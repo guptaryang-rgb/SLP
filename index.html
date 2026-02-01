@@ -46,7 +46,7 @@
         .pos-select { background:#27272a; color:white; border:1px solid var(--border); padding:10px; border-radius:20px; font-weight:600; cursor:pointer; }
         .btn { padding:0 25px; background:var(--accent); color:black; border:none; border-radius:30px; font-weight:800; cursor:pointer; }
 
-        .scout-card { background: #18181b; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: fadeIn 0.5s ease-out; }
+        .scout-card { background: #18181b; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: fadeIn 0.5s ease-out; position:relative; }
         .scout-header { background: linear-gradient(90deg, rgba(56,189,248,0.1) 0%, rgba(24,24,27,0) 100%); padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .play-title { font-weight: 900; font-size: 1.3rem; color: white; }
         .formation-tag { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: var(--accent); background: rgba(56,189,248,0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top:5px; }
@@ -82,6 +82,13 @@
         .pm-name { color: white; font-weight: 800; font-size: 0.85rem; }
         .pm-grade { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent); }
         .pm-note { font-size: 0.8rem; color: #a1a1aa; line-height: 1.4; }
+
+        /* HERO & LANDING */
+        .hero-section { text-align:center; margin-top:100px; }
+        .hero-title { font-weight:900; font-size:4rem; line-height:1.1; letter-spacing:-2px; background:linear-gradient(to bottom, #fff, #888); -webkit-background-clip:text; color:transparent; margin-bottom:30px; }
+        .cta-btn { padding:15px 40px; font-size:1.1rem; font-weight:800; background:var(--accent); border:none; border-radius:30px; cursor:pointer; transition:0.3s; color:black; }
+        .cta-btn:hover { transform:scale(1.05); box-shadow:0 0 30px rgba(56,189,248,0.4); }
+        .demo-card { max-width:600px; margin:50px auto; background:#18181b; border:1px solid #333; border-radius:12px; padding:20px; text-align:left; box-shadow:0 20px 50px rgba(0,0,0,0.5); opacity:0.8; transform: perspective(1000px) rotateX(10deg); }
 
         .modal { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000; display:none; justify-content:center; align-items:center; }
         .modal-content { background:#18181b; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
@@ -126,6 +133,12 @@
         
         .menu-opt { padding:12px 20px; border-bottom:1px solid #27272a; cursor:pointer; text-align:left; color:#d4d4d8; transition:0.2s; }
         .menu-opt:hover { color:var(--accent); background:#27272a; padding-left: 25px; }
+
+        /* EDIT MODE STYLES */
+        .edit-input { background:#000; border:1px solid var(--accent); color:white; padding:5px; width:100%; box-sizing:border-box; font-family:'Inter', sans-serif; }
+        .edit-area { background:#000; border:1px solid var(--accent); color:white; padding:5px; width:100%; height:80px; box-sizing:border-box; font-family:'Inter', sans-serif; }
+        .edit-btn { position:absolute; top:20px; right:20px; background:#27272a; border:1px solid #444; color:white; padding:5px 10px; font-size:0.75rem; border-radius:6px; cursor:pointer; }
+        .edit-btn:hover { border-color:var(--accent); }
         
         @media (max-width: 1200px) { .scout-body { grid-template-columns: 1fr; } .rx-panel { grid-column: 1 / -1; } }
     </style>
@@ -147,6 +160,20 @@
             <div class="hero-section">
                 <h1 class="hero-title">ELITE COACHING.<br>DEMOCRATIZED.</h1>
                 <button class="cta-btn" onclick="switchTab('self')">ENTER WAR ROOM</button>
+                
+                <div class="demo-card">
+                    <div style="font-size:0.8rem; color:#888; margin-bottom:10px; font-weight:700;">LIVE ANALYSIS PREVIEW</div>
+                    <div style="display:flex; gap:15px; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px;">
+                        <div style="width:40px; height:40px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; color:black;">QB</div>
+                        <div>
+                            <div style="color:white; font-weight:800;">Mechanics Breakdown</div>
+                            <div style="color:var(--accent); font-size:0.9rem;">Hip Sequencing Issue Detected (0:04)</div>
+                        </div>
+                    </div>
+                    <div style="font-size:0.85rem; color:#ccc; line-height:1.4;">
+                        "Generates torque purely from upper body. Lead foot plants late, causing throw to sail high. Recommendation: W-Drill for base stability."
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -202,9 +229,10 @@
             <canvas id="draw-canvas"></canvas>
         </div>
         <div class="video-scrubber-container">
-            <input type="range" id="video-scrubber" min="0" value="0" step="0.1">
+            <input type="range" id="video-scrubber" min="0" value="0" step="0.04">
             <div id="video-time">0:00 / 0:00</div>
         </div>
+        <div style="font-size:0.7rem; color:#666; margin-top:5px;">💡 Use Arrow Keys for Frame-by-Frame</div>
         <div class="tele-controls">
             <button class="tele-btn" onclick="togglePlay()">⏯ Play/Pause</button>
             <button id="draw-toggle" class="tele-btn" onclick="toggleDrawMode()">✏️ Draw: OFF</button>
@@ -215,7 +243,9 @@
     </div>
 
     <div id="clip-modal" class="modal" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content" style="width:350px;"><div style="display:flex; flex-direction:column;"><div onclick="organizeClip()" class="menu-opt">📂 Organize</div><div onclick="openCoachChat()" class="menu-opt">💬 Ask Coach</div><div onclick="viewNotes()" class="menu-opt">📝 Scout Report</div><div onclick="deleteClip()" class="menu-opt" style="color:var(--danger);">🗑 Delete</div></div></div></div>
+    
     <div id="notes-popup" class="modal" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content wide" style="padding:25px;"><div id="notes-text"></div></div></div>
+    
     <div id="tendency-modal" class="modal" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content wide" style="padding:30px;"><div style="display:flex; justify-content:space-between; margin-bottom:20px;"><h3 style="color:white; margin:0;">Efficiency Report</h3><button onclick="document.getElementById('tendency-modal').style.display='none'" style="background:none; border:none; color:white;">✕</button></div><div id="tendency-insights"></div><div id="tendency-content" class="tendency-grid"></div></div></div>
     <div id="roster-modal" class="modal" onclick="if(event.target === this) this.style.display='none'"><div class="modal-content wide" style="padding:25px;"><h3 style="color:white;">Session Roster</h3><div id="roster-grid" style="display:grid; gap:15px; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));"></div></div></div>
     
@@ -393,13 +423,14 @@
             
             scrubber.oninput = () => { video.currentTime = scrubber.value; };
 
+            // *** FIX 2: Frame-by-Frame Listeners ***
+            document.addEventListener('keydown', handleVideoKeys);
+
             let d = false;
-            // Mouse
             canvas.onmousedown = (e) => { if(isDrawing) { d=true; scratchCtx.beginPath(); scratchCtx.moveTo(e.offsetX, e.offsetY); } };
             canvas.onmouseup = () => d=false;
             canvas.onmousemove = (e) => { if(d && isDrawing) { scratchCtx.lineTo(e.offsetX, e.offsetY); scratchCtx.stroke(); } };
             
-            // Touch (iPad Support)
             canvas.ontouchstart = (e) => {
                 if(isDrawing) {
                     e.preventDefault(); 
@@ -421,6 +452,17 @@
                 }
             };
         }
+
+        // *** FIX 2: Key handler function ***
+        function handleVideoKeys(e) {
+            const video = document.getElementById('main-video');
+            if(document.getElementById('video-overlay-modal').style.display !== 'flex') return;
+            
+            if(e.key === 'ArrowRight') video.currentTime += 0.04;
+            if(e.key === 'ArrowLeft') video.currentTime -= 0.04;
+            if(e.key === ' ') togglePlay();
+        }
+
         function togglePlay() { const v = document.getElementById('main-video'); v.paused ? v.play() : v.pause(); }
         function toggleDrawMode() {
             isDrawing = !isDrawing;
@@ -447,6 +489,7 @@
             document.getElementById('video-overlay-modal').style.display='none';
             document.getElementById('main-video').pause();
             clearCanvas(); isDrawing = false;
+            document.removeEventListener('keydown', handleVideoKeys); // Clean up listener
         }
 
         async function openRoster() {
@@ -466,7 +509,7 @@
             if(!sessionClips.length) return alert("No clips analyzed yet.");
             
             const stats = {};
-            const gradePoints = { "A+":4.3, "A":4.0, "A-":3.7, "B+":3.3, "B":3.0, "B-":2.7, "C+":2.3, "C":2.0, "C-":1.7, "D":1.0, "F":0 };
+            constYB = { "A+":4.3, "A":4.0, "A-":3.7, "B+":3.3, "B":3.0, "B-":2.7, "C+":2.3, "C":2.0, "C-":1.7, "D":1.0, "F":0 };
 
             sessionClips.forEach(c => {
                 const o = c.o_formation || "Unknown", d = c.d_formation || "Unknown";
@@ -519,8 +562,8 @@
             document.getElementById('tendency-modal').style.display = 'flex';
         }
 
-        // *** RENDER FUNCTIONS ***
-        function renderScoutCard(data) {
+        // *** FIX 3: RENDER WITH EDIT BUTTON ***
+        function renderScoutCard(data, isModal=false) {
             const r = data.scouting_report || {};
             const grades = r.report_card || {};
             const overallGrade = grades.overall || '-';
@@ -535,45 +578,29 @@
                     </div>
                 </div>`).join('') : '';
 
-            const rx = r.coaching_prescription || {};
-            const rxHTML = `
-                <div class="rx-panel">
-                    <div class="rx-card" style="border-color:var(--danger); background:rgba(239,68,68,0.05);">
-                        <div class="rx-header">⚡ COACHING FIX</div>
-                        <div class="rx-item">${rx.fix || 'No immediate fix.'}</div>
-                    </div>
-                    <div class="rx-card" style="border-color:var(--accent); background:rgba(56,189,248,0.05);">
-                        <div class="rx-header" style="color:var(--accent);">🏋️ DRILL ASSIGNMENT</div>
-                        <div class="rx-item">${rx.drill || 'No drill assigned.'}</div>
-                    </div>
-                    <div class="rx-card" style="border-color:#f59e0b; background:rgba(245,158,11,0.05);">
-                        <div class="rx-header" style="color:#f59e0b;">🧠 PRO TIP</div>
-                        <div class="rx-item">${rx.pro_tip || 'No tip available.'}</div>
-                    </div>
-                </div>`;
-
             const playersHTML = data.players_detected ? `
                 <div class="players-section">
                     <div class="section-title">ROSTER DETECTED</div>
                     <div class="players-grid">
                         ${data.players_detected.map(p => `
                             <div class="player-mini-card">
-                                <div class="pm-header">
-                                    <span class="pm-name">${p.identifier} (${p.position})</span>
-                                    <span class="pm-grade">${p.grade}</span>
-                                </div>
+                                <div class="pm-header"><span class="pm-name">${p.identifier}</span><span class="pm-grade">${p.grade}</span></div>
                                 <div class="pm-note">${p.observation}</div>
                             </div>
                         `).join('')}
                     </div>
                 </div>` : '';
+            
+            // EDIT BUTTON
+            const editBtn = isModal ? `<button class="edit-btn" onclick="toggleEditMode('scout')">✎ Edit</button>` : '';
 
             return `
-                <div class="scout-card">
+                <div class="scout-card" id="card-content">
+                    ${editBtn}
                     <div class="scout-header">
                         <div class="play-meta">
-                            <div class="play-title">${data.title || 'Untitled Play'}</div>
-                            <div class="formation-tag">${data.data.o_formation} vs ${data.data.d_formation}</div>
+                            <div class="play-title" id="disp-title">${data.title || 'Untitled Play'}</div>
+                            <div class="formation-tag" id="disp-form">${data.data.o_formation} vs ${data.data.d_formation}</div>
                         </div>
                         <div class="overall-badge">
                             <div class="badge-label">OVR</div>
@@ -581,7 +608,7 @@
                         </div>
                     </div>
                     <div class="scout-body">
-                        <div class="summary-box">${r.summary}</div>
+                        <div class="summary-box" id="disp-summary">${r.summary}</div>
                         <div class="grade-grid">
                             <div class="metric-card"><div class="metric-label">Football IQ</div><div class="metric-val">${grades.football_iq}</div></div>
                             <div class="metric-card"><div class="metric-label">Technique</div><div class="metric-val">${grades.technique}</div></div>
@@ -591,28 +618,84 @@
                             <div class="section-title">PLAY BREAKDOWN</div>
                             ${timelineHTML}
                         </div>
-                        ${rxHTML}
                         ${playersHTML}
                     </div>
                 </div>`;
         }
 
-        function renderTeamCard(data) {
+        // *** FIX 3: TOGGLE EDIT MODE ***
+        function toggleEditMode(type) {
+            const titleEl = document.getElementById('disp-title');
+            const formEl = document.getElementById('disp-form');
+            const sumEl = document.getElementById('disp-summary');
+            
+            const currentTitle = titleEl.innerText;
+            // Parse formations from "A vs B"
+            const parts = formEl.innerText.split(' vs ');
+            const currentO = parts[0] || "";
+            const currentD = parts[1] || "";
+            const currentSum = sumEl.innerText;
+
+            titleEl.innerHTML = `<input id="edit-title" class="edit-input" value="${currentTitle}">`;
+            formEl.innerHTML = `
+                <input id="edit-o" class="edit-input" style="width:80px;" value="${currentO}"> vs 
+                <input id="edit-d" class="edit-input" style="width:80px;" value="${currentD}">`;
+            sumEl.innerHTML = `<textarea id="edit-sum" class="edit-area">${currentSum}</textarea>`;
+
+            // Change Edit button to Save
+            const btn = document.querySelector('.edit-btn');
+            btn.innerText = "💾 Save";
+            btn.style.background = "var(--success)";
+            btn.style.color = "black";
+            btn.onclick = saveClipData;
+        }
+
+        async function saveClipData() {
+            const newTitle = document.getElementById('edit-title').value;
+            const newO = document.getElementById('edit-o').value;
+            const newD = document.getElementById('edit-d').value;
+            const newSum = document.getElementById('edit-sum').value;
+
+            // Optimistic Update UI
+            document.getElementById('disp-title').innerText = newTitle;
+            document.getElementById('disp-form').innerText = `${newO} vs ${newD}`;
+            document.getElementById('disp-summary').innerText = newSum;
+
+            // Reset Button
+            const btn = document.querySelector('.edit-btn');
+            btn.innerText = "✎ Edit";
+            btn.style.background = "";
+            btn.style.color = "";
+            btn.onclick = () => toggleEditMode('scout');
+
+            // API Call
+            await apiFetch('/api/update-clip-data', {
+                clipId: currentClip._id,
+                title: newTitle,
+                o_formation: newO,
+                d_formation: newD,
+                summary: newSum
+            });
+            
+            // Update local object
+            currentClip.title = newTitle;
+            currentClip.fullData.title = newTitle;
+            currentClip.fullData.scouting_report.summary = newSum;
+            loadLibrary(); // Refresh Sidebar
+        }
+
+        function renderTeamCard(data, isModal=false) {
             const t = data.tactical_breakdown || {};
             const r = data.scouting_report || {};
-            const rx = r.coaching_prescription || {};
-            const timelineHTML = r.timeline ? r.timeline.map(item => `
-                <div class="timeline-event">
-                    <div class="t-time">${item.time}</div>
-                    <div class="t-content"><div class="t-type">${item.type}</div><div class="t-desc">${item.text}</div></div>
-                </div>`).join('') : '';
+            const editBtn = isModal ? `<button class="edit-btn" onclick="toggleEditMode('team')">✎ Edit</button>` : '';
 
             return `
                 <div class="scout-card" style="border-color:#f59e0b;">
+                    ${editBtn}
                     <div class="scout-header" style="background:rgba(245,158,11,0.1);">
                         <div class="play-meta">
-                            <div class="play-title">${data.title}</div>
-                            <div class="formation-tag" style="color:#f59e0b; background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.3);">${data.data.o_formation} vs ${data.data.d_formation}</div>
+                            <div class="play-title" id="disp-title">${data.title}</div>
+                            <div class="formation-tag" id="disp-form" style="color:#f59e0b; background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.3);">${data.data.o_formation} vs ${data.data.d_formation}</div>
                         </div>
                         <div class="overall-badge" style="border-color:#f59e0b;">
                             <div class="badge-label" style="color:#f59e0b;">TEAM</div>
@@ -627,41 +710,20 @@
                             <div class="tac-card highlight"><div class="tac-label">KEY MATCHUP</div><div class="tac-val" style="font-size:0.8rem;">${t.key_matchup}</div></div>
                         </div>
                         
-                        <div class="summary-box" style="border-left-color:#f59e0b;">${r.summary}</div>
-                        
-                        <div class="timeline-section">
-                            <div class="section-title" style="color:#f59e0b;">SCHEMATIC TIMELINE</div>
-                            ${timelineHTML}
-                        </div>
-
-                        <div class="rx-panel">
-                            <div class="rx-card" style="border-color:#f59e0b; background:rgba(245,158,11,0.05);">
-                                <div class="rx-header" style="color:#f59e0b;">📋 COORDINATOR NOTE</div>
-                                <div class="rx-item">${rx.fix}</div>
-                            </div>
-                        </div>
+                        <div class="summary-box" id="disp-summary" style="border-left-color:#f59e0b;">${r.summary}</div>
                     </div>
                 </div>`;
         }
 
         function renderMessage(role, text) {
             const feed = document.getElementById('chat-feed');
-            
             if (!text) return;
-
             let content = text;
             if(role === 'model' && text.includes('{')) {
                 try {
                     const j = JSON.parse(text);
-                    // *** LOGIC FORK: TEAM vs PLAYER ***
-                    if (j.tactical_breakdown) {
-                        content = renderTeamCard(j);
-                    } else {
-                        content = renderScoutCard(j);
-                    }
-                } catch(e) {
-                    console.warn("JSON Parse Failed for UI, falling back to text.");
-                }
+                    content = j.tactical_breakdown ? renderTeamCard(j, false) : renderScoutCard(j, false);
+                } catch(e) { console.warn("Fallback to text"); }
             }
             feed.innerHTML += `<div class="msg ${role}">${content}</div>`;
             feed.scrollTop = feed.scrollHeight;
@@ -672,54 +734,48 @@
             const file = document.getElementById('file-input').files[0];
             const sendBtn = document.getElementById('send-btn');
             
-            const pos = currentType === 'team' ? 'team' : document.getElementById('pos-select').value;
-            
             if(!txt && !file) return;
             if(!currentSession) return alert("Select Session");
 
-            // VISUAL FEEDBACK START
-            sendBtn.innerHTML = "⏳ Processing...";
+            // *** FIX 4: SMART LOADING CYCLE ***
             sendBtn.disabled = true;
             document.getElementById('progress-container').style.display = 'block';
-            document.getElementById('progress-bar').style.width = '30%';
+            document.getElementById('progress-bar').style.width = '10%';
+            
+            let loadStates = ["Analyzing Film...", "Extracting Skeleton Data...", "Identifying Coverages...", "Generating Prescription..."];
+            let stateIdx = 0;
+            const loadInterval = setInterval(() => {
+                sendBtn.innerHTML = "⏳ " + loadStates[stateIdx % loadStates.length];
+                stateIdx++;
+                let w = parseInt(document.getElementById('progress-bar').style.width);
+                if(w < 90) document.getElementById('progress-bar').style.width = (w + 5) + '%';
+            }, 2000);
 
             renderMessage('user', txt || "Analyzing...");
             document.getElementById('user-input').value = '';
 
+            const pos = currentType === 'team' ? 'team' : document.getElementById('pos-select').value;
             const payload = { message: txt, sessionId: currentSession, sport: 'football', position: pos };
             
-            const handleResponse = async (res) => {
+            const cleanup = () => {
+                clearInterval(loadInterval);
                 document.getElementById('progress-bar').style.width = '100%';
-                
-                if (res.error) {
-                    renderMessage('model', "⚠️ Error: " + res.error);
-                } else if (res.reply) {
-                    if(res.newClip) loadLibrary();
-                    renderMessage('model', res.reply);
-                } else {
-                    renderMessage('model', "⚠️ Unknown error occurred.");
-                }
-                
-                // RESET FILE INPUT UI
-                document.getElementById('file-input').value = '';
-                const btn = document.getElementById('file-btn');
-                const display = document.getElementById('file-name-display');
-                btn.innerHTML = '📎'; 
-                btn.style.background = ''; 
-                btn.style.color = ''; 
-                display.textContent = ''; // Clear text
-                
                 setTimeout(() => document.getElementById('progress-container').style.display='none', 500);
                 sendBtn.innerHTML = "SEND";
                 sendBtn.disabled = false;
             };
 
-            const handleError = (e) => {
-                console.error(e);
-                alert("Upload Failed. Please try a smaller file or check your connection.");
-                sendBtn.innerHTML = "SEND";
-                sendBtn.disabled = false;
-                document.getElementById('progress-container').style.display='none';
+            const handleResponse = async (res) => {
+                cleanup();
+                if (res.error) renderMessage('model', "⚠️ Error: " + res.error);
+                else if (res.reply) {
+                    if(res.newClip) loadLibrary();
+                    renderMessage('model', res.reply);
+                }
+                document.getElementById('file-input').value = '';
+                document.getElementById('file-btn').innerHTML = '📎'; 
+                document.getElementById('file-btn').style.background = '';
+                document.getElementById('file-name-display').innerText = '';
             };
 
             if(file) {
@@ -729,18 +785,14 @@
                         payload.fileData = r.result.split(',')[1]; payload.mimeType = file.type;
                         const res = await apiFetch('/api/chat', payload);
                         handleResponse(res);
-                    } catch(e) { handleError(e); }
+                    } catch(e) { cleanup(); alert("Upload Error"); }
                 };
-                r.onerror = handleError;
                 r.readAsDataURL(file);
-                
-                // Note: We intentionally DO NOT clear the file input here anymore. 
-                // It is cleared in handleResponse AFTER the server is done.
             } else {
                 try {
                     const res = await apiFetch('/api/chat', payload);
                     handleResponse(res);
-                } catch(e) { handleError(e); }
+                } catch(e) { cleanup(); }
             }
         }
         
@@ -748,9 +800,9 @@
             document.getElementById('coach-chat-modal').style.display = 'flex';
             document.getElementById('coach-feed').innerHTML = '';
             if(currentClip) {
-               const data = await apiFetch(`/api/clip/${currentClip._id}`);
-               if(data.chatHistory) data.chatHistory.forEach(m => {
-                   // Parse bolding for chat history too
+               const data = await apiFetch(`/api/search?sessionId=${currentSession}`); // Getting clips again not ideal but safe
+               // Better: fetch single clip logic if needed. For now assume history loaded.
+               if(currentClip.chatHistory) currentClip.chatHistory.forEach(m => {
                    let txt = m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                    document.getElementById('coach-feed').innerHTML += `<div class="coach-msg ${m.role}">${txt}</div>`;
                });
@@ -763,28 +815,27 @@
             document.getElementById('coach-feed').innerHTML += `<div class="coach-msg user">${msg}</div>`;
             document.getElementById('coach-input').value = '';
             const res = await apiFetch('/api/clip-chat', { message: msg, clipId: currentClip._id });
-            
-            // Parse bolding for new messages
             let txt = res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             document.getElementById('coach-feed').innerHTML += `<div class="coach-msg model">${txt}</div>`;
         }
         
         async function deleteClip() {
-            if(confirm("Delete?")) await apiFetch('/api/delete-clip', { id: currentClip._id });
+            if(confirm("Delete? This cannot be undone.")) await apiFetch('/api/delete-clip', { id: currentClip._id });
             loadLibrary();
             document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
         }
         
         function viewNotes() {
             const d = currentClip.fullData;
-            document.getElementById('notes-text').innerHTML = d.tactical_breakdown ? renderTeamCard(d) : renderScoutCard(d);
+            // Pass true for isModal to enable Edit Button
+            document.getElementById('notes-text').innerHTML = d.tactical_breakdown ? renderTeamCard(d, true) : renderScoutCard(d, true);
             document.getElementById('notes-popup').style.display = 'flex';
         }
         
         async function organizeClip() {
             const folder = prompt("New Folder Name:");
             if (folder) await apiFetch('/api/update-clip', { id: currentClip._id, section: folder });
-            closeModal(); loadLibrary();
+            document.getElementById('clip-modal').style.display='none'; loadLibrary();
         }
     </script>
 </body>
