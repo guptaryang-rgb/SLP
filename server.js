@@ -83,7 +83,6 @@ const RUBRICS = {
     "kp": "SPECIALISTS: Approach rhythm, Plant foot depth, Contact sweet-spot, Follow-through balance.",
     "general": "INTANGIBLES: Motor/Effort, Football IQ, Situational Awareness, Speed."
 };
-};
 
 const PlayerProfileSchema = new mongoose.Schema({
     identifier: String, position: String, grade: String, notes: [String], weaknesses: [String], last_updated: { type: Date, default: Date.now }
