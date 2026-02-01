@@ -6,7 +6,7 @@ const fs = require("fs/promises");
 const path = require("path");
 
 const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
-const {GdGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
 const cloudinary = require("cloudinary").v2;
 
