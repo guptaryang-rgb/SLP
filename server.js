@@ -60,20 +60,29 @@ async function generateWithFallback(promptParts) {
     throw new Error(`Analysis failed. Last error: ${lastError?.message}`);
 }
 
-/* ---------------- RUBRICS ---------------- */
+/* ---------------- UPDATED ELITE RUBRICS ---------------- */
+// This injects the "Professional Coach" brain into the AI
 const RUBRICS = {
-    "team": "ELITE COORDINATOR: Situation, Pre-Snap Shell, Post-Snap Rotation, Conflict Players.",
-    "qb": "BIOMECHANICS: Base, Hip Sequencing, Arm Angle, Release Time.",
-    "rb": "BIOMECHANICS: Pad Level, Cuts, Vision, Pass Pro.",
-    "wr": "BIOMECHANICS: Release, Stem, Break Point, Catch Radius.",
-    "te": "BIOMECHANICS: Blocking Leverage, Route Depth, Seam Recognition.",
-    "ol": "BIOMECHANICS: First Step, Punch Timing, Anchor.",
-    "dl": "BIOMECHANICS: Get-off, Hand Usage, Bend.",
-    "lb": "BIOMECHANICS: Read Steps, Flow, Tackle Technique.",
-    "cb": "BIOMECHANICS: Press, Hip Fluidity, Phase, Ball Skills.",
-    "s":  "BIOMECHANICS: Range, Angles, Disguise, Alley Filling.",
-    "kp": "BIOMECHANICS: Plant, Swing, Follow-through.",
-    "general": "GENERAL: Effort, Speed, Intelligence."
+    "team": `
+    ELITE COORDINATOR DIAGNOSTICS:
+    1. SITUATION: Down & Distance tendencies, Field Position (Red Zone vs Open Field).
+    2. PRE-SNAP: Formational Tells (RB depth/width), Motion leverage, OL Stance (Heavy vs Light hands).
+    3. SCHEME: Identify Concept (Mesh, Dagger, Duo) vs Coverage Shell (MOFO/MOFC).
+    4. POST-SNAP: Identify the 'Conflict Player' in a bind. Who is the weak link?
+    5. EXECUTION: Success Rate & Efficiency Grade.`,
+    
+    "qb": "MECHANICS: Base width, Kinetic Chain (Hips before Shoulder), Elbow height, Release time (<0.4s). EYE DISCIPLINE: Manipulating safeties vs Staring down targets.",
+    "rb": "VISION: Pressing the hole, Cutback lanes, Pad Level (Hammer vs Nail). PASS PRO: Scanning inside-out, Sturdy base.",
+    "wr": "ROUTE TECH: Release vs Press, Stacking the DB, Stem leverage, Sinking hips at break point, Late Hands catch technique.",
+    "te": "HYBRID PLAY: In-line blocking leverage (Power step), Seam recognition in Zone, Catching in traffic.",
+    "ol": "TRENCH WARFARE: First step explosiveness (no bucket steps), Punch timing, Anchor vs Bull Rush, Hand placement.",
+    "dl": "DISRUPTION: Get-off speed (snap anticipation), Hand combat (Swipe/Rip/Swim), Gap integrity vs Peeking.",
+    "lb": "SECOND LEVEL: Read steps (False steps?), Flow/Scrape over blocks, Shock & Shed technique, Coverage depth.",
+    "cb": "ISLAND DEFENSE: Press technique (Opening the gate too early), Phase maintenance, Eye discipline (Receiver hips vs QB eyes).",
+    "s":  "LAST LINE: Pursuit angles (Inside-Out), Range from hash-to-sideline, Disguising coverages, Alley filling.",
+    "kp": "SPECIALISTS: Approach rhythm, Plant foot depth, Contact sweet-spot, Follow-through balance.",
+    "general": "INTANGIBLES: Motor/Effort, Football IQ, Situational Awareness, Speed."
+};
 };
 
 const PlayerProfileSchema = new mongoose.Schema({
