@@ -1,4 +1,4 @@
-require("dotenv").config(); // Fixed typo: lowercase 'r'
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -6,7 +6,7 @@ const fs = require("fs/promises");
 const path = require("path");
 
 const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const {GdGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
 const cloudinary = require("cloudinary").v2;
 
@@ -34,11 +34,11 @@ cloudinary.config({
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
 
-// *** RESTORED: User requested Gemini 2.5 Pro ***
+// *** STABLE MODELS ONLY ***
 const MODEL_FALLBACK_LIST = [
-    "gemini-2.5-pro", 
+    "gemini-1.5-flash", 
     "gemini-1.5-pro",
-    "gemini-1.5-flash"
+    "gemini-1.5-flash-latest"
 ];
 
 async function generateWithFallback(promptParts) {
@@ -86,10 +86,11 @@ const Session = mongoose.model("Session", new mongoose.Schema({
   roster: [PlayerProfileSchema] 
 }));
 
+// *** FIX 1: Added publicId to Schema for cleanup ***
 const Clip = mongoose.model("Clip", new mongoose.Schema({
   owner: String, sessionId: String, sport: String, title: String, formation: String,
   o_formation: String, d_formation: String, section: { type: String, default: "Inbox" },
-  videoUrl: String, geminiFileUri: String, fullData: Object,
+  videoUrl: String, publicId: String, geminiFileUri: String, fullData: Object,
   chatHistory: [{ role: String, text: String }], snapshots: [String],
   createdAt: { type: Date, default: Date.now }
 }));
@@ -133,7 +134,14 @@ app.get("/api/session/:id", requireAuth, async (req, res) => {
 app.post("/api/delete-session", requireAuth, async (req, res) => {
   try {
     await Session.deleteOne({ sessionId: req.body.sessionId, owner: req.auth.userId });
+    
+    // Cleanup all clips in session
+    const clips = await Clip.find({ sessionId: req.body.sessionId, owner: req.auth.userId });
+    for (const clip of clips) {
+        if (clip.publicId) await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
+    }
     await Clip.deleteMany({ sessionId: req.body.sessionId, owner: req.auth.userId });
+    
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Delete failed" }); }
 });
@@ -154,9 +162,48 @@ app.post("/api/update-clip", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Update failed" }); }
 });
 
+// *** FIX 3: Route to Manual Override AI Data ***
+app.post("/api/update-clip-data", requireAuth, async (req, res) => {
+    try {
+        const { clipId, title, summary, o_formation, d_formation } = req.body;
+        const clip = await Clip.findOne({ _id: clipId, owner: req.auth.userId });
+        
+        if (!clip) return res.status(404).json({ error: "Clip not found" });
+
+        // Update top-level fields
+        clip.title = title;
+        clip.o_formation = o_formation;
+        clip.d_formation = d_formation;
+        clip.formation = `${o_formation} vs ${d_formation}`;
+
+        // Update the JSON structure stored in fullData
+        if (clip.fullData) {
+            clip.fullData.title = title;
+            if (clip.fullData.data) {
+                clip.fullData.data.o_formation = o_formation;
+                clip.fullData.data.d_formation = d_formation;
+            }
+            if (clip.fullData.scouting_report) {
+                clip.fullData.scouting_report.summary = summary;
+            }
+        }
+        
+        await clip.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Data Update failed" }); }
+});
+
+// *** FIX 1: Secure Cloudinary Deletion ***
 app.post("/api/delete-clip", requireAuth, async (req, res) => {
   try {
-    await Clip.findOneAndDelete({ _id: req.body.id, owner: req.auth.userId });
+    const clip = await Clip.findOne({ _id: req.body.id, owner: req.auth.userId });
+    if (clip) {
+        if (clip.publicId) {
+            console.log("🗑 Removing from Cloudinary:", clip.publicId);
+            await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
+        }
+        await Clip.deleteOne({ _id: req.body.id });
+    }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Delete failed" }); }
 });
@@ -223,8 +270,11 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         fileManager.uploadFile(tempPath, { mimeType, displayName: "Video" })
     ]);
 
+    // *** FIX 1: Store publicId ***
     let savedClip = await Clip.create({
-      owner: req.auth.userId, sessionId, sport, videoUrl: cloud.secure_url,
+      owner: req.auth.userId, sessionId, sport, 
+      videoUrl: cloud.secure_url, 
+      publicId: cloud.public_id, // Store ID for deletion
       title: "Analyzing...", formation: "...", section: "Inbox", chatHistory: [], snapshots: []
     });
 
@@ -239,74 +289,45 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
-    // *** REVERTED LOGIC: Standard Team/Individual Analysis ***
-    let systemInstruction;
-    
-    if (position === 'team') {
-        // COORDINATOR MODE
-        systemInstruction = `
-        ROLE: NFL Offensive/Defensive Coordinator.
-        TASK: Perform a high-level schematic self-scout of this play.
-        ANALYSIS CHECKLIST: ${specificFocus}
+    let systemInstruction = `
+    ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
+    TASK: Analyze video clip. Focus: ${specificFocus}.
+    ROSTER: ${rosterContext}
 
-        CRITICAL OUTPUT FORMAT (JSON):
-        { 
-            "title": "Play Title (e.g. 'Power Read vs 4-3 Over')", 
-            "data": { "o_formation": "Specific Set", "d_formation": "Front & Coverage" }, 
-            "tactical_breakdown": {
-                "concept": "Name of Scheme",
-                "box_count": "Light / Neutral / Loaded",
-                "coverage_shell": "Pre-Snap (MOFO/MOFC) -> Post-Snap",
-                "pressure": "Blitz? Stunt? Base?",
-                "key_matchup": "Key 1v1"
+    OUTPUT JSON (Strict Format):
+    { 
+        "title": "Play Title", 
+        "data": { "o_formation": "Set", "d_formation": "Shell" }, 
+        "tactical_breakdown": {
+            "concept": "Scheme",
+            "box_count": "Count",
+            "coverage_shell": "Cover X",
+            "key_matchup": "1v1"
+        },
+        "scouting_report": { 
+            "summary": "Narrative. Include specific timestamps (e.g., 'at 0:04, hips locked').", 
+            "timeline": [{ "time": "0:00", "type": "Phase", "text": "Obs" }],
+            "coaching_prescription": { 
+                "fix": "Technical fix", 
+                "drill": "Specific Drill Name", 
+                "pro_tip": "Tip" 
             },
-            "scouting_report": { 
-                "summary": "Schematic narrative.", 
-                "timeline": [
-                    { "time": "0:00", "type": "Pre-Snap", "text": "Alignment." },
-                    { "time": "0:04", "type": "Result", "text": "Outcome." }
-                ],
-                "coaching_prescription": { "fix": "Fix", "drill": "Drill", "pro_tip": "Tip" },
-                "report_card": { "scheme_soundness": "A-", "execution": "B", "success_rate": "Grade", "overall": "A-" }
-            },
-            "players_detected": [] 
-        }`;
-    } else {
-        // PLAYER MODE
-        systemInstruction = `
-        ROLE: Elite Private Position Coach.
-        TASK: Biomechanical analysis of specific player.
-        FOCUS: ${specificFocus}
-        ROSTER: ${rosterContext}
-
-        OUTPUT JSON:
-        { 
-            "title": "Play Title", 
-            "data": { "o_formation": "Set", "d_formation": "Shell" }, 
-            "scouting_report": { 
-                "summary": "Technical breakdown.", 
-                "timeline": [{ "time": "0:00", "type": "Action", "text": "Obs" }],
-                "coaching_prescription": { "fix": "Fix", "drill": "Drill", "pro_tip": "Tip" },
-                "report_card": { "football_iq": "B", "technique": "C", "effort": "A", "overall": "B" }
-            },
-            "players_detected": [ { "identifier": "Name", "position": "Pos", "grade": "B", "observation": "Note", "weakness": "Weak" } ]
-        }`;
-    }
+            "report_card": { "football_iq": "B", "technique": "C", "effort": "A", "overall": "B" }
+        },
+        "players_detected": [ { "identifier": "Name", "position": "Pos", "grade": "B", "observation": "Note", "weakness": "Weak" } ] 
+    }`;
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
     const result = await generateWithFallback(prompt);
     
     let text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     
-    // *** CRASH GUARD: Handle Malformed JSON ***
     let json;
     try {
         json = JSON.parse(text);
-        // Force critical fields to exist if AI forgot them
         if (!json.data) json.data = { o_formation: "Unknown", d_formation: "Unknown" };
     } catch (e) {
         console.error("AI JSON Parse Error:", text);
-        // Fallback object so server doesn't crash
         json = {
             title: "Analysis Error",
             data: { o_formation: "Error", d_formation: "Error" },
