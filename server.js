@@ -383,5 +383,5 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Vantage Vision running on http://localhost:${PORT}`))
+app.listen(PORT, () => console.log(`🚀 Vantage Vision running on http://localhost:${PORT}`));
 
