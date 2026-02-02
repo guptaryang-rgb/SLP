@@ -63,20 +63,21 @@
         #landing-view {
             align-items: center; justify-content: center; text-align: center;
             background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
+            overflow-y: auto; /* Allow scroll on small screens */
         }
-        .hero-wrapper { max-width: 1000px; padding: 0 20px; display: flex; flex-direction: column; align-items: center; }
+        .hero-wrapper { max-width: 1000px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
         
-        .hero-badge { 
-            display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 20px; 
-            background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); 
-            color: var(--accent); font-size: 0.75rem; font-weight: 600; margin-bottom: 30px; letter-spacing: 1px;
-        }
         .hero-title { 
             font-size: 4.5rem; font-weight: 900; line-height: 1.05; letter-spacing: -2px; margin: 0 0 24px 0; 
             background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; 
         }
-        .hero-subtitle { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 48px; font-weight: 300; max-width: 600px; line-height: 1.6; }
+        .hero-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 24px; font-weight: 300; max-width: 700px; line-height: 1.6; }
         
+        .value-prop {
+            font-size: 0.95rem; color: #ccc; margin-bottom: 40px; max-width: 650px; line-height: 1.6; 
+            background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid var(--border);
+        }
+
         .cta-btn { 
             background: var(--text); color: black; padding: 16px 40px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; 
             font-size: 1rem; transition: all 0.2s ease; box-shadow: 0 0 40px rgba(255,255,255,0.1); 
@@ -89,9 +90,9 @@
             transform: perspective(1000px) rotateX(10deg); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
             backdrop-filter: blur(10px);
         }
-        .demo-ui::before { content:'LIVE ANALYSIS'; position: absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:black; font-size:0.7rem; font-weight:800; padding:4px 12px; border-radius:12px; }
+        .demo-ui::before { content:'SYSTEM CAPABILITIES'; position: absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:black; font-size:0.7rem; font-weight:800; padding:4px 12px; border-radius:12px; }
 
-        .legal-footer { position: absolute; bottom: 30px; width: 100%; text-align: center; font-size: 0.8rem; color: #555; }
+        .legal-footer { margin-top: 60px; width: 100%; text-align: center; font-size: 0.8rem; color: #555; padding-bottom: 20px; }
         .legal-footer a { color: #777; text-decoration: none; margin: 0 12px; transition: 0.2s; }
         .legal-footer a:hover { color: var(--accent); }
 
@@ -115,7 +116,16 @@
             background-color: #050505;
             background-image: radial-gradient(#222 1px, transparent 1px);
             background-size: 40px 40px; 
+            position: relative;
         }
+        
+        /* TOOLS BAR (ADDED) */
+        .tools-bar { 
+            display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; 
+            border-bottom: 1px solid var(--border); background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .tools-center { display: flex; gap: 10px; }
         
         /* CHAT FEED */
         .chat-feed { flex: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
@@ -125,7 +135,7 @@
         .msg.model { align-self: flex-start; width: 100%; max-width: 100%; padding: 0; }
 
         /* EMPTY STATE */
-        #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.3; pointer-events: none; }
+        #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.3; pointer-events: none; text-align: center; padding: 20px; }
         #empty-state h3 { font-weight: 800; font-size: 1.5rem; margin: 10px 0; color: #fff; }
         #empty-state p { color: #888; }
 
@@ -238,7 +248,27 @@
         #coach-chat-modal { position: fixed; bottom: 20px; right: 320px; width: 380px; height: 600px; background: #111; border: 1px solid #333; border-radius: 16px; display: none; flex-direction: column; z-index: 2000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         
         /* Mobile Response */
-        @media (max-width: 1200px) { .scout-body { grid-template-columns: 1fr; } .rx-panel { grid-column: 1 / -1; } .app-body { flex-direction: column; } .sidebar, .lib-panel { width: 100%; height: auto; border: none; } .main { min-height: 500px; } }
+        @media (max-width: 1000px) { 
+            .scout-body { grid-template-columns: 1fr; } 
+            .rx-panel { grid-column: 1 / -1; } 
+            .app-body { position: relative; } 
+            .sidebar, .lib-panel { 
+                position: absolute; top: 0; bottom: 0; height: 100%; width: 300px; box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            }
+            .sidebar { left: 0; border-right: 1px solid var(--border); }
+            .lib-panel { right: 0; border-left: 1px solid var(--border); }
+            .hero-title { font-size: 3rem; }
+            .chat-feed { padding: 20px; }
+            .navbar { padding: 0 16px; }
+            .nav-tab { padding: 8px 12px; font-size: 0.8rem; }
+            .logo { font-size: 1rem; }
+        }
+        @media (max-width: 600px) {
+            .tools-bar { padding: 10px; }
+            .input-bar { padding: 10px; flex-wrap: wrap; }
+            .pos-select, #file-btn { display: none; } /* Simplify on mobile */
+            .hero-title { font-size: 2.5rem; }
+        }
         
         /* Menu Options */
         .menu-opt { padding: 12px 20px; border-bottom: 1px solid #222; cursor: pointer; color: #ccc; transition: 0.2s; font-size: 0.9rem; }
@@ -269,23 +299,27 @@
         <div id="landing-view" class="view active-view">
             <div class="hero-wrapper">
                 <div class="hero-content">
-                    <div class="hero-badge">V 2.0 // PROFESSIONAL SUITE</div>
                     <h1 class="hero-title">The Game is Won<br>Before the Snap.</h1>
-                    <p class="hero-subtitle">Elite biomechanical & schematic analysis for the modern athlete. Powered by Computer Vision and Large Multimodal Models.</p>
+                    <p class="hero-subtitle">Football is just as much a mental game as physical. To win requires the most intelligent player. But to achieve you must know about everything on the field. Our goal is to only help you get close</p>
+                    
+                    <div class="value-prop">
+                        This is a perfect and affable opportunity to get close to professional level coaching without spending 200 a hour. This serves as preparing the athlete to make the most of the professional coaching but also progress in a constant feedback cycle
+                    </div>
+
                     <button class="cta-btn" onclick="switchTab('self')">Enter War Room</button>
                 </div>
                 
                 <div class="demo-ui">
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
                         <div style="font-weight:800; color:white;">ANALYSIS PREVIEW</div>
-                        <div style="color:var(--accent);">QB MECHANICS</div>
+                        <div style="color:var(--accent);">AI CAPABILITIES</div>
                     </div>
                     <div style="font-family:'JetBrains Mono'; font-size:0.85rem; color:#ccc; line-height:1.6;">
-                        > DETECTED: Hip Sequencing Latency<br>
-                        > TIMESTAMP: 0:04.2<br>
-                        > OBSERVATION: Upper body initiates torque before lead foot plant.<br>
-                        > RESULT: Loss of velocity, ball sails high.<br>
-                        > RX: <span style="color:var(--success);">W-Drill (Base Stability)</span>
+                        > <strong>PLAYER TRACKING:</strong> Velocity, Acceleration, Reaction Time<br>
+                        > <strong>SCHEMATIC ID:</strong> Cover 2/3/4/6 Recognition, Front Identification<br>
+                        > <strong>BIOMECHANICS:</strong> Joint Angle Analysis, Efficiency Scoring<br>
+                        > <strong>PREDICTION:</strong> Tendency Modeling based on Formation<br>
+                        > <strong>REPORTING:</strong> Auto-generated Scouting Cards
                     </div>
                 </div>
 
@@ -297,7 +331,7 @@
         </div>
 
         <div id="war-room-view" class="view">
-            <div id="progress-container"><div id="progress-bar"></div></div>
+            <div id="progress-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:3px; z-index:9999;"><div id="progress-bar" style="height:100%; background:var(--accent); width:0; transition:width 0.5s;"></div></div>
             
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
@@ -306,13 +340,6 @@
                 </div>
 
                 <div class="main">
-                    <div id="chat-feed" class="chat-feed">
-                        <div id="empty-state">
-                            <h3>Ready to Analyze</h3>
-                            <p>Upload game film or ask the coach to begin.</p>
-                        </div>
-                    </div>
-                    
                     <div class="tools-bar">
                         <div class="tools-left"><button class="tool-btn" onclick="toggleSidebar()">◂ Sessions</button></div>
                         <div class="tools-center" id="team-tools-panel" style="display:none;">
@@ -322,6 +349,13 @@
                         <div class="tools-right"><button class="tool-btn" onclick="toggleLibrary()">Library ▸</button></div>
                     </div>
 
+                    <div id="chat-feed" class="chat-feed">
+                        <div id="empty-state">
+                            <h3>Ready to Analyze</h3>
+                            <p>Upload game film or ask the coach to begin.</p>
+                        </div>
+                    </div>
+                    
                     <div class="input-bar">
                         <select id="pos-select" class="pos-select">
                             <option value="general">Focus Area...</option>
@@ -362,7 +396,6 @@
             <button class="tool-btn" onclick="togglePlay()">⏯ Play</button>
             <button id="draw-toggle" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
             <button class="tool-btn" onclick="clearCanvas()">Clear</button>
-            <button class="tool-btn" onclick="saveSnapshot()" style="color:var(--success);">📸 Save</button>
             <button class="tool-btn" onclick="closeVideoPlayer()" style="color:var(--text-dim);">Close</button>
         </div>
     </div>
@@ -398,8 +431,8 @@
     </div>
 
     <div id="coach-chat-modal">
-        <div class="chat-header"><span>Coach's Corner</span> <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer;">✕</span></div>
-        <div id="coach-feed" class="coach-feed"></div>
+        <div class="chat-header" style="padding:15px; border-bottom:1px solid #333; font-weight:800; display:flex; justify-content:space-between;"><span>Coach's Corner</span> <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer;">✕</span></div>
+        <div id="coach-feed" class="chat-feed" style="padding:20px;"></div>
         <div style="padding: 15px; border-top: 1px solid #333; display: flex; gap: 8px;">
             <input id="coach-input" style="flex: 1; background: #222; border: 1px solid #333; padding: 10px; border-radius: 8px; color: white;" placeholder="Message...">
             <button onclick="sendCoachMessage()" style="background: var(--accent); border: none; border-radius: 8px; padding: 0 16px; font-weight: bold;">></button>
@@ -418,7 +451,7 @@
                         document.getElementById('auth-modal').style.display = 'none';
                         Clerk.mountUserButton(document.getElementById('user-button'));
                         document.getElementById('send-btn').addEventListener('click', sendMessage);
-                        switchTab('self');
+                        switchTab('about'); // Start on About Page
                     } else { Clerk.mountSignIn(document.getElementById('sign-in')); }
                 });
             } else { setTimeout(initApp, 500); }
@@ -446,7 +479,10 @@
                 document.getElementById('chat-feed').innerHTML = '<div id="empty-state"><h3>Ready to Analyze</h3><p>Upload game film or ask the coach to begin.</p></div>';
                 document.getElementById('lib-grid').innerHTML = '';
                 document.getElementById('pos-select').style.display = tabName === 'team' ? 'none' : 'block';
+                
+                // Toggle Middle Buttons based on Tab
                 document.getElementById('team-tools-panel').style.display = tabName === 'team' ? 'flex' : 'none';
+                
                 loadSessions();
             }
         }
@@ -494,7 +530,7 @@
             currentSession = id; loadLibrary();
             const data = await apiFetch(`/api/session/${id}`);
             const feed = document.getElementById('chat-feed');
-            if(data.history.length > 0) feed.innerHTML = ''; // Clear empty state if history exists
+            if(data.history.length > 0) feed.innerHTML = ''; 
             data.history.forEach(m => renderMessage(m.role, m.text));
         }
 
@@ -509,7 +545,7 @@
             for(const [name, list] of Object.entries(folders)) {
                 grid.innerHTML += `<div class="folder-header">${name}</div>`;
                 list.forEach(c => {
-                    grid.innerHTML += `<div class="clip-card"><button class="clip-menu-btn" onclick='openOptions(${JSON.stringify(c).replace(/'/g, "&apos;")})'>⋮</button><div class="clip-thumb" onclick="openVideoPlayer('${c.videoUrl}', '${c._id}')">▶</div><div class="clip-info">${c.title}</div></div>`;
+                    grid.innerHTML += `<div class="clip-card"><button class="clip-menu-btn" style="position:absolute; right:5px; top:5px; background:rgba(0,0,0,0.7); border:none; color:white; border-radius:4px; cursor:pointer;" onclick='openOptions(${JSON.stringify(c).replace(/'/g, "&apos;")})'>⋮</button><div class="clip-thumb" onclick="openVideoPlayer('${c.videoUrl}', '${c._id}')">▶</div><div class="clip-info">${c.title}</div></div>`;
                 });
             }
         }
@@ -577,16 +613,7 @@
             else { btn.innerHTML = "✏️ Draw: OFF"; btn.classList.remove('active'); document.getElementById('draw-canvas').style.pointerEvents="none"; }
         }
         function clearCanvas() { scratchCtx.clearRect(0, 0, document.getElementById('draw-canvas').width, document.getElementById('draw-canvas').height); }
-        async function saveSnapshot() {
-            const v = document.getElementById('main-video');
-            const c = document.getElementById('draw-canvas');
-            const t = document.createElement('canvas'); t.width = v.videoWidth; t.height = v.videoHeight;
-            const ctx = t.getContext('2d');
-            ctx.drawImage(v, 0, 0, t.width, t.height);
-            ctx.drawImage(c, 0, 0, t.width, t.height);
-            await apiFetch('/api/save-snapshot', { clipId: currentClip._id, imageData: t.toDataURL('image/jpeg') });
-            alert("Snapshot Saved!");
-        }
+        
         function closeVideoPlayer() {
             document.getElementById('video-overlay-modal').style.display='none';
             document.getElementById('main-video').pause();
@@ -640,7 +667,7 @@
                 const gpa = (data.totalPoints / data.count).toFixed(1);
                 const letter = gpa >= 4 ? 'A' : (gpa >= 3 ? 'B' : (gpa >= 2 ? 'C' : 'D'));
                 oHTML += `
-                    <div class="tendency-row">
+                    <div class="tendency-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #333;">
                         <div class="tac-val" style="font-size:0.9rem;">${name}</div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <div style="font-size:0.8rem; color:#888;">${data.count} plays</div>
@@ -687,10 +714,10 @@
                     </div>
                     <div class="scout-body">
                         <div class="summary-box">${r.summary}</div>
-                        <div class="grade-grid">
-                            <div class="metric-card"><div class="metric-label">Football IQ</div><div class="metric-val">${grades.football_iq}</div></div>
-                            <div class="metric-card"><div class="metric-label">Technique</div><div class="metric-val">${grades.technique}</div></div>
-                            <div class="metric-card"><div class="metric-label">Effort</div><div class="metric-val">${grades.effort}</div></div>
+                        <div class="grade-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; grid-column:1/-1; margin-bottom:10px;">
+                            <div class="metric-card"><div class="tac-label">Football IQ</div><div class="tac-val">${grades.football_iq}</div></div>
+                            <div class="metric-card"><div class="tac-label">Technique</div><div class="tac-val">${grades.technique}</div></div>
+                            <div class="metric-card"><div class="tac-label">Effort</div><div class="tac-val">${grades.effort}</div></div>
                         </div>
                         <div class="timeline-section"><div class="section-title">PLAY BREAKDOWN</div>${timelineHTML}</div>
                         <div class="rx-panel">
@@ -743,7 +770,6 @@
         function renderMessage(role, text) {
             const feed = document.getElementById('chat-feed');
             if (!text) return;
-            // Clear empty state if user is active
             if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
             
             let content = text;
@@ -837,7 +863,7 @@
         async function organizeClip() {
             const folder = prompt("New Folder Name:");
             if (folder) await apiFetch('/api/update-clip', { id: currentClip._id, section: folder });
-            closeModal(); loadLibrary();
+            document.getElementById('clip-modal').style.display = 'none'; loadLibrary();
         }
     </script>
 </body>
