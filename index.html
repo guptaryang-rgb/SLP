@@ -12,7 +12,7 @@
 
     <style>
         /* =========================================
-           1. CORE THEME SYSTEM & VARIABLES
+           1. CORE THEME SYSTEM
            ========================================= */
         :root { 
             --bg-deep: #050505; 
@@ -34,24 +34,15 @@
         * { box-sizing: border-box; outline: none; }
         
         body { 
-            background: var(--bg-deep); 
-            color: var(--text); 
-            font-family: var(--font-main); 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            margin: 0; 
+            background: var(--bg-deep); color: var(--text); font-family: var(--font-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; 
         }
         
-        /* Modern Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* =========================================
-           2. NAVIGATION BAR
+           2. NAVIGATION
            ========================================= */
         .navbar { 
             height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; 
@@ -69,25 +60,23 @@
         .nav-tab.active { background: #222; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
 
         /* =========================================
-           3. VIEW MANAGEMENT
+           3. VIEW MANAGEMENT & LANDING
            ========================================= */
         .view-container { flex: 1; position: relative; overflow: hidden; }
         .view { position: absolute; inset: 0; display: none; flex-direction: column; opacity: 0; transform: scale(0.98); transition: opacity 0.3s ease, transform 0.3s ease; }
         .view.active-view { display: flex; opacity: 1; transform: scale(1); }
 
-        /* --- LANDING PAGE --- */
         #landing-view {
             align-items: center; text-align: center;
             background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
             overflow-y: auto; padding-bottom: 50px;
         }
         .hero-wrapper { max-width: 1000px; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; }
-        
         .hero-title { 
             font-size: 4.5rem; font-weight: 900; line-height: 1.05; letter-spacing: -2px; margin: 0 0 24px 0; 
             background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; 
         }
-        .hero-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 30px; font-weight: 300; max-width: 650px; line-height: 1.6; }
+        .hero-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 30px; font-weight: 300; max-width: 700px; line-height: 1.6; }
         
         .onboarding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 40px 0; width: 100%; text-align: left; }
         .step-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 24px; border-radius: 12px; }
@@ -105,11 +94,11 @@
         .legal-footer a { color: #777; text-decoration: none; margin: 0 12px; }
 
         /* =========================================
-           4. WAR ROOM (MAIN APP LAYOUT)
+           4. WAR ROOM LAYOUT
            ========================================= */
         .app-body { flex: 1; display: flex; overflow: hidden; width: 100vw; justify-content: space-between; }
         
-        /* RESTORED ORIGINAL SIDEBAR STYLE */
+        /* RESTORED SIDEBAR STYLE */
         .sidebar, .lib-panel { 
             width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; 
             transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; backdrop-filter: blur(20px); z-index: 5;
@@ -125,7 +114,6 @@
         .panel-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
         .panel-btn:hover { color: var(--accent); }
 
-        /* RESTORED ORIGINAL SESSION ITEMS */
         .session-item { 
             padding: 12px 16px; margin: 4px 12px; border-radius: 8px; color: var(--text-dim); font-size: 0.9rem; cursor: pointer; transition: 0.2s; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -133,13 +121,12 @@
         .session-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .session-item.active { background: #1a1a1a; color: white; border-left: 3px solid var(--accent); }
 
-        /* Main Content Area */
         .main { 
             flex: 1; display: flex; flex-direction: column; width: 100%; min-width: 0; 
             background-color: #050505; position: relative;
         }
 
-        /* --- 5. CINEMA MODE (VIDEO PLAYER DOCKED TOP) --- */
+        /* --- 5. CINEMA MODE (VIDEO PLAYER) --- */
         #cinema-container { 
             display: none; /* Hidden until clip plays */
             flex-direction: column; border-bottom: 1px solid var(--border); 
@@ -166,7 +153,7 @@
         
         .tele-tools { display: flex; gap: 8px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px; margin-left: 8px; }
         
-        /* --- 6. ANALYSIS FEED (SCROLLABLE BELOW VIDEO) --- */
+        /* --- 6. ANALYSIS FEED --- */
         .analysis-area { 
             flex: 1; overflow-y: auto; padding: 32px; background: #0a0a0a; 
             display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
@@ -176,7 +163,6 @@
         .msg.user { align-self: flex-end; background: #27272a; border: 1px solid var(--border); color: #fff; }
         .msg.model { align-self: flex-start; width: 100%; padding: 0; background: transparent; max-width: 100%; }
 
-        /* Empty State */
         #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.4; pointer-events: none; text-align: center; }
         #empty-state h3 { font-weight: 800; font-size: 1.5rem; margin: 16px 0 8px 0; color: #fff; }
 
@@ -222,7 +208,6 @@
             padding: 20px 32px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; z-index: 50; 
             backdrop-filter: blur(10px);
         }
-        
         .tool-group { display: flex; gap: 8px; padding-right: 16px; border-right: 1px solid var(--border); }
         .input-box { 
             flex: 1; background: #141414; border: 1px solid var(--border); color: white; padding: 14px 20px; border-radius: 12px; 
@@ -241,7 +226,6 @@
         .tool-btn:hover { color: white; border-color: var(--border-light); background: #333; }
         .tool-btn.active { color: black; background: var(--accent); border-color: var(--accent); }
 
-        /* Clip Cards */
         .clip-card { 
             padding: 12px; margin: 0 12px 12px; background: #141414; border: 1px solid var(--border); border-radius: 10px; 
             cursor: pointer; display: flex; gap: 12px; align-items: center; transition: 0.2s; 
@@ -262,7 +246,6 @@
             width: 90vw; max-width: 850px; padding: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
         }
 
-        /* Strategy Hub */
         .strat-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
         .strat-tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text-dark); font-weight: 700; }
         .strat-tab.active { background: #222; color: white; border: 1px solid var(--border); }
@@ -275,13 +258,14 @@
             cursor: pointer; background: rgba(255,255,255,0.01);
         }
 
-        /* Coach Chat Popup */
         #coach-chat-modal { 
             position: fixed; bottom: 100px; right: 40px; width: 380px; height: 500px; background: #111; border: 1px solid var(--border); 
             border-radius: 16px; display: none; flex-direction: column; z-index: 2500; box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
         }
 
-        /* Mobile */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         @media (max-width: 1000px) { 
             .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); }
             #cinema-container { height: 40%; }
@@ -296,9 +280,7 @@
 <body>
 
     <div class="navbar">
-        <div class="logo">
-            <div class="logo-icon"></div> Vantage<span>Vision</span>
-        </div>
+        <div class="logo"><div class="logo-icon"></div> Vantage<span>Vision</span></div>
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('about')">Vision</div>
             <div class="nav-tab" onclick="switchTab('self')">Self Analysis</div>
@@ -418,12 +400,10 @@
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
             <h3 style="margin-top:0; font-size:1.5rem;">Strategy Hub (Coordinator Tools)</h3>
-            
             <div class="strat-tabs">
                 <div class="strat-tab active" onclick="switchStrat('rules')">Position Rules</div>
                 <div class="strat-tab" onclick="switchStrat('playbook')">Upload Playbook</div>
             </div>
-
             <div id="strat-rules-view">
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <select id="rule-pos-select" class="pos-select" style="flex:1;">
@@ -433,22 +413,17 @@
                         <option value="DL">Defensive Line</option>
                     </select>
                 </div>
-                <textarea id="rules-input" class="strat-area" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep. If #1 stops, CB stays over top."></textarea>
-                <div style="display:flex; justify-content:flex-end;">
-                    <button onclick="saveRules()" class="btn" style="background:var(--accent); color:black;">Save Rule Set</button>
-                </div>
+                <textarea id="rules-input" class="strat-area" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep."></textarea>
+                <button onclick="saveRules()" class="btn" style="width:100%;">Save Rule Set</button>
             </div>
-
             <div id="strat-playbook-view" style="display:none;">
                 <div class="upload-zone" onclick="document.getElementById('pb-file').click()">
                     <div style="font-size:3rem; margin-bottom:15px;">📂</div>
                     <div style="font-weight:700; color:white;">Click to Upload PDF Diagram</div>
-                    <div id="pb-filename" style="color:var(--accent); margin-top:15px; font-weight:600;"></div>
+                    <div id="pb-filename" style="color:var(--accent); margin-top:15px;"></div>
                 </div>
                 <input type="file" id="pb-file" hidden onchange="handlePlaybook(this)">
-                <div style="display:flex; justify-content:flex-end; margin-top:20px;">
-                    <button onclick="savePlaybook()" class="btn" style="background:var(--success); color:black;">Integrate Playbook</button>
-                </div>
+                <button onclick="savePlaybook()" class="btn" style="width:100%; margin-top:20px;">Integrate Playbook</button>
             </div>
         </div>
     </div>
@@ -483,7 +458,7 @@
         let currentSession = null, currentClip = null, currentType = 'self';
         let sessionClips = [];
         
-        // TELESTRATOR STATE (FIXED FOR PERFORMANCE)
+        // TELESTRATOR STATE
         let isDrawing = false, scratchCtx = null;
         let temporalDrawings = []; 
         let currentPath = [];
@@ -551,7 +526,8 @@
             if(sessions && sessions.length > 0) {
                 list.innerHTML = sessions.map(s => 
                     `<div class="session-item" id="sess-${s.id}" onclick="selectSession('${s.id}')">
-                        <span>${s.title}</span><span style="opacity:0.5; font-size:1.2rem;" onclick="deleteSession('${s.id}')">×</span>
+                        <span style="font-weight:600; color:#fff;">${s.title}</span>
+                        <span style="opacity:0.5; font-size:1.2rem; cursor:pointer;" onclick="deleteSession('${s.id}')">×</span>
                     </div>`
                 ).join('');
                 if(!currentSession) selectSession(sessions[0].id);
@@ -585,7 +561,7 @@
             
             clips.forEach(c => {
                 grid.innerHTML += `
-                <div class="clip-card" onclick="playClip('${c.videoUrl}', '${c._id}', '${encodeURIComponent(JSON.stringify(c))}')">
+                <div class="clip-card" onclick="playClip('${c._id}')">
                     <div class="clip-thumb-mini">▶</div>
                     <div style="overflow:hidden;">
                         <div class="clip-info-title">${c.title || "Untitled Clip"}</div>
@@ -598,8 +574,12 @@
         /* --- THE TELESTRATOR ENGINE (FAST & RESPONSIVE) --- */
         let animationFrameId;
 
-        async function playClip(url, id, clipDataStr) {
-            if(id) currentClip = {_id: id, videoUrl: url};
+        async function playClip(id) {
+            // FIND CLIP DATA
+            const clip = sessionClips.find(c => c._id === id);
+            if (!clip) return;
+            
+            currentClip = clip;
             
             // 1. Activate Cinema Layout
             document.getElementById('cinema-container').style.display = 'flex';
@@ -607,8 +587,13 @@
             const canvas = document.getElementById('draw-canvas');
             const scrubber = document.getElementById('video-scrubber');
             
-            video.src = url;
+            video.src = clip.videoUrl;
             video.play();
+            
+            // 2. Load Report Directly
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML = ''; 
+            if(clip.fullData) renderMessage('model', JSON.stringify(clip.fullData));
             
             // Reset Drawing
             temporalDrawings = []; 
@@ -616,16 +601,6 @@
             isDrawing = false;
             document.getElementById('draw-btn').classList.remove('active');
             
-            // 2. FORCE LOAD REPORT
-            if(clipDataStr) {
-                const clipData = JSON.parse(decodeURIComponent(clipDataStr));
-                const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; // Clear feed to focus on this clip
-                if(clipData.fullData) {
-                    renderMessage('model', JSON.stringify(clipData.fullData));
-                }
-            }
-
             video.onloadedmetadata = () => {
                 canvas.width = video.clientWidth || 800;
                 canvas.height = video.clientHeight || 450;
@@ -634,7 +609,7 @@
                 scratchCtx.lineJoin = 'round';
                 scrubber.max = video.duration;
                 if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                playbackLoop(); // Start the loop for fading
+                playbackLoop(); 
             };
             
             video.ontimeupdate = () => {
@@ -649,7 +624,7 @@
             // 3. DRAWING EVENTS (Direct Draw for 0 Latency)
             canvas.onmousedown = (e) => { 
                 if(isDrawing) { 
-                    isDrawing = true; // Use boolean state for drag
+                    // No d=true needed, just start path
                     currentPath = [{x: e.offsetX, y: e.offsetY}];
                     scratchCtx.beginPath();
                     scratchCtx.moveTo(e.offsetX, e.offsetY);
@@ -668,13 +643,14 @@
             };
 
             canvas.onmouseup = () => {
-                if(isDrawing) {
+                if(isDrawing && currentPath.length > 0) {
                     // Save stroke for temporal playback
                     temporalDrawings.push({
                         path: currentPath,
                         startTime: video.currentTime,
                         duration: 3.0 // Lasts 3 seconds
                     });
+                    currentPath = [];
                 }
             };
         }
@@ -718,22 +694,22 @@
         }
 
         function toggleDrawMode() {
+            isDrawing = !isDrawing;
             const btn = document.getElementById('draw-btn');
             const canvas = document.getElementById('draw-canvas');
             const video = document.getElementById('main-video');
             
-            // Toggle Logic
-            if(btn.classList.contains('active')) {
+            if(isDrawing) {
+                btn.classList.add('active');
+                canvas.style.pointerEvents = 'auto';
+                canvas.style.cursor = 'crosshair'; // Visual feedback
+                video.pause();
+            } else {
                 isDrawing = false;
                 btn.classList.remove('active');
                 canvas.style.pointerEvents = 'none';
+                canvas.style.cursor = 'default';
                 video.play();
-            } else {
-                isDrawing = true;
-                btn.classList.add('active');
-                canvas.style.pointerEvents = 'auto';
-                canvas.style.cursor = 'crosshair'; // Visual Feedback
-                video.pause();
             }
         }
         
@@ -967,7 +943,6 @@
             }
         }
         
-        // Roster & Stats Stubs
         async function openRoster() {
             if(!currentSession) return alert("Select a session first.");
             const data = await apiFetch(`/api/session/${currentSession}`);
