@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vantage Vision | Pro Suite | Quarterback Intelligence</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <script crossorigin="anonymous" data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -20,7 +19,7 @@
         :root { 
             /* Backgrounds */
             --bg-deep: #050505; 
-            --bg-panel: rgba(20, 20, 20, 0.7); 
+            --bg-panel: rgba(20, 20, 20, 0.85); 
             --bg-card: #141414;
             --bg-overlay: rgba(0, 0, 0, 0.95);
 
@@ -55,6 +54,9 @@
             --nav-height: 64px;
             --sidebar-width: 280px;
             --lib-width: 320px;
+            
+            /* Mobile Handling */
+            --app-height: 100dvh; /* Fix for mobile browser bars */
         }
         
         /* Reset & Base */
@@ -62,36 +64,28 @@
             box-sizing: border-box; 
             outline: none; 
             -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent; /* Remove blue tap box on mobile */
         }
         
         body { 
             background: var(--bg-deep); 
             color: var(--text); 
             font-family: var(--font-main); 
-            height: 100vh; 
+            height: var(--app-height); 
             width: 100vw;
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
             margin: 0; 
             padding: 0;
+            overscroll-behavior: none; /* Prevent pull-to-refresh on mobile */
         }
         
         /* Scrollbar Styling */
-        ::-webkit-scrollbar { 
-            width: 6px; 
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track { 
-            background: transparent; 
-        }
-        ::-webkit-scrollbar-thumb { 
-            background: #333; 
-            border-radius: 3px; 
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
         /* ==========================================================================
            2. NAVIGATION & HEADER
@@ -102,8 +96,8 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 0 32px; 
-            background: rgba(5, 5, 5, 0.8); 
+            padding: 0 24px; 
+            background: rgba(5, 5, 5, 0.9); 
             backdrop-filter: blur(12px); 
             z-index: 100; 
             flex-shrink: 0;
@@ -118,11 +112,10 @@
             gap: 12px; 
             color: white; 
             user-select: none;
+            cursor: pointer;
         } 
         
-        .logo span { 
-            color: var(--accent); 
-        }
+        .logo span { color: var(--accent); }
         
         .logo-icon { 
             width: 28px; 
@@ -142,19 +135,17 @@
         }
         
         .nav-tab { 
-            padding: 8px 20px; 
+            padding: 8px 16px; 
             border-radius: 8px; 
             font-weight: 500; 
             font-size: 0.85rem; 
             cursor: pointer; 
             transition: all 0.2s ease; 
             color: var(--text-dim); 
+            white-space: nowrap;
         }
         
-        .nav-tab:hover { 
-            color: white; 
-            background: rgba(255,255,255,0.03); 
-        }
+        .nav-tab:hover { color: white; background: rgba(255,255,255,0.03); }
         
         .nav-tab.active { 
             background: #222; 
@@ -237,50 +228,6 @@
             line-height: 1.6; 
         }
         
-        .onboarding-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 24px; 
-            margin: 40px 0; 
-            width: 100%; 
-            text-align: left; 
-        }
-        
-        .step-card { 
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); 
-            padding: 32px; 
-            border-radius: 16px; 
-            transition: transform 0.3s ease;
-        }
-        
-        .step-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255,255,255,0.04);
-            border-color: var(--border-hover);
-        }
-
-        .step-num { 
-            color: var(--accent); 
-            font-weight: 900; 
-            font-size: 1.5rem; 
-            margin-bottom: 12px; 
-            font-family: var(--font-mono);
-        }
-        
-        .step-title { 
-            color: white; 
-            font-weight: 700; 
-            margin-bottom: 8px; 
-            font-size: 1.1rem;
-        }
-        
-        .step-desc { 
-            color: #888; 
-            font-size: 0.9rem; 
-            line-height: 1.5; 
-        }
-
         .cta-btn { 
             background: var(--text); 
             color: black; 
@@ -336,8 +283,8 @@
         .lib-panel.collapsed { margin-right: calc(var(--lib-width) * -1); opacity: 0; }
 
         .panel-header { 
-            padding: 20px 24px; 
-            font-size: 0.7rem; 
+            padding: 16px 20px; 
+            font-size: 0.75rem; 
             font-weight: 800; 
             color: var(--text-dim); 
             letter-spacing: 1px; 
@@ -346,7 +293,7 @@
             justify-content: space-between; 
             align-items: center; 
             border-bottom: 1px solid var(--border); 
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.3);
         }
         
         .panel-btn { 
@@ -357,11 +304,12 @@
             font-size: 1.2rem; 
             transition: 0.2s; 
             opacity: 0.7;
+            padding: 4px;
         }
         .panel-btn:hover { opacity: 1; color: var(--accent); }
 
         .session-item { 
-            padding: 14px 16px; 
+            padding: 12px 16px; 
             margin: 4px 12px; 
             border-radius: 8px; 
             color: var(--text-dim); 
@@ -371,18 +319,11 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            user-select: none;
         }
         
-        .session-item:hover { 
-            background: rgba(255,255,255,0.05); 
-            color: white; 
-        }
-        
-        .session-item.active { 
-            background: #1a1a1a; 
-            color: white; 
-            border-left: 3px solid var(--accent); 
-        }
+        .session-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .session-item.active { background: #1a1a1a; color: white; border-left: 3px solid var(--accent); }
 
         .main { 
             flex: 1; 
@@ -395,37 +336,37 @@
         }
 
         /* ==========================================================================
-           5. NEW POP-UP ANALYSIS OVERLAY (THE REQUESTED ADJUSTMENT)
+           5. POP-UP ANALYSIS OVERLAY (IMPROVED)
            ========================================================================== */
         
-        /* The Wrapper */
         #analysis-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
-            height: 100vh;
+            height: var(--app-height);
             background: #000;
-            z-index: 5000; /* High z-index to sit on top of everything */
-            display: none; /* Hidden by default */
+            z-index: 5000;
+            display: none;
             flex-direction: column;
-            animation: overlayFadeIn 0.2s ease-out;
+            animation: overlayFadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
         @keyframes overlayFadeIn {
-            from { opacity: 0; transform: scale(0.98); }
+            from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
 
         /* Top Bar of Overlay */
         .overlay-header {
-            height: 50px;
+            height: 56px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 24px;
+            padding: 0 20px;
             background: #080808;
+            flex-shrink: 0;
         }
 
         .overlay-title {
@@ -434,25 +375,28 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1rem;
         }
-        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); }
+        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.5; } 100% { opacity:1; } }
 
-        /* The Video Section (Top Half) */
+        /* The Video Section */
         #popup-video-container {
-            flex: 6; /* 60% of vertical space */
+            flex: 6; /* 60% Height */
             position: relative;
-            background: #000;
+            background: #050505;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-bottom: 1px solid var(--border);
             overflow: hidden;
+            touch-action: none; /* Critical for drawing */
         }
 
-        /* The Report Section (Bottom Half) */
+        /* The Report Section */
         #popup-report-container {
-            flex: 4; /* 40% of vertical space */
+            flex: 4; /* 40% Height */
             background: #111;
             overflow-y: auto;
             padding: 24px;
@@ -470,25 +414,29 @@
             justify-content: center; 
             align-items: center; 
             background: #000; 
+            overflow: hidden;
         }
         
+        /* Video and Canvas Logic */
         #main-video { 
             max-height: 100%; 
             max-width: 100%; 
-            width: auto; 
-            height: auto; 
+            /* Fix for ghosting: object-fit contain */
+            object-fit: contain; 
             display: block; 
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
         
         #draw-canvas { 
             position: absolute; 
+            /* Positioned exactly over the video via JS, but defaults to full container */
             top: 0; 
             left: 0; 
             width: 100%; 
             height: 100%; 
             pointer-events: none; 
             z-index: 10; 
+            touch-action: none;
         }
         
         .video-controls { 
@@ -496,13 +444,17 @@
             bottom: 0; 
             left: 0; 
             right: 0; 
-            padding: 16px 32px; 
-            background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, transparent 100%); 
+            padding: 16px 24px; 
+            background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, transparent 100%); 
             display: flex; 
             gap: 20px; 
             align-items: center; 
             z-index: 20;
+            transition: opacity 0.3s;
         }
+        
+        /* Hide controls when inactive/drawing if desired */
+        .controls-hidden .video-controls { opacity: 0; pointer-events: none; }
 
         .v-btn { 
             background: none; 
@@ -513,6 +465,10 @@
             display: flex; 
             align-items: center; 
             transition: color 0.2s;
+            padding: 0;
+            min-width: 44px; /* Touch target size */
+            min-height: 44px;
+            justify-content: center;
         }
         .v-btn:hover { color: var(--accent); }
         
@@ -533,14 +489,15 @@
             appearance: none;
             transition: height 0.2s;
         }
-        .scrubber:hover { height: 6px; }
+        .scrubber:hover { height: 8px; }
         .scrubber::-webkit-slider-thumb { 
             appearance: none; 
-            width: 12px; 
-            height: 12px; 
+            width: 16px; /* Larger for touch */
+            height: 16px; 
             background: var(--accent); 
             border-radius: 50%; 
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            margin-top: -2px;
         }
 
         .tele-tools { 
@@ -552,27 +509,22 @@
         }
 
         /* ==========================================================================
-           6. SCOUT CARD STYLES (Used inside the Popup)
+           6. SCOUT CARD STYLES
            ========================================================================== */
+        .report-wrapper { max-width: 900px; width: 100%; padding-bottom: 40px; }
         
-        /* Container for the report content */
-        .report-wrapper {
-            max-width: 900px;
-            width: 100%;
-        }
-
         .scout-card { 
             background: #141414; 
             border: 1px solid var(--border); 
             border-radius: 16px; 
             overflow: hidden; 
             box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5); 
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             animation: slideUp 0.4s ease-out;
         }
 
         .scout-header { 
-            padding: 20px 32px; 
+            padding: 20px 24px; 
             border-bottom: 1px solid var(--border); 
             display: flex; 
             justify-content: space-between; 
@@ -580,14 +532,8 @@
             background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 100%);
         }
         
-        .play-title { 
-            font-weight: 800; 
-            font-size: 1.4rem; 
-            color: white; 
-            margin-top: 6px; 
-        }
-        
-        .tag-row { display: flex; gap: 8px; align-items: center; }
+        .play-title { font-weight: 800; font-size: 1.2rem; color: white; margin-top: 6px; }
+        .tag-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
         .formation-tag { 
             font-family: var(--font-mono); 
@@ -599,156 +545,87 @@
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
         
-        .focus-tag { 
-            font-family: var(--font-mono); 
-            font-size: 0.75rem; 
-            color: #fbbf24; 
-            background: rgba(251, 191, 36, 0.1); 
-            padding: 4px 10px; 
-            border-radius: 4px; 
-            font-weight: 700; 
-            border: 1px solid rgba(251, 191, 36, 0.2);
-        }
-        
         .exec-badge { 
             text-align: center; 
             background: #050505; 
             border: 1px solid var(--border); 
-            padding: 8px 18px; 
+            padding: 8px 16px; 
             border-radius: 8px; 
-            min-width: 80px;
+            min-width: 70px;
         }
-        
-        .exec-label { font-size: 0.65rem; font-weight: 700; opacity: 0.8; margin-bottom: 2px; }
-        .exec-val { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+        .exec-val { font-size: 1.4rem; font-weight: 900; line-height: 1; }
         
         .scout-body { 
-            padding: 32px; 
+            padding: 24px; 
             display: grid; 
             grid-template-columns: 2fr 1.2fr; 
-            gap: 40px; 
+            gap: 32px; 
         }
         
         .summary-text { 
             color: #d4d4d8; 
-            font-size: 1.05rem; 
-            line-height: 1.8; 
+            font-size: 1rem; 
+            line-height: 1.7; 
             margin-bottom: 24px; 
             grid-column: 1 / -1; 
             border-left: 3px solid var(--border); 
-            padding-left: 20px; 
+            padding-left: 16px; 
             background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
-            padding: 20px;
+            padding: 16px;
             border-radius: 0 8px 8px 0;
         }
         
         .grade-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 16px; 
+            gap: 12px; 
             margin-bottom: 24px; 
         }
         
         .metric-card { 
             background: #1a1a1a; 
-            padding: 16px; 
+            padding: 12px; 
             border-radius: 10px; 
             text-align: center; 
             border: 1px solid var(--border); 
-            transition: transform 0.2s;
         }
-        .metric-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-
-        .metric-label { 
-            font-size: 0.65rem; 
-            color: #888; 
-            margin-bottom: 8px; 
-            text-transform: uppercase; 
-            font-weight: 700; 
-            letter-spacing: 0.5px;
-        }
-        
-        .metric-val { 
-            font-size: 1.4rem; 
-            font-weight: 800; 
-            color: white; 
-        }
-
-        .timeline-section h4 { 
-            margin: 0 0 16px 0; 
-            font-size: 0.9rem; 
-            text-transform: uppercase; 
-            color: var(--text-dim); 
-            letter-spacing: 1px;
-        }
+        .metric-label { font-size: 0.6rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; }
+        .metric-val { font-size: 1.2rem; font-weight: 800; color: white; }
 
         .timeline-event { 
             display: flex; 
-            gap: 16px; 
-            margin-bottom: 12px; 
+            gap: 12px; 
+            margin-bottom: 8px; 
             cursor: pointer; 
             padding: 10px; 
             border-radius: 8px; 
             transition: 0.2s; 
-            border: 1px solid transparent; 
             background: rgba(255,255,255,0.02);
+            align-items: center;
         }
-        
-        .timeline-event:hover { 
-            background: rgba(255,255,255,0.05); 
-            border-color: var(--border); 
-        }
-        
+        .timeline-event:hover { background: rgba(255,255,255,0.05); }
         .t-time { 
             font-family: var(--font-mono); 
-            font-size: 0.8rem; 
+            font-size: 0.75rem; 
             color: var(--accent); 
             font-weight: 700;
             background: rgba(56,189,248,0.1); 
             padding: 4px 8px; 
             border-radius: 4px; 
-            height: fit-content;
-        }
-
-        .coaching-fix {
-            margin-top: 24px;
-            padding: 16px;
-            background: rgba(56,189,248,0.05);
-            border: 1px solid var(--accent-dim);
-            border-radius: 10px;
-            position: relative;
-        }
-        .coaching-fix::before {
-            content: 'COACHING PRESCRIPTION';
-            position: absolute;
-            top: -10px;
-            left: 16px;
-            background: #141414;
-            padding: 0 8px;
-            font-size: 0.7rem;
-            color: var(--accent);
-            font-weight: 800;
         }
 
         /* ==========================================================================
-           7. INPUT BAR & TOOLS
+           7. INPUT & TOOLS
            ========================================================================== */
         .input-bar { 
-            padding: 24px 32px; 
+            padding: 20px 24px; 
             background: rgba(5,5,5,0.95); 
             border-top: 1px solid var(--border); 
             display: flex; 
-            gap: 16px; 
+            gap: 12px; 
             align-items: center; 
             z-index: 50; 
             backdrop-filter: blur(10px);
-        }
-        
-        .tool-group { 
-            display: flex; 
-            gap: 8px; 
-            padding-right: 20px; 
-            border-right: 1px solid var(--border); 
         }
         
         .input-box { 
@@ -756,74 +633,31 @@
             background: #141414; 
             border: 1px solid var(--border); 
             color: white; 
-            padding: 14px 20px; 
-            border-radius: 12px; 
+            padding: 12px 16px; 
+            border-radius: 10px; 
             outline: none; 
             font-family: 'Inter'; 
             font-size: 0.95rem; 
-            transition: 0.2s;
         }
+        .input-box:focus { border-color: var(--accent); }
         
-        .input-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-        
-        .pos-select { 
-            background: #141414; 
-            color: white; 
-            border: 1px solid var(--border); 
-            padding: 0 20px; 
-            height: 48px; 
-            border-radius: 12px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            outline: none; 
-        }
-        
-        .btn { 
-            padding: 0 28px; 
-            height: 48px; 
-            background: white; 
-            color: black; 
-            border: none; 
-            border-radius: 12px; 
-            font-weight: 800; 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-        
-        .btn:hover { 
-            background: #e4e4e7; 
-            transform: translateY(-1px); 
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
-        }
-
         .tool-btn { 
             background: #222; 
             border: 1px solid var(--border); 
             color: #ccc; 
             font-size: 0.85rem; 
-            padding: 10px 18px; 
+            padding: 10px 16px; 
             border-radius: 8px; 
             cursor: pointer; 
             transition: 0.2s; 
             font-weight: 600; 
             display: flex; 
             align-items: center; 
-            gap: 8px;
+            gap: 6px;
+            white-space: nowrap;
         }
-        
-        .tool-btn:hover { 
-            color: white; 
-            border-color: var(--border-light); 
-            background: #333; 
-        }
-        
-        .tool-btn.active { 
-            color: black; 
-            background: var(--accent); 
-            border-color: var(--accent); 
-        }
+        .tool-btn.active { color: black; background: var(--accent); border-color: var(--accent); }
 
-        /* Clip Cards in Library */
         .clip-card { 
             padding: 12px; 
             margin: 0 12px 12px; 
@@ -836,37 +670,29 @@
             align-items: center; 
             transition: 0.2s; 
         }
-        
-        .clip-card:hover { 
-            border-color: var(--border-hover); 
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
-        }
+        .clip-card:hover { border-color: var(--border-hover); background: #1a1a1a; }
         
         .clip-thumb-mini { 
-            width: 70px; 
-            height: 45px; 
+            width: 60px; 
+            height: 40px; 
             background: #000; 
             border-radius: 6px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             color: #333; 
-            font-size: 0.9rem; 
+            font-size: 0.8rem; 
             border: 1px solid #333;
         }
-        
-        .clip-info-title { font-size: 0.85rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
-        .clip-info-meta { font-size: 0.7rem; color: #666; font-family: var(--font-mono); }
 
         /* ==========================================================================
-           8. MODALS (Strategy, Roster, etc)
+           8. MODALS & UTILS
            ========================================================================== */
         .modal { 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,0.8); 
-            backdrop-filter: blur(8px); 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(5px); 
             z-index: 2000; 
             display: none; 
             justify-content: center; 
@@ -878,85 +704,43 @@
             background: #111; 
             border: 1px solid var(--border); 
             border-radius: 16px; 
-            overflow: hidden; 
             width: 90vw; 
-            max-width: 850px; 
-            padding: 40px; 
-            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
+            max-width: 800px; 
+            padding: 32px; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
-        .strat-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-        .strat-tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text-dark); font-weight: 700; transition:0.2s; }
-        .strat-tab.active { background: #222; color: white; border: 1px solid var(--border); }
-        
-        .strat-area { 
-            width: 100%; 
-            background: #080808; 
-            border: 1px solid var(--border); 
-            color: #e4e4e7; 
-            padding: 20px; 
-            border-radius: 12px; 
-            min-height: 250px; 
-            font-family: var(--font-mono); 
-            font-size: 0.9rem; 
-            margin-bottom: 20px;
-        }
-        
-        .upload-zone { 
-            border: 2px dashed var(--border); 
-            border-radius: 12px; 
-            padding: 60px; 
-            text-align: center; 
-            color: var(--text-dark); 
-            cursor: pointer; 
-            background: rgba(255,255,255,0.01);
-            transition: 0.2s;
-        }
-        .upload-zone:hover { border-color: var(--accent); background: rgba(56,189,248,0.02); }
-
-        /* Coach Chat Float */
-        #coach-chat-modal { 
-            position: fixed; 
-            bottom: 100px; 
-            right: 40px; 
-            width: 380px; 
-            height: 500px; 
-            background: #111; 
-            border: 1px solid var(--border); 
-            border-radius: 16px; 
-            display: none; 
-            flex-direction: column; 
-            z-index: 6000; /* Higher than video overlay */
-            box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
-        }
-
-        /* Animations */
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Mobile Responsive */
-        @media (max-width: 1000px) { 
-            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); }
-            #popup-video-container { flex: 0 0 300px; }
-            .scout-body { grid-template-columns: 1fr; }
-            .onboarding-grid { grid-template-columns: 1fr; }
-            .input-bar { flex-wrap: wrap; padding: 10px; }
+        /* Mobile Responsive Overrides */
+        @media (max-width: 900px) { 
+            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); box-shadow: 0 0 50px black; }
+            #popup-video-container { flex: 0 0 40dvh; /* Use less space for video on phone portrait */ }
+            #popup-report-container { flex: 1; }
+            .scout-body { grid-template-columns: 1fr; gap: 20px; }
+            .input-bar { flex-wrap: wrap; padding: 12px; }
             .tool-group { border-right: none; width: 100%; justify-content: space-between; margin-bottom: 8px; }
-            #file-btn, #pos-select { display: none; }
+            .onboarding-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 3rem; }
+            .overlay-header { padding: 0 12px; }
+            .tele-tools { padding-left: 8px; margin-left: 4px; }
+            .tool-btn span { display: none; } /* Hide text, keep icon on small screens */
+            .tool-btn { padding: 10px; }
         }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <div class="logo">
+        <div class="logo" onclick="window.location.reload()">
             <div class="logo-icon"></div> 
             Vantage<span>Vision</span>
         </div>
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('about')">Vision</div>
-            <div class="nav-tab" onclick="switchTab('self')">Self Analysis</div>
-            <div class="nav-tab" onclick="switchTab('team')">Team Analysis</div>
+            <div class="nav-tab active" data-tab="about">Vision</div>
+            <div class="nav-tab" data-tab="self">Self Analysis</div>
+            <div class="nav-tab" data-tab="team">Team Analysis</div>
         </div>
         <div id="user-button"></div>
     </div>
@@ -965,49 +749,34 @@
         
         <div id="landing-view" class="view active-view">
             <div class="hero-wrapper">
-                <div class="hero-badge">Pro Suite v2.5.1</div>
+                <div class="hero-badge">Pro Suite v3.0 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Football is a mental game. To win, you need more than just physical talent—you need intelligence and preparation. Vantage Vision uses AI to break down film instantly, giving you the edge.</p>
+                <p class="hero-subtitle">Professional-grade film analysis. Now with local persistence, touch-optimized telestration, and offline playback support.</p>
                 
                 <div class="onboarding-grid">
-                    <div class="step-card">
-                        <div class="step-num">01</div>
-                        <div class="step-title">Upload Film</div>
-                        <div class="step-desc">Securely drag & drop your game footage (MP4). Our system processes movement tracking and identifies formations instantly.</div>
+                    <div class="step-card" style="background:rgba(255,255,255,0.03); padding:24px; border-radius:12px; border:1px solid var(--border);">
+                        <div style="color:var(--accent); font-weight:900; font-size:1.2rem; margin-bottom:8px;">01. Upload</div>
+                        <div style="color:#aaa; font-size:0.9rem;">Upload raw MP4 footage directly from your device. No server uploads needed.</div>
                     </div>
-                    <div class="step-card">
-                        <div class="step-num">02</div>
-                        <div class="step-title">Set Strategy</div>
-                        <div class="step-desc">Don't settle for generic advice. Upload your specific Playbook or Rule Sets so the AI grades "Execution" against YOUR scheme.</div>
+                    <div class="step-card" style="background:rgba(255,255,255,0.03); padding:24px; border-radius:12px; border:1px solid var(--border);">
+                        <div style="color:var(--accent); font-weight:900; font-size:1.2rem; margin-bottom:8px;">02. Analyze</div>
+                        <div style="color:#aaa; font-size:0.9rem;">AI breaks down formation, execution, and timing errors instantly.</div>
                     </div>
-                    <div class="step-card">
-                        <div class="step-num">03</div>
-                        <div class="step-title">Review & Fix</div>
-                        <div class="step-desc">Enter the "War Room." Watch film with synchronized coaching notes, temporal drawings, and download instant scout cards.</div>
+                    <div class="step-card" style="background:rgba(255,255,255,0.03); padding:24px; border-radius:12px; border:1px solid var(--border);">
+                        <div style="color:var(--accent); font-weight:900; font-size:1.2rem; margin-bottom:8px;">03. Fix</div>
+                        <div style="color:#aaa; font-size:0.9rem;">Use Apple Pencil or touch to draw over film in real-time.</div>
                     </div>
                 </div>
 
-                <button class="cta-btn" onclick="switchTab('self')">Enter the Command Center</button>
-                <div class="legal-footer" style="margin-top:60px; font-size:0.8rem; color:#555;">
-                    <a href="#" style="color:#777; text-decoration:none; margin:0 12px;">Privacy Policy</a> • 
-                    <a href="#" style="color:#777; text-decoration:none; margin:0 12px;">Terms of Service</a>
-                </div>
+                <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
             </div>
         </div>
 
         <div id="war-room-view" class="view">
-            <div id="progress-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:3px; z-index:9999;">
-                <div id="progress-bar" style="height:100%; background:var(--accent); width:0; transition:width 0.5s;"></div>
-            </div>
-            
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn" onclick="newSession()">+</button></div>
-                    <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;">
-                        <div class="session-item active">
-                            <span>Demo Session</span>
-                        </div>
-                    </div>
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
+                    <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
                 <div class="main">
@@ -1015,41 +784,29 @@
                         <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
                             <div style="font-size:3rem; margin-bottom:16px;">🏈</div>
                             <h3>Ready to Analyze</h3>
-                            <p style="color:#666; max-width:300px; margin:0 auto;">Upload game film below or select a previous clip from the library on the right to start the Pop-Up Analysis.</p>
+                            <p style="color:#666; max-width:300px; margin:0 auto;">Select "Self" or "Team" analysis to begin.</p>
                         </div>
                     </div>
                     
                     <div class="input-bar">
                         <div class="tool-group">
-                            <button class="tool-btn" onclick="toggleSidebar()">◂ Lists</button>
-                            <button class="tool-btn" onclick="openStrategy()">📘 Strategy</button>
-                            <button class="tool-btn" onclick="openTendencies()">📊 Stats</button>
+                            <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Lists</button>
+                            <button class="tool-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy</button>
                         </div>
                         
-                        <select id="pos-select" class="pos-select">
-                            <option value="general">Focus Area...</option>
-                            <option value="qb">Quarterback</option>
-                            <option value="wr">Receiver</option>
-                            <option value="rb">Running Back</option>
-                            <option value="ol">O-Line</option>
-                            <option value="dl">D-Line</option>
-                            <option value="lb">Linebacker</option>
-                            <option value="db">Defensive Back</option>
-                        </select>
-                        <input type="file" id="file-input" hidden onchange="handleFileSelect(this)">
-                        <button id="file-btn" class="tool-btn" style="height:46px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload</button>
+                        <input type="file" id="file-input" hidden accept="video/*">
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
                         
-                        <input type="text" id="user-input" class="input-box" placeholder="Ask the coach or upload footage...">
-                        <button id="send-btn" class="btn">SEND</button>
+                        <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
+                        <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
                         
-                        <button class="tool-btn" onclick="toggleLibrary()" style="margin-left:8px;">Library ▸</button>
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
                     </div>
                 </div>
 
                 <div class="lib-panel" id="right-panel">
                     <div class="panel-header">Film Library</div>
-                    <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;">
-                        </div>
+                    <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;"></div>
                 </div>
             </div>
         </div>
@@ -1061,420 +818,563 @@
                 <div class="live-dot"></div>
                 Vantage Cinema Mode
             </div>
-            <button class="tool-btn" onclick="closePopup()">✕ Close View</button>
+            <button class="tool-btn" onclick="Telestrator.close()">✕ Close</button>
         </div>
 
         <div id="popup-video-container">
             <div id="telestrator-view">
-                <video id="main-video" crossorigin="anonymous"></video>
+                <video id="main-video" playsinline webkit-playsinline></video>
                 <canvas id="draw-canvas"></canvas>
             </div>
             
             <div class="video-controls">
-                <button class="v-btn" onclick="togglePlay()">⏯</button>
+                <button class="v-btn" id="play-pause-btn">⏯</button>
                 <div class="scrubber-container">
-                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.1">
-                    <div id="video-time" class="time-display" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa;">0:00</div>
+                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                    <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
                 </div>
                 <div class="tele-tools">
-                    <button id="draw-btn" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
-                    <button class="tool-btn" onclick="clearCanvas()">Clear</button>
+                    <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                    <button id="clear-btn" class="tool-btn">Clear</button>
                 </div>
             </div>
         </div>
 
         <div id="popup-report-container">
-            <div class="report-wrapper" id="report-injection-site">
-                </div>
+            <div class="report-wrapper" id="report-injection-site"></div>
         </div>
     </div>
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
-            <h3 style="margin-top:0; font-size:1.5rem; color:white;">Strategy Hub (Coordinator Tools)</h3>
-            <div class="strat-tabs">
-                <div class="strat-tab active" onclick="switchStrat('rules')">Position Rules</div>
-                <div class="strat-tab" onclick="switchStrat('playbook')">Upload Playbook</div>
-            </div>
-            <div id="strat-rules-view">
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <select id="rule-pos-select" class="pos-select" style="flex:1;">
-                        <option value="CB">Cornerback</option>
-                        <option value="S">Safety</option>
-                        <option value="LB">Linebacker</option>
-                        <option value="DL">Defensive Line</option>
-                    </select>
-                </div>
-                <textarea id="rules-input" class="strat-area" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep."></textarea>
-                <button onclick="saveRules()" class="btn" style="width:100%;">Save Rule Set</button>
-            </div>
-            <div id="strat-playbook-view" style="display:none;">
-                <div class="upload-zone" onclick="document.getElementById('pb-file').click()">
-                    <div style="font-size:3rem; margin-bottom:15px;">📂</div>
-                    <div style="font-weight:700; color:white;">Click to Upload PDF Diagram</div>
-                    <div id="pb-filename" style="color:var(--accent); margin-top:15px;"></div>
-                </div>
-                <input type="file" id="pb-file" hidden onchange="handlePlaybook(this)">
-                <button onclick="savePlaybook()" class="btn" style="width:100%; margin-top:20px;">Integrate Playbook</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="coach-chat-modal">
-        <div class="panel-header" style="background:#1a1a1a;">Coach's Corner <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer; opacity:0.5;">✕</span></div>
-        <div id="coach-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; background:#111;"></div>
-        <div style="padding:16px; border-top:1px solid var(--border); display:flex; gap:8px; background:#1a1a1a;">
-            <input id="coach-input" style="flex:1; background:#000; border:1px solid var(--border); padding:10px; border-radius:8px; color:white;" placeholder="Type here...">
-            <button onclick="sendCoachMessage()" class="btn" style="height:auto; padding:0 16px;">></button>
-        </div>
-    </div>
-
-    <div id="tendency-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content">
-            <h3 style="margin-top:0; color:white;">Performance Analytics</h3>
-            <div id="tendency-content" style="margin-top:20px;"></div>
+            <h3 style="margin-top:0; color:white;">Strategy Hub</h3>
+            <textarea id="rules-input" style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;" placeholder="Enter defensive rules (e.g. 'In Cover 2, corners stay flat')..."></textarea>
+            <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;" onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
         </div>
     </div>
 
     <div id="auth-modal" class="modal" style="display: flex; z-index:9999;"><div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div></div>
 
     <script>
-        let currentSession = null, currentClip = null, currentType = 'self';
-        let sessionClips = [];
-        
-        // TELESTRATOR STATE
-        let isDrawing = false, scratchCtx = null;
-        let temporalDrawings = []; 
-        let currentPath = [];
-        let animationFrameId;
-        
-        // STRATEGY STATE
-        let teamRules = {}, activePlaybook = null;
+        /**
+         * 1. STORAGE ENGINE (Fixes Persistence)
+         * Wraps LocalStorage to save sessions, clips, and messages.
+         */
+        const Store = {
+            get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+            
+            // Initialization Logic
+            init: () => {
+                if (!Store.get('sessions')) Store.set('sessions', [
+                    { id: 'sess_demo', title: 'Demo Session', date: Date.now(), type: 'self' }
+                ]);
+                if (!Store.get('clips')) Store.set('clips', []); // We will mock fill this later
+                if (!Store.get('messages')) Store.set('messages', {});
+            },
 
-        // INITIALIZATION
-        function initApp() {
-            if (window.Clerk) {
-                Clerk.load().then(() => {
-                    if (Clerk.user) {
-                        document.getElementById('auth-modal').style.display = 'none';
-                        Clerk.mountUserButton(document.getElementById('user-button'));
-                        document.getElementById('send-btn').addEventListener('click', sendMessage);
-                        // Mock Initial Data for UI
-                        mockLibraryLoad();
-                    } else { Clerk.mountSignIn(document.getElementById('sign-in')); }
-                });
-            } else { setTimeout(initApp, 500); }
-        }
-        window.onload = initApp;
+            addClip: (clip) => {
+                const clips = Store.get('clips') || [];
+                clips.unshift(clip);
+                Store.set('clips', clips);
+                return clips;
+            },
+            
+            getClips: () => Store.get('clips') || []
+        };
 
-        /* --- NAVIGATION --- */
-        function toggleSidebar() { document.getElementById('left-panel').classList.toggle('collapsed'); }
-        function toggleLibrary() { document.getElementById('right-panel').classList.toggle('collapsed'); }
-        
-        function switchTab(tabName) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.view').forEach(v => { v.classList.remove('active-view'); v.style.opacity=0; });
-            
-            if(tabName === 'about') {
-                document.querySelector('.nav-tab:nth-child(1)').classList.add('active');
-                const v = document.getElementById('landing-view'); v.classList.add('active-view');
-                setTimeout(()=>v.style.opacity=1, 50);
-            } else {
-                currentType = tabName; 
-                const index = tabName === 'self' ? 2 : 3;
-                document.querySelector(`.nav-tab:nth-child(${index})`).classList.add('active');
-                const v = document.getElementById('war-room-view'); v.classList.add('active-view');
-                setTimeout(()=>v.style.opacity=1, 50);
-                document.getElementById('pos-select').style.display = tabName === 'team' ? 'none' : 'block';
-            }
-        }
-
-        /* --- MOCK DATA FOR DEMO --- */
-        function mockLibraryLoad() {
-            const grid = document.getElementById('lib-grid');
-            const mockClips = [
-                { id: 'c1', title: 'Q1 12:04 - Vertical Route', form: 'Trips Right', vid: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
-                { id: 'c2', title: 'Q2 08:30 - Screen Pass', form: 'Doubles Left', vid: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' },
-                { id: 'c3', title: 'Q3 02:15 - Zone Read', form: 'Empty Set', vid: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }
-            ];
-            sessionClips = mockClips;
-            grid.innerHTML = mockClips.map(c => `
-                <div class="clip-card" onclick="playClip('${c.id}')">
-                    <div class="clip-thumb-mini">▶</div>
-                    <div style="overflow:hidden;">
-                        <div class="clip-info-title">${c.title}</div>
-                        <div class="clip-info-meta">${c.form}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        /* --- THE POP-UP LOGIC (KEY CHANGE) --- */
-        
-        async function playClip(id) {
-            const clip = sessionClips.find(c => c.id === id);
-            if (!clip) return;
-            currentClip = clip;
-            
-            // 1. SHOW THE OVERLAY
-            const overlay = document.getElementById('analysis-overlay');
-            overlay.style.display = 'flex';
-            
-            // 2. SETUP VIDEO
-            const video = document.getElementById('main-video');
-            const canvas = document.getElementById('draw-canvas');
-            const scrubber = document.getElementById('video-scrubber');
-            
-            video.src = clip.vid;
-            video.play();
-            
-            // 3. GENERATE & INJECT SCOUT CARD (MOCKED FOR DEMO)
-            const reportContainer = document.getElementById('report-injection-site');
-            reportContainer.innerHTML = generateMockReport(clip);
-
-            // 4. RESET TELESTRATOR
-            temporalDrawings = []; 
-            clearCanvas();
-            isDrawing = false;
-            document.getElementById('draw-btn').classList.remove('active');
-            
-            // 5. SETUP LISTENERS
-            video.onloadedmetadata = () => {
-                canvas.width = video.clientWidth || 800;
-                canvas.height = video.clientHeight || 450;
-                scratchCtx = canvas.getContext('2d');
-                scratchCtx.lineCap = 'round';
-                scratchCtx.lineJoin = 'round';
-                scrubber.max = video.duration;
-                if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                playbackLoop(); 
-            };
-            
-            video.ontimeupdate = () => {
-                scrubber.value = video.currentTime;
-                const m = Math.floor(video.currentTime/60);
-                const s = Math.floor(video.currentTime%60).toString().padStart(2,'0');
-                document.getElementById('video-time').innerText = `${m}:${s}`;
-            };
-            
-            scrubber.oninput = () => { video.currentTime = scrubber.value; };
-
-            // Drawing Events
-            canvas.onmousedown = (e) => { 
-                if(isDrawing) { 
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    currentPath = [{x, y}];
-                    scratchCtx.beginPath();
-                    scratchCtx.moveTo(x, y);
-                    scratchCtx.strokeStyle = "#fbbf24"; 
-                    scratchCtx.lineWidth = 4;
-                } 
-            };
-            
-            canvas.onmousemove = (e) => { 
-                if(isDrawing && e.buttons === 1) { 
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    currentPath.push({x, y});
-                    scratchCtx.lineTo(x, y);
-                    scratchCtx.stroke();
-                } 
-            };
-
-            canvas.onmouseup = () => {
-                if(isDrawing && currentPath.length > 0) {
-                    temporalDrawings.push({
-                        path: currentPath,
-                        startTime: video.currentTime,
-                        duration: 3.0 
-                    });
-                    currentPath = [];
-                }
-            };
-        }
-
-        function closePopup() {
-            document.getElementById('analysis-overlay').style.display = 'none';
-            const v = document.getElementById('main-video');
-            v.pause();
-            v.src = "";
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-        }
-
-        // --- DRAWING LOOP ---
-        function playbackLoop() {
-            const video = document.getElementById('main-video');
-            const canvas = document.getElementById('draw-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            if(!isDrawing || video.paused === false) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const t = video.currentTime;
+        /**
+         * 2. TELESTRATOR ENGINE (Fixes Drawing, Touch, Resize, & Canvas Sync)
+         * Handles Pointer Events for Apple Pencil/Finger support.
+         */
+        class TelestratorEngine {
+            constructor() {
+                this.video = document.getElementById('main-video');
+                this.canvas = document.getElementById('draw-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.container = document.getElementById('telestrator-view');
                 
-                temporalDrawings.forEach(stroke => {
-                    if(t >= stroke.startTime && t <= (stroke.startTime + stroke.duration)) {
-                        const age = t - stroke.startTime;
-                        const opacity = 1 - (age / stroke.duration);
-                        
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                        ctx.lineWidth = 4;
-                        if(stroke.path.length > 0) {
-                            ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
-                            for(let i=1; i<stroke.path.length; i++) {
-                                ctx.lineTo(stroke.path[i].x, stroke.path[i].y);
-                            }
-                        }
-                        ctx.stroke();
-                    }
-                });
+                this.isDrawing = false;
+                this.mode = 'view'; // 'view' or 'draw'
+                this.strokes = []; // Stores strokes: { path: [{x,y,p}], time, duration }
+                this.currentPath = [];
+                
+                // Bindings
+                this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
+                this.bindEvents();
             }
-            animationFrameId = requestAnimationFrame(playbackLoop);
-        }
 
-        function toggleDrawMode() {
-            isDrawing = !isDrawing;
-            const btn = document.getElementById('draw-btn');
-            const canvas = document.getElementById('draw-canvas');
-            const video = document.getElementById('main-video');
-            
-            if(isDrawing) {
-                btn.classList.add('active');
-                canvas.style.pointerEvents = 'auto';
-                canvas.style.cursor = 'crosshair'; 
-                video.pause();
-            } else {
-                isDrawing = false;
-                btn.classList.remove('active');
-                canvas.style.pointerEvents = 'none';
-                canvas.style.cursor = 'default';
-                video.play();
+            init(videoUrl) {
+                this.video.src = videoUrl;
+                this.strokes = [];
+                this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+                this.resizeObserver.observe(this.video);
+                
+                // Show Overlay
+                document.getElementById('analysis-overlay').style.display = 'flex';
+                this.video.play().catch(e => console.log("Autoplay blocked", e));
+                this.fitCanvas();
+                this.startLoop();
             }
-        }
-        
-        function clearCanvas() { temporalDrawings = []; }
-        function togglePlay() { const v = document.getElementById('main-video'); v.paused ? v.play() : v.pause(); }
 
-        /* --- GENERATE MOCK REPORT (Replica of AI response) --- */
-        function generateMockReport(clip) {
-            const id = Date.now();
-            return `
-            <div class="scout-card" id="card-${id}">
-                <div class="scout-header">
-                    <div class="play-meta">
-                        <div class="tag-row">
-                            <span class="formation-tag">${clip.form.toUpperCase()}</span>
-                            <span class="focus-tag">OFFENSE</span>
-                        </div>
-                        <div class="play-title">${clip.title}</div>
-                    </div>
+            close() {
+                document.getElementById('analysis-overlay').style.display = 'none';
+                this.video.pause();
+                this.video.src = "";
+                this.resizeObserver.disconnect();
+                cancelAnimationFrame(this.animId);
+            }
+
+            // Fixes Ghost Drawing: Fits canvas exactly to video rect
+            fitCanvas() {
+                const rect = this.video.getBoundingClientRect();
+                if (rect.width === 0) return; // Video not loaded yet
+                
+                // Set internal resolution match CSS size
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                
+                // Position canvas exactly over video
+                this.canvas.style.width = `${rect.width}px`;
+                this.canvas.style.height = `${rect.height}px`;
+                this.canvas.style.top = `${this.video.offsetTop}px`;
+                this.canvas.style.left = `${this.video.offsetLeft}px`;
+                
+                // Reset context props after resize
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+            }
+
+            bindEvents() {
+                // POINTER EVENTS (Unified Touch/Mouse/Pen)
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    if (this.mode !== 'draw') return;
+                    e.preventDefault(); // Stop scrolling
+                    this.isDrawing = true;
+                    this.video.pause(); // Auto-pause on draw
                     
-                    <div class="card-actions" style="display:flex; gap:12px; align-items:center;">
-                        <button class="tool-btn" onclick="openCoachChat()">💬 Ask Coach</button>
-                        <div class="exec-badge" style="border-color:var(--warning);">
-                            <div class="exec-label" style="color:var(--warning);">EXECUTION</div>
-                            <div class="exec-val" style="color:var(--warning);">B-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="scout-body">
-                    <div class="summary-text">
-                        <strong>Play Analysis:</strong> The quarterback successfully identifies the Cover 2 shell pre-snap. However, the drop-back footwork was slightly drifted left, causing the throw to lag behind the receiver on the seam route. The offensive line held the pocket well (3.2s protection), but the release timing was late by approximately 0.4 seconds.
-                    </div>
-                    <div class="stats-col">
-                        <div class="grade-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">Football IQ</div>
-                                <div class="metric-val" style="color:var(--success)">A-</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Technique</div>
-                                <div class="metric-val" style="color:var(--danger)">C+</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Effort</div>
-                                <div class="metric-val">100</div>
-                            </div>
-                        </div>
-                        <div class="timeline-section">
-                            <h4>Timeline Breakdown</h4>
-                            <div class="timeline-event" onclick="document.getElementById('main-video').currentTime=1.5">
-                                <div class="t-time">0:01.5</div>
-                                <div class="t-text">Snap / Dropback Start</div>
-                            </div>
-                            <div class="timeline-event" onclick="document.getElementById('main-video').currentTime=2.8">
-                                <div class="t-time">0:02.8</div>
-                                <div class="t-text">Pocket Drift (Error Detected)</div>
-                            </div>
-                            <div class="timeline-event" onclick="document.getElementById('main-video').currentTime=3.5">
-                                <div class="t-time">0:03.5</div>
-                                <div class="t-text">Release Point</div>
-                            </div>
-                        </div>
-                        <div class="coaching-fix">
-                            Drill Recommendation: <strong>"Lane Discipline Drop"</strong>. Focus on keeping the back foot perpendicular to the line of scrimmage to prevent drifting into the B-gap pressure.
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+                    const { x, y } = this.getCoords(e);
+                    this.currentPath = [{ x, y, p: e.pressure || 0.5 }];
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);
+                    this.ctx.strokeStyle = "#fbbf24";
+                });
+
+                this.canvas.addEventListener('pointermove', (e) => {
+                    if (!this.isDrawing) return;
+                    e.preventDefault();
+                    
+                    const { x, y } = this.getCoords(e);
+                    const pressure = e.pressure || 0.5; // Apple Pencil Pressure
+                    
+                    this.currentPath.push({ x, y, p: pressure });
+                    
+                    // Direct Draw
+                    this.ctx.lineWidth = 2 + (pressure * 4); // Line width varies by pressure
+                    this.ctx.lineTo(x, y);
+                    this.ctx.stroke();
+                });
+
+                this.canvas.addEventListener('pointerup', () => this.endStroke());
+                this.canvas.addEventListener('pointercancel', () => this.endStroke());
+
+                // UI Buttons
+                document.getElementById('draw-btn').onclick = () => this.toggleMode();
+                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); };
+                document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
+                
+                // Scrubber
+                const scrubber = document.getElementById('video-scrubber');
+                this.video.ontimeupdate = () => {
+                    if (!this.video.paused) {
+                        scrubber.value = this.video.currentTime;
+                        document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
+                    }
+                };
+                this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
+                scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
+            }
+
+            getCoords(e) {
+                // Get coords relative to the canvas, not screen
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+
+            endStroke() {
+                if (!this.isDrawing) return;
+                this.isDrawing = false;
+                if (this.currentPath.length > 0) {
+                    // Save stroke relative to video time
+                    this.strokes.push({
+                        path: [...this.currentPath],
+                        startTime: this.video.currentTime,
+                        duration: 3.0 // Strokes fade after 3 seconds
+                    });
+                }
+                this.currentPath = [];
+            }
+
+            toggleMode() {
+                this.mode = this.mode === 'view' ? 'draw' : 'view';
+                const btn = document.getElementById('draw-btn');
+                if (this.mode === 'draw') {
+                    btn.classList.add('active');
+                    this.canvas.style.pointerEvents = 'auto'; // Enable touch
+                    this.canvas.style.cursor = 'crosshair';
+                    this.video.pause();
+                } else {
+                    btn.classList.remove('active');
+                    this.canvas.style.pointerEvents = 'none'; // Click-through to video
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+
+            startLoop() {
+                const loop = () => {
+                    if (!this.isDrawing && !this.video.paused) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        const t = this.video.currentTime;
+
+                        // Render temporal strokes
+                        this.strokes.forEach(s => {
+                            if (t >= s.startTime && t <= (s.startTime + s.duration)) {
+                                const age = t - s.startTime;
+                                const opacity = 1 - (age / s.duration);
+                                
+                                this.ctx.beginPath();
+                                this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
+                                
+                                if(s.path.length > 0) {
+                                    this.ctx.moveTo(s.path[0].x, s.path[0].y);
+                                    for(let i=1; i<s.path.length; i++) {
+                                        this.ctx.lineWidth = 2 + (s.path[i].p * 4);
+                                        this.ctx.lineTo(s.path[i].x, s.path[i].y);
+                                    }
+                                }
+                                this.ctx.stroke();
+                            }
+                        });
+                    }
+                    this.animId = requestAnimationFrame(loop);
+                };
+                loop();
+            }
+
+            formatTime(s) {
+                const m = Math.floor(s/60);
+                const sec = Math.floor(s%60).toString().padStart(2,'0');
+                return `${m}:${sec}`;
+            }
         }
 
-        /* --- STANDARD CHAT & MODAL FUNCTIONS --- */
-        async function sendMessage() {
-            const txt = document.getElementById('user-input').value;
-            if(!txt) return;
-            // Mock Response for Chat UI
-            const feed = document.getElementById('chat-feed');
-            if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+        const Telestrator = new TelestratorEngine();
+
+        /**
+         * 3. COACH AI LOGIC (Simulated Backend)
+         * Generates context-aware responses and "Scout Cards".
+         */
+        const CoachAI = {
+            analyze: async (text, file) => {
+                return new Promise(resolve => {
+                    // Simulated Network Delay
+                    setTimeout(() => {
+                        // 1. If File Uploaded -> Generate New Clip & Scout Card
+                        if (file) {
+                            const newClip = {
+                                id: 'clip_' + Date.now(),
+                                title: text || "Uploaded Gameplay Analysis",
+                                date: Date.now(),
+                                // IMPORTANT: Create local BLOB URL for immediate playback
+                                videoUrl: URL.createObjectURL(file),
+                                formation: 'Custom Upload',
+                                grade: 'PENDING'
+                            };
+                            Store.addClip(newClip);
+                            resolve({ 
+                                type: 'card', 
+                                data: CoachAI.generateScoutCard(newClip),
+                                clip: newClip 
+                            });
+                        } 
+                        // 2. If Text Question -> Text Response
+                        else {
+                            resolve({
+                                type: 'text',
+                                text: CoachAI.getTextResponse(text)
+                            });
+                        }
+                    }, 1500);
+                });
+            },
+
+            generateScoutCard: (clip) => {
+                // Randomizes grades for demo purposes
+                const grades = ['A-', 'B+', 'B-', 'C+'];
+                const grade = grades[Math.floor(Math.random()*grades.length)];
+                
+                return {
+                    id: clip.id,
+                    title: clip.title,
+                    formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random()*4)],
+                    grade: grade,
+                    iq: ['A', 'A-', 'B+'][Math.floor(Math.random()*3)],
+                    tech: ['B', 'B-', 'C+'][Math.floor(Math.random()*3)],
+                    effort: '100',
+                    summary: "The quarterback demonstrates good pre-snap recognition but drifts in the pocket. The release timing was 0.4s late relative to the receiver's break. Footwork needs improved consistency on the drop.",
+                    fix: "Drill Suggestion: 'Ladder Drops' with focus on keeping eyes downfield while maintaining a wide base."
+                };
+            },
+
+            getTextResponse: (input) => {
+                const l = input.toLowerCase();
+                if (l.includes('cover 2')) return "Against Cover 2, look for the hole between the corner and safety (the 'Honey Hole') or attack the middle of the field between the linebackers.";
+                if (l.includes('blitz')) return "When identifying a blitz, your first read is the 'Hot' route replacing the blitzer. Shorten your drop and get the ball out.";
+                return "That's a good question. Based on standard principles, you should prioritize reading the safety alignment first. Would you like to upload a clip to see this in action?";
+            }
+        };
+
+        /**
+         * 4. UI MANAGER
+         * Handles DOM updates, Tab switching, and initial load.
+         */
+        const UI = {
+            currentTab: 'about',
             
-            feed.innerHTML += `<div class="msg user" style="align-self:flex-end; background:#333; padding:12px; border-radius:8px; color:white; max-width:80%; margin-bottom:12px;">${txt}</div>`;
-            document.getElementById('user-input').value = '';
-            
-            setTimeout(() => {
-                feed.innerHTML += `<div class="msg model" style="align-self:flex-start; color:#ccc; max-width:90%; margin-bottom:12px;">Analyzing your request against the uploaded footage... (This is a UI demo)</div>`;
+            init: () => {
+                Store.init();
+                UI.renderSessionList();
+                UI.renderLibrary();
+                
+                // Tab Listeners
+                document.querySelectorAll('.nav-tab').forEach(t => {
+                    t.onclick = () => UI.switchTab(t.dataset.tab);
+                });
+
+                // File Input
+                document.getElementById('file-input').onchange = (e) => {
+                    if (e.target.files[0]) {
+                        const btn = document.getElementById('file-btn');
+                        btn.style.background = 'var(--success)';
+                        btn.style.color = 'black';
+                        btn.innerHTML = '✅ Ready to Analyze';
+                    }
+                };
+
+                // Send Button
+                document.getElementById('send-btn').onclick = UI.handleSend;
+            },
+
+            switchTab: (tab) => {
+                UI.currentTab = tab;
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                
+                const aboutView = document.getElementById('landing-view');
+                const warView = document.getElementById('war-room-view');
+                
+                if (tab === 'about') {
+                    aboutView.classList.add('active-view');
+                    aboutView.style.opacity = 1;
+                    warView.classList.remove('active-view');
+                } else {
+                    aboutView.classList.remove('active-view');
+                    warView.classList.add('active-view');
+                    setTimeout(() => warView.style.opacity = 1, 50);
+                    // Update Empty State Text
+                    const emptyTitle = document.querySelector('#empty-state h3');
+                    if(emptyTitle) emptyTitle.innerText = `Ready for ${tab === 'self' ? 'Self' : 'Team'} Analysis`;
+                }
+            },
+
+            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+
+            renderSessionList: () => {
+                const list = document.getElementById('session-list');
+                const sessions = Store.get('sessions');
+                list.innerHTML = sessions.map(s => `
+                    <div class="session-item ${s.id === 'sess_demo' ? 'active' : ''}">
+                        <span>${s.title}</span>
+                    </div>
+                `).join('');
+            },
+
+            renderLibrary: () => {
+                const grid = document.getElementById('lib-grid');
+                const clips = [
+                    // Persistent Clips from Store
+                    ...Store.getClips(),
+                    // Hardcoded Demo Clips
+                    { id: 'demo1', title: 'Cover 3 Beater', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', formation: 'Trips Left' },
+                    { id: 'demo2', title: 'Screen Logic', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', formation: 'Doubles' }
+                ];
+                
+                grid.innerHTML = clips.map(c => `
+                    <div class="clip-card" onclick="UI.playClip('${c.id}')">
+                        <div class="clip-thumb-mini">▶</div>
+                        <div>
+                            <div style="font-weight:600; font-size:0.85rem; color:white;">${c.title}</div>
+                            <div style="font-size:0.7rem; color:#666;">${c.formation}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Store clips in memory for lookup
+                window.activeClips = clips; 
+            },
+
+            playClip: (id) => {
+                const clip = window.activeClips.find(c => c.id === id);
+                if (!clip) return;
+                
+                // 1. Generate Report
+                const report = CoachAI.generateScoutCard(clip);
+                document.getElementById('report-injection-site').innerHTML = UI.buildScoutCardHTML(report);
+                
+                // 2. Launch Telestrator
+                Telestrator.init(clip.videoUrl);
+            },
+
+            handleSend: async () => {
+                const input = document.getElementById('user-input');
+                const fileInput = document.getElementById('file-input');
+                const feed = document.getElementById('chat-feed');
+                
+                if (!input.value && !fileInput.files.length) return;
+                
+                // Remove empty state
+                const empty = document.getElementById('empty-state');
+                if(empty) empty.remove();
+
+                // User Msg
+                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
+                feed.innerHTML += `
+                    <div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">
+                        ${userText}
+                    </div>`;
+                
+                // Reset Inputs
+                input.value = '';
+                const file = fileInput.files[0];
+                fileInput.value = '';
+                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
+                document.getElementById('file-btn').style.background = '#222';
+                document.getElementById('file-btn').style.color = '#ccc';
+
+                // Loading Indicator
+                const loadId = 'load_'+Date.now();
+                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Coaching Engine is analyzing...</div>`;
                 feed.scrollTop = feed.scrollHeight;
-            }, 1000);
-        }
 
-        async function openCoachChat() {
-            document.getElementById('coach-chat-modal').style.display = 'flex';
-        }
+                // API Call
+                const res = await CoachAI.analyze(userText, file);
+                
+                // Remove Loading
+                document.getElementById(loadId).remove();
 
-        async function sendCoachMessage() {
-            const msg = document.getElementById('coach-input').value;
-            const feed = document.getElementById('coach-feed');
-            if(msg) {
-                feed.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-weight:600; max-width:80%;">${msg}</div>`;
-                document.getElementById('coach-input').value = '';
-                setTimeout(() => {
-                    feed.innerHTML += `<div style="align-self:flex-start; background:#222; color:#ddd; padding:8px 12px; border-radius:8px; max-width:90%;">Coach AI: Good observation. Watch the safety's hips on that play.</div>`;
-                    feed.scrollTop = feed.scrollHeight;
-                }, 800);
+                // Render Response
+                if (res.type === 'text') {
+                    feed.innerHTML += `
+                        <div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;">
+                            <strong style="color:var(--accent);">Coach AI:</strong> ${res.text}
+                        </div>`;
+                } else if (res.type === 'card') {
+                    // Update Library with new clip
+                    UI.renderLibrary();
+                    
+                    // Show "Click to View" in chat
+                    feed.innerHTML += `
+                        <div style="align-self:flex-start; width:100%; margin-bottom:20px;">
+                            <div style="margin-bottom:8px; color:var(--accent); font-weight:700;">Analysis Complete:</div>
+                            ${UI.buildScoutCardHTML(res.data, true)}
+                        </div>`;
+                }
+                feed.scrollTop = feed.scrollHeight;
+            },
+
+            buildScoutCardHTML: (data, isChatPreview = false) => {
+                // If chat preview, we wrap it in a container that opens the full view on click
+                const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
+                const cursor = isChatPreview ? 'cursor:pointer;' : '';
+                
+                return `
+                <div class="scout-card" style="${cursor}" ${onclick}>
+                    <div class="scout-header">
+                        <div>
+                            <div class="tag-row">
+                                <span class="formation-tag">${data.formation}</span>
+                            </div>
+                            <div class="play-title">${data.title}</div>
+                        </div>
+                        <div class="exec-badge">
+                            <div style="font-size:0.6rem; color:#888; font-weight:700;">GRADE</div>
+                            <div class="exec-val" style="color:${data.grade.includes('A') ? 'var(--success)' : 'var(--warning)'}">${data.grade}</div>
+                        </div>
+                    </div>
+                    <div class="scout-body">
+                        <div class="summary-text">${data.summary}</div>
+                        <div>
+                            <div class="grade-grid">
+                                <div class="metric-card"><div class="metric-label">Football IQ</div><div class="metric-val">${data.iq}</div></div>
+                                <div class="metric-card"><div class="metric-label">Technique</div><div class="metric-val">${data.tech}</div></div>
+                                <div class="metric-card"><div class="metric-label">Effort</div><div class="metric-val">${data.effort}%</div></div>
+                            </div>
+                            <div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:8px; border:1px solid rgba(56,189,248,0.2);">
+                                <div style="color:var(--accent); font-size:0.75rem; font-weight:800; margin-bottom:4px;">COACHING FIX</div>
+                                <div style="font-size:0.9rem; color:#eee;">${data.fix}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
             }
-        }
+        };
 
-        function openStrategy() { document.getElementById('strategy-modal').style.display = 'flex'; switchStrat('rules'); }
-        function switchStrat(type) {
-            document.querySelectorAll('.strat-tab').forEach(t => t.classList.remove('active'));
-            if(type === 'rules') {
-                document.querySelector('.strat-tab:nth-child(1)').classList.add('active');
-                document.getElementById('strat-rules-view').style.display = 'block';
-                document.getElementById('strat-playbook-view').style.display = 'none';
-            } else {
-                document.querySelector('.strat-tab:nth-child(2)').classList.add('active');
-                document.getElementById('strat-rules-view').style.display = 'none';
-                document.getElementById('strat-playbook-view').style.display = 'block';
+        const App = {
+            init: () => {
+                // Auth Check Loop (Retry up to 5 times)
+                let attempts = 0;
+                const checkAuth = setInterval(() => {
+                    attempts++;
+                    if (window.Clerk) {
+                        clearInterval(checkAuth);
+                        Clerk.load().then(() => {
+                            if (!Clerk.user) {
+                                Clerk.mountSignIn(document.getElementById('sign-in'));
+                            } else {
+                                document.getElementById('auth-modal').style.display = 'none';
+                                Clerk.mountUserButton(document.getElementById('user-button'));
+                                UI.init();
+                            }
+                        });
+                    } else if (attempts > 10) {
+                        // Fallback if Clerk fails (Offline Mode)
+                        clearInterval(checkAuth);
+                        document.getElementById('auth-modal').style.display = 'none';
+                        console.warn("Auth failed to load. Entering Offline Mode.");
+                        UI.init(); 
+                    }
+                }, 300);
+            },
+            
+            createNewSession: () => {
+                const title = prompt("Session Name:");
+                if(title) {
+                    const sessions = Store.get('sessions');
+                    sessions.unshift({ id: 'sess_'+Date.now(), title, date: Date.now() });
+                    Store.set('sessions', sessions);
+                    UI.renderSessionList();
+                }
             }
-        }
-        
-        function saveRules() { alert(`✅ Rules saved.`); document.getElementById('strategy-modal').style.display = 'none'; }
-        function savePlaybook() { alert("✅ Playbook Integrated."); document.getElementById('strategy-modal').style.display = 'none'; }
-        function openTendencies() { document.getElementById('tendency-modal').style.display = 'flex'; document.getElementById('tendency-content').innerHTML = "<p style='color:#ccc;'>Analytics Module Loaded.</p>"; }
-        function newSession() { alert("Creating new session..."); }
-        function handleFileSelect() { document.getElementById('file-btn').style.background = "var(--success)"; document.getElementById('file-btn').innerText = "Ready"; }
+        };
+
+        // Start Application
+        window.onload = App.init;
+
     </script>
 </body>
 </html>
