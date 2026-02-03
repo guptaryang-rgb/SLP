@@ -34,11 +34,11 @@ cloudinary.config({
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
 
-// *** STABLE MODELS ONLY ***
+// *** UPDATED: NOW USING GEMINI 2.5 PRO ***
 const MODEL_FALLBACK_LIST = [
-    "gemini-1.5-flash", 
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-latest"
+    "gemini-2.5-pro",   // Your requested model (Best reasoning)
+    "gemini-2.5-flash", // Faster fallback
+    "gemini-2.0-flash"  // Previous stable fallback
 ];
 
 async function generateWithFallback(promptParts) {
@@ -252,7 +252,7 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
 
 /* ---- MAIN ANALYSIS ROUTE (INTEGRATED STRATEGY) ---- */
 app.post("/api/chat", requireAuth, async (req, res) => {
-  // 1. Capture the new data (rules/playbook) from the frontend
+  // 1. Capture the new data from the frontend
   const { message, sessionId, fileData, mimeType, sport, position, rules, playbook } = req.body;
   let tempPath = null;
 
@@ -274,7 +274,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     // Handle Text-Only Chat (No Video)
     if (!fileData) {
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
-        // We inject the rules here too, so text chat is also "smart"
         const result = await generateWithFallback([{ text: `ROLE: NFL Coach.\nCONTEXT: ${rulesContext}\nUSER: ${message}` }]);
         const reply = result.response.text();
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
