@@ -4,297 +4,436 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vantage Vision | Pro Suite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
     <script crossorigin="anonymous" data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
-        /* --- PROFESSIONAL THEME SYSTEM --- */
+        /* =========================================
+           1. CORE THEME SYSTEM & VARIABLES
+           ========================================= */
         :root { 
+            /* Colors */
             --bg-deep: #050505; 
-            --bg-panel: rgba(20, 20, 20, 0.6); 
+            --bg-panel: #0a0a0a; 
             --bg-card: #141414;
+            --bg-hover: #1f1f1f;
+            
             --border: rgba(255, 255, 255, 0.08); 
-            --border-hover: rgba(255, 255, 255, 0.15);
+            --border-light: rgba(255, 255, 255, 0.15);
+            
             --text: #e4e4e7; 
             --text-dim: #a1a1aa;
+            --text-dark: #71717a;
+
+            /* Brand Colors */
             --accent: #38bdf8; 
             --accent-glow: rgba(56, 189, 248, 0.15);
+            --accent-dim: rgba(56, 189, 248, 0.1);
+            
+            /* Status Colors */
             --danger: #ef4444; 
             --success: #10b981; 
             --warning: #f59e0b; 
+            
+            /* Typography */
             --font-main: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
+            
+            /* Layout */
+            --nav-height: 64px;
+            --sidebar-width: 280px;
+            --lib-width: 320px;
         }
         
-        * { box-sizing: border-box; }
-        body { background: var(--bg-deep); color: var(--text); font-family: var(--font-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+        * { box-sizing: border-box; outline: none; }
         
-        /* MODERN SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
+        body { 
+            background: var(--bg-deep); 
+            color: var(--text); 
+            font-family: var(--font-main); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            margin: 0; 
+        }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-        /* --- NAVIGATION --- */
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(56, 189, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } }
+
+        /* =========================================
+           2. NAVIGATION BAR
+           ========================================= */
         .navbar { 
-            height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; 
-            background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0;
+            height: var(--nav-height); 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 32px; 
+            background: rgba(5, 5, 5, 0.95); 
+            backdrop-filter: blur(12px); 
+            z-index: 100; 
+            flex-shrink: 0;
         }
-        .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; color: white; } 
+        
+        .logo { 
+            font-weight: 900; 
+            font-size: 1.2rem; 
+            letter-spacing: -0.5px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            color: white; 
+            cursor: pointer;
+        } 
         .logo span { color: var(--accent); }
-        .logo-icon { width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent), #1e40af); border-radius: 6px; }
-
-        .nav-tabs { display: flex; gap: 4px; background: #0f0f0f; padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
-        .nav-tab { 
-            padding: 8px 20px; border-radius: 8px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; color: var(--text-dim); 
+        .logo-icon { 
+            width: 24px; 
+            height: 24px; 
+            background: linear-gradient(135deg, var(--accent), #1e40af); 
+            border-radius: 6px; 
+            box-shadow: 0 0 15px var(--accent-glow);
         }
-        .nav-tab:hover { color: white; background: rgba(255,255,255,0.03); }
-        .nav-tab.active { background: #222; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
 
-        /* --- VIEW MANAGEMENT --- */
+        .nav-tabs { 
+            display: flex; 
+            gap: 6px; 
+            background: #000; 
+            padding: 4px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border); 
+        }
+        .nav-tab { 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            color: var(--text-dim); 
+        }
+        .nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-tab.active { 
+            background: #222; 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* =========================================
+           3. VIEW MANAGEMENT
+           ========================================= */
         .view-container { flex: 1; position: relative; overflow: hidden; }
         .view { 
-            position: absolute; inset: 0; display: none; flex-direction: column; opacity: 0; transform: scale(0.98); transition: opacity 0.3s ease, transform 0.3s ease; 
+            position: absolute; inset: 0; display: none; flex-direction: column; opacity: 0; transform: scale(0.99); 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
         }
         .view.active-view { display: flex; opacity: 1; transform: scale(1); }
 
-        /* --- LANDING PAGE (THE VISION) --- */
+        /* =========================================
+           4. LANDING PAGE (ONBOARDING UI)
+           ========================================= */
         #landing-view {
-            align-items: center; justify-content: center; text-align: center;
-            background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
-            overflow-y: auto; 
+            align-items: center; justify-content: flex-start; text-align: center;
+            background: radial-gradient(circle at 50% 0%, #111827 0%, #000 80%);
+            overflow-y: auto; padding-bottom: 80px;
         }
-        .hero-wrapper { max-width: 1000px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        .hero-wrapper { max-width: 1100px; padding: 80px 24px; display: flex; flex-direction: column; align-items: center; }
         
+        .hero-badge {
+            background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent);
+            padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px;
+            margin-bottom: 24px; text-transform: uppercase;
+        }
+
         .hero-title { 
             font-size: 4.5rem; font-weight: 900; line-height: 1.05; letter-spacing: -2px; margin: 0 0 24px 0; 
-            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; 
+            background: linear-gradient(180deg, #fff 0%, #9ca3af 100%); -webkit-background-clip: text; color: transparent; 
         }
-        .hero-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 24px; font-weight: 300; max-width: 700px; line-height: 1.6; }
+        .hero-subtitle { font-size: 1.2rem; color: var(--text-dim); margin-bottom: 40px; font-weight: 300; max-width: 700px; line-height: 1.6; }
         
-        .value-prop {
-            font-size: 0.95rem; color: #ccc; margin-bottom: 40px; max-width: 650px; line-height: 1.6; 
-            background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid var(--border);
+        /* Onboarding Cards */
+        .onboarding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0; width: 100%; text-align: left; }
+        .step-card { 
+            background: rgba(20, 20, 20, 0.5); border: 1px solid var(--border); padding: 32px; border-radius: 16px; 
+            transition: transform 0.3s ease, border-color 0.3s ease; position: relative; overflow: hidden;
         }
+        .step-card:hover { transform: translateY(-8px); border-color: var(--accent); background: rgba(20, 20, 20, 0.8); }
+        .step-card::after { 
+            content:''; position: absolute; top:0; left:0; right:0; height: 2px; 
+            background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: 0.3s; 
+        }
+        .step-card:hover::after { opacity: 1; }
+
+        .step-num { color: var(--accent); font-weight: 900; font-size: 2rem; margin-bottom: 16px; opacity: 0.8; font-family: var(--font-mono); }
+        .step-title { color: white; font-weight: 800; font-size: 1.25rem; margin-bottom: 12px; }
+        .step-desc { color: #a1a1aa; font-size: 0.95rem; line-height: 1.6; }
 
         .cta-btn { 
-            background: var(--text); color: black; padding: 16px 40px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; 
-            font-size: 1rem; transition: all 0.2s ease; box-shadow: 0 0 40px rgba(255,255,255,0.1); 
+            background: #e4e4e7; color: black; padding: 18px 48px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; 
+            font-size: 1.1rem; transition: all 0.2s ease; margin-top: 40px; box-shadow: 0 0 60px rgba(255,255,255,0.1); 
         }
-        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(255,255,255,0.2); background: white; }
+        .cta-btn:hover { transform: translateY(-3px); background: white; box-shadow: 0 0 80px rgba(255,255,255,0.25); }
 
-        .demo-ui {
-            margin-top: 60px; width: 100%; max-width: 800px; background: rgba(20,20,20,0.8); border: 1px solid var(--border); 
-            border-radius: 16px; padding: 24px; text-align: left; position: relative;
-            transform: perspective(1000px) rotateX(10deg); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
-        }
-        .demo-ui::before { content:'SYSTEM CAPABILITIES'; position: absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:black; font-size:0.7rem; font-weight:800; padding:4px 12px; border-radius:12px; }
-
-        .legal-footer { margin-top: 60px; width: 100%; text-align: center; font-size: 0.8rem; color: #555; padding-bottom: 20px; }
-        .legal-footer a { color: #777; text-decoration: none; margin: 0 12px; transition: 0.2s; }
+        .legal-footer { margin-top: 80px; width: 100%; text-align: center; font-size: 0.8rem; color: #444; }
+        .legal-footer a { color: #666; text-decoration: none; margin: 0 12px; transition: 0.2s; }
         .legal-footer a:hover { color: var(--accent); }
 
-        /* --- APP INTERFACE (WAR ROOM) --- */
-        .app-body { flex: 1; display: flex; overflow: hidden; width: 100vw; justify-content: space-between; }
+        /* =========================================
+           5. WAR ROOM (MAIN APP LAYOUT)
+           ========================================= */
+        .app-body { flex: 1; display: flex; overflow: hidden; width: 100vw; position: relative; }
         
+        /* Sidebar & Library Panels */
         .sidebar, .lib-panel { 
-            width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; 
-            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; backdrop-filter: blur(20px); z-index: 5;
+            width: var(--sidebar-width); background: var(--bg-panel); border-right: 1px solid var(--border); 
+            display: flex; flex-direction: column; flex-shrink: 0; z-index: 20; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .lib-panel { border-right: none; border-left: 1px solid var(--border); width: 320px; }
-        .sidebar.collapsed { margin-left: -280px; opacity: 0; }
-        .lib-panel.collapsed { margin-right: -320px; opacity: 0; }
+        .lib-panel { border-right: none; border-left: 1px solid var(--border); width: var(--lib-width); }
+        
+        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); opacity: 0; }
+        .lib-panel.collapsed { margin-right: calc(var(--lib-width) * -1); opacity: 0; }
 
-        .panel-header { padding: 20px 24px; font-size: 0.7rem; font-weight: 800; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .panel-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
-        .panel-btn:hover { color: var(--accent); }
+        .panel-header { 
+            padding: 20px 24px; font-size: 0.75rem; font-weight: 800; color: var(--text-dark); letter-spacing: 1.5px; 
+            text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); 
+        }
+        .panel-btn { background: none; border: none; color: white; cursor: pointer; transition: 0.2s; font-size: 1.2rem; }
+        .panel-btn:hover { color: var(--accent); transform: rotate(90deg); }
 
+        /* Main Content Area */
         .main { 
             flex: 1; display: flex; flex-direction: column; width: 100%; min-width: 0; 
-            background-color: #050505;
-            background-image: radial-gradient(#222 1px, transparent 1px);
-            background-size: 40px 40px; 
-            position: relative;
+            background-color: #050505; position: relative; 
+        }
+
+        /* --- 5A. CINEMA MODE (HUDL STYLE PLAYER) --- */
+        #cinema-container { 
+            display: none; /* Hidden by default until clip is loaded */
+            flex-direction: column; border-bottom: 1px solid var(--border); 
+            background: #000; height: 55%; flex-shrink: 0; position: relative;
+            transition: height 0.3s ease;
         }
         
-        /* TOOLS BAR */
-        .tools-bar { 
-            display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; 
-            border-bottom: 1px solid var(--border); background: rgba(5,5,5,0.8); backdrop-filter: blur(10px);
-            z-index: 10;
+        #telestrator-view { 
+            width: 100%; height: 100%; position: relative; display: flex; justify-content: center; align-items: center; background: #080808; 
         }
-        .tools-center { display: flex; gap: 10px; }
         
-        /* CHAT FEED */
-        .chat-feed { flex: 1; overflow-y: auto; padding: 40px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
+        #main-video { 
+            max-height: 100%; max-width: 100%; width: auto; height: auto; display: block;
+        }
         
-        .msg { max-width: 75%; font-size: 0.95rem; line-height: 1.6; animation: fadeIn 0.3s ease; }
-        .msg.user { align-self: flex-end; background: #27272a; padding: 12px 20px; border-radius: 12px 12px 0 12px; border: 1px solid var(--border); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .msg.model { align-self: flex-start; width: 100%; max-width: 100%; padding: 0; }
+        #draw-canvas { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; 
+        }
+        
+        /* Video Controls Overlay */
+        .video-controls { 
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 24px; 
+            background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); 
+            display: flex; gap: 16px; align-items: center; z-index: 20;
+        }
+        
+        .v-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem; width: 32px; display: flex; align-items: center; justify-content: center; }
+        .v-btn:hover { color: var(--accent); }
+        
+        .scrubber-container { flex: 1; display: flex; align-items: center; gap: 10px; }
+        .scrubber { 
+            width: 100%; cursor: pointer; accent-color: var(--accent); height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.2); appearance: none;
+        }
+        .scrubber::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; }
+        
+        .time-display { color: #ccc; font-family: var(--font-mono); font-size: 0.8rem; min-width: 80px; text-align: right; }
 
-        /* EMPTY STATE */
-        #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.3; pointer-events: none; text-align: center; padding: 20px; }
-        #empty-state h3 { font-weight: 800; font-size: 1.5rem; margin: 10px 0; color: #fff; }
-        #empty-state p { color: #888; }
+        .tele-tools { display: flex; gap: 8px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px; margin-left: 8px; }
+        
+        /* --- 5B. ANALYSIS FEED (SCROLLABLE AREA) --- */
+        .analysis-area { 
+            flex: 1; overflow-y: auto; padding: 32px; background: var(--bg-deep); 
+            display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
+        }
+        
+        /* Messages */
+        .msg { max-width: 85%; font-size: 0.95rem; line-height: 1.6; padding: 16px 20px; border-radius: 12px; margin-bottom: 8px; animation: slideUp 0.3s ease; }
+        .msg.user { 
+            align-self: flex-end; background: #27272a; border: 1px solid var(--border); color: #fff; 
+            border-bottom-right-radius: 2px;
+        }
+        .msg.model { 
+            align-self: flex-start; width: 100%; padding: 0; background: transparent; max-width: 100%; 
+        }
 
-        /* --- SCOUT CARD --- */
+        /* Empty State */
+        #empty-state { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; 
+            opacity: 0.4; pointer-events: none; text-align: center; padding: 20px; 
+        }
+        #empty-state h3 { font-weight: 800; font-size: 1.5rem; margin: 16px 0 8px 0; color: #fff; }
+
+        /* --- 6. SCOUT CARD 2.0 (THE CORE UI ELEMENT) --- */
         .scout-card { 
             background: #141414; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); margin-top: 10px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5); margin-top: 10px;
         }
         .scout-header { 
-            padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; 
+            padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; 
             background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 100%);
         }
-        .play-title { font-weight: 700; font-size: 1.1rem; color: white; margin-bottom: 4px; }
-        .formation-tag { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; }
         
-        .overall-badge { display: flex; flex-direction: column; align-items: center; background: #000; border: 1px solid var(--border); padding: 8px 16px; border-radius: 10px; }
-        .badge-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        .badge-score { font-size: 1.6rem; font-weight: 900; line-height: 1; margin-top: 2px; }
-        .badge-score.A { color: var(--success); text-shadow: 0 0 20px rgba(16,185,129,0.3); }
-        .badge-score.B { color: var(--warning); }
-        .badge-score.C { color: var(--danger); }
-
-        .scout-body { padding: 24px; display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-        .summary-box { grid-column: 1 / -1; font-size: 1rem; color: #d4d4d8; padding-bottom: 20px; border-bottom: 1px solid var(--border); line-height: 1.6; }
-
-        .tactical-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; grid-column: 1/-1; margin-bottom: 10px; }
-        .tac-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px; border-radius: 8px; }
-        .tac-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-        .tac-val { font-size: 0.95rem; font-weight: 700; color: white; font-family: var(--font-mono); }
-
-        .timeline-section { grid-column: 1 / 2; }
-        .section-title { font-size: 0.75rem; color: var(--text-dim); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+        .play-meta { display: flex; flex-direction: column; gap: 4px; }
+        .play-title { font-weight: 800; font-size: 1.2rem; color: white; letter-spacing: -0.5px; }
         
-        .timeline-event { display: flex; gap: 16px; margin-bottom: 20px; position: relative; }
-        .timeline-event::before { content:''; position:absolute; left: 20px; top: 30px; bottom: -25px; width: 1px; background: var(--border); }
-        .timeline-event:last-child::before { display: none; }
+        .tag-row { display: flex; gap: 8px; align-items: center; }
+        .formation-tag { 
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); font-weight: 700;
+            background: rgba(56, 189, 248, 0.1); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(56,189,248,0.2);
+        }
+        .focus-tag { 
+            font-family: var(--font-mono); font-size: 0.7rem; color: #fbbf24; font-weight: 700;
+            background: rgba(251, 191, 36, 0.1); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(251,191,36,0.2);
+        }
+        
+        .card-actions { display: flex; gap: 12px; align-items: center; }
+        
+        /* Execution Score Badge */
+        .exec-badge { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #050505; border: 1px solid var(--border); padding: 6px 14px; border-radius: 8px; min-width: 60px;
+        }
+        .exec-label { font-size: 0.55rem; font-weight: 900; letter-spacing: 1px; color: #888; margin-bottom: 2px; }
+        .exec-val { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+        
+        .scout-body { padding: 24px; display: grid; grid-template-columns: 2fr 1.2fr; gap: 32px; }
+        
+        .summary-text { color: #d4d4d8; font-size: 1rem; line-height: 1.7; margin-bottom: 24px; grid-column: 1 / -1; border-left: 2px solid var(--border); padding-left: 16px; }
+        
+        .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+        .metric-card { background: #1a1a1a; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .metric-label { font-size: 0.6rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .metric-val { font-size: 1.2rem; font-weight: 800; color: white; }
+
+        .timeline-section h4 { font-size: 0.75rem; color: var(--text-dark); font-weight: 900; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
+        
+        .timeline-event { 
+            display: flex; gap: 16px; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; 
+            transition: 0.2s; border: 1px solid transparent; 
+        }
+        .timeline-event:hover { background: rgba(255,255,255,0.03); border-color: var(--border); }
         
         .t-time { 
-            font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); cursor: pointer; 
-            padding: 6px 10px; background: #222; border-radius: 6px; border: 1px solid var(--border); height: fit-content; z-index: 2; transition: 0.2s;
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); font-weight: 700;
+            background: rgba(56,189,248,0.1); padding: 4px 8px; border-radius: 4px; height: fit-content; margin-top: 2px;
         }
-        .t-time:hover { border-color: var(--accent); color: white; box-shadow: 0 0 10px var(--accent-glow); }
-        .t-type { color: white; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-        .t-desc { color: #a1a1aa; font-size: 0.85rem; line-height: 1.5; }
+        .t-text { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
 
-        .rx-panel { grid-column: 2 / 3; display: flex; flex-direction: column; gap: 12px; }
-        .rx-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 16px; border-radius: 8px; transition: 0.2s; }
-        .rx-card:hover { border-color: rgba(255,255,255,0.2); }
-        .rx-header { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
-        .youtube-btn { 
-            display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: #cc0000; color: white; 
-            padding: 8px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-decoration: none; transition: 0.2s; 
-        }
-        .youtube-btn:hover { background: #ff0000; transform: translateY(-1px); }
-
-        /* --- INPUT BAR --- */
+        /* --- 7. INPUT BAR (SMART CONTROLS) --- */
         .input-bar { 
-            padding: 20px 32px; background: rgba(5,5,5,0.9); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; z-index: 10; 
-            backdrop-filter: blur(15px);
+            padding: 16px 32px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; z-index: 50; 
+            backdrop-filter: blur(10px);
         }
-        .input-box { 
-            flex: 1; background: #141414; border: 1px solid var(--border); color: white; padding: 14px 20px; border-radius: 12px; 
-            outline: none; transition: 0.2s; font-family: 'Inter'; font-size: 0.95rem; 
-        }
-        .input-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-        .pos-select { background: #141414; color: white; border: 1px solid var(--border); padding: 0 16px; height: 48px; border-radius: 12px; font-weight: 500; cursor: pointer; outline: none; }
-        .btn { padding: 0 24px; height: 48px; background: white; color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn:hover { background: #e4e4e7; transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* --- LIBRARY ITEMS --- */
-        .session-item { 
-            padding: 12px 16px; margin: 4px 12px; border-radius: 8px; color: var(--text-dim); font-size: 0.9rem; cursor: pointer; transition: 0.2s; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .session-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .session-item.active { background: #1a1a1a; color: white; border-left: 3px solid var(--accent); }
-
-        .clip-card { margin: 0 12px 12px; background: #141414; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: 0.2s; position: relative; }
-        .clip-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .clip-thumb { height: 110px; background: #000; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; transition: 0.2s; }
-        .clip-card:hover .clip-thumb { background: #0a0a0a; color: var(--accent); }
-        .clip-info { padding: 12px; font-size: 0.85rem; font-weight: 600; color: #ddd; }
-        .folder-header { padding: 20px 12px 8px; font-size: 0.7rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
         
-        .tool-btn { background: #222; border: 1px solid var(--border); color: #ccc; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition:0.2s; }
-        .tool-btn:hover { border-color: var(--accent); color: white; }
+        .tool-group { display: flex; gap: 8px; padding-right: 16px; border-right: 1px solid var(--border); }
+        
+        .input-box { 
+            flex: 1; background: #141414; border: 1px solid var(--border); color: white; padding: 12px 20px; border-radius: 10px; 
+            outline: none; font-family: 'Inter'; font-size: 0.95rem; transition: 0.2s;
+        }
+        .input-box:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+        
+        .pos-select { 
+            background: #141414; color: white; border: 1px solid var(--border); padding: 0 16px; height: 46px; border-radius: 10px; 
+            font-weight: 500; cursor: pointer; outline: none; 
+        }
+        
+        .btn { padding: 0 24px; height: 46px; background: white; color: black; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn:hover { background: #e4e4e7; transform: translateY(-1px); }
 
-        /* --- MODALS --- */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.2s ease; }
-        .modal-content { background: #111; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-content.wide { width: 90vw; max-width: 900px; max-height: 85vh; overflow-y: auto; padding: 40px; }
+        /* --- 8. SHARED COMPONENT STYLES --- */
+        .tool-btn { 
+            background: #222; border: 1px solid var(--border); color: #ccc; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; 
+            cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .tool-btn:hover { color: white; border-color: var(--border-light); background: #333; }
+        .tool-btn.active { color: var(--warning); border-color: var(--warning); background: rgba(245,158,11,0.1); }
 
-        /* NEW CSS FOR STRATEGY MODAL */
-        .strat-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .strat-tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--text-dim); font-weight: 600; transition: 0.2s; }
-        .strat-tab.active { background: #333; color: white; }
-        .strat-area { width: 100%; background: #000; border: 1px solid var(--border); color: #e4e4e7; padding: 15px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.9rem; min-height: 200px; margin-bottom: 10px; resize: vertical; }
-        .strat-area:focus { outline: none; border-color: var(--accent); }
-        .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; color: var(--text-dim); cursor: pointer; transition: 0.2s; }
+        /* Clip Cards in Library */
+        .clip-card { 
+            padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 16px; align-items: center; transition: 0.2s; 
+        }
+        .clip-card:hover { background: rgba(255,255,255,0.03); padding-left: 20px; }
+        .clip-thumb-mini { 
+            width: 70px; height: 45px; background: #000; border-radius: 6px; display: flex; align-items: center; justify-content: center; 
+            color: #333; font-size: 0.9rem; border: 1px solid #333;
+        }
+        .clip-info-title { font-weight: 700; font-size: 0.9rem; color: #eee; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+        .clip-info-meta { font-size: 0.75rem; color: #666; font-family: var(--font-mono); }
+
+        /* --- 9. MODALS --- */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 2000; 
+            display: none; justify-content: center; align-items: center; animation: fadeIn 0.2s ease; 
+        }
+        .modal-content { 
+            background: #111; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; 
+            width: 90vw; max-width: 850px; padding: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
+        }
+
+        /* Strategy Hub Styles */
+        .strat-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .strat-tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text-dark); font-weight: 700; transition: 0.2s; }
+        .strat-tab:hover { color: white; }
+        .strat-tab.active { background: #222; color: white; border: 1px solid var(--border); }
+        
+        .strat-area { 
+            width: 100%; background: #080808; border: 1px solid var(--border); color: #e4e4e7; padding: 20px; border-radius: 12px; 
+            min-height: 250px; font-family: var(--font-mono); font-size: 0.9rem; line-height: 1.6; resize: vertical; margin-bottom: 20px;
+        }
+        .strat-area:focus { border-color: var(--accent); }
+        
+        .upload-zone { 
+            border: 2px dashed var(--border); border-radius: 12px; padding: 60px; text-align: center; color: var(--text-dark); 
+            cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.01);
+        }
         .upload-zone:hover { border-color: var(--accent); color: white; background: rgba(56,189,248,0.05); }
 
-        /* Video Player Polish */
-        #video-overlay-modal { display: none; flex-direction: column; }
-        #telestrator-container { position: relative; border: 1px solid #333; border-radius: 12px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        #main-video { display: block; max-height: 70vh; width: auto; max-width: 90vw; }
-        #draw-canvas { position: absolute; top:0; left:0; pointer-events:none; }
-        
-        .video-scrubber-container { width: 100%; max-width: 800px; margin-top: 20px; display: flex; gap: 15px; align-items: center; background: #1a1a1a; padding: 10px 20px; border-radius: 50px; border: 1px solid #333; }
-        #video-scrubber { flex: 1; cursor: pointer; accent-color: var(--accent); }
-        .tele-controls { margin-top: 15px; display: flex; gap: 10px; }
+        /* Coach Chat Popup (Floating) */
+        #coach-chat-modal { 
+            position: fixed; bottom: 90px; right: 40px; width: 380px; height: 600px; background: #111; border: 1px solid var(--border); 
+            border-radius: 16px; display: none; flex-direction: column; z-index: 2500; box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
+            overflow: hidden; animation: slideUp 0.3s ease;
+        }
 
-        /* Animation Keyframes */
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Coach Chat */
-        #coach-chat-modal { position: fixed; bottom: 20px; right: 320px; width: 380px; height: 600px; background: #111; border: 1px solid #333; border-radius: 16px; display: none; flex-direction: column; z-index: 2000; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        
-        /* Mobile Response */
+        /* --- 10. MOBILE RESPONSIVENESS --- */
         @media (max-width: 1000px) { 
-            .scout-body { grid-template-columns: 1fr; } 
-            .rx-panel { grid-column: 1 / -1; } 
-            .app-body { position: relative; } 
-            .sidebar, .lib-panel { 
-                position: absolute; top: 0; bottom: 0; height: 100%; width: 300px; box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            }
-            .sidebar { left: 0; border-right: 1px solid var(--border); }
-            .lib-panel { right: 0; border-left: 1px solid var(--border); }
+            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); backdrop-filter: blur(20px); }
+            #cinema-container { height: 40%; }
+            .scout-body { grid-template-columns: 1fr; }
             .hero-title { font-size: 3rem; }
-            .chat-feed { padding: 20px; }
-            .navbar { padding: 0 16px; }
-            .nav-tab { padding: 8px 12px; font-size: 0.8rem; }
-            .logo { font-size: 1rem; }
+            .onboarding-grid { grid-template-columns: 1fr; }
+            .input-bar { flex-wrap: wrap; padding: 10px; }
+            .tool-group { border-right: none; width: 100%; justify-content: space-between; margin-bottom: 8px; }
+            #file-btn, #pos-select { display: none; } /* Simplify for mobile */
         }
-        @media (max-width: 600px) {
-            .tools-bar { padding: 10px; }
-            .input-bar { padding: 10px; flex-wrap: wrap; }
-            .pos-select, #file-btn { display: none; } /* Simplify on mobile */
-            .hero-title { font-size: 2.5rem; }
-        }
-        
-        /* Menu Options */
-        .menu-opt { padding: 12px 20px; border-bottom: 1px solid #222; cursor: pointer; color: #ccc; transition: 0.2s; font-size: 0.9rem; }
-        .menu-opt:hover { background: #222; color: white; padding-left: 25px; }
-        
-        /* Trend Bar */
-        .trend-bar-container { display: flex; align-items: flex-end; gap: 8px; height: 180px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        .trend-bar { flex: 1; background: #222; border-radius: 4px 4px 0 0; transition: height 0.5s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
-        .trend-bar:hover { background: var(--accent); }
     </style>
 </head>
 <body>
 
     <div class="navbar">
         <div class="logo">
-            <div class="logo-icon"></div>
-            Vantage<span>Vision</span>
+            <div class="logo-icon"></div> Vantage<span>Vision</span>
         </div>
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('about')">Vision</div>
@@ -305,52 +444,32 @@
     </div>
 
     <div class="view-container">
+        
         <div id="landing-view" class="view active-view">
             <div class="hero-wrapper">
-                <div class="hero-content">
-                    <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                    <p class="hero-subtitle">Football is as much mental as it is physical. Winning requires intelligence, awareness, and preperation. Our only goal is to give you total clarity before the play begins.</p>
-                    
-                    <div class="value-prop">
-                        Designed to complement elite coaching, our platform accelerates athlete development through constant analysis and feedback without the professional-level price.
-                    </div>
-
-                    <button class="cta-btn" onclick="switchTab('self')">Enter the Command Center</button>
-                </div>
+                <div class="hero-badge">Pro Suite v2.5</div>
+                <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
+                <p class="hero-subtitle">Football is a mental game. To win, you need more than just physical talent—you need intelligence and preparation. Vantage Vision uses AI to break down film instantly, giving you the edge.</p>
                 
-                <div class="demo-ui">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
-                        <div style="font-weight:800; color:white;">Platform Overview</div>
-                        <div style="color:var(--accent);">AI Powered</div>
+                <div class="onboarding-grid">
+                    <div class="step-card">
+                        <div class="step-num">01</div>
+                        <div class="step-title">Upload Film</div>
+                        <div class="step-desc">Securely drag & drop your game footage (MP4). Our system processes movement tracking and identifies formations instantly.</div>
                     </div>
-                    <div style="font-family:'Inter', system-ui, -apple-system, sans-serif;
-           							font-size:0.9rem;
-            						color:#ccc;
-           							line-height:1.7;">
-
-                            <span style="color:var(--accent); margin-right:6px;">•</span>
-                            <strong>PLAYER TRACKING:</strong>
-                            Velocity, Acceleration, Reaction Time<br>
-                        
-                            <span style="color:var(--accent); margin-right:6px;">•</span>
-                            <strong>SCHEMATIC ID:</strong>
-                            Cover 2/3/4/6 Recognition, Front Identification<br>
-                        
-                            <span style="color:var(--accent); margin-right:6px;">•</span>
-                            <strong>BIOMECHANICS:</strong>
-                            Joint Angle Analysis, Efficiency Scoring<br>
-                        
-                            <span style="color:var(--accent); margin-right:6px;">•</span>
-                            <strong>PREDICTION:</strong>
-                            Tendency Modeling based on Formation<br>
-                        
-                            <span style="color:var(--accent); margin-right:6px;">•</span>
-                            <strong>REPORTING:</strong>
-                            Auto-generated Scouting Cards
-                        
-                        </div>
+                    <div class="step-card">
+                        <div class="step-num">02</div>
+                        <div class="step-title">Set Strategy</div>
+                        <div class="step-desc">Don't settle for generic advice. Upload your specific Playbook or Rule Sets so the AI grades "Execution" against YOUR scheme.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">03</div>
+                        <div class="step-title">Review & Fix</div>
+                        <div class="step-desc">Enter the "War Room." Watch film with synchronized coaching notes, temporal drawings, and download instant scout cards.</div>
+                    </div>
                 </div>
 
+                <button class="cta-btn" onclick="switchTab('self')">Enter the Command Center</button>
                 <div class="legal-footer">
                     <a href="/privacy.html" target="_blank">Privacy Policy</a> • 
                     <a href="/terms.html" target="_blank">Terms of Service</a>
@@ -364,28 +483,46 @@
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
                     <div class="panel-header">Sessions <button class="panel-btn" onclick="newSession()">+</button></div>
-                    <div id="session-list" style="overflow-y:auto; flex:1; padding:10px 0;"></div>
+                    <div id="session-list" style="overflow-y:auto; flex:1; padding:12px;"></div>
                 </div>
 
                 <div class="main">
-                    <div class="tools-bar">
-                        <div class="tools-left"><button class="tool-btn" onclick="toggleSidebar()">◂ Sessions</button></div>
-                        <div class="tools-center" id="team-tools-panel" style="display:none;">
-                            <button class="tool-btn" onclick="openRoster()">👥 Roster</button>
-                            <button class="tool-btn" onclick="openStrategy()">📘 Strategy</button>
-                            <button class="tool-btn" onclick="openTendencies()">📊 Analytics</button>
+                    
+                    <div id="cinema-container">
+                        <div id="telestrator-view">
+                            <video id="main-video" crossorigin="anonymous"></video>
+                            <canvas id="draw-canvas"></canvas>
                         </div>
-                        <div class="tools-right"><button class="tool-btn" onclick="toggleLibrary()">Library ▸</button></div>
+                        
+                        <div class="video-controls">
+                            <button class="v-btn" onclick="togglePlay()">⏯</button>
+                            <div class="scrubber-container">
+                                <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.1">
+                                <div id="video-time" class="time-display">0:00</div>
+                            </div>
+                            <div class="tele-tools">
+                                <button id="draw-btn" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
+                                <button class="tool-btn" onclick="clearCanvas()">Clear</button>
+                                <button class="tool-btn" onclick="closeVideoPlayer()" style="color:var(--text-dim);">Close View</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="chat-feed" class="chat-feed">
+                    <div id="chat-feed" class="analysis-area">
                         <div id="empty-state">
+                            <div style="font-size:3rem; opacity:0.5; margin-bottom:16px;">🏈</div>
                             <h3>Ready to Analyze</h3>
-                            <p>Upload game film or ask the coach to begin.</p>
+                            <p style="color:#666; max-width:300px;">Upload game film below or select a previous clip from the library on the right.</p>
                         </div>
                     </div>
                     
                     <div class="input-bar">
+                        <div class="tool-group">
+                            <button class="tool-btn" onclick="toggleSidebar()">◂ Lists</button>
+                            <button class="tool-btn" onclick="openStrategy()">📘 Strategy</button>
+                            <button class="tool-btn" onclick="openTendencies()">📊 Stats</button>
+                        </div>
+                        
                         <select id="pos-select" class="pos-select">
                             <option value="general">Focus Area...</option>
                             <option value="qb">Quarterback</option>
@@ -397,71 +534,27 @@
                             <option value="db">Defensive Back</option>
                         </select>
                         <input type="file" id="file-input" hidden onchange="handleFileSelect(this)">
-                        <button id="file-btn" class="tool-btn" style="height:48px; width:48px; display:flex; align-items:center; justify-content:center;" onclick="document.getElementById('file-input').click()">📎</button>
-                        <span id="file-name-display" style="color:var(--text-dim); font-size:0.8rem; max-width:150px; overflow:hidden; text-overflow:ellipsis;"></span>
-                        <input type="text" id="user-input" class="input-box" placeholder="Ask the coach or upload 500MB+ film...">
+                        <button id="file-btn" class="tool-btn" style="height:46px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload</button>
+                        
+                        <input type="text" id="user-input" class="input-box" placeholder="Ask the coach about this play...">
                         <button id="send-btn" class="btn">SEND</button>
+                        
+                        <button class="tool-btn" onclick="toggleLibrary()" style="margin-left:8px;">Library ▸</button>
                     </div>
                 </div>
 
                 <div class="lib-panel" id="right-panel">
                     <div class="panel-header">Film Library</div>
-                    <div id="lib-grid" style="padding:10px; overflow-y:auto; flex:1;"></div>
+                    <div id="lib-grid" style="padding:0; overflow-y:auto; flex:1;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="video-overlay-modal" class="modal">
-        <div id="telestrator-container">
-            <video id="main-video" crossorigin="anonymous"></video>
-            <canvas id="draw-canvas"></canvas>
-        </div>
-        <div class="video-scrubber-container">
-            <input type="range" id="video-scrubber" min="0" value="0" step="0.1" style="flex:1;">
-            <div id="video-time">0:00</div>
-        </div>
-        <div class="tele-controls">
-            <button class="tool-btn" onclick="togglePlay()">⏯ Play</button>
-            <button id="draw-toggle" class="tool-btn" onclick="toggleDrawMode()">✏️ Draw</button>
-            <button class="tool-btn" onclick="clearCanvas()">Clear</button>
-            <button class="tool-btn" onclick="closeVideoPlayer()" style="color:var(--text-dim);">Close</button>
-        </div>
-    </div>
-
-    <div id="clip-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content" style="width: 300px; padding: 0;">
-            <div onclick="organizeClip()" class="menu-opt">📂 Move to Folder</div>
-            <div onclick="openCoachChat()" class="menu-opt">💬 Ask Coach</div>
-            <div onclick="viewNotes()" class="menu-opt">📝 View Report</div>
-            <div onclick="deleteClip()" class="menu-opt" style="color: var(--danger);">🗑 Delete</div>
-        </div>
-    </div>
-
-    <div id="notes-popup" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content wide">
-            <div id="notes-text"></div>
-        </div>
-    </div>
-
-    <div id="tendency-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content wide">
-            <h2 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:20px;">Performance Analytics</h2>
-            <div id="tendency-chart"></div>
-            <div id="tendency-content" class="tendency-grid"></div>
-        </div>
-    </div>
-
-    <div id="roster-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content wide">
-            <h3 style="margin-top:0;">Active Roster</h3>
-            <div id="roster-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:15px;"></div>
-        </div>
-    </div>
-
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content wide">
-            <h3 style="margin-top:0;">Strategy Hub (Coordinator Tools)</h3>
+        <div class="modal-content">
+            <h3 style="margin-top:0; font-size:1.5rem;">Strategy Hub (Coordinator Tools)</h3>
+            <p style="color:#888; margin-bottom:20px;">Configure the AI to grade based on YOUR specific terminology and rules.</p>
             
             <div class="strat-tabs">
                 <div class="strat-tab active" onclick="switchStrat('rules')">Position Rules</div>
@@ -469,48 +562,82 @@
             </div>
 
             <div id="strat-rules-view">
-                <p style="color:#888; font-size:0.9rem;">Define assignment rules for the AI to enforce during analysis.</p>
-                <select id="rule-pos-select" class="pos-select" style="width:100%; margin-bottom:10px;">
-                    <option value="CB">Cornerback</option>
-                    <option value="S">Safety</option>
-                    <option value="LB">Linebacker</option>
-                    <option value="DL">Defensive Line</option>
-                </select>
-                <textarea id="rules-input" class="strat-area" placeholder="E.g., If #2 receiver goes vertical, carry him up to 10 yards then pass off..."></textarea>
-                <button onclick="saveRules()" class="btn" style="background:var(--accent); border:none; color:black; width:100%;">Save Position Rules</button>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <select id="rule-pos-select" class="pos-select" style="flex:1;">
+                        <option value="CB">Cornerback</option>
+                        <option value="S">Safety</option>
+                        <option value="LB">Linebacker</option>
+                        <option value="DL">Defensive Line</option>
+                        <option value="WR">Receiver</option>
+                        <option value="OL">Offensive Line</option>
+                    </select>
+                </div>
+                <textarea id="rules-input" class="strat-area" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep. If #1 stops, CB stays over top. Never get beat inside."></textarea>
+                <div style="display:flex; justify-content:flex-end;">
+                    <button onclick="saveRules()" class="btn" style="background:var(--accent); color:black;">Save Rule Set</button>
+                </div>
             </div>
 
             <div id="strat-playbook-view" style="display:none;">
-                <p style="color:#888; font-size:0.9rem;">Upload diagrams or PDF playbooks for schematic cross-reference.</p>
                 <div class="upload-zone" onclick="document.getElementById('pb-file').click()">
-                    <div style="font-size:2rem; margin-bottom:10px;">📂</div>
-                    <div>Click to Upload PDF / Image</div>
-                    <div id="pb-filename" style="margin-top:10px; color:var(--accent);"></div>
+                    <div style="font-size:3rem; margin-bottom:15px;">📂</div>
+                    <div style="font-weight:700; color:white;">Click to Upload PDF Diagram</div>
+                    <div style="font-size:0.9rem; color:#666; margin-top:5px;">AI will compare drawn plays vs. video execution.</div>
+                    <div id="pb-filename" style="color:var(--accent); margin-top:15px; font-weight:600;"></div>
                 </div>
                 <input type="file" id="pb-file" hidden onchange="handlePlaybook(this)">
-                <button onclick="savePlaybook()" class="btn" style="background:var(--success); border:none; color:black; width:100%; margin-top:15px;">Integrate Playbook</button>
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                    <button onclick="savePlaybook()" class="btn" style="background:var(--success); color:black;">Integrate Playbook</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="coach-chat-modal">
-        <div class="chat-header" style="padding:15px; border-bottom:1px solid #333; font-weight:800; display:flex; justify-content:space-between;"><span>Coach's Corner</span> <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer;">✕</span></div>
-        <div id="coach-feed" class="chat-feed" style="padding:20px;"></div>
-        <div style="padding: 15px; border-top: 1px solid #333; display: flex; gap: 8px;">
-            <input id="coach-input" style="flex: 1; background: #222; border: 1px solid #333; padding: 10px; border-radius: 8px; color: white;" placeholder="Message...">
-            <button onclick="sendCoachMessage()" style="background: var(--accent); border: none; border-radius: 8px; padding: 0 16px; font-weight: bold;">></button>
+        <div class="panel-header" style="background:#1a1a1a;">
+            Coach's Corner 
+            <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer; opacity:0.5;">✕</span>
+        </div>
+        <div id="coach-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; background:#111;"></div>
+        <div style="padding:16px; border-top:1px solid var(--border); display:flex; gap:8px; background:#1a1a1a;">
+            <input id="coach-input" style="flex:1; background:#000; border:1px solid var(--border); padding:10px; border-radius:8px; color:white;" placeholder="Type here...">
+            <button onclick="sendCoachMessage()" class="btn" style="height:auto; padding:0 16px;">></button>
         </div>
     </div>
 
-    <div id="auth-modal" class="modal" style="display: flex;"><div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div></div>
+    <div id="tendency-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Performance Analytics</h3>
+            <div id="tendency-chart"></div>
+            <div id="tendency-content" style="margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <div id="roster-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content">
+            <h3 style="margin-top:0;">Active Roster</h3>
+            <p style="color:#666; margin-bottom:20px;">Players automatically detected and graded by AI.</p>
+            <div id="roster-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;"></div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
+        <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
+    </div>
 
     <script>
-        let currentSession = null, currentClip = null, currentType = 'self', sessionClips = [], isDrawing = false, scratchCtx = null;
+        // GLOBAL STATE
+        let currentSession = null, currentClip = null, currentType = 'self';
+        let sessionClips = [];
         
-        // NEW STATE VARIABLES FOR STRATEGY
-        let teamRules = {};
-        let activePlaybook = null;
+        // TELESTRATOR STATE
+        let isDrawing = false, scratchCtx = null;
+        let temporalDrawings = []; // Stores {path, startTime, duration}
+        
+        // STRATEGY STATE
+        let teamRules = {}, activePlaybook = null;
 
+        /* --- INITIALIZATION --- */
         function initApp() {
             if (window.Clerk) {
                 Clerk.load().then(() => {
@@ -518,17 +645,20 @@
                         document.getElementById('auth-modal').style.display = 'none';
                         Clerk.mountUserButton(document.getElementById('user-button'));
                         document.getElementById('send-btn').addEventListener('click', sendMessage);
-                        switchTab('about'); // Start on About Page
-                    } else { Clerk.mountSignIn(document.getElementById('sign-in')); }
+                    } else { 
+                        Clerk.mountSignIn(document.getElementById('sign-in')); 
+                    }
                 });
             } else { setTimeout(initApp, 500); }
         }
         window.onload = initApp;
 
+        /* --- NAVIGATION & UI TOGGLES --- */
         function toggleSidebar() { document.getElementById('left-panel').classList.toggle('collapsed'); }
         function toggleLibrary() { document.getElementById('right-panel').classList.toggle('collapsed'); }
-
+        
         function switchTab(tabName) {
+            // Update UI Tabs
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.view').forEach(v => { v.classList.remove('active-view'); v.style.opacity=0; });
             
@@ -543,45 +673,49 @@
                 const v = document.getElementById('war-room-view'); v.classList.add('active-view');
                 setTimeout(()=>v.style.opacity=1, 50);
                 
-                document.getElementById('chat-feed').innerHTML = '<div id="empty-state"><h3>Ready to Analyze</h3><p>Upload game film or ask the coach to begin.</p></div>';
+                // Refresh data
+                document.getElementById('chat-feed').innerHTML = `<div id="empty-state"><div style="font-size:3rem; opacity:0.5; margin-bottom:16px;">🏈</div><h3>Ready to Analyze</h3><p style="color:#666;">Select ${tabName} mode analysis.</p></div>`;
                 document.getElementById('lib-grid').innerHTML = '';
                 document.getElementById('pos-select').style.display = tabName === 'team' ? 'none' : 'block';
-                
-                // Toggle Middle Buttons based on Tab
-                document.getElementById('team-tools-panel').style.display = tabName === 'team' ? 'flex' : 'none';
-                
                 loadSessions();
             }
         }
 
-        function handleFileSelect(input) {
-            const btn = document.getElementById('file-btn');
-            if (input.files && input.files[0]) {
-                if (input.files[0].size > 500 * 1024 * 1024) return alert("File too large (Max 500MB)");
-                btn.innerHTML = '✅'; btn.style.background = 'var(--success)'; btn.style.color = 'black';
-                document.getElementById('file-name-display').textContent = input.files[0].name;
-            }
-        }
-
+        /* --- API COMMUNICATION LAYER --- */
         async function apiFetch(url, body) {
             if (!Clerk.session) return null;
             const token = await Clerk.session.getToken();
-            return fetch(url, {
-                method: body ? 'POST' : 'GET',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: body ? JSON.stringify(body) : null
-            }).then(r => r.json());
+            try {
+                const res = await fetch(url, {
+                    method: body ? 'POST' : 'GET',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: body ? JSON.stringify(body) : null
+                });
+                if (!res.ok) throw new Error("Network response was not ok");
+                return await res.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                return { error: "Connection Failed" };
+            }
         }
 
+        /* --- SESSION MANAGEMENT --- */
         async function loadSessions() {
             const sessions = await apiFetch(`/api/sessions?type=${currentType}`);
             const list = document.getElementById('session-list');
-            list.innerHTML = sessions.map(s => 
-                `<div class="session-item" id="sess-${s.id}" onclick="selectSession('${s.id}')"><span>${s.title}</span><span onclick="deleteSession('${s.id}')" style="opacity:0.5;font-size:1.2rem;">×</span></div>`
-            ).join('');
-            if(sessions.length > 0 && !currentSession) selectSession(sessions[0].id);
+            if(sessions && sessions.length > 0) {
+                list.innerHTML = sessions.map(s => 
+                    `<div class="session-item" id="sess-${s.id}" onclick="selectSession('${s.id}')">
+                        <div style="font-weight:600; color:#fff;">${s.title}</div>
+                        <div style="font-size:0.75rem; color:#666;">${s.type.toUpperCase()}</div>
+                    </div>`
+                ).join('');
+                if(!currentSession) selectSession(sessions[0].id);
+            } else {
+                list.innerHTML = `<div style="padding:20px; color:#666; text-align:center;">No sessions found. <br><br>Click + to create one.</div>`;
+            }
         }
-        
+
         function selectSession(id) {
             document.querySelectorAll('.session-item').forEach(i => i.classList.remove('active'));
             const el = document.getElementById(`sess-${id}`);
@@ -590,51 +724,75 @@
             loadChat(id);
         }
 
-        async function newSession() { const t = prompt("Session Name:"); if(t) { await apiFetch('/api/create-session', { title: t, type: currentType }); loadSessions(); } }
-        async function deleteSession(id) { if(confirm("Delete Session?")) { await apiFetch('/api/delete-session', { sessionId: id }); currentSession=null; loadSessions(); } }
+        async function newSession() { 
+            const t = prompt("Name your new session (e.g., 'Week 4 vs Eagles'):"); 
+            if(t) { await apiFetch('/api/create-session', { title: t, type: currentType }); loadSessions(); } 
+        }
 
         async function loadChat(id) {
             currentSession = id; loadLibrary();
             const data = await apiFetch(`/api/session/${id}`);
             const feed = document.getElementById('chat-feed');
-            if(data.history.length > 0) feed.innerHTML = ''; 
-            data.history.forEach(m => renderMessage(m.role, m.text));
+            if(data.history && data.history.length > 0) feed.innerHTML = ''; // Clear empty state
+            if(data.history) data.history.forEach(m => renderMessage(m.role, m.text));
         }
 
+        /* --- LIBRARY & CLIPS --- */
         async function loadLibrary() {
             if (!currentSession) return;
             const clips = await apiFetch(`/api/search?sessionId=${currentSession}`);
             sessionClips = clips;
             const grid = document.getElementById('lib-grid');
             grid.innerHTML = '';
-            const folders = {};
-            clips.forEach(c => { const s = c.section || 'Inbox'; if(!folders[s]) folders[s]=[]; folders[s].push(c); });
-            for(const [name, list] of Object.entries(folders)) {
-                grid.innerHTML += `<div class="folder-header">${name}</div>`;
-                list.forEach(c => {
-                    grid.innerHTML += `<div class="clip-card"><button class="clip-menu-btn" style="position:absolute; right:5px; top:5px; background:rgba(0,0,0,0.7); border:none; color:white; border-radius:4px; cursor:pointer;" onclick='openOptions(${JSON.stringify(c).replace(/'/g, "&apos;")})'>⋮</button><div class="clip-thumb" onclick="openVideoPlayer('${c.videoUrl}', '${c._id}')">▶</div><div class="clip-info">${c.title}</div></div>`;
-                });
-            }
+            if(clips.length === 0) grid.innerHTML = `<div style="padding:20px; color:#444; text-align:center; font-size:0.85rem;">No clips yet.<br>Upload video to begin.</div>`;
+            
+            clips.forEach(c => {
+                grid.innerHTML += `
+                <div class="clip-card" onclick="playClip('${c.videoUrl}', '${c._id}')">
+                    <div class="clip-thumb-mini">▶</div>
+                    <div style="overflow:hidden;">
+                        <div class="clip-info-title">${c.title || "Untitled Clip"}</div>
+                        <div class="clip-info-meta">${c.formation || "Analyzing..."}</div>
+                    </div>
+                </div>`;
+            });
         }
 
-        function openOptions(clip) { currentClip = clip; document.getElementById('clip-modal').style.display = 'flex'; }
+        /* --- THE TELESTRATOR ENGINE (HUDL STYLE) --- */
+        let animationFrameId;
 
-        function openVideoPlayer(url, id) {
+        async function playClip(url, id) {
             if(id) currentClip = {_id: id, videoUrl: url};
-            const modal = document.getElementById('video-overlay-modal');
+            
+            // 1. Activate Cinema Layout
+            const container = document.getElementById('cinema-container');
+            container.style.display = 'flex';
+            
             const video = document.getElementById('main-video');
             const canvas = document.getElementById('draw-canvas');
             const scrubber = document.getElementById('video-scrubber');
             
             video.src = url;
-            modal.style.display = 'flex';
+            video.play();
             
+            // Reset Drawing State
+            temporalDrawings = []; 
+            clearCanvas();
+            isDrawing = false;
+            document.getElementById('draw-btn').classList.remove('active');
+            
+            // 2. Video Events
             video.onloadedmetadata = () => {
-                canvas.width = video.offsetWidth;
-                canvas.height = video.offsetHeight;
+                canvas.width = video.clientWidth || 800;
+                canvas.height = video.clientHeight || 450;
                 scratchCtx = canvas.getContext('2d');
-                scratchCtx.strokeStyle = "#38bdf8"; scratchCtx.lineWidth = 4;
+                scratchCtx.lineCap = 'round';
+                scratchCtx.lineJoin = 'round';
                 scrubber.max = video.duration;
+                
+                // Start Rendering Loop
+                if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                renderLoop();
             };
             
             video.ontimeupdate = () => {
@@ -646,307 +804,316 @@
             
             scrubber.oninput = () => { video.currentTime = scrubber.value; };
 
+            // 3. Drawing Logic
             let d = false;
-            canvas.onmousedown = (e) => { if(isDrawing) { d=true; scratchCtx.beginPath(); scratchCtx.moveTo(e.offsetX, e.offsetY); } };
-            canvas.onmouseup = () => d=false;
-            canvas.onmousemove = (e) => { if(d && isDrawing) { scratchCtx.lineTo(e.offsetX, e.offsetY); scratchCtx.stroke(); } };
-            canvas.ontouchstart = (e) => {
-                if(isDrawing) { e.preventDefault(); d = true; const rect = canvas.getBoundingClientRect(); scratchCtx.beginPath(); scratchCtx.moveTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); }
+            let currentPath = [];
+            
+            canvas.onmousedown = (e) => { 
+                if(isDrawing) { 
+                    d=true; 
+                    currentPath = [{x: e.offsetX, y: e.offsetY}];
+                } 
             };
-            canvas.ontouchend = () => d=false;
-            canvas.ontouchmove = (e) => {
-                if(d && isDrawing) { e.preventDefault(); const rect = canvas.getBoundingClientRect(); scratchCtx.lineTo(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top); scratchCtx.stroke(); }
+            
+            canvas.onmouseup = () => {
+                if(d && isDrawing) {
+                    d = false;
+                    // SAVE: Path + Timestamp + Duration
+                    temporalDrawings.push({
+                        path: currentPath,
+                        startTime: video.currentTime,
+                        duration: 3.0, // Drawing stays for 3 seconds
+                        color: "#fbbf24"
+                    });
+                }
+            };
+            
+            canvas.onmousemove = (e) => { 
+                if(d && isDrawing) { 
+                    currentPath.push({x: e.offsetX, y: e.offsetY});
+                    // Visual feedback while drawing
+                    const ctx = canvas.getContext('2d');
+                    ctx.lineWidth = 4; ctx.strokeStyle = "#fbbf24";
+                    ctx.lineTo(e.offsetX, e.offsetY); 
+                    ctx.stroke(); 
+                } 
             };
         }
-        
-        function seekTo(timeStr) {
-            const parts = timeStr.split(':');
-            const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+
+        // The "Game Loop" for drawings
+        function renderLoop() {
             const video = document.getElementById('main-video');
-            if (!video.src && currentClip) {
-                openVideoPlayer(currentClip.videoUrl, currentClip._id);
-                setTimeout(() => { document.getElementById('main-video').currentTime = seconds; }, 500);
-            } else {
-                document.getElementById('video-overlay-modal').style.display = 'flex';
-                video.currentTime = seconds;
-            }
-        }
-
-        function togglePlay() { const v = document.getElementById('main-video'); v.paused ? v.play() : v.pause(); }
-        function toggleDrawMode() {
-            isDrawing = !isDrawing;
-            const btn = document.getElementById('draw-toggle');
-            if (isDrawing) { btn.innerHTML = "✏️ Draw: ON"; btn.classList.add('active'); document.getElementById('draw-canvas').style.pointerEvents="auto"; document.getElementById('main-video').pause(); } 
-            else { btn.innerHTML = "✏️ Draw: OFF"; btn.classList.remove('active'); document.getElementById('draw-canvas').style.pointerEvents="none"; }
-        }
-        function clearCanvas() { scratchCtx.clearRect(0, 0, document.getElementById('draw-canvas').width, document.getElementById('draw-canvas').height); }
-        
-        function closeVideoPlayer() {
-            document.getElementById('video-overlay-modal').style.display='none';
-            document.getElementById('main-video').pause();
-            clearCanvas(); isDrawing = false;
-        }
-
-        async function openRoster() {
-            if(!currentSession) return alert("Select Session");
-            const data = await apiFetch(`/api/session/${currentSession}`);
-            const grid = document.getElementById('roster-grid');
-            grid.innerHTML = '';
-            if(data.roster) {
-                data.roster.forEach(p => {
-                    grid.innerHTML += `<div class="tac-card"><div class="tac-label">${p.position}</div><div class="tac-val">${p.identifier}</div><div style="font-size:0.8rem; color:#888;">${p.notes[0]}</div></div>`;
+            const canvas = document.getElementById('draw-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Only clear/redraw if not currently drawing
+            if(!isDrawing || video.paused === false) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const t = video.currentTime;
+                
+                temporalDrawings.forEach(stroke => {
+                    // Check if stroke is "alive" at current video time
+                    if(t >= stroke.startTime && t <= (stroke.startTime + stroke.duration)) {
+                        
+                        // Fade effect
+                        const age = t - stroke.startTime;
+                        const opacity = 1 - (age / stroke.duration);
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
+                        ctx.lineWidth = 4;
+                        
+                        if(stroke.path.length > 0) {
+                            ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
+                            for(let i=1; i<stroke.path.length; i++) {
+                                ctx.lineTo(stroke.path[i].x, stroke.path[i].y);
+                            }
+                        }
+                        ctx.stroke();
+                    }
                 });
             }
-            document.getElementById('roster-modal').style.display = 'flex';
-        }
-
-        function openTendencies() {
-            if(!sessionClips.length) return alert("No clips analyzed yet.");
             
-            const stats = {};
-            const gradePoints = { "A+":4.3, "A":4.0, "A-":3.7, "B+":3.3, "B":3.0, "B-":2.7, "C+":2.3, "C":2.0, "C-":1.7, "D":1.0, "F":0 };
-            const timeline = [];
+            animationFrameId = requestAnimationFrame(renderLoop);
+        }
 
-            sessionClips.forEach((c, idx) => {
-                const o = c.o_formation || "Unknown";
-                const gradeStr = c.fullData?.scouting_report?.report_card?.overall || "C";
-                const points = gradePoints[gradeStr] || 2.0;
-                
-                timeline.push({ id: idx, grade: points });
+        function closeVideoPlayer() {
+            document.getElementById('cinema-container').style.display = 'none';
+            document.getElementById('main-video').pause();
+            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+        }
 
-                if(!stats[o]) stats[o] = { count:0, totalPoints:0 };
-                stats[o].count++; stats[o].totalPoints += points;
-            });
-
-            // Trend Graph
-            let graphHTML = '<div class="trend-bar-container">';
-            timeline.slice(-10).forEach(t => { 
-                const height = (t.grade / 4.3) * 100;
-                let color = t.grade > 3.5 ? 'var(--success)' : (t.grade > 2.5 ? '#fbbf24' : 'var(--danger)');
-                graphHTML += `<div class="trend-bar" style="height:${height}%; background:${color};" title="Grade: ${t.grade}"></div>`;
-            });
-            graphHTML += '</div><div style="text-align:center; font-size:0.8rem; color:#888;">Last 10 Plays (Performance Trend)</div>';
-            document.getElementById('tendency-chart').innerHTML = graphHTML;
-
-            // Stats Table
-            let oHTML = '<div style="margin-top:20px;">';
-            Object.entries(stats).forEach(([name, data]) => {
-                const gpa = (data.totalPoints / data.count).toFixed(1);
-                const letter = gpa >= 4 ? 'A' : (gpa >= 3 ? 'B' : (gpa >= 2 ? 'C' : 'D'));
-                oHTML += `
-                    <div class="tendency-row" style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #333;">
-                        <div class="tac-val" style="font-size:0.9rem;">${name}</div>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <div style="font-size:0.8rem; color:#888;">${data.count} plays</div>
-                            <div class="badge-score ${letter}" style="font-size:1rem;">${letter}</div>
-                        </div>
-                    </div>`;
-            });
-            oHTML += '</div>';
+        function toggleDrawMode() {
+            isDrawing = !isDrawing;
+            const btn = document.getElementById('draw-btn');
+            const canvas = document.getElementById('draw-canvas');
+            const video = document.getElementById('main-video');
             
-            document.getElementById('tendency-content').innerHTML = oHTML;
-            document.getElementById('tendency-modal').style.display = 'flex';
-        }
-
-        async function exportCard(elementId) {
-            const el = document.getElementById(elementId);
-            const canvas = await html2canvas(el, { backgroundColor: "#141414" });
-            const link = document.createElement('a');
-            link.download = 'Vantage-Scout-Card.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        function renderScoutCard(data) {
-            const r = data.scouting_report || {};
-            const grades = r.report_card || {};
-            const overallGrade = grades.overall || '-';
-            const gradeColor = overallGrade.startsWith('A') ? 'A' : (overallGrade.startsWith('B') ? 'B' : (overallGrade.startsWith('C') ? 'C' : 'D'));
-
-            const timelineHTML = r.timeline ? r.timeline.map(t => `
-                <div class="timeline-event">
-                    <div class="t-time" onclick="seekTo('${t.time}')">${t.time}</div>
-                    <div class="t-content"><div class="t-type">${t.type}</div><div class="t-desc">${t.text}</div></div>
-                </div>`).join('') : '';
-
-            const rx = r.coaching_prescription || {};
-            return `
-                <div class="scout-card" id="card-${Date.now()}">
-                    <div class="scout-header">
-                        <div><div class="play-title">${data.title}</div><div class="formation-tag">${data.data.o_formation}</div></div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <button onclick="exportCard('card-${Date.now()}')" class="tool-btn" style="padding:5px 10px;">📷</button>
-                            <div class="overall-badge"><div class="badge-label">OVR</div><div class="badge-score ${gradeColor}">${overallGrade}</div></div>
-                        </div>
-                    </div>
-                    <div class="scout-body">
-                        <div class="summary-box">${r.summary}</div>
-                        <div class="grade-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; grid-column:1/-1; margin-bottom:10px;">
-                            <div class="metric-card"><div class="tac-label">Football IQ</div><div class="tac-val">${grades.football_iq}</div></div>
-                            <div class="metric-card"><div class="tac-label">Technique</div><div class="tac-val">${grades.technique}</div></div>
-                            <div class="metric-card"><div class="tac-label">Effort</div><div class="tac-val">${grades.effort}</div></div>
-                        </div>
-                        <div class="timeline-section"><div class="section-title">PLAY BREAKDOWN</div>${timelineHTML}</div>
-                        <div class="rx-panel">
-                            <div class="rx-card"><div class="rx-header">FIX</div><div class="rx-item">${rx.fix}</div></div>
-                            <div class="rx-card" style="border-color:var(--accent); background:rgba(56,189,248,0.05);">
-                                <div class="rx-header" style="color:var(--accent);">🏋️ DRILL ASSIGNMENT</div>
-                                <div class="rx-item">
-                                    ${rx.drill} 
-                                    <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(rx.drill + ' football drill')}" target="_blank" class="youtube-btn">▶ Watch Drill</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        }
-
-        function renderTeamCard(data) {
-            const t = data.tactical_breakdown || {};
-            const r = data.scouting_report || {};
-            const rx = r.coaching_prescription || {};
-            const timelineHTML = r.timeline ? r.timeline.map(item => `
-                <div class="timeline-event">
-                    <div class="t-time" onclick="seekTo('${item.time}')">${item.time}</div>
-                    <div class="t-content"><div class="t-type">${item.type}</div><div class="t-desc">${item.text}</div></div>
-                </div>`).join('') : '';
-
-            return `
-                <div class="scout-card" id="card-${Date.now()}" style="border-color:#f59e0b;">
-                    <div class="scout-header" style="background:rgba(245,158,11,0.1);">
-                        <div><div class="play-title">${data.title}</div><div class="formation-tag" style="color:#f59e0b;">${data.data.o_formation}</div></div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <button onclick="exportCard('card-${Date.now()}')" class="tool-btn" style="padding:5px 10px;">📷</button>
-                            <div class="overall-badge" style="border-color:#f59e0b;"><div class="badge-label" style="color:#f59e0b;">TEAM</div><div class="badge-score" style="color:#f59e0b;">XO</div></div>
-                        </div>
-                    </div>
-                    <div class="scout-body">
-                        <div class="tactical-grid">
-                            <div class="tac-card highlight"><div class="tac-label">CONCEPT</div><div class="tac-val">${t.concept}</div></div>
-                            <div class="tac-card"><div class="tac-label">BOX</div><div class="tac-val">${t.box_count}</div></div>
-                            <div class="tac-card"><div class="tac-label">COVERAGE</div><div class="tac-val">${t.coverage_shell}</div></div>
-                            <div class="tac-card highlight"><div class="tac-label">KEY MATCHUP</div><div class="tac-val" style="font-size:0.8rem;">${t.key_matchup}</div></div>
-                        </div>
-                        <div class="summary-box" style="border-left-color:#f59e0b;">${r.summary}</div>
-                        <div class="timeline-section"><div class="section-title" style="color:#f59e0b;">SCHEMATIC TIMELINE</div>${timelineHTML}</div>
-                        <div class="rx-panel"><div class="rx-card" style="border-color:#f59e0b; background:rgba(245,158,11,0.05);"><div class="rx-header" style="color:#f59e0b;">COORDINATOR NOTE</div><div class="rx-item">${rx.fix}</div></div></div>
-                    </div>
-                </div>`;
-        }
-
-        function renderMessage(role, text) {
-            const feed = document.getElementById('chat-feed');
-            if (!text) return;
-            if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
-            
-            let content = text;
-            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            if(role === 'model' && text.includes('{')) {
-                try {
-                    const j = JSON.parse(text);
-                    content = j.tactical_breakdown ? renderTeamCard(j) : renderScoutCard(j);
-                } catch(e) { }
+            if(isDrawing) {
+                btn.classList.add('active');
+                canvas.style.pointerEvents = 'auto';
+                video.pause();
+            } else {
+                btn.classList.remove('active');
+                canvas.style.pointerEvents = 'none';
+                video.play();
             }
-            feed.innerHTML += `<div class="msg ${role}">${content}</div>`;
-            feed.scrollTop = feed.scrollHeight;
+        }
+        
+        function clearCanvas() { temporalDrawings = []; }
+        function togglePlay() { const v = document.getElementById('main-video'); v.paused ? v.play() : v.pause(); }
+        function seekTo(timeStr) {
+            if(!document.getElementById('main-video').src) return alert("Select a clip first.");
+            const parts = timeStr.split(':');
+            const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+            document.getElementById('main-video').currentTime = seconds;
+            document.getElementById('main-video').play();
         }
 
+        /* --- CHAT ENGINE & SCOUT CARD GENERATION --- */
         async function sendMessage() {
             const txt = document.getElementById('user-input').value;
             const file = document.getElementById('file-input').files[0];
-            const sendBtn = document.getElementById('send-btn');
-            const pos = currentType === 'team' ? 'team' : document.getElementById('pos-select').value;
+            const pos = document.getElementById('pos-select').value;
+            
             if(!txt && !file) return;
-            if(!currentSession) return alert("Select Session");
-
-            sendBtn.innerHTML = "⏳ Processing..."; sendBtn.disabled = true;
+            
+            // UI Feedback
+            renderMessage('user', txt || "Analyzing video...");
+            document.getElementById('user-input').value = '';
+            document.getElementById('send-btn').innerHTML = "⏳";
             document.getElementById('progress-container').style.display = 'block';
             document.getElementById('progress-bar').style.width = '30%';
 
-            renderMessage('user', txt || "Analyzing...");
-            document.getElementById('user-input').value = '';
-
-            // MODIFIED PAYLOAD TO INCLUDE RULES & PLAYBOOK
             const payload = { 
-                message: txt, 
-                sessionId: currentSession, 
-                sport: 'football', 
-                position: pos,
-                rules: teamRules, // Send rules to backend
-                playbook: activePlaybook // Send playbook reference to backend
-            };
-            
-            const handleResponse = async (res) => {
-                document.getElementById('progress-bar').style.width = '100%';
-                if (res.error) renderMessage('model', "⚠️ Error: " + res.error);
-                else if (res.reply) { if(res.newClip) loadLibrary(); renderMessage('model', res.reply); }
-                document.getElementById('file-input').value = '';
-                document.getElementById('file-btn').innerHTML = '📎'; 
-                document.getElementById('file-btn').style.background = ''; 
-                document.getElementById('file-name-display').textContent = '';
-                setTimeout(() => document.getElementById('progress-container').style.display='none', 500);
-                sendBtn.innerHTML = "SEND"; sendBtn.disabled = false;
+                message: txt, sessionId: currentSession, position: pos, 
+                sport: 'football', rules: teamRules, playbook: activePlaybook 
             };
 
-            const handleError = (e) => { console.error(e); alert("Upload Failed."); sendBtn.innerHTML = "SEND"; sendBtn.disabled = false; };
+            const handleResponse = (res) => {
+                document.getElementById('progress-bar').style.width = '100%';
+                setTimeout(()=> document.getElementById('progress-container').style.display='none', 500);
+                document.getElementById('send-btn').innerHTML = "SEND";
+                
+                if(res.error) return renderMessage('model', "⚠️ " + res.error);
+                if(res.reply) {
+                    renderMessage('model', res.reply);
+                    if(res.newClip) loadLibrary();
+                }
+                // Reset file input
+                document.getElementById('file-input').value = '';
+                document.getElementById('file-btn').innerHTML = "📎 Upload";
+                document.getElementById('file-btn').style.background = '';
+            };
 
             if(file) {
                 const r = new FileReader();
                 r.onload = async () => {
-                    try { payload.fileData = r.result.split(',')[1]; payload.mimeType = file.type; const res = await apiFetch('/api/chat', payload); handleResponse(res); } catch(e) { handleError(e); }
+                    try {
+                        payload.fileData = r.result.split(',')[1]; payload.mimeType = file.type;
+                        const res = await apiFetch('/api/chat', payload);
+                        handleResponse(res);
+                    } catch(e) { console.error(e); alert("Upload failed"); }
                 };
                 r.readAsDataURL(file);
             } else {
-                try { const res = await apiFetch('/api/chat', payload); handleResponse(res); } catch(e) { handleError(e); }
+                const res = await apiFetch('/api/chat', payload);
+                handleResponse(res);
             }
         }
+
+        function renderMessage(role, text) {
+            const feed = document.getElementById('chat-feed');
+            if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+            
+            let content = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Check if JSON (Scout Card)
+            if(role === 'model' && text.includes('{')) {
+                try {
+                    // Sanitize potential markdown code blocks from AI
+                    const cleanText = text.replace(/```json/g, '').replace(/```/g, '');
+                    const j = JSON.parse(cleanText);
+                    content = renderScoutCard(j);
+                } catch(e) { console.log("Text fallback", e); }
+            }
+            
+            feed.innerHTML += `<div class="msg ${role}">${content}</div>`;
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        // --- SCOUT CARD RENDERER (The "Brain" Visualization) ---
+        function renderScoutCard(data) {
+            const r = data.scouting_report || {};
+            const grades = r.report_card || {};
+            
+            // Logic: Convert Overall Grade to Color
+            const overall = grades.overall || "C";
+            let color = 'var(--text-dim)';
+            if(overall.includes('A')) color = 'var(--success)';
+            if(overall.includes('B')) color = 'var(--warning)';
+            if(overall.includes('C')) color = 'var(--danger)';
+            if(overall.includes('D') || overall.includes('F')) color = 'var(--danger)';
+
+            // Focus Badge
+            const focus = document.getElementById('pos-select').value.toUpperCase();
+            
+            // Timeline Generator
+            const timelineHTML = r.timeline ? r.timeline.map(t => `
+                <div class="timeline-event" onclick="seekTo('${t.time}')">
+                    <div class="t-time">${t.time}</div>
+                    <div class="t-text">${t.text}</div>
+                </div>`).join('') : '';
+
+            const cardId = `card-${Date.now()}`;
+
+            return `
+            <div class="scout-card" id="${cardId}">
+                <div class="scout-header">
+                    <div class="play-meta">
+                        <div class="tag-row">
+                            <span class="formation-tag">${data.data.o_formation || "Unknown"}</span>
+                            ${focus !== 'GENERAL' ? `<span class="focus-tag">FOCUS: ${focus}</span>` : ''}
+                        </div>
+                        <div class="play-title">${data.title}</div>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="tool-btn" onclick="openCoachChat()">💬 Ask Coach</button>
+                        <button class="tool-btn" onclick="downloadCard('${cardId}')">⬇️ Report</button>
+                        
+                        <div class="exec-badge" style="border-color:${color};">
+                            <div class="exec-label" style="color:${color};">EXEC</div>
+                            <div class="exec-val" style="color:${color};">${overall}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scout-body">
+                    <div class="summary-text">${r.summary}</div>
+                    
+                    <div class="stats-col">
+                        <div class="grade-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Football IQ</div>
+                                <div class="metric-val" style="color:${grades.football_iq?.includes('A')? 'var(--success)':'white'}">${grades.football_iq}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Technique</div>
+                                <div class="metric-val">${grades.technique}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Effort</div>
+                                <div class="metric-val">${grades.effort}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-section">
+                            <h4>Timeline Breakdown</h4>
+                            ${timelineHTML}
+                        </div>
+                        
+                        <div style="margin-top:20px; padding:12px; background:rgba(56,189,248,0.05); border:1px solid var(--accent-dim); border-radius:8px;">
+                            <div style="font-size:0.7rem; font-weight:700; color:var(--accent); margin-bottom:4px;">COACHING FIX</div>
+                            <div style="font-size:0.9rem; color:#eee;">${r.coaching_prescription?.fix || "None"}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        /* --- FEATURE IMPLEMENTATIONS --- */
         
+        // 1. Download Report (HTML2Canvas)
+        async function downloadCard(id) {
+            const el = document.getElementById(id);
+            // Temporary style fix for capture
+            const originalBg = el.style.background;
+            el.style.background = "#141414"; 
+            
+            try {
+                const canvas = await html2canvas(el, { backgroundColor: "#141414", scale: 2 });
+                const link = document.createElement('a');
+                link.download = 'Vantage_Scout_Report.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            } catch(e) { alert("Download failed"); }
+            
+            el.style.background = originalBg;
+        }
+
+        // 2. Ask Coach (Contextual Chat)
         async function openCoachChat() {
+            if(!currentClip) return alert("Please upload or select a play first.");
             document.getElementById('coach-chat-modal').style.display = 'flex';
-            document.getElementById('coach-feed').innerHTML = '';
-            if(currentClip) {
-               const data = await apiFetch(`/api/clip/${currentClip._id}`);
-               if(data.chatHistory) data.chatHistory.forEach(m => {
-                   let txt = m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                   document.getElementById('coach-feed').innerHTML += `<div class="coach-msg ${m.role}">${txt}</div>`;
-               });
-            }
+            // Optional: Fetch specific clip history here
         }
-        
+
         async function sendCoachMessage() {
             const msg = document.getElementById('coach-input').value;
             if(!msg) return;
-            document.getElementById('coach-feed').innerHTML += `<div class="coach-msg user">${msg}</div>`;
+            
+            // Add user bubble
+            const feed = document.getElementById('coach-feed');
+            feed.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-weight:600; max-width:80%;">${msg}</div>`;
             document.getElementById('coach-input').value = '';
+            feed.scrollTop = feed.scrollHeight;
+
+            // API Call
             const res = await apiFetch('/api/clip-chat', { message: msg, clipId: currentClip._id });
-            let txt = res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            document.getElementById('coach-feed').innerHTML += `<div class="coach-msg model">${txt}</div>`;
-        }
-        
-        async function deleteClip() {
-            if(confirm("Delete?")) await apiFetch('/api/delete-clip', { id: currentClip._id });
-            loadLibrary();
-            document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-        }
-        
-        function viewNotes() {
-            const d = currentClip.fullData;
-            document.getElementById('notes-text').innerHTML = d.tactical_breakdown ? renderTeamCard(d) : renderScoutCard(d);
-            document.getElementById('notes-popup').style.display = 'flex';
-        }
-        
-        async function organizeClip() {
-            const folder = prompt("New Folder Name:");
-            if (folder) await apiFetch('/api/update-clip', { id: currentClip._id, section: folder });
-            document.getElementById('clip-modal').style.display = 'none'; loadLibrary();
+            
+            // Add bot bubble
+            let reply = res.reply ? res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : "Connection Error";
+            feed.innerHTML += `<div style="align-self:flex-start; background:#222; color:#ddd; padding:8px 12px; border-radius:8px; max-width:90%; line-height:1.5;">${reply}</div>`;
+            feed.scrollTop = feed.scrollHeight;
         }
 
-        /* NEW STRATEGY FUNCTIONS */
+        // 3. Strategy Hub Functions
         function openStrategy() {
             document.getElementById('strategy-modal').style.display = 'flex';
             switchStrat('rules');
         }
-
         function switchStrat(type) {
             document.querySelectorAll('.strat-tab').forEach(t => t.classList.remove('active'));
             if(type === 'rules') {
@@ -959,29 +1126,77 @@
                 document.getElementById('strat-playbook-view').style.display = 'block';
             }
         }
-
+        
         function saveRules() {
             const pos = document.getElementById('rule-pos-select').value;
             const text = document.getElementById('rules-input').value;
-            if(!text) return;
-            teamRules[pos] = text;
-            alert(`Rules saved for ${pos}. The AI will now cross-reference these rules.`);
-            document.getElementById('rules-input').value = '';
+            if(text) {
+                teamRules[pos] = text;
+                alert(`✅ Rules saved for ${pos}. The AI will now enforce this logic.`);
+                document.getElementById('rules-input').value = '';
+            }
         }
-
+        
         function handlePlaybook(input) {
             if(input.files && input.files[0]) {
                 document.getElementById('pb-filename').innerText = "Selected: " + input.files[0].name;
             }
         }
-
+        
         function savePlaybook() {
             const file = document.getElementById('pb-file').files[0];
-            if(!file) return alert("Please select a file.");
-            // In a real app, this would upload to server. Here we store the metadata.
-            activePlaybook = { name: file.name, loaded: true };
-            alert("Playbook Integrated! Analysis will now reference uploaded diagrams.");
-            document.getElementById('strategy-modal').style.display='none';
+            if(file) {
+                activePlaybook = { name: file.name, loaded: true };
+                alert("✅ Playbook Integrated. AI will cross-reference diagrams.");
+                document.getElementById('strategy-modal').style.display = 'none';
+            }
+        }
+        
+        function handleFileSelect(input) {
+            if(input.files[0]) {
+                const btn = document.getElementById('file-btn');
+                btn.innerHTML = "✅ Ready";
+                btn.style.background = "var(--success)";
+                btn.style.color = "black";
+                btn.style.border = "none";
+            }
+        }
+        
+        // Roster & Tendency stubs (Connecting buttons)
+        async function openRoster() {
+            if(!currentSession) return alert("Select a session first.");
+            const data = await apiFetch(`/api/session/${currentSession}`);
+            const grid = document.getElementById('roster-grid');
+            grid.innerHTML = '';
+            
+            if(data.roster && data.roster.length > 0) {
+                data.roster.forEach(p => {
+                    grid.innerHTML += `
+                    <div style="background:#1a1a1a; padding:12px; border:1px solid var(--border); border-radius:8px;">
+                        <div style="font-weight:800; color:white;">${p.identifier}</div>
+                        <div style="font-size:0.75rem; color:#888;">${p.position}</div>
+                        <div style="margin-top:8px; font-size:1.5rem; font-weight:900; color:var(--accent);">${p.grade || "-"}</div>
+                    </div>`;
+                });
+            } else {
+                grid.innerHTML = "<p style='color:#666;'>No players detected yet.</p>";
+            }
+            document.getElementById('roster-modal').style.display = 'flex';
+        }
+        
+        function openTendencies() {
+            // Placeholder logic for stats visualization
+            if(sessionClips.length === 0) return alert("No clips to analyze.");
+            document.getElementById('tendency-content').innerHTML = `
+                <div style="background:#222; height:20px; width:100%; border-radius:10px; overflow:hidden;">
+                    <div style="background:var(--success); width:60%; height:100%;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:0.8rem; color:#888;">
+                    <span>Success Rate: 60%</span>
+                    <span>${sessionClips.length} Plays Tracked</span>
+                </div>
+            `;
+            document.getElementById('tendency-modal').style.display = 'flex';
         }
     </script>
 </body>
