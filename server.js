@@ -173,7 +173,154 @@ app.post("/api/update-clip", requireAuth, async (req, res) => {
 // *** FIX 3: Route to Manual Override AI Data ***
 app.post("/api/update-clip-data", requireAuth, async (req, res) => {
     try {
-        const { clipId, title, summary, o_formation, d_formation } = req.body;
+/* ---- MAIN ANALYSIS ROUTE (UPDATED) ---- */
+app.post("/api/chat", requireAuth, async (req, res) => {
+  // 1. Capture the new data from the frontend
+  const { message, sessionId, fileData, mimeType, sport, position, rules, playbook } = req.body;
+  let tempPath = null;
+
+  try {
+    // Construct the context strings
+    let rulesContext = "";
+    if (rules && Object.keys(rules).length > 0) {
+        rulesContext = "\nCOORDINATOR RULES TO ENFORCE:\n";
+        for (const [pos, rule] of Object.entries(rules)) {
+            rulesContext += `- ${pos.toUpperCase()}: ${rule}\n`;
+        }
+    }
+
+    let playbookContext = "";
+    if (playbook && playbook.name) {
+        playbookContext = `\nREFERENCE PLAYBOOK: ${playbook.name} (Assume standard concepts apply unless specified).`;
+    }
+
+    if (!fileData) {
+        await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
+        // Inject rules into text chat too
+        const result = await generateWithFallback([{ text: `ROLE: NFL Coach.\nCONTEXT: ${rulesContext}\nUSER: ${message}` }]);
+        const reply = result.response.text();
+        await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
+        return res.json({ reply });
+    }
+
+    const buffer = Buffer.from(fileData, "base64");
+    tempPath = path.join(UPLOAD_DIR, `upload_${Date.now()}.mp4`);
+    await fs.writeFile(tempPath, buffer);
+
+    const [cloud, uploaded] = await Promise.all([
+        cloudinary.uploader.upload(tempPath, { resource_type: "video", folder: "vantage_vision" }),
+        fileManager.uploadFile(tempPath, { mimeType, displayName: "Video" })
+    ]);
+
+    let savedClip = await Clip.create({
+      owner: req.auth.userId, sessionId, sport, 
+      videoUrl: cloud.secure_url, 
+      publicId: cloud.public_id,
+      title: "Analyzing...", formation: "...", section: "Inbox", chatHistory: [], snapshots: []
+    });
+
+    let file = await fileManager.getFile(uploaded.file.name);
+    while (file.state === FileState.PROCESSING) {
+        await new Promise(r => setTimeout(r, 2000));
+        file = await fileManager.getFile(uploaded.file.name);
+    }
+    if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
+
+    const session = await Session.findOne({ sessionId, owner: req.auth.userId });
+    const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
+    const specificFocus = RUBRICS[position] || RUBRICS["team"];
+
+    // 2. Inject the Rules and Playbook into the AI System Instruction
+    let systemInstruction = `
+    ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
+    TASK: Analyze video clip. Focus: ${specificFocus}.
+    
+    ${rulesContext}
+    ${playbookContext}
+
+    ROSTER CONTEXT:
+    ${rosterContext}
+
+    OUTPUT JSON (Strict Format):
+    { 
+        "title": "Play Title", 
+        "data": { "o_formation": "Set", "d_formation": "Shell" }, 
+        "tactical_breakdown": {
+            "concept": "Scheme",
+            "box_count": "Count",
+            "coverage_shell": "Cover X",
+            "key_matchup": "1v1"
+        },
+        "scouting_report": { 
+            "summary": "Narrative. If a specific Rule was violated, mention it explicitly in CAPS.", 
+            "timeline": [{ "time": "0:00", "type": "Phase", "text": "Obs" }],
+            "coaching_prescription": { 
+                "fix": "Technical fix", 
+                "drill": "Specific Drill Name", 
+                "pro_tip": "Tip" 
+            },
+            "report_card": { "football_iq": "B", "technique": "C", "effort": "A", "overall": "B" }
+        },
+        "players_detected": [ { "identifier": "Name", "position": "Pos", "grade": "B", "observation": "Note", "weakness": "Weak" } ] 
+    }`;
+
+    const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
+    const result = await generateWithFallback(prompt);
+    
+    let text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    let json;
+    try {
+        json = JSON.parse(text);
+        if (!json.data) json.data = { o_formation: "Unknown", d_formation: "Unknown" };
+    } catch (e) {
+        console.error("AI JSON Parse Error:", text);
+        json = {
+            title: "Analysis Error",
+            data: { o_formation: "Error", d_formation: "Error" },
+            scouting_report: { summary: "The AI analysis could not be processed. Please try again." }
+        };
+    }
+
+    if (json.players_detected && json.players_detected.length > 0) {
+        for (const p of json.players_detected) {
+            const idx = session.roster.findIndex(r => r.identifier === p.identifier);
+            if (idx > -1) {
+                session.roster[idx].grade = p.grade;
+                session.roster[idx].notes.push(p.observation);
+                if(p.weakness) session.roster[idx].weaknesses.push(p.weakness);
+                session.roster[idx].last_updated = new Date();
+            } else {
+                session.roster.push({
+                    identifier: p.identifier, position: p.position, grade: p.grade,
+                    notes: [p.observation], weaknesses: p.weakness ? [p.weakness] : []
+                });
+            }
+        }
+        await session.save();
+    }
+
+    savedClip.title = json.title || "Untitled Clip";
+    savedClip.o_formation = json.data.o_formation;
+    savedClip.d_formation = json.data.d_formation;
+    savedClip.formation = `${json.data.o_formation} vs ${json.data.d_formation}`;
+    savedClip.fullData = json;
+    savedClip.geminiFileUri = file.uri;
+    await savedClip.save();
+
+    await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: "Uploaded Video Analysis" } } });
+    await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: JSON.stringify(json) } } });
+
+    await fs.unlink(tempPath).catch(console.error);
+    res.json({ reply: JSON.stringify(json), newClip: savedClip });
+
+  } catch (e) {
+    console.error("SERVER ERROR:", e); 
+    if (tempPath) await fs.unlink(tempPath).catch(console.error);
+    res.status(500).json({ error: e.message || "Analysis failed." });
+  }
+});
+
         const clip = await Clip.findOne({ _id: clipId, owner: req.auth.userId });
         
         if (!clip) return res.status(404).json({ error: "Clip not found" });
