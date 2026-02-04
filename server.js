@@ -34,11 +34,11 @@ cloudinary.config({
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
 
-// *** UPDATED: NOW USING GEMINI 2.5 PRO ***
+// *** MODEL STRATEGY: Gemini 2.5 Pro Requested ***
 const MODEL_FALLBACK_LIST = [
-    "gemini-2.5-pro",   // Your requested model (Best reasoning)
-    "gemini-2.5-flash", // Faster fallback
-    "gemini-2.0-flash"  // Previous stable fallback
+    "gemini-2.5-pro", 
+    "gemini-1.5-pro",
+    "gemini-1.5-flash"
 ];
 
 async function generateWithFallback(promptParts) {
@@ -60,7 +60,7 @@ async function generateWithFallback(promptParts) {
     throw new Error(`Analysis failed. Last error: ${lastError?.message}`);
 }
 
-/* ---------------- UPDATED ELITE RUBRICS ---------------- */
+/* ---------------- RUBRICS ---------------- */
 const RUBRICS = {
     "team": `
     ELITE COORDINATOR DIAGNOSTICS:
@@ -124,7 +124,9 @@ app.post("/api/create-session", requireAuth, async (req, res) => {
 app.get("/api/sessions", requireAuth, async (req, res) => {
   try {
     const query = { owner: req.auth.userId };
+    // *** FIX: Strictly filter by session type (Team vs Self) ***
     if (req.query.type) query.type = req.query.type; 
+    
     const sessions = await Session.find(query).sort({ _id: -1 });
     res.json(sessions.map(s => ({ id: s.sessionId, title: s.title, type: s.type })));
   } catch (e) { res.json([]); }
@@ -140,14 +142,12 @@ app.get("/api/session/:id", requireAuth, async (req, res) => {
 app.post("/api/delete-session", requireAuth, async (req, res) => {
   try {
     await Session.deleteOne({ sessionId: req.body.sessionId, owner: req.auth.userId });
-    
-    // Cleanup all clips in session
+    // Cleanup clips
     const clips = await Clip.find({ sessionId: req.body.sessionId, owner: req.auth.userId });
-    for (const clip of clips) {
-        if (clip.publicId) await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
+    for(const clip of clips) {
+        if(clip.publicId) await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
     }
     await Clip.deleteMany({ sessionId: req.body.sessionId, owner: req.auth.userId });
-    
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Delete failed" }); }
 });
@@ -163,6 +163,7 @@ app.get("/api/search", requireAuth, async (req, res) => {
 
 app.post("/api/update-clip", requireAuth, async (req, res) => {
   try {
+    // *** FIX: Allow moving clips between folders/sections ***
     await Clip.findOneAndUpdate({ _id: req.body.id, owner: req.auth.userId }, { $set: { section: req.body.section } });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Update failed" }); }
@@ -175,13 +176,11 @@ app.post("/api/update-clip-data", requireAuth, async (req, res) => {
         
         if (!clip) return res.status(404).json({ error: "Clip not found" });
 
-        // Update top-level fields
         clip.title = title;
         clip.o_formation = o_formation;
         clip.d_formation = d_formation;
         clip.formation = `${o_formation} vs ${d_formation}`;
 
-        // Update the JSON structure stored in fullData
         if (clip.fullData) {
             clip.fullData.title = title;
             if (clip.fullData.data) {
@@ -201,12 +200,8 @@ app.post("/api/update-clip-data", requireAuth, async (req, res) => {
 app.post("/api/delete-clip", requireAuth, async (req, res) => {
   try {
     const clip = await Clip.findOne({ _id: req.body.id, owner: req.auth.userId });
-    if (clip) {
-        if (clip.publicId) {
-            await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
-        }
-        await Clip.deleteOne({ _id: req.body.id });
-    }
+    if(clip && clip.publicId) await cloudinary.uploader.destroy(clip.publicId, { resource_type: "video" });
+    await Clip.findOneAndDelete({ _id: req.body.id, owner: req.auth.userId });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Delete failed" }); }
 });
@@ -230,12 +225,12 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
 
     const prompt = `
     ROLE: Elite Football Coordinator.
-    CONTEXT: Clip Analysis.
+    CONTEXT: User asks about a clip. You have full game context (Roster).
     CLIP DATA: ${JSON.stringify(clip.fullData)}
-    ROSTER: ${rosterContext}
+    ROSTER/TENDENCIES: ${rosterContext}
     HISTORY: ${historyText}
     QUESTION: "${req.body.message}"
-    INSTRUCTION: Concise, professional answer. Use **bold** for emphasis.
+    INSTRUCTION: Answer specifically. If asking about a player, check Roster for past weaknesses. Use **bold** for key stats/players.
     `;
     
     const result = await generateWithFallback([{ text: prompt }]);
@@ -250,37 +245,20 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Chat failed" }); }
 });
 
-/* ---- MAIN ANALYSIS ROUTE (INTEGRATED STRATEGY) ---- */
+/* ---- MAIN ANALYSIS ROUTE ---- */
 app.post("/api/chat", requireAuth, async (req, res) => {
-  // 1. Capture the new data from the frontend
-  const { message, sessionId, fileData, mimeType, sport, position, rules, playbook } = req.body;
+  const { message, sessionId, fileData, mimeType, sport, position } = req.body;
   let tempPath = null;
 
   try {
-    // 2. Build the "Strategy Context" string to send to Gemini
-    let rulesContext = "";
-    if (rules && Object.keys(rules).length > 0) {
-        rulesContext = "\nCOORDINATOR RULES TO ENFORCE:\n";
-        for (const [pos, rule] of Object.entries(rules)) {
-            rulesContext += `- ${pos.toUpperCase()}: ${rule}\n`;
-        }
-    }
-
-    let playbookContext = "";
-    if (playbook && playbook.name) {
-        playbookContext = `\nREFERENCE PLAYBOOK: ${playbook.name} (Assume standard concepts apply unless specified).`;
-    }
-
-    // Handle Text-Only Chat (No Video)
     if (!fileData) {
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
-        const result = await generateWithFallback([{ text: `ROLE: NFL Coach.\nCONTEXT: ${rulesContext}\nUSER: ${message}` }]);
+        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }]);
         const reply = result.response.text();
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
         return res.json({ reply });
     }
 
-    // Handle Video Upload
     const buffer = Buffer.from(fileData, "base64");
     tempPath = path.join(UPLOAD_DIR, `upload_${Date.now()}.mp4`);
     await fs.writeFile(tempPath, buffer);
@@ -292,8 +270,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     let savedClip = await Clip.create({
       owner: req.auth.userId, sessionId, sport, 
-      videoUrl: cloud.secure_url, 
-      publicId: cloud.public_id,
+      videoUrl: cloud.secure_url, publicId: cloud.public_id,
       title: "Analyzing...", formation: "...", section: "Inbox", chatHistory: [], snapshots: []
     });
 
@@ -308,16 +285,11 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
-    // 3. Inject Rules & Playbook into the core AI Prompt
+    // *** STABLE PROMPT (INTEGRATED DRILL NAMES) ***
     let systemInstruction = `
     ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
     TASK: Analyze video clip. Focus: ${specificFocus}.
-    
-    ${rulesContext}
-    ${playbookContext}
-
-    ROSTER CONTEXT:
-    ${rosterContext}
+    ROSTER: ${rosterContext}
 
     OUTPUT JSON (Strict Format):
     { 
@@ -330,11 +302,11 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "key_matchup": "1v1"
         },
         "scouting_report": { 
-            "summary": "Narrative. If a specific Rule was violated, mention it explicitly in CAPS.", 
+            "summary": "Narrative.", 
             "timeline": [{ "time": "0:00", "type": "Phase", "text": "Obs" }],
             "coaching_prescription": { 
                 "fix": "Technical fix", 
-                "drill": "Specific Drill Name", 
+                "drill": "Specific Drill Name (e.g. 'W-Drill')", 
                 "pro_tip": "Tip" 
             },
             "report_card": { "football_iq": "B", "technique": "C", "effort": "A", "overall": "B" }
@@ -347,6 +319,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     let text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     
+    // *** CRASH GUARD ***
     let json;
     try {
         json = JSON.parse(text);
