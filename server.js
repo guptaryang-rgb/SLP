@@ -498,7 +498,14 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     // Prepare Context
     const session = await Session.findOne({ sessionId, owner: req.auth.userId });
-    const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
+    
+    // GUARD: If no session found, stop immediately
+    if (!session) {
+        if (tempPath) await fs.unlink(tempPath).catch(console.error);
+        return res.status(400).json({ reply: "Error: No Active Session found. Please select a session on the left." });
+    }
+
+    const rosterContext = session.roster ? session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n') : "";
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
     // Construct the "Elite Coach" Prompt
