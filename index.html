@@ -907,6 +907,7 @@
                         if (file) {
                             const newClip = {
                                 id: 'clip_' + Date.now(),
+                                sessionId: UI.activeSessionId, // ATTACH TO CURRENT SESSION
                                 title: text || "Uploaded Gameplay Analysis",
                                 date: Date.now(),
                                 videoUrl: URL.createObjectURL(file), // Local Blob
@@ -914,6 +915,8 @@
                                 grade: 'PENDING'
                             };
                             Store.addClip(newClip);
+                            // Refresh Library to show new clip
+                            setTimeout(() => UI.renderLibrary(), 100);
                             resolve({ type: 'card', data: CoachAI.generateScoutCard(newClip), clip: newClip });
                         } else {
                             resolve({ type: 'text', text: CoachAI.getTextResponse(text) });
