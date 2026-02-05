@@ -30,7 +30,6 @@ app.get('/api/sessions', ClerkExpressWithAuth(), async (req, res) => {
     const userId = req.auth.userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
     
-    // Return sessions for this user, sorted by newest
     const sessions = await Session.find({ userId }).sort({ createdAt: -1 });
     res.json(sessions);
   } catch (error) {
@@ -39,19 +38,19 @@ app.get('/api/sessions', ClerkExpressWithAuth(), async (req, res) => {
   }
 });
 
-// 2. CREATE SESSION (Save new session)
+// 2. CREATE SESSION (The Missing Link)
 app.post('/api/create-session', ClerkExpressWithAuth(), async (req, res) => {
   try {
     const userId = req.auth.userId;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const { title, type } = req.body; 
+    const { title, type } = req.body;
     
     const newSession = new Session({
         sessionId: 'sess_' + Date.now(),
-        userId,
+        userId, 
         title: title || "New Session",
-        type: type || 'self', // 'self' or 'team'
+        type: type || 'self',
         createdAt: new Date(),
         history: [],
         roster: []
