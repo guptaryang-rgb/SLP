@@ -727,7 +727,7 @@
             
             init: () => {
                 // Initialize Sessions
-                // FIX: Start empty so we don't use a fake session that isn't on the server
+                // FIX: Start with empty array. Do NOT create fake local sessions.
                 if (!Store.get('sessions')) Store.set('sessions', []);
                 // Initialize Global Clips
                 if (!Store.get('clips')) Store.set('clips', []);
@@ -1380,7 +1380,7 @@ Clerk.load()
                 }, 300);
             },
             createNewSession: async () => {
-                const title = prompt(`New ${UI.currentMode.toUpperCase()} Session Name:`);
+                const title = prompt("New Session Name:");
                 if(title) {
                     try {
                         const token = await window.Clerk.session.getToken();
@@ -1389,26 +1389,22 @@ Clerk.load()
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
+                        
+                        if (!res.ok) throw new Error("Server failed to create session");
+                        
                         const newSession = await res.json();
                         
-                        // Update Store locally to reflect change immediately
+                        // Update Local Store
                         const sessions = Store.get('sessions') || [];
-                        // FIX: Store consistently as 'sessionId'
-                        sessions.unshift({ 
-                            sessionId: newSession.sessionId, // Changed from id to sessionId
-                            title: newSession.title, 
-                            date: newSession.createdAt, 
-                            type: newSession.type 
-                        });
+                        sessions.unshift(newSession);
                         Store.set('sessions', sessions);
                         
-                        // Force selection immediately
-                        UI.activeSessionId = newSession.sessionId; 
+                        // Force Selection
                         await UI.selectSession(newSession.sessionId);
                         
                     } catch (e) { 
                         console.error(e);
-                        alert("Failed to create session on server."); 
+                        alert("Failed to create session. Check server console."); 
                     }
                 }
             }
