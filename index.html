@@ -403,6 +403,15 @@
             width: 100%; height: 100%; position: relative; display: flex; 
             justify-content: center; align-items: center; background: #000; overflow: hidden;
         }
+
+        /* NEW: Ghost Video Layer */
+        #ghost-video {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            object-fit: contain; opacity: 0; pointer-events: none; z-index: 5;
+        }
+        
+        #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
+        
         
         #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
         #draw-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; touch-action: none; }
@@ -608,6 +617,7 @@
                         <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
                         <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
                         <button class="dash-btn" onclick="alert('Upload Playbook Feature')">📖 Playbook</button>
+                        <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
                         <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster / Tendency</button>
                     </div>
 
@@ -653,11 +663,17 @@
 
         <div id="popup-video-container">
             <div id="telestrator-view">
+                <video id="ghost-video" playsinline webkit-playsinline muted></video>
                 <video id="main-video" playsinline webkit-playsinline></video>
                 <canvas id="draw-canvas"></canvas>
             </div>
             
             <div class="video-controls">
+                <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
+                    <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
+                    <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);" oninput="document.getElementById('ghost-video').style.opacity = this.value">
+                </div>
+
                 <button class="v-btn" id="play-pause-btn">⏯</button>
                 <div class="scrubber-container">
                     <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
@@ -689,6 +705,15 @@
             <p style="color:#888; margin-bottom:16px;">Define analysis rules. These persist across all sessions.</p>
             <textarea id="rules-input" style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
             <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;" onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="max-width:600px;">
+            <h3 style="margin-top:0; color:white;">Defensive Shot Chart</h3>
+            <div style="background:white; padding:10px; border-radius:8px;">
+                <canvas id="teamChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -791,6 +816,15 @@
             }
 
             bindEvents() {
+                // NEW: Keyboard Shortcuts for Frame Scrubbing
+                document.addEventListener('keydown', (e) => {
+                    // Only active if overlay is open and not drawing
+                    if (document.getElementById('analysis-overlay').style.display !== 'none') {
+                        if (e.key === 'ArrowRight') this.video.currentTime += 0.033; // Forward 1 frame
+                        if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;  // Back 1 frame
+                    }
+                });
+
                 // Unified Pointer Events (Mouse, Touch, Pen)
                 this.canvas.addEventListener('pointerdown', (e) => {
                     if (this.mode !== 'draw') return;
@@ -1139,43 +1173,29 @@
             },
 
             renderLibrary: () => {
-                const grid = document.getElementById('lib-grid');
-                
-                // Guard: Require a session to be selected first
-                if (!UI.activeSessionId) {
-                    grid.innerHTML = '<div style="padding:20px; color:#666; font-size:0.8rem; text-align:center;">Select or Create a Session to view film.</div>';
-                    return;
-                }
+                 // ... existing code ...
+            },
 
-                const allClips = Store.getClips();
-                // FILTER: Only show clips for this specific session
-                const sessionClips = allClips.filter(c => c.sessionId === UI.activeSessionId);
-                
-                window.activeClips = sessionClips; 
-
-                grid.innerHTML = sessionClips.map(c => `
-                    <div class="clip-card" style="display:block; cursor:default;">
-                        <div style="display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="UI.playClip('${c.id}')">
-                            <div class="clip-thumb-mini">▶</div>
-                            <div style="flex:1;">
-                                <div style="font-weight:600; font-size:0.85rem; color:white;">${c.title}</div>
-                                <div style="font-size:0.7rem; color:#666;">${c.formation}</div>
-                            </div>
-                        </div>
-                        
-                        <div style="border-top:1px solid #222; margin-top:8px; padding-top:8px; display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <button onclick="alert('Scouting Report for ${c.id}')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer;">📊 Scout Report</button>
-                                <button onclick="alert('Ask Coach Feature for ${c.id}')" style="background:none; border:none; color:var(--text); font-size:0.7rem; cursor:pointer;">🤖 Ask Coach</button>
-                            </div>
-                            <div style="display:flex; gap:8px; justify-content:flex-end;">
-                                <button onclick="alert('Rename ${c.id}')" style="background:none; border:none; color:#666; font-size:0.7rem; cursor:pointer;" title="Rename">✏️</button>
-                                <button onclick="alert('Move to Folder')" style="background:none; border:none; color:#666; font-size:0.7rem; cursor:pointer;" title="Organize">Tb</button>
-                                <button onclick="alert('Delete ${c.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer;" title="Delete">🗑</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+            // NEW: Render Chart.js Graph
+            showTeamStats: () => {
+                document.getElementById('stats-modal').style.display = 'flex';
+                const ctx = document.getElementById('teamChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Pass Completions Allowed',
+                            data: Array.from({length: 20}, () => ({x: Math.random()*50, y: Math.random()*100})),
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: { title: {display:true, text:'Field Width'} },
+                            y: { title: {display:true, text:'Yards Downfield'} }
+                        }
+                    }
+                });
             },
 
             playClip: (id) => {
