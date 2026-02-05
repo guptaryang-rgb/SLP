@@ -1109,11 +1109,19 @@
             toggleModal: (id) => document.getElementById(id).style.display = 'flex',
 
             // NEW: Select a session and load its specific data
-            selectSession: (sessId) => {
+            selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
+
+                // LOAD DATA: Fetch Clips for this Session
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const clips = await res.json();
+                    Store.set('clips', clips);
+                } catch (e) { console.error("Clip Load Failed", e); }
+
                 UI.renderSessionList(); // Re-render to show active state
                 UI.renderLibrary();     // Load clips for THIS session
-                // UI.loadChatFeed(sessId); // Optional: Load chat for THIS session (if you want chat per session)
             },
 
             renderSessionList: () => {
