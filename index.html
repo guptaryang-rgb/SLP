@@ -285,7 +285,30 @@
         /* ==========================================================================
            4. WORKSPACE LAYOUT (Sidebars & Main)
            ========================================================================== */
-        .app-body { 
+       .dashboard-header {
+            padding: 16px 24px;
+            background: #0a0a0a;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .dash-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .dash-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: var(--text-dim); } .app-body { 
             flex: 1; 
             display: flex; 
             overflow: hidden; 
@@ -566,10 +589,9 @@
 
                 <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
 
-                <div class="legal-footer">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Data Security</a>
+               <div class="legal-footer">
+                    <a href="privacy.html" target="_blank">Privacy Policy</a>
+                    <a href="terms.html" target="_blank">Terms of Service</a>
                 </div>
             </div>
         </div>
