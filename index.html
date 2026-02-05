@@ -1077,21 +1077,42 @@
 
             renderLibrary: () => {
                 const grid = document.getElementById('lib-grid');
-                const clips = [
-                    ...Store.getClips(),
-                    { id: 'demo1', title: 'Cover 3 Beater', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', formation: 'Trips Left' }
-                ];
                 
-                grid.innerHTML = clips.map(c => `
-                    <div class="clip-card" onclick="UI.playClip('${c.id}')">
-                        <div class="clip-thumb-mini">▶</div>
-                        <div>
-                            <div style="font-weight:600; font-size:0.85rem; color:white;">${c.title}</div>
-                            <div style="font-size:0.7rem; color:#666;">${c.formation}</div>
+                // Guard: Require a session to be selected first
+                if (!UI.activeSessionId) {
+                    grid.innerHTML = '<div style="padding:20px; color:#666; font-size:0.8rem; text-align:center;">Select or Create a Session to view film.</div>';
+                    return;
+                }
+
+                const allClips = Store.getClips();
+                // FILTER: Only show clips for this specific session
+                const sessionClips = allClips.filter(c => c.sessionId === UI.activeSessionId);
+                
+                window.activeClips = sessionClips; 
+
+                grid.innerHTML = sessionClips.map(c => `
+                    <div class="clip-card" style="display:block; cursor:default;">
+                        <div style="display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="UI.playClip('${c.id}')">
+                            <div class="clip-thumb-mini">▶</div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600; font-size:0.85rem; color:white;">${c.title}</div>
+                                <div style="font-size:0.7rem; color:#666;">${c.formation}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="border-top:1px solid #222; margin-top:8px; padding-top:8px; display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <button onclick="alert('Scouting Report for ${c.id}')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer;">📊 Scout Report</button>
+                                <button onclick="alert('Ask Coach Feature for ${c.id}')" style="background:none; border:none; color:var(--text); font-size:0.7rem; cursor:pointer;">🤖 Ask Coach</button>
+                            </div>
+                            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                                <button onclick="alert('Rename ${c.id}')" style="background:none; border:none; color:#666; font-size:0.7rem; cursor:pointer;" title="Rename">✏️</button>
+                                <button onclick="alert('Move to Folder')" style="background:none; border:none; color:#666; font-size:0.7rem; cursor:pointer;" title="Organize">Tb</button>
+                                <button onclick="alert('Delete ${c.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; cursor:pointer;" title="Delete">🗑</button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
-                window.activeClips = clips; 
             },
 
             playClip: (id) => {
