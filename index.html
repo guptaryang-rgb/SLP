@@ -1148,7 +1148,7 @@
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
                 
-                // 0. IMMEDIATE WIPE (Visual Reset)
+                 // 0. IMMEDIATE WIPE (Visual Reset)
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
 
@@ -1157,7 +1157,8 @@
                 const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
 
                 // 2. RENDER CHAT (Isolate History)
-                const feed = document.getElementById('chat-feed');
+                // ...existing code...
+                // reuse `feed` declared above (do NOT redeclare)
                 feed.innerHTML = ''; // WIPE PREVIOUS CHAT
                 
                 if (currentSession && currentSession.history && currentSession.history.length > 0) {
