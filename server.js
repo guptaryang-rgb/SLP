@@ -574,11 +574,17 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     }
 
     // Update Clip with Analysis
-    savedClip.title = json.title || "Untitled Clip";
-    savedClip.o_formation = json.data.o_formation;
-    savedClip.d_formation = json.data.d_formation;
-    savedClip.formation = `${json.data.o_formation} vs ${json.data.d_formation}`;
-    savedClip.fullData = json;
+    // FIX: Add strict fallbacks to prevent "undefined" in UI
+    const oForm = json.data?.o_formation || json.data?.offense || "Unknown Offense";
+    const dForm = json.data?.d_formation || json.data?.defense || "Unknown Defense";
+
+    savedClip.title = json.title || "Untitled Analysis";
+    savedClip.o_formation = oForm;
+    savedClip.d_formation = dForm;
+    savedClip.formation = `${oForm} vs ${dForm}`;
+    
+    // Ensure fullData is never null
+    savedClip.fullData = json || {};
     savedClip.geminiFileUri = file.uri;
     await savedClip.save();
 
