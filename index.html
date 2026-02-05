@@ -1278,14 +1278,28 @@
                     attempts++;
                     if (window.Clerk) {
                         clearInterval(checkAuth);
-                        Clerk.load().then(() => {
-                            if (!Clerk.user) {
-                                Clerk.mountSignIn(document.getElementById('sign-in'));
-                            } else {
+Clerk.load()
+                            .then(() => {
+                                if (!Clerk.user) {
+                                    Clerk.mountSignIn(document.getElementById('sign-in'));
+                                } else {
+                                    document.getElementById('auth-modal').style.display = 'none';
+                                    Clerk.mountUserButton(document.getElementById('user-button'));
+                                    UI.init();
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Clerk Auth Failed:", err);
+                                // Fallback: Open app anyway so you aren't stuck
                                 document.getElementById('auth-modal').style.display = 'none';
-                                Clerk.mountUserButton(document.getElementById('user-button'));
-                                UI.init();
-                            }
+                                UI.init(); 
+                            });
+                    } else if (attempts > 10) {
+                        clearInterval(checkAuth);
+                        console.warn("Clerk timeout - forcing init");
+                        document.getElementById('auth-modal').style.display = 'none';
+                        UI.init(); 
+                    }
                         });
                     } else if (attempts > 10) {
                         clearInterval(checkAuth);
