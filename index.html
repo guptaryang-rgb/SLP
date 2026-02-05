@@ -1042,6 +1042,12 @@
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
                     const sessions = await res.json();
                     Store.set('sessions', sessions);
+                    
+                    // FIX: Auto-select the most recent session if none is active
+                    if (sessions.length > 0 && !UI.activeSessionId) {
+                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                        if(firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                    }
                 } catch (e) { console.error("Session Load Failed", e); }
 
                 // Tab Logic
@@ -1346,8 +1352,14 @@ Clerk.load()
                         sessions.unshift({ id: newSession.sessionId, title: newSession.title, date: newSession.createdAt, type: newSession.type });
                         Store.set('sessions', sessions);
                         
-                        UI.selectSession(newSession.sessionId);
-                    } catch (e) { alert("Failed to create session on server."); }
+                        // FIX: Force selection immediately
+                        UI.activeSessionId = newSession.sessionId; 
+                        await UI.selectSession(newSession.sessionId);
+                        
+                    } catch (e) { 
+                        console.error(e);
+                        alert("Failed to create session on server."); 
+                    }
                 }
             }
         };
