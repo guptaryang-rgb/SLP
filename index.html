@@ -1002,11 +1002,15 @@
             currentMode: 'about', // 'about', 'self', 'team'
             activeSessionId: null, // NEW: Track specific selected session
             
-            init: () => {
-                Store.init();
-                // UI.renderSessionList(); // Removed: Wait for tab switch to render correct list
-                // UI.renderLibrary();     // Removed: Wait for session selection
-                
+           init: async () => {
+                // LOAD DATA: Fetch Sessions from Server
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const sessions = await res.json();
+                    Store.set('sessions', sessions);
+                } catch (e) { console.error("Session Load Failed", e); }
+
                 // Tab Logic
                 document.querySelectorAll('.nav-tab').forEach(t => {
                     t.onclick = () => UI.switchTab(t.dataset.tab);
