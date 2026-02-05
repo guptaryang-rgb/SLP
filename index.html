@@ -411,9 +411,6 @@
         }
         
         #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
-        
-        
-        #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
         #draw-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; touch-action: none; }
         
         .video-controls { 
@@ -730,7 +727,8 @@
             
             init: () => {
                 // Initialize Sessions
-                if (!Store.get('sessions')) Store.set('sessions', [{ id: 'sess_init', title: 'Season 2026', date: Date.now() }]);
+                // FIX: Use 'sessionId' to match server format
+                if (!Store.get('sessions')) Store.set('sessions', [{ sessionId: 'sess_init', title: 'Season 2026', date: Date.now(), type: 'self' }]);
                 // Initialize Global Clips
                 if (!Store.get('clips')) Store.set('clips', []);
                 // Initialize Isolated Chat Stores
@@ -1096,36 +1094,35 @@
                     }
 
                     // Load the Isolated Chat for this mode
-                    UI.loadChatFeed(tab);
+                    // FIX: Don't load generic history. Load active session or empty state.
+                    if (UI.activeSessionId) {
+                        UI.selectSession(UI.activeSessionId);
+                    } else {
+                        // Clear feed if no session selected yet
+                        document.getElementById('chat-feed').innerHTML = '';
+                        UI.renderSessionList(); 
+                    }
                 }
             },
 
+            // FIX: This function is deprecated in favor of selectSession, 
+            // but we keep it for safety to show the empty state background
             loadChatFeed: (mode) => {
                 const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; // Wipe current view
+                feed.innerHTML = ''; 
                 
-                // Fetch from isolated storage
-                const history = Store.getChat(mode);
+                const icon = mode === 'self' ? '👤' : '🛡️';
+                const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
+                const subtitle = mode === 'self' 
+                    ? 'Focus on individual technique, position grades, and biomechanics.' 
+                    : 'Analyze formations, scheme efficiency, and unit coordination.';
                 
-                if (history.length === 0) {
-                    // Unique Empty States for Differentiation
-                    const icon = mode === 'self' ? '👤' : '🛡️';
-                    const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
-                    const subtitle = mode === 'self' 
-                        ? 'Focus on individual technique, position grades, and biomechanics.' 
-                        : 'Analyze formations, scheme efficiency, and unit coordination.';
-                    
-                    feed.innerHTML = `
-                        <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
-                            <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
-                            <h3>${title}</h3>
-                            <p style="color:#666; max-width:300px; margin:0 auto;">${subtitle}</p>
-                        </div>`;
-                } else {
-                    // Render History
-                    history.forEach(msg => UI.renderMessageHTML(msg));
-                    feed.scrollTop = feed.scrollHeight;
-                }
+                feed.innerHTML = `
+                    <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
+                        <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
+                        <h3>${title}</h3>
+                        <p style="color:#666; max-width:300px; margin:0 auto;">${subtitle}</p>
+                    </div>`;
             },
 
             renderMessageHTML: (msg) => {
@@ -1150,6 +1147,10 @@
             // NEW: Select a session and load its specific data
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
+                
+                // 0. IMMEDIATE WIPE (Visual Reset)
+                const feed = document.getElementById('chat-feed');
+                feed.innerHTML = '';
 
                 // 1. FIND SESSION DATA (For Chat History)
                 const sessions = Store.get('sessions') || [];
@@ -1262,8 +1263,15 @@
 
                 const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
                 
-                // SAVE USER MSG TO ISOLATED STORE
-                Store.addMessage(mode, { type: 'user', content: userText });
+                // SAVE USER MSG TO SESSION STORE (Locally)
+                const sessions = Store.get('sessions');
+                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if(sessIdx > -1) {
+                    if(!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                    sessions[sessIdx].history.push({ role: 'user', text: userText });
+                    Store.set('sessions', sessions);
+                }
+                
                 UI.renderMessageHTML({ type: 'user', content: userText });
 
                 // Reset Inputs
@@ -1281,14 +1289,19 @@
                 const res = await CoachAI.analyze(userText, file);
                 document.getElementById(loadId).remove();
 
-                // SAVE AI MSG TO ISOLATED STORE
+                // SAVE AI MSG TO SESSION STORE (Locally)
                 let aiContent = res.text;
                 if (res.type === 'card') {
                     UI.renderLibrary();
                     aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
                 }
                 
-                Store.addMessage(mode, { type: 'ai', content: aiContent });
+                const sessions2 = Store.get('sessions');
+                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if(sessIdx2 > -1) {
+                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
+                    Store.set('sessions', sessions2);
+                } // <--- THIS CLOSING BRACKET WAS MISSING
                 
                 // Render
                 feed.innerHTML += `
