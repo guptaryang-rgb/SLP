@@ -1210,12 +1210,14 @@
                 }, 300);
             },
             createNewSession: () => {
-                const title = prompt("Session Name:");
+                const title = prompt(`New ${UI.currentMode.toUpperCase()} Session Name:`);
                 if(title) {
                     const sessions = Store.get('sessions');
-                    sessions.unshift({ id: 'sess_'+Date.now(), title, date: Date.now() });
+                    const newId = 'sess_' + Date.now();
+                    // SAVE TYPE: Save 'self' or 'team' to ensure separation
+                    sessions.unshift({ id: newId, title, date: Date.now(), type: UI.currentMode });
                     Store.set('sessions', sessions);
-                    UI.renderSessionList();
+                    UI.selectSession(newId); // Auto-select the new session
                 }
             }
         };
