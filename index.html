@@ -1170,12 +1170,16 @@
                 // FILTER: Only show sessions matching current mode (Self vs Team)
                 const modeSessions = sessions.filter(s => s.type === UI.currentMode);
                 
-                list.innerHTML = modeSessions.map(s => `
-                    <div class="session-item ${s.id === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${s.id}')">
+                list.innerHTML = modeSessions.map(s => {
+                    // FIX: Handle both 'sessionId' (Server) and 'id' (Legacy Local)
+                    const validId = s.sessionId || s.id; 
+                    
+                    return `
+                    <div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')">
                         <span>${s.title}</span>
-                        <span style="font-size:0.7rem; color:#666;">${new Date(s.date).toLocaleDateString()}</span>
+                        <span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span>
                     </div>
-                `).join('');
+                `}).join('');
             },
 
             renderLibrary: () => {
@@ -1348,11 +1352,16 @@ Clerk.load()
                         
                         // Update Store locally to reflect change immediately
                         const sessions = Store.get('sessions') || [];
-                        // Server uses 'sessionId', Store uses 'id' - mapping accordingly
-                        sessions.unshift({ id: newSession.sessionId, title: newSession.title, date: newSession.createdAt, type: newSession.type });
+                        // FIX: Store consistently as 'sessionId'
+                        sessions.unshift({ 
+                            sessionId: newSession.sessionId, // Changed from id to sessionId
+                            title: newSession.title, 
+                            date: newSession.createdAt, 
+                            type: newSession.type 
+                        });
                         Store.set('sessions', sessions);
                         
-                        // FIX: Force selection immediately
+                        // Force selection immediately
                         UI.activeSessionId = newSession.sessionId; 
                         await UI.selectSession(newSession.sessionId);
                         
