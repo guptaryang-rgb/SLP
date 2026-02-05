@@ -727,8 +727,8 @@
             
             init: () => {
                 // Initialize Sessions
-                // FIX: Use 'sessionId' to match server format
-                if (!Store.get('sessions')) Store.set('sessions', [{ sessionId: 'sess_init', title: 'Season 2026', date: Date.now(), type: 'self' }]);
+                // FIX: Start empty so we don't use a fake session that isn't on the server
+                if (!Store.get('sessions')) Store.set('sessions', []);
                 // Initialize Global Clips
                 if (!Store.get('clips')) Store.set('clips', []);
                 // Initialize Isolated Chat Stores
