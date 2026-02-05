@@ -1294,15 +1294,26 @@
                     }
                 }, 300);
             },
-            createNewSession: () => {
+            createNewSession: async () => {
                 const title = prompt(`New ${UI.currentMode.toUpperCase()} Session Name:`);
                 if(title) {
-                    const sessions = Store.get('sessions');
-                    const newId = 'sess_' + Date.now();
-                    // SAVE TYPE: Save 'self' or 'team' to ensure separation
-                    sessions.unshift({ id: newId, title, date: Date.now(), type: UI.currentMode });
-                    Store.set('sessions', sessions);
-                    UI.selectSession(newId); // Auto-select the new session
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/create-session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ title, type: UI.currentMode })
+                        });
+                        const newSession = await res.json();
+                        
+                        // Update Store locally to reflect change immediately
+                        const sessions = Store.get('sessions') || [];
+                        // Server uses 'sessionId', Store uses 'id' - mapping accordingly
+                        sessions.unshift({ id: newSession.sessionId, title: newSession.title, date: newSession.createdAt, type: newSession.type });
+                        Store.set('sessions', sessions);
+                        
+                        UI.selectSession(newSession.sessionId);
+                    } catch (e) { alert("Failed to create session on server."); }
                 }
             }
         };
