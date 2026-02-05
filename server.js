@@ -497,7 +497,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
 
     // Prepare Context
-    const session = await Session.findOne({ sessionId, owner: req.auth.userId });
+    // FIX: Match the schema field 'userId'
+    const session = await Session.findOne({ sessionId, userId: req.auth.userId });
     
     // GUARD: If no session found, stop immediately
     if (!session) {
