@@ -1048,16 +1048,29 @@
                 }
             },
 
-            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+           toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
             toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
             toggleModal: (id) => document.getElementById(id).style.display = 'flex',
 
+            // NEW: Select a session and load its specific data
+            selectSession: (sessId) => {
+                UI.activeSessionId = sessId;
+                UI.renderSessionList(); // Re-render to show active state
+                UI.renderLibrary();     // Load clips for THIS session
+                // UI.loadChatFeed(sessId); // Optional: Load chat for THIS session (if you want chat per session)
+            },
+
             renderSessionList: () => {
                 const list = document.getElementById('session-list');
-                const sessions = Store.get('sessions');
-                list.innerHTML = sessions.map(s => `
-                    <div class="session-item active">
+                const sessions = Store.get('sessions') || [];
+                
+                // FILTER: Only show sessions matching current mode (Self vs Team)
+                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                
+                list.innerHTML = modeSessions.map(s => `
+                    <div class="session-item ${s.id === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${s.id}')">
                         <span>${s.title}</span>
+                        <span style="font-size:0.7rem; color:#666;">${new Date(s.date).toLocaleDateString()}</span>
                     </div>
                 `).join('');
             },
