@@ -1214,6 +1214,13 @@
                 const mode = UI.currentMode; // 'self' or 'team'
                 
                 if (!input.value && !fileInput.files.length) return;
+
+                // GUARD: Prevent upload if no session is active
+                if (!UI.activeSessionId) {
+                    alert("⚠️ Please Create or Select a Session from the left panel first!");
+                    return;
+                }
+
                 if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
                 const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
