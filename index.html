@@ -604,15 +604,17 @@
                 </div>
 
                 <div class="main">
+                    <div class="dashboard-header">
+                        <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
+                        <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
+                        <button class="dash-btn" onclick="alert('Upload Playbook Feature')">📖 Playbook</button>
+                        <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster / Tendency</button>
+                    </div>
+
                     <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
                         </div>
                     
                     <div class="input-bar">
-                        <div class="tool-group">
-                            <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Lists</button>
-                            <button class="tool-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy</button>
-                        </div>
-                        
                         <select id="pos-select" class="pos-select">
                             <option value="general">Select Focus...</option>
                             <option value="qb">Quarterback</option>
@@ -946,11 +948,12 @@
          */
         const UI = {
             currentMode: 'about', // 'about', 'self', 'team'
+            activeSessionId: null, // NEW: Track specific selected session
             
             init: () => {
                 Store.init();
-                UI.renderSessionList();
-                UI.renderLibrary();
+                // UI.renderSessionList(); // Removed: Wait for tab switch to render correct list
+                // UI.renderLibrary();     // Removed: Wait for session selection
                 
                 // Tab Logic
                 document.querySelectorAll('.nav-tab').forEach(t => {
