@@ -910,7 +910,6 @@
          */
         const CoachAI = {
             analyze: async (text, file) => {
-                analyze: async (text, file) => {
                 // Helper: Convert File to Base64 for Server
                 const toBase64 = file => new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -1297,12 +1296,6 @@ Clerk.load()
                     } else if (attempts > 10) {
                         clearInterval(checkAuth);
                         console.warn("Clerk timeout - forcing init");
-                        document.getElementById('auth-modal').style.display = 'none';
-                        UI.init(); 
-                    }
-                        });
-                    } else if (attempts > 10) {
-                        clearInterval(checkAuth);
                         document.getElementById('auth-modal').style.display = 'none';
                         UI.init(); 
                     }
