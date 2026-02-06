@@ -496,11 +496,12 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
 
     // Prepare Context
-    // FIX: Match the schema field 'userId'
-    const session = await Session.findOne({ sessionId, userId: req.auth.userId });
+    // FIXED: Changed 'userId' to 'owner' to match Mongoose Schema
+    const session = await Session.findOne({ sessionId, owner: req.auth.userId });
     
     // GUARD: If no session found, stop immediately
     if (!session) {
+
         if (tempPath) await fs.unlink(tempPath).catch(console.error);
         return res.status(400).json({ reply: "Error: No Active Session found. Please select a session on the left." });
     }
