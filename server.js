@@ -19,68 +19,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 // Increased limit for high-res game film
 app.use(express.json({ limit: "500mb" })); 
-app.use(ClerkExpressWithAuth());
-app.use(express.static(__dirname));
-
-// --- NEW API ROUTES FOR PERSISTENCE ---
-
-// 1. GET SESSIONS (Load list on refresh)
-app.get('/api/sessions', ClerkExpressWithAuth(), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    
-    const sessions = await Session.find({ userId }).sort({ createdAt: -1 });
-    res.json(sessions);
-  } catch (error) {
-    console.error("Session Fetch Error:", error);
-    res.status(500).json({ error: "Failed to fetch sessions" });
-  }
-});
-
-// 2. CREATE SESSION (The Missing Link)
-app.post('/api/create-session', ClerkExpressWithAuth(), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-    const { title, type } = req.body;
-    
-    const newSession = new Session({
-        sessionId: 'sess_' + Date.now(),
-        userId, 
-        title: title || "New Session",
-        type: type || 'self',
-        createdAt: new Date(),
-        history: [],
-        roster: []
-    });
-    
-    await newSession.save();
-    res.json(newSession);
-  } catch (error) {
-    console.error("Create Session Error:", error);
-    res.status(500).json({ error: "Failed to create session" });
-  }
-});
-
-// 3. GET CLIPS (Load library for specific session)
-app.get('/api/search', ClerkExpressWithAuth(), async (req, res) => {
-  try {
-    const userId = req.auth.userId;
-    const { sessionId } = req.query;
-    
-    const query = { userId };
-    // If sessionId is provided, filter by it. Otherwise return all (or none).
-    if (sessionId) query.sessionId = sessionId;
-    
-    const clips = await Clip.find(query).sort({ date: -1 });
-    res.json(clips);
-  } catch (error) {
-    console.error("Library Fetch Error:", error);
-    res.status(500).json({ error: "Failed to fetch clips" });
-  }
-});
 
 // Upload Directory Setup
 const UPLOAD_DIR = path.join(__dirname, 'temp_uploads');
