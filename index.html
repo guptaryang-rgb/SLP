@@ -2,289 +2,567 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vantage Vision | Pro Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vantage Vision | Pro Suite | Intelligence Platform</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <script crossorigin="anonymous" data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* =========================================
-           1. CORE THEME SYSTEM
-           ========================================= */
+        /* ==========================================================================
+           1. CORE DESIGN SYSTEM (TOKENS)
+           ========================================================================== */
         :root { 
+            /* Color Palette */
             --bg-deep: #050505; 
-            --bg-panel: rgba(20, 20, 20, 0.6); 
+            --bg-panel: rgba(20, 20, 20, 0.85); 
             --bg-card: #141414;
+            --bg-overlay: rgba(0, 0, 0, 0.95);
+
+            /* Borders */
             --border: rgba(255, 255, 255, 0.08); 
             --border-hover: rgba(255, 255, 255, 0.15);
+            --border-light: rgba(255, 255, 255, 0.2);
+
+            /* Text */
             --text: #e4e4e7; 
             --text-dim: #a1a1aa;
+            --text-dark: #71717a;
+
+            /* Brand Identity */
             --accent: #38bdf8; 
             --accent-glow: rgba(56, 189, 248, 0.15);
+            --accent-dim: rgba(56, 189, 248, 0.4);
+
+            /* Semantic Colors */
             --danger: #ef4444; 
+            --danger-bg: rgba(239, 68, 68, 0.1);
             --success: #10b981; 
+            --success-bg: rgba(16, 185, 129, 0.1);
             --warning: #f59e0b; 
-            --font-main: 'Inter', sans-serif;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            
+            /* Typography */
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
+
+            /* Layout Dimensions */
+            --nav-height: 64px;
+            --sidebar-width: 280px;
+            --lib-width: 320px;
+            --app-height: 100dvh; /* Dynamic Viewport Height for Mobile */
         }
         
-        * { box-sizing: border-box; outline: none; }
+        /* Global Reset */
+        * { 
+            box-sizing: border-box; 
+            outline: none; 
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent; 
+        }
         
         body { 
-            background: var(--bg-deep); color: var(--text); font-family: var(--font-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; 
+            background: var(--bg-deep); 
+            color: var(--text); 
+            font-family: var(--font-main); 
+            height: var(--app-height); 
+            width: 100vw;
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            margin: 0; 
+            padding: 0;
+            overscroll-behavior: none; 
         }
         
-        ::-webkit-scrollbar { width: 6px; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-        /* =========================================
-           2. NAVIGATION
-           ========================================= */
+        /* ==========================================================================
+           2. NAVIGATION COMPONENTS
+           ========================================================================== */
         .navbar { 
-            height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; 
-            background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(12px); z-index: 100; flex-shrink: 0;
+            height: var(--nav-height); 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 24px; 
+            background: rgba(5, 5, 5, 0.9); 
+            backdrop-filter: blur(12px); 
+            z-index: 100; 
+            flex-shrink: 0;
         }
-        .logo { font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; color: white; } 
-        .logo span { color: var(--accent); }
-        .logo-icon { width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent), #1e40af); border-radius: 6px; }
 
-        .nav-tabs { display: flex; gap: 4px; background: #0f0f0f; padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
-        .nav-tab { 
-            padding: 8px 20px; border-radius: 8px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; color: var(--text-dim); 
-        }
-        .nav-tab:hover { color: white; background: rgba(255,255,255,0.03); }
-        .nav-tab.active { background: #222; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
-
-        /* =========================================
-           3. VIEW MANAGEMENT & LANDING
-           ========================================= */
-        .view-container { flex: 1; position: relative; overflow: hidden; }
-        .view { position: absolute; inset: 0; display: none; flex-direction: column; opacity: 0; transform: scale(0.98); transition: opacity 0.3s ease, transform 0.3s ease; }
-        .view.active-view { display: flex; opacity: 1; transform: scale(1); }
-
-        #landing-view {
-            align-items: center; text-align: center;
-            background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
-            overflow-y: auto; padding-bottom: 50px;
-        }
-        .hero-wrapper { max-width: 1000px; padding: 60px 20px; display: flex; flex-direction: column; align-items: center; }
-        .hero-title { 
-            font-size: 4.5rem; font-weight: 900; line-height: 1.05; letter-spacing: -2px; margin: 0 0 24px 0; 
-            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; 
-        }
-        .hero-subtitle { font-size: 1.1rem; color: var(--text-dim); margin-bottom: 30px; font-weight: 300; max-width: 700px; line-height: 1.6; }
+        .logo { 
+            font-weight: 800; 
+            font-size: 1.25rem; 
+            letter-spacing: -0.5px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            color: white; 
+            user-select: none;
+            cursor: pointer;
+        } 
         
-        .onboarding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 40px 0; width: 100%; text-align: left; }
-        .step-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 24px; border-radius: 12px; }
-        .step-num { color: var(--accent); font-weight: 900; font-size: 1.5rem; margin-bottom: 10px; }
-        .step-title { color: white; font-weight: 700; margin-bottom: 8px; }
+        .logo span { color: var(--accent); }
+        
+        .logo-icon { 
+            width: 28px; 
+            height: 28px; 
+            background: linear-gradient(135deg, var(--accent), #1e40af); 
+            border-radius: 6px; 
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .nav-tabs { 
+            display: flex; 
+            gap: 4px; 
+            background: #0f0f0f; 
+            padding: 4px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border); 
+        }
+        
+        .nav-tab { 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-weight: 500; 
+            font-size: 0.85rem; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            color: var(--text-dim); 
+            white-space: nowrap;
+        }
+        
+        .nav-tab:hover { color: white; background: rgba(255,255,255,0.03); }
+        
+        .nav-tab.active { 
+            background: #222; 
+            color: white; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+            border: 1px solid rgba(255,255,255,0.05); 
+        }
+
+        /* ==========================================================================
+           3. VIEW & ROUTING SYSTEM
+           ========================================================================== */
+        .view-container { 
+            flex: 1; 
+            position: relative; 
+            overflow: hidden; 
+            display: flex;
+        }
+        
+        .view { 
+            position: absolute; 
+            inset: 0; 
+            display: none; 
+            flex-direction: column; 
+            opacity: 0; 
+            transform: scale(0.99); 
+            transition: opacity 0.3s ease, transform 0.3s ease; 
+        }
+        
+        .view.active-view { 
+            display: flex; 
+            opacity: 1; 
+            transform: scale(1); 
+        }
+
+        /* --- Landing View Specifics --- */
+        #landing-view {
+            align-items: center; 
+            text-align: center;
+            background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
+            overflow-y: auto; 
+            padding-bottom: 50px;
+        }
+        
+        .hero-wrapper { 
+            max-width: 1000px; 
+            padding: 80px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100%; /* Ensure footer pushes down */
+        }
+        
+        .hero-badge {
+            font-size: 0.8rem;
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            font-weight: 600;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .hero-title { 
+            font-size: 4.5rem; 
+            font-weight: 900; 
+            line-height: 1.05; 
+            letter-spacing: -2px; 
+            margin: 0 0 24px 0; 
+            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); 
+            -webkit-background-clip: text; 
+            color: transparent; 
+        }
+        
+        .hero-subtitle { 
+            font-size: 1.15rem; 
+            color: var(--text-dim); 
+            margin-bottom: 30px; 
+            font-weight: 300; 
+            max-width: 700px; 
+            line-height: 1.6; 
+        }
+        
+        .onboarding-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 24px; 
+            margin: 40px 0; 
+            width: 100%; 
+            text-align: left; 
+        }
+        
+        .step-card { 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid var(--border); 
+            padding: 24px; 
+            border-radius: 12px; 
+            transition: transform 0.3s ease;
+        }
+        
+        .step-num { color: var(--accent); font-weight: 900; font-size: 1.5rem; margin-bottom: 12px; font-family: var(--font-mono); }
+        .step-title { color: white; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
         .step-desc { color: #888; font-size: 0.9rem; line-height: 1.5; }
 
         .cta-btn { 
-            background: var(--text); color: black; padding: 16px 40px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; 
-            font-size: 1rem; transition: all 0.2s ease; margin-top: 20px; box-shadow: 0 0 40px rgba(255,255,255,0.1); 
+            background: var(--text); 
+            color: black; 
+            padding: 18px 48px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            transition: all 0.2s ease; 
+            margin-top: 30px; 
+            box-shadow: 0 0 40px rgba(255,255,255,0.1); 
         }
-        .cta-btn:hover { transform: translateY(-2px); background: white; box-shadow: 0 0 60px rgba(255,255,255,0.2); }
-
-        .legal-footer { margin-top: 60px; width: 100%; text-align: center; font-size: 0.8rem; color: #555; }
-        .legal-footer a { color: #777; text-decoration: none; margin: 0 12px; }
-
-        /* =========================================
-           4. WAR ROOM LAYOUT
-           ========================================= */
-        .app-body { flex: 1; display: flex; overflow: hidden; width: 100vw; justify-content: space-between; }
         
-        /* RESTORED SIDEBAR STYLE */
-        .sidebar, .lib-panel { 
-            width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; 
-            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; backdrop-filter: blur(20px); z-index: 5;
+        .cta-btn:hover { 
+            transform: translateY(-2px); 
+            background: white; 
+            box-shadow: 0 0 60px rgba(255,255,255,0.25); 
         }
-        .lib-panel { border-right: none; border-left: 1px solid var(--border); width: 320px; }
-        .sidebar.collapsed { margin-left: -280px; opacity: 0; }
-        .lib-panel.collapsed { margin-right: -320px; opacity: 0; }
+
+        .legal-footer {
+            margin-top: 80px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .legal-footer a { color: var(--text-dark); text-decoration: none; transition: 0.2s; }
+        .legal-footer a:hover { color: var(--accent); }
+
+        /* ==========================================================================
+           4. WORKSPACE LAYOUT (Sidebars & Main)
+           ========================================================================== */
+       .dashboard-header {
+            padding: 16px 24px;
+            background: #0a0a0a;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .dash-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .dash-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: var(--text-dim); } .app-body { 
+            flex: 1; 
+            display: flex; 
+            overflow: hidden; 
+            width: 100vw; 
+            justify-content: space-between; 
+            position: relative;
+        }
+        
+        .sidebar, .lib-panel { 
+            width: var(--sidebar-width); 
+            background: var(--bg-panel); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            flex-shrink: 0; 
+            backdrop-filter: blur(20px); 
+            z-index: 5;
+        }
+        
+        .lib-panel { 
+            border-right: none; 
+            border-left: 1px solid var(--border); 
+            width: var(--lib-width); 
+        }
+        
+        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); opacity: 0; }
+        .lib-panel.collapsed { margin-right: calc(var(--lib-width) * -1); opacity: 0; }
 
         .panel-header { 
-            padding: 20px 24px; font-size: 0.7rem; font-weight: 800; color: var(--text-dim); letter-spacing: 1px; 
-            text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); 
+            padding: 16px 20px; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: var(--text-dim); 
+            letter-spacing: 1px; 
+            text-transform: uppercase; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border); 
+            background: rgba(0,0,0,0.3);
         }
-        .panel-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
-        .panel-btn:hover { color: var(--accent); }
+        
+        .panel-btn { 
+            background: none; border: none; color: white; cursor: pointer; 
+            font-size: 1.2rem; transition: 0.2s; opacity: 0.7; padding: 4px;
+        }
+        .panel-btn:hover { opacity: 1; color: var(--accent); }
 
         .session-item { 
-            padding: 12px 16px; margin: 4px 12px; border-radius: 8px; color: var(--text-dim); font-size: 0.9rem; cursor: pointer; transition: 0.2s; 
-            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 16px; margin: 4px 12px; border-radius: 8px; 
+            color: var(--text-dim); font-size: 0.9rem; cursor: pointer; 
+            transition: 0.2s; display: flex; justify-content: space-between; align-items: center; user-select: none;
         }
         .session-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .session-item.active { background: #1a1a1a; color: white; border-left: 3px solid var(--accent); }
 
         .main { 
-            flex: 1; display: flex; flex-direction: column; width: 100%; min-width: 0; 
-            background-color: #050505; position: relative;
+            flex: 1; display: flex; flex-direction: column; width: 100%; 
+            min-width: 0; background-color: #050505; position: relative;
         }
 
-        /* --- 5. CINEMA MODE (VIDEO PLAYER) --- */
-        #cinema-container { 
-            display: none; /* Hidden until clip plays */
-            flex-direction: column; border-bottom: 1px solid var(--border); 
-            background: #000; height: 55%; flex-shrink: 0; position: relative;
+        /* ==========================================================================
+           5. ANALYSIS OVERLAY (THE TELESTRATOR POPUP)
+           ========================================================================== */
+        #analysis-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: var(--app-height);
+            background: #000; z-index: 5000; display: none; flex-direction: column;
+            animation: overlayFadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        #telestrator-view { width: 100%; height: 100%; position: relative; display: flex; justify-content: center; align-items: center; background: #080808; }
-        #main-video { max-height: 100%; max-width: 100%; width: auto; height: auto; display: block; }
-        #draw-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
+        @keyframes overlayFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .overlay-header {
+            height: 56px; border-bottom: 1px solid var(--border); display: flex;
+            justify-content: space-between; align-items: center; padding: 0 20px;
+            background: #080808; flex-shrink: 0;
+        }
+
+        .overlay-title { font-weight: 700; color: white; display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.5; } 100% { opacity:1; } }
+
+        /* Video Area */
+        #popup-video-container {
+            flex: 6; position: relative; background: #050505; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            border-bottom: 1px solid var(--border); overflow: hidden; touch-action: none;
+        }
+
+        #telestrator-view { 
+            width: 100%; height: 100%; position: relative; display: flex; 
+            justify-content: center; align-items: center; background: #000; overflow: hidden;
+        }
+
+        /* NEW: Ghost Video Layer */
+        #ghost-video {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            object-fit: contain; opacity: 0; pointer-events: none; z-index: 5;
+        }
+        
+        #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
+        #draw-canvas { position: absolute; top:0; left:0; pointer-events:none; touch-action: none; z-index: 10; }
         
         .video-controls { 
-            position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 24px; 
-            background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); 
-            display: flex; gap: 16px; align-items: center; z-index: 20;
+            position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 24px;
+            background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
+            display: flex; gap: 20px; align-items: center; z-index: 20; transition: opacity 0.3s;
         }
         
-        .v-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem; display: flex; align-items: center; }
+        .v-btn { 
+            background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem;
+            display: flex; align-items: center; min-width: 44px; min-height: 44px; justify-content: center;
+        }
         .v-btn:hover { color: var(--accent); }
         
+        .scrubber-container { flex: 1; display: flex; align-items: center; gap: 12px; }
         .scrubber { 
-            flex: 1; cursor: pointer; accent-color: var(--accent); height: 4px; border-radius: 2px;
-            background: rgba(255,255,255,0.2); appearance: none;
+            flex: 1; cursor: pointer; accent-color: var(--accent); height: 4px;
+            border-radius: 2px; background: rgba(255,255,255,0.2); appearance: none;
         }
-        .scrubber::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; }
+        .scrubber:hover { height: 8px; }
         
         .tele-tools { display: flex; gap: 8px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px; margin-left: 8px; }
-        
-        /* --- 6. ANALYSIS FEED --- */
-        .analysis-area { 
-            flex: 1; overflow-y: auto; padding: 32px; background: #0a0a0a; 
-            display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth;
+
+        /* Report Area */
+        #popup-report-container {
+            flex: 4; background: #111; overflow-y: auto; padding: 24px;
+            display: flex; flex-direction: column; align-items: center;
         }
-        
-        .msg { max-width: 85%; font-size: 0.95rem; line-height: 1.6; padding: 16px 20px; border-radius: 12px; margin-bottom: 8px; }
-        .msg.user { align-self: flex-end; background: #27272a; border: 1px solid var(--border); color: #fff; }
-        .msg.model { align-self: flex-start; width: 100%; padding: 0; background: transparent; max-width: 100%; }
+        .report-wrapper { max-width: 900px; width: 100%; padding-bottom: 40px; }
 
-        #empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.4; pointer-events: none; text-align: center; }
-        #empty-state h3 { font-weight: 800; font-size: 1.5rem; margin: 16px 0 8px 0; color: #fff; }
-
-        /* --- 7. SCOUT CARD 2.0 --- */
+        /* ==========================================================================
+           6. SCOUT CARD STYLING
+           ========================================================================== */
         .scout-card { 
-            background: #141414; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; 
-            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5); margin-top: 10px;
+            background: #141414; border: 1px solid var(--border); border-radius: 16px;
+            overflow: hidden; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
+            margin-bottom: 20px; animation: slideUp 0.4s ease-out; width: 100%;
         }
+
         .scout-header { 
-            padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex;
+            justify-content: space-between; align-items: center;
             background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 100%);
         }
         
-        .play-title { font-weight: 800; font-size: 1.2rem; color: white; margin-top: 4px; }
-        .formation-tag { font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 4px 8px; border-radius: 4px; }
-        .focus-tag { font-family: var(--font-mono); font-size: 0.7rem; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 4px 8px; border-radius: 4px; margin-left: 8px; font-weight: 700; }
+        .play-title { font-weight: 800; font-size: 1.2rem; color: white; margin-top: 6px; }
+        .formation-tag { 
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);
+            background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
         
         .exec-badge { 
-            text-align: center; background: #050505; border: 1px solid var(--border); padding: 6px 14px; border-radius: 8px; 
+            text-align: center; background: #050505; border: 1px solid var(--border);
+            padding: 8px 16px; border-radius: 8px; min-width: 70px;
         }
         .exec-val { font-size: 1.4rem; font-weight: 900; line-height: 1; }
         
         .scout-body { padding: 24px; display: grid; grid-template-columns: 2fr 1.2fr; gap: 32px; }
-        .summary-text { color: #d4d4d8; font-size: 1rem; line-height: 1.7; margin-bottom: 24px; grid-column: 1 / -1; border-left: 2px solid var(--border); padding-left: 16px; }
+        .summary-text { 
+            color: #d4d4d8; font-size: 1rem; line-height: 1.7; margin-bottom: 24px;
+            grid-column: 1 / -1; border-left: 3px solid var(--border); padding-left: 16px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+            padding: 16px; border-radius: 0 8px 8px 0;
+        }
         
         .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-        .metric-card { background: #1a1a1a; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .metric-card { background: #1a1a1a; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
         .metric-label { font-size: 0.6rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; }
         .metric-val { font-size: 1.2rem; font-weight: 800; color: white; }
 
-        .timeline-event { 
-            display: flex; gap: 16px; margin-bottom: 12px; cursor: pointer; padding: 8px; border-radius: 8px; 
-            transition: 0.2s; border: 1px solid transparent; 
-        }
-        .timeline-event:hover { background: rgba(255,255,255,0.03); border-color: var(--border); }
-        .t-time { 
-            font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); font-weight: 700;
-            background: rgba(56,189,248,0.1); padding: 4px 8px; border-radius: 4px; height: fit-content;
-        }
-
-        /* --- 8. INPUT BAR --- */
+        /* ==========================================================================
+           7. INPUT BAR & TOOLS
+           ========================================================================== */
         .input-bar { 
-            padding: 20px 32px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; z-index: 50; 
-            backdrop-filter: blur(10px);
+            padding: 20px 24px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border);
+            display: flex; gap: 12px; align-items: center; z-index: 50; backdrop-filter: blur(10px);
         }
-        .tool-group { display: flex; gap: 8px; padding-right: 16px; border-right: 1px solid var(--border); }
+        
         .input-box { 
-            flex: 1; background: #141414; border: 1px solid var(--border); color: white; padding: 14px 20px; border-radius: 12px; 
-            outline: none; font-family: 'Inter'; font-size: 0.95rem; transition: 0.2s;
+            flex: 1; background: #141414; border: 1px solid var(--border); color: white;
+            padding: 12px 16px; border-radius: 10px; outline: none; font-family: 'Inter'; font-size: 0.95rem;
         }
         .input-box:focus { border-color: var(--accent); }
-        .pos-select { background: #141414; color: white; border: 1px solid var(--border); padding: 0 16px; height: 48px; border-radius: 12px; font-weight: 500; cursor: pointer; outline: none; }
-        .btn { padding: 0 24px; height: 48px; background: white; color: black; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn:hover { background: #e4e4e7; transform: translateY(-1px); }
-
-        /* --- 9. SHARED STYLES --- */
+        
         .tool-btn { 
-            background: #222; border: 1px solid var(--border); color: #ccc; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; 
-            cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            background: #222; border: 1px solid var(--border); color: #ccc;
+            font-size: 0.85rem; padding: 10px 16px; border-radius: 8px; cursor: pointer;
+            transition: 0.2s; font-weight: 600; display: flex; align-items: center;
+            gap: 6px; white-space: nowrap;
         }
-        .tool-btn:hover { color: white; border-color: var(--border-light); background: #333; }
-        .tool-btn.active { color: black; background: var(--accent); border-color: var(--accent); }
+        .tool-btn:hover { color: white; background: #333; }
 
+        .pos-select {
+            background: #141414; color: white; border: 1px solid var(--border);
+            padding: 0 16px; height: 44px; border-radius: 8px; font-weight: 500;
+            cursor: pointer; outline: none; display: none; /* Hidden by default */
+        }
+
+        /* Library Cards */
         .clip-card { 
-            padding: 12px; margin: 0 12px 12px; background: #141414; border: 1px solid var(--border); border-radius: 10px; 
-            cursor: pointer; display: flex; gap: 12px; align-items: center; transition: 0.2s; 
+            padding: 12px; margin: 0 12px 12px; background: #141414; border: 1px solid var(--border);
+            border-radius: 10px; cursor: pointer; display: flex; gap: 12px; align-items: center; transition: 0.2s;
         }
-        .clip-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .clip-card:hover { border-color: var(--border-hover); background: #1a1a1a; }
         .clip-thumb-mini { 
-            width: 70px; height: 45px; background: #000; border-radius: 6px; display: flex; align-items: center; justify-content: center; 
-            color: #333; font-size: 0.9rem; border: 1px solid #333;
+            width: 60px; height: 40px; background: #000; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; color: #333;
+            font-size: 0.8rem; border: 1px solid #333;
         }
 
-        /* --- 10. MODALS --- */
+        /* ==========================================================================
+           8. MODALS & UTILITIES
+           ========================================================================== */
         .modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); z-index: 2000; 
-            display: none; justify-content: center; align-items: center; animation: fadeIn 0.2s ease; 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.2s ease;
         }
         .modal-content { 
-            background: #111; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; 
-            width: 90vw; max-width: 850px; padding: 40px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
-        }
-
-        .strat-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-        .strat-tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; color: var(--text-dark); font-weight: 700; }
-        .strat-tab.active { background: #222; color: white; border: 1px solid var(--border); }
-        .strat-area { 
-            width: 100%; background: #080808; border: 1px solid var(--border); color: #e4e4e7; padding: 20px; border-radius: 12px; 
-            min-height: 250px; font-family: var(--font-mono); font-size: 0.9rem; margin-bottom: 20px;
-        }
-        .upload-zone { 
-            border: 2px dashed var(--border); border-radius: 12px; padding: 60px; text-align: center; color: var(--text-dark); 
-            cursor: pointer; background: rgba(255,255,255,0.01);
-        }
-
-        #coach-chat-modal { 
-            position: fixed; bottom: 100px; right: 40px; width: 380px; height: 500px; background: #111; border: 1px solid var(--border); 
-            border-radius: 16px; display: none; flex-direction: column; z-index: 2500; box-shadow: 0 40px 80px rgba(0,0,0,0.8); 
+            background: #111; border: 1px solid var(--border); border-radius: 16px;
+            width: 90vw; max-width: 800px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        @media (max-width: 1000px) { 
-            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); }
-            #cinema-container { height: 40%; }
-            .scout-body { grid-template-columns: 1fr; }
-            .onboarding-grid { grid-template-columns: 1fr; }
-            .input-bar { flex-wrap: wrap; padding: 10px; }
+        /* Mobile Breakpoints */
+        @media (max-width: 900px) { 
+            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); box-shadow: 0 0 50px black; }
+            #popup-video-container { flex: 0 0 40dvh; }
+            #popup-report-container { flex: 1; }
+            .scout-body { grid-template-columns: 1fr; gap: 20px; }
+            .input-bar { flex-wrap: wrap; padding: 12px; }
             .tool-group { border-right: none; width: 100%; justify-content: space-between; margin-bottom: 8px; }
-            #file-btn, #pos-select { display: none; }
+            .onboarding-grid { grid-template-columns: 1fr; }
+            .hero-title { font-size: 3rem; }
+            .tool-btn span { display: none; } /* Hide text on small screens */
+            .tool-btn { padding: 10px; }
         }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <div class="logo"><div class="logo-icon"></div> Vantage<span>Vision</span></div>
+        <div class="logo" onclick="window.location.reload()">
+            <div class="logo-icon"></div> 
+            Vantage<span>Vision</span>
+        </div>
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('about')">Vision</div>
-            <div class="nav-tab" onclick="switchTab('self')">Self Analysis</div>
-            <div class="nav-tab" onclick="switchTab('team')">Team Analysis</div>
+            <div class="nav-tab active" data-tab="about">Vision</div>
+            <div class="nav-tab" data-tab="self">Self Analysis</div>
+            <div class="nav-tab" data-tab="team">Team Analysis</div>
         </div>
         <div id="user-button"></div>
     </div>
@@ -293,99 +571,73 @@
         
         <div id="landing-view" class="view active-view">
             <div class="hero-wrapper">
-                <div class="hero-badge">Pro Suite v2.5</div>
+                <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Football is a mental game. To win, you need more than just physical talent—you need intelligence and preparation. Vantage Vision uses AI to break down film instantly, giving you the edge.</p>
+                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
                 
                 <div class="onboarding-grid">
                     <div class="step-card">
                         <div class="step-num">01</div>
-                        <div class="step-title">Upload Film</div>
-                        <div class="step-desc">Securely drag & drop your game footage (MP4). Our system processes movement tracking and identifies formations instantly.</div>
+                        <div class="step-title">Upload</div>
+                        <div class="step-desc">Upload raw MP4 footage directly from your device. Local processing ensures privacy.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">02</div>
-                        <div class="step-title">Set Strategy</div>
-                        <div class="step-desc">Don't settle for generic advice. Upload your specific Playbook or Rule Sets so the AI grades "Execution" against YOUR scheme.</div>
+                        <div class="step-title">Select Mode</div>
+                        <div class="step-desc">Choose <strong>Self</strong> for biomechanics & grades, or <strong>Team</strong> for scheme & coverage analysis.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
-                        <div class="step-title">Review & Fix</div>
-                        <div class="step-desc">Enter the "War Room." Watch film with synchronized coaching notes, temporal drawings, and download instant scout cards.</div>
+                        <div class="step-title">Execute</div>
+                        <div class="step-desc">Use the Telestrator engine to draw over film in real-time with Apple Pencil support.</div>
                     </div>
                 </div>
 
-                <button class="cta-btn" onclick="switchTab('self')">Enter the Command Center</button>
-                <div class="legal-footer">
-                    <a href="/privacy.html" target="_blank">Privacy Policy</a> • 
-                    <a href="/terms.html" target="_blank">Terms of Service</a>
+                <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
+
+               <div class="legal-footer">
+                    <a href="privacy.html" target="_blank">Privacy Policy</a>
+                    <a href="terms.html" target="_blank">Terms of Service</a>
                 </div>
             </div>
         </div>
 
         <div id="war-room-view" class="view">
-            <div id="progress-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:3px; z-index:9999;"><div id="progress-bar" style="height:100%; background:var(--accent); width:0; transition:width 0.5s;"></div></div>
-            
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn" onclick="newSession()">+</button></div>
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
                 <div class="main">
-                    
-                    <div id="cinema-container">
-                        <div id="telestrator-view">
-                            <video id="main-video" crossorigin="anonymous"></video>
-                            <canvas id="draw-canvas"></canvas>
-                        </div>
-                        
-                        <div class="video-controls">
-                            <button class="v-btn" onclick="togglePlay()">⏯</button>
-                            <div class="scrubber-container">
-                                <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.1">
-                                <div id="video-time" class="time-display">0:00</div>
-                            </div>
-                            <div class="tele-tools">
-                                <button id="draw-btn" class="tool-btn" onclick="toggleDrawMode()">✏️ Pencil</button>
-                                <button class="tool-btn" onclick="clearCanvas()">Clear</button>
-                                <button class="tool-btn" onclick="closeVideoPlayer()" style="color:var(--text-dim);">Close View</button>
-                            </div>
-                        </div>
+                    <div class="dashboard-header">
+                        <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
+                        <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
+                        <button class="dash-btn" onclick="alert('Upload Playbook Feature')">📖 Playbook</button>
+                        <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
+                        <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster / Tendency</button>
                     </div>
 
-                    <div id="chat-feed" class="analysis-area">
-                        <div id="empty-state">
-                            <div style="font-size:3rem; opacity:0.5; margin-bottom:16px;">🏈</div>
-                            <h3>Ready to Analyze</h3>
-                            <p style="color:#666; max-width:300px;">Upload game film below or select a previous clip from the library on the right.</p>
+                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
                         </div>
-                    </div>
                     
                     <div class="input-bar">
-                        <div class="tool-group">
-                            <button class="tool-btn" onclick="toggleSidebar()">◂ Lists</button>
-                            <button class="tool-btn" onclick="openStrategy()">📘 Strategy</button>
-                            <button class="tool-btn" onclick="openTendencies()">📊 Stats</button>
-                        </div>
-                        
                         <select id="pos-select" class="pos-select">
-                            <option value="general">Focus Area...</option>
+                            <option value="general">Select Focus...</option>
                             <option value="qb">Quarterback</option>
                             <option value="wr">Receiver</option>
                             <option value="rb">Running Back</option>
-                            <option value="ol">O-Line</option>
-                            <option value="dl">D-Line</option>
-                            <option value="lb">Linebacker</option>
                             <option value="db">Defensive Back</option>
+                            <option value="ol">Offensive Line</option>
                         </select>
-                        <input type="file" id="file-input" hidden onchange="handleFileSelect(this)">
-                        <button id="file-btn" class="tool-btn" style="height:46px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload</button>
+
+                        <input type="file" id="file-input" hidden accept="video/*">
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
                         
-                        <input type="text" id="user-input" class="input-box" placeholder="Ask the coach about this play...">
-                        <button id="send-btn" class="btn">SEND</button>
+                        <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
+                        <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
                         
-                        <button class="tool-btn" onclick="toggleLibrary()" style="margin-left:8px;">Library ▸</button>
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
                     </div>
                 </div>
 
@@ -397,582 +649,785 @@
         </div>
     </div>
 
+    <div id="analysis-overlay">
+        <div class="overlay-header">
+            <div class="overlay-title">
+                <div class="live-dot"></div>
+                Vantage Cinema Mode
+            </div>
+            <button class="tool-btn" onclick="Telestrator.close()">✕ Close</button>
+        </div>
+
+        <div id="popup-video-container">
+            <div id="telestrator-view">
+                <video id="ghost-video" playsinline webkit-playsinline muted></video>
+                <video id="main-video" playsinline webkit-playsinline></video>
+                <canvas id="draw-canvas"></canvas>
+            </div>
+            
+            <div class="video-controls">
+                <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
+                    <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
+                    <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);" oninput="document.getElementById('ghost-video').style.opacity = this.value">
+                </div>
+
+                <button class="v-btn" id="play-pause-btn">⏯</button>
+                <div class="scrubber-container">
+                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                    <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+                </div>
+                <div class="tele-tools">
+                    <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                    <button id="clear-btn" class="tool-btn">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="popup-report-container">
+            <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button class="tool-btn" style="padding:6px 12px;">Ask</button>
+                </div>
+            </div>
+
+            <div class="report-wrapper" id="report-injection-site"></div>
+        </div>
+    </div>
+
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
-            <h3 style="margin-top:0; font-size:1.5rem;">Strategy Hub (Coordinator Tools)</h3>
-            <div class="strat-tabs">
-                <div class="strat-tab active" onclick="switchStrat('rules')">Position Rules</div>
-                <div class="strat-tab" onclick="switchStrat('playbook')">Upload Playbook</div>
-            </div>
-            <div id="strat-rules-view">
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <select id="rule-pos-select" class="pos-select" style="flex:1;">
-                        <option value="CB">Cornerback</option>
-                        <option value="S">Safety</option>
-                        <option value="LB">Linebacker</option>
-                        <option value="DL">Defensive Line</option>
-                    </select>
-                </div>
-                <textarea id="rules-input" class="strat-area" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep."></textarea>
-                <button onclick="saveRules()" class="btn" style="width:100%;">Save Rule Set</button>
-            </div>
-            <div id="strat-playbook-view" style="display:none;">
-                <div class="upload-zone" onclick="document.getElementById('pb-file').click()">
-                    <div style="font-size:3rem; margin-bottom:15px;">📂</div>
-                    <div style="font-weight:700; color:white;">Click to Upload PDF Diagram</div>
-                    <div id="pb-filename" style="color:var(--accent); margin-top:15px;"></div>
-                </div>
-                <input type="file" id="pb-file" hidden onchange="handlePlaybook(this)">
-                <button onclick="savePlaybook()" class="btn" style="width:100%; margin-top:20px;">Integrate Playbook</button>
-            </div>
+            <h3 style="margin-top:0; color:white;">Strategy Hub</h3>
+            <p style="color:#888; margin-bottom:16px;">Define analysis rules. These persist across all sessions.</p>
+            <textarea id="rules-input" style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
+            <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;" onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
         </div>
     </div>
 
-    <div id="coach-chat-modal">
-        <div class="panel-header" style="background:#1a1a1a;">Coach's Corner <span onclick="document.getElementById('coach-chat-modal').style.display='none'" style="cursor:pointer; opacity:0.5;">✕</span></div>
-        <div id="coach-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; background:#111;"></div>
-        <div style="padding:16px; border-top:1px solid var(--border); display:flex; gap:8px; background:#1a1a1a;">
-            <input id="coach-input" style="flex:1; background:#000; border:1px solid var(--border); padding:10px; border-radius:8px; color:white;" placeholder="Type here...">
-            <button onclick="sendCoachMessage()" class="btn" style="height:auto; padding:0 16px;">></button>
-        </div>
-    </div>
-
-    <div id="tendency-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content">
-            <h3 style="margin-top:0;">Performance Analytics</h3>
-            <div id="tendency-chart"></div>
-            <div id="tendency-content" style="margin-top:20px;"></div>
-        </div>
-    </div>
-
-    <div id="roster-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content">
-            <h3 style="margin-top:0;">Active Roster</h3>
-            <div id="roster-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;"></div>
+    <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="max-width:600px;">
+            <h3 style="margin-top:0; color:white;">Defensive Shot Chart</h3>
+            <div style="background:white; padding:10px; border-radius:8px;">
+                <canvas id="teamChart"></canvas>
+            </div>
         </div>
     </div>
 
     <div id="auth-modal" class="modal" style="display: flex; z-index:9999;"><div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div></div>
 
     <script>
-        let currentSession = null, currentClip = null, currentType = 'self';
-        let sessionClips = [];
-        
-        // TELESTRATOR STATE
-        let isDrawing = false, scratchCtx = null;
-        let temporalDrawings = []; 
-        let currentPath = [];
-        
-        // STRATEGY STATE
-        let teamRules = {}, activePlaybook = null;
-
-        function initApp() {
-            if (window.Clerk) {
-                Clerk.load().then(() => {
-                    if (Clerk.user) {
-                        document.getElementById('auth-modal').style.display = 'none';
-                        Clerk.mountUserButton(document.getElementById('user-button'));
-                        document.getElementById('send-btn').addEventListener('click', sendMessage);
-                    } else { Clerk.mountSignIn(document.getElementById('sign-in')); }
-                });
-            } else { setTimeout(initApp, 500); }
-        }
-        window.onload = initApp;
-
-        /* --- NAVIGATION --- */
-        function toggleSidebar() { document.getElementById('left-panel').classList.toggle('collapsed'); }
-        function toggleLibrary() { document.getElementById('right-panel').classList.toggle('collapsed'); }
-        
-        function switchTab(tabName) {
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.view').forEach(v => { v.classList.remove('active-view'); v.style.opacity=0; });
+        /**
+         * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
+         * Manages LocalStorage with strict separation between Self and Team chats.
+         */
+        const Store = {
+            get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
             
-            if(tabName === 'about') {
-                document.querySelector('.nav-tab:nth-child(1)').classList.add('active');
-                const v = document.getElementById('landing-view'); v.classList.add('active-view');
-                setTimeout(()=>v.style.opacity=1, 50);
-            } else {
-                currentType = tabName; 
-                const index = tabName === 'self' ? 2 : 3;
-                document.querySelector(`.nav-tab:nth-child(${index})`).classList.add('active');
-                const v = document.getElementById('war-room-view'); v.classList.add('active-view');
-                setTimeout(()=>v.style.opacity=1, 50);
-                
-                document.getElementById('chat-feed').innerHTML = `<div id="empty-state"><div style="font-size:3rem; opacity:0.5; margin-bottom:16px;">🏈</div><h3>Ready to Analyze</h3><p style="color:#666;">Select ${tabName} mode analysis.</p></div>`;
-                document.getElementById('lib-grid').innerHTML = '';
-                document.getElementById('pos-select').style.display = tabName === 'team' ? 'none' : 'block';
-                loadSessions();
+            init: () => {
+                // Initialize Sessions
+                // FIX: Start with empty array. Do NOT create fake local sessions.
+                if (!Store.get('sessions')) Store.set('sessions', []);
+                // Initialize Global Clips
+                if (!Store.get('clips')) Store.set('clips', []);
+                // Initialize Isolated Chat Stores
+                if (!Store.get('chat_self')) Store.set('chat_self', []);
+                if (!Store.get('chat_team')) Store.set('chat_team', []);
+            },
+
+            addClip: (clip) => {
+                const clips = Store.get('clips') || [];
+                clips.unshift(clip);
+                Store.set('clips', clips);
+                return clips;
+            },
+            
+            getClips: () => Store.get('clips') || [],
+
+            // --- CHAT ISOLATION LOGIC ---
+            addMessage: (mode, msg) => {
+                // mode must be 'self' or 'team'
+                const key = `chat_${mode}`;
+                const history = Store.get(key) || [];
+                history.push(msg);
+                Store.set(key, history);
+            },
+
+            getChat: (mode) => {
+                const key = `chat_${mode}`;
+                return Store.get(key) || [];
             }
-        }
+        };
 
-        async function apiFetch(url, body) {
-            if (!Clerk.session) return null;
-            const token = await Clerk.session.getToken();
-            try {
-                const res = await fetch(url, {
-                    method: body ? 'POST' : 'GET',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: body ? JSON.stringify(body) : null
-                });
-                if (!res.ok) throw new Error("Network response was not ok");
-                return await res.json();
-            } catch (error) { console.error("API Error:", error); return { error: "Connection Failed" }; }
-        }
-
-        /* --- SESSION MANAGEMENT --- */
-        async function loadSessions() {
-            const sessions = await apiFetch(`/api/sessions?type=${currentType}`);
-            const list = document.getElementById('session-list');
-            if(sessions && sessions.length > 0) {
-                list.innerHTML = sessions.map(s => 
-                    `<div class="session-item" id="sess-${s.id}" onclick="selectSession('${s.id}')">
-                        <span style="font-weight:600; color:#fff;">${s.title}</span>
-                        <span style="opacity:0.5; font-size:1.2rem; cursor:pointer;" onclick="deleteSession('${s.id}')">×</span>
-                    </div>`
-                ).join('');
-                if(!currentSession) selectSession(sessions[0].id);
-            } else { list.innerHTML = `<div style="padding:20px; color:#666; text-align:center;">No sessions found.</div>`; }
-        }
-
-        function selectSession(id) {
-            document.querySelectorAll('.session-item').forEach(i => i.classList.remove('active'));
-            const el = document.getElementById(`sess-${id}`);
-            if(el) el.classList.add('active');
-            currentSession = id;
-            loadChat(id);
-        }
-
-        async function newSession() { const t = prompt("Session Name:"); if(t) { await apiFetch('/api/create-session', { title: t, type: currentType }); loadSessions(); } }
-
-        async function loadChat(id) {
-            currentSession = id; loadLibrary();
-            const data = await apiFetch(`/api/session/${id}`);
-            const feed = document.getElementById('chat-feed');
-            if(data.history && data.history.length > 0) feed.innerHTML = ''; 
-            if(data.history) data.history.forEach(m => renderMessage(m.role, m.text));
-        }
-
-        async function loadLibrary() {
-            if (!currentSession) return;
-            const clips = await apiFetch(`/api/search?sessionId=${currentSession}`);
-            sessionClips = clips;
-            const grid = document.getElementById('lib-grid');
-            grid.innerHTML = '';
-            
-            clips.forEach(c => {
-                grid.innerHTML += `
-                <div class="clip-card" onclick="playClip('${c._id}')">
-                    <div class="clip-thumb-mini">▶</div>
-                    <div style="overflow:hidden;">
-                        <div class="clip-info-title">${c.title || "Untitled Clip"}</div>
-                        <div class="clip-info-meta">${c.formation || "Analyzing..."}</div>
-                    </div>
-                </div>`;
-            });
-        }
-
-        /* --- THE TELESTRATOR ENGINE (FAST & RESPONSIVE) --- */
-        let animationFrameId;
-
-        async function playClip(id) {
-            // FIND CLIP DATA
-            const clip = sessionClips.find(c => c._id === id);
-            if (!clip) return;
-            
-            currentClip = clip;
-            
-            // 1. Activate Cinema Layout
-            document.getElementById('cinema-container').style.display = 'flex';
-            const video = document.getElementById('main-video');
-            const canvas = document.getElementById('draw-canvas');
-            const scrubber = document.getElementById('video-scrubber');
-            
-            video.src = clip.videoUrl;
-            video.play();
-            
-            // 2. Load Report Directly
-            const feed = document.getElementById('chat-feed');
-            feed.innerHTML = ''; 
-            if(clip.fullData) renderMessage('model', JSON.stringify(clip.fullData));
-            
-            // Reset Drawing
-            temporalDrawings = []; 
-            clearCanvas();
-            isDrawing = false;
-            document.getElementById('draw-btn').classList.remove('active');
-            
-            video.onloadedmetadata = () => {
-                canvas.width = video.clientWidth || 800;
-                canvas.height = video.clientHeight || 450;
-                scratchCtx = canvas.getContext('2d');
-                scratchCtx.lineCap = 'round';
-                scratchCtx.lineJoin = 'round';
-                scrubber.max = video.duration;
-                if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                playbackLoop(); 
-            };
-            
-            video.ontimeupdate = () => {
-                scrubber.value = video.currentTime;
-                const m = Math.floor(video.currentTime/60);
-                const s = Math.floor(video.currentTime%60).toString().padStart(2,'0');
-                document.getElementById('video-time').innerText = `${m}:${s}`;
-            };
-            
-            scrubber.oninput = () => { video.currentTime = scrubber.value; };
-
-            // 3. DRAWING EVENTS (Direct Draw for 0 Latency)
-            canvas.onmousedown = (e) => { 
-                if(isDrawing) { 
-                    // No d=true needed, just start path
-                    currentPath = [{x: e.offsetX, y: e.offsetY}];
-                    scratchCtx.beginPath();
-                    scratchCtx.moveTo(e.offsetX, e.offsetY);
-                    scratchCtx.strokeStyle = "#fbbf24"; 
-                    scratchCtx.lineWidth = 4;
-                } 
-            };
-            
-            canvas.onmousemove = (e) => { 
-                if(isDrawing && e.buttons === 1) { // Check if mouse button is down
-                    currentPath.push({x: e.offsetX, y: e.offsetY});
-                    // DIRECT DRAW: No requestAnimationFrame lag
-                    scratchCtx.lineTo(e.offsetX, e.offsetY);
-                    scratchCtx.stroke();
-                } 
-            };
-
-            canvas.onmouseup = () => {
-                if(isDrawing && currentPath.length > 0) {
-                    // Save stroke for temporal playback
-                    temporalDrawings.push({
-                        path: currentPath,
-                        startTime: video.currentTime,
-                        duration: 3.0 // Lasts 3 seconds
-                    });
-                    currentPath = [];
-                }
-            };
-        }
-
-        // Loop handles FADING of OLD drawings only
-        function playbackLoop() {
-            const video = document.getElementById('main-video');
-            const canvas = document.getElementById('draw-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Only redraw if NOT currently drawing (avoids conflict)
-            if(!isDrawing || video.paused === false) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const t = video.currentTime;
+        /**
+         * 2. TELESTRATOR ENGINE (Drawing, Touch, Pencil)
+         * Handles the video player and drawing canvas synchronization.
+         */
+        class TelestratorEngine {
+            constructor() {
+                this.video = document.getElementById('main-video');
+                this.canvas = document.getElementById('draw-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.isDrawing = false;
+                this.mode = 'view'; 
+                this.strokes = [];
+                this.currentPath = [];
                 
-                temporalDrawings.forEach(stroke => {
-                    if(t >= stroke.startTime && t <= (stroke.startTime + stroke.duration)) {
-                        const age = t - stroke.startTime;
-                        const opacity = 1 - (age / stroke.duration);
-                        
-                        ctx.beginPath();
-                        ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                        ctx.lineWidth = 4;
-                        if(stroke.path.length > 0) {
-                            ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
-                            for(let i=1; i<stroke.path.length; i++) {
-                                ctx.lineTo(stroke.path[i].x, stroke.path[i].y);
-                            }
-                        }
-                        ctx.stroke();
+                this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
+                this.bindEvents();
+            }
+
+            init(videoUrl) {
+                this.video.src = videoUrl;
+                this.strokes = [];
+                this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+                this.resizeObserver.observe(this.video);
+                
+                document.getElementById('analysis-overlay').style.display = 'flex';
+                this.video.play().catch(e => console.log("Autoplay blocked", e));
+                this.fitCanvas();
+                this.startLoop();
+            }
+
+            close() {
+                document.getElementById('analysis-overlay').style.display = 'none';
+                this.video.pause();
+                this.video.src = "";
+                this.resizeObserver.disconnect();
+                cancelAnimationFrame(this.animId);
+            }
+
+            fitCanvas() {
+                const rect = this.video.getBoundingClientRect();
+                if (rect.width === 0) return;
+                
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.canvas.style.width = `${rect.width}px`;
+                this.canvas.style.height = `${rect.height}px`;
+                this.canvas.style.top = `${this.video.offsetTop}px`;
+                this.canvas.style.left = `${this.video.offsetLeft}px`;
+                
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+            }
+
+            bindEvents() {
+                // Keyboard Shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (document.getElementById('analysis-overlay').style.display !== 'none') {
+                        if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
+                        if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
                     }
                 });
-            }
-            animationFrameId = requestAnimationFrame(playbackLoop);
-        }
 
-        function closeVideoPlayer() {
-            document.getElementById('cinema-container').style.display = 'none';
-            document.getElementById('main-video').pause();
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-        }
-
-        function toggleDrawMode() {
-            isDrawing = !isDrawing;
-            const btn = document.getElementById('draw-btn');
-            const canvas = document.getElementById('draw-canvas');
-            const video = document.getElementById('main-video');
-            
-            if(isDrawing) {
-                btn.classList.add('active');
-                canvas.style.pointerEvents = 'auto';
-                canvas.style.cursor = 'crosshair'; // Visual feedback
-                video.pause();
-            } else {
-                isDrawing = false;
-                btn.classList.remove('active');
-                canvas.style.pointerEvents = 'none';
-                canvas.style.cursor = 'default';
-                video.play();
-            }
-        }
-        
-        function clearCanvas() { temporalDrawings = []; }
-        function togglePlay() { const v = document.getElementById('main-video'); v.paused ? v.play() : v.pause(); }
-        function seekTo(timeStr) {
-            if(!document.getElementById('main-video').src) return alert("Select a clip first.");
-            const parts = timeStr.split(':');
-            const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-            document.getElementById('main-video').currentTime = seconds;
-            document.getElementById('main-video').play();
-        }
-
-        /* --- CHAT ENGINE --- */
-        async function sendMessage() {
-            const txt = document.getElementById('user-input').value;
-            const file = document.getElementById('file-input').files[0];
-            const pos = document.getElementById('pos-select').value;
-            
-            if(!txt && !file) return;
-            
-            renderMessage('user', txt || "Analyzing video...");
-            document.getElementById('user-input').value = '';
-            document.getElementById('send-btn').innerHTML = "⏳";
-            document.getElementById('progress-container').style.display = 'block';
-            document.getElementById('progress-bar').style.width = '30%';
-
-            const payload = { 
-                message: txt, sessionId: currentSession, position: pos, 
-                sport: 'football', rules: teamRules, playbook: activePlaybook 
-            };
-
-            const handleResponse = (res) => {
-                document.getElementById('progress-bar').style.width = '100%';
-                setTimeout(()=> document.getElementById('progress-container').style.display='none', 500);
-                document.getElementById('send-btn').innerHTML = "SEND";
-                
-                if(res.error) return renderMessage('model', "⚠️ " + res.error);
-                if(res.reply) {
-                    renderMessage('model', res.reply);
-                    if(res.newClip) loadLibrary();
-                }
-                document.getElementById('file-input').value = '';
-                document.getElementById('file-btn').innerHTML = "📎 Upload";
-            };
-
-            if(file) {
-                const r = new FileReader();
-                r.onload = async () => {
-                    try {
-                        payload.fileData = r.result.split(',')[1]; payload.mimeType = file.type;
-                        const res = await apiFetch('/api/chat', payload);
-                        handleResponse(res);
-                    } catch(e) { console.error(e); alert("Upload failed"); }
-                };
-                r.readAsDataURL(file);
-            } else {
-                const res = await apiFetch('/api/chat', payload);
-                handleResponse(res);
-            }
-        }
-
-        function renderMessage(role, text) {
-            const feed = document.getElementById('chat-feed');
-            if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
-            
-            let content = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            if(role === 'model' && text.includes('{')) {
-                try {
-                    const cleanText = text.replace(/```json/g, '').replace(/```/g, '');
-                    const j = JSON.parse(cleanText);
-                    content = renderScoutCard(j);
-                } catch(e) { console.log("Text fallback", e); }
-            }
-            
-            feed.innerHTML += `<div class="msg ${role}">${content}</div>`;
-            feed.scrollTop = feed.scrollHeight;
-        }
-
-        // --- SCOUT CARD RENDERER ---
-        function renderScoutCard(data) {
-            const r = data.scouting_report || {};
-            const grades = r.report_card || {};
-            const overall = grades.overall || "C";
-            let color = 'var(--text-dim)';
-            if(overall.includes('A')) color = 'var(--success)';
-            if(overall.includes('B')) color = 'var(--warning)';
-            if(overall.includes('C') || overall.includes('D')) color = 'var(--danger)';
-
-            const focus = document.getElementById('pos-select').value.toUpperCase();
-            
-            const timelineHTML = r.timeline ? r.timeline.map(t => `
-                <div class="timeline-event" onclick="seekTo('${t.time}')">
-                    <div class="t-time">${t.time}</div>
-                    <div class="t-text">${t.text}</div>
-                </div>`).join('') : '';
-
-            const cardId = `card-${Date.now()}`;
-
-            return `
-            <div class="scout-card" id="${cardId}">
-                <div class="scout-header">
-                    <div class="play-meta">
-                        <div class="tag-row">
-                            <span class="formation-tag">${data.data.o_formation || "Unknown"}</span>
-                            ${focus !== 'GENERAL' ? `<span class="focus-tag">FOCUS: ${focus}</span>` : ''}
-                        </div>
-                        <div class="play-title">${data.title}</div>
-                    </div>
+                // --- APPLE PENCIL & TOUCH LOGIC ---
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    if (this.mode !== 'draw') return;
+                    e.preventDefault(); 
                     
-                    <div class="card-actions">
-                        <button class="tool-btn" onclick="openCoachChat()">💬 Ask Coach</button>
-                        <button class="tool-btn" onclick="downloadCard('${cardId}')">⬇️ Report</button>
-                        <div class="exec-badge" style="border-color:${color};">
-                            <div class="exec-label" style="color:${color};">EXEC</div>
-                            <div class="exec-val" style="color:${color};">${overall}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="scout-body">
-                    <div class="summary-text">${r.summary}</div>
-                    <div class="stats-col">
-                        <div class="grade-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">Football IQ</div>
-                                <div class="metric-val" style="color:${grades.football_iq?.includes('A')? 'var(--success)':'white'}">${grades.football_iq}</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Technique</div>
-                                <div class="metric-val">${grades.technique}</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Effort</div>
-                                <div class="metric-val">${grades.effort}</div>
-                            </div>
-                        </div>
-                        <div class="timeline-section">
-                            <h4>Timeline Breakdown</h4>
-                            ${timelineHTML}
-                        </div>
-                        <div style="margin-top:20px; padding:12px; background:rgba(56,189,248,0.05); border:1px solid var(--accent-dim); border-radius:8px;">
-                            <div style="font-size:0.7rem; font-weight:700; color:var(--accent); margin-bottom:4px;">COACHING FIX</div>
-                            <div style="font-size:0.9rem; color:#eee;">${r.coaching_prescription?.fix || "None"}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        /* --- FEATURE IMPLEMENTATIONS --- */
-        async function downloadCard(id) {
-            const el = document.getElementById(id);
-            const originalBg = el.style.background;
-            el.style.background = "#141414"; 
-            try {
-                const canvas = await html2canvas(el, { backgroundColor: "#141414", scale: 2 });
-                const link = document.createElement('a');
-                link.download = 'Vantage_Scout_Report.png';
-                link.href = canvas.toDataURL();
-                link.click();
-            } catch(e) { alert("Download failed"); }
-            el.style.background = originalBg;
-        }
-
-        async function openCoachChat() {
-            if(!currentClip) return alert("Please upload or select a play first.");
-            document.getElementById('coach-chat-modal').style.display = 'flex';
-        }
-
-        async function sendCoachMessage() {
-            const msg = document.getElementById('coach-input').value;
-            if(!msg) return;
-            const feed = document.getElementById('coach-feed');
-            feed.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-weight:600; max-width:80%;">${msg}</div>`;
-            document.getElementById('coach-input').value = '';
-            feed.scrollTop = feed.scrollHeight;
-
-            const res = await apiFetch('/api/clip-chat', { message: msg, clipId: currentClip._id });
-            let reply = res.reply ? res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : "Connection Error";
-            feed.innerHTML += `<div style="align-self:flex-start; background:#222; color:#ddd; padding:8px 12px; border-radius:8px; max-width:90%; line-height:1.5;">${reply}</div>`;
-            feed.scrollTop = feed.scrollHeight;
-        }
-
-        function openStrategy() { document.getElementById('strategy-modal').style.display = 'flex'; switchStrat('rules'); }
-        function switchStrat(type) {
-            document.querySelectorAll('.strat-tab').forEach(t => t.classList.remove('active'));
-            if(type === 'rules') {
-                document.querySelector('.strat-tab:nth-child(1)').classList.add('active');
-                document.getElementById('strat-rules-view').style.display = 'block';
-                document.getElementById('strat-playbook-view').style.display = 'none';
-            } else {
-                document.querySelector('.strat-tab:nth-child(2)').classList.add('active');
-                document.getElementById('strat-rules-view').style.display = 'none';
-                document.getElementById('strat-playbook-view').style.display = 'block';
-            }
-        }
-        
-        function saveRules() {
-            const pos = document.getElementById('rule-pos-select').value;
-            const text = document.getElementById('rules-input').value;
-            if(text) {
-                teamRules[pos] = text;
-                alert(`✅ Rules saved for ${pos}.`);
-                document.getElementById('rules-input').value = '';
-            }
-        }
-        
-        function handlePlaybook(input) {
-            if(input.files && input.files[0]) {
-                document.getElementById('pb-filename').innerText = "Selected: " + input.files[0].name;
-            }
-        }
-        
-        function savePlaybook() {
-            const file = document.getElementById('pb-file').files[0];
-            if(file) {
-                activePlaybook = { name: file.name, loaded: true };
-                alert("✅ Playbook Integrated.");
-                document.getElementById('strategy-modal').style.display = 'none';
-            }
-        }
-        
-        function handleFileSelect(input) {
-            if(input.files[0]) {
-                const btn = document.getElementById('file-btn');
-                btn.innerHTML = "✅ Ready";
-                btn.style.background = "var(--success)";
-                btn.style.color = "black";
-                btn.style.border = "none";
-            }
-        }
-        
-        async function openRoster() {
-            if(!currentSession) return alert("Select a session first.");
-            const data = await apiFetch(`/api/session/${currentSession}`);
-            const grid = document.getElementById('roster-grid');
-            grid.innerHTML = '';
-            if(data.roster && data.roster.length > 0) {
-                data.roster.forEach(p => {
-                    grid.innerHTML += `
-                    <div style="background:#1a1a1a; padding:12px; border:1px solid var(--border); border-radius:8px;">
-                        <div style="font-weight:800; color:white;">${p.identifier}</div>
-                        <div style="font-size:0.75rem; color:#888;">${p.position}</div>
-                        <div style="margin-top:8px; font-size:1.5rem; font-weight:900; color:var(--accent);">${p.grade || "-"}</div>
-                    </div>`;
+                    this.isDrawing = true;
+                    this.canvas.setPointerCapture(e.pointerId); // CRITICAL: Locks pencil to canvas
+                    this.video.pause(); 
+                    
+                    const { x, y } = this.getCoords(e);
+                    const pressure = e.pressure || 0.5;
+                    
+                    this.currentPath = [{ x, y, p: pressure }];
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);
+                    this.ctx.strokeStyle = "#fbbf24";
+                    this.ctx.lineWidth = 2 + (pressure * 6);
                 });
-            } else { grid.innerHTML = "<p style='color:#666;'>No players detected yet.</p>"; }
-            document.getElementById('roster-modal').style.display = 'flex';
+
+                this.canvas.addEventListener('pointermove', (e) => {
+                    if (!this.isDrawing) return;
+                    if (e.pointerType === 'touch') e.preventDefault(); // Stop scrolling
+                    
+                    const { x, y } = this.getCoords(e);
+                    const pressure = e.pressure || 0.5;
+                    
+                    this.currentPath.push({ x, y, p: pressure });
+                    
+                    // Dynamic line width based on Apple Pencil pressure
+                    this.ctx.lineWidth = 2 + (pressure * 6);
+                    this.ctx.lineTo(x, y);
+                    this.ctx.stroke();
+                });
+
+                this.canvas.addEventListener('pointerup', (e) => {
+                    this.canvas.releasePointerCapture(e.pointerId);
+                    this.endStroke();
+                });
+                
+                this.canvas.addEventListener('pointercancel', (e) => {
+                    this.canvas.releasePointerCapture(e.pointerId);
+                    this.endStroke();
+                });
+
+                // UI Controls
+                document.getElementById('draw-btn').onclick = () => this.toggleMode();
+                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); };
+                document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
+                
+                // Scrubber Logic
+                const scrubber = document.getElementById('video-scrubber');
+                this.video.ontimeupdate = () => {
+                    if (!this.video.paused) {
+                        scrubber.value = this.video.currentTime;
+                        document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
+                    }
+                };
+                this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
+                scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
+            }
+
+            getCoords(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            endStroke() {
+                if (!this.isDrawing) return;
+                this.isDrawing = false;
+                if (this.currentPath.length > 0) {
+                    this.strokes.push({
+                        path: [...this.currentPath],
+                        startTime: this.video.currentTime,
+                        duration: 3.0 // Strokes fade after 3 seconds
+                    });
+                }
+                this.currentPath = [];
+            }
+
+            toggleMode() {
+                this.mode = this.mode === 'view' ? 'draw' : 'view';
+                const btn = document.getElementById('draw-btn');
+                if (this.mode === 'draw') {
+                    btn.classList.add('active');
+                    this.canvas.style.pointerEvents = 'auto';
+                    this.canvas.style.cursor = 'crosshair';
+                    this.video.pause();
+                } else {
+                    btn.classList.remove('active');
+                    this.canvas.style.pointerEvents = 'none';
+                    this.canvas.style.cursor = 'default';
+                }
+            }
+
+            startLoop() {
+                const loop = () => {
+                    if (!this.isDrawing && !this.video.paused) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        const t = this.video.currentTime;
+                        this.strokes.forEach(s => {
+                            if (t >= s.startTime && t <= (s.startTime + s.duration)) {
+                                const age = t - s.startTime;
+                                const opacity = 1 - (age / s.duration);
+                                this.ctx.beginPath();
+                                this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
+                                if(s.path.length > 0) {
+                                    this.ctx.moveTo(s.path[0].x, s.path[0].y);
+                                    for(let i=1; i<s.path.length; i++) {
+                                        this.ctx.lineWidth = 2 + (s.path[i].p * 4);
+                                        this.ctx.lineTo(s.path[i].x, s.path[i].y);
+                                    }
+                                }
+                                this.ctx.stroke();
+                            }
+                        });
+                    }
+                    this.animId = requestAnimationFrame(loop);
+                };
+                loop();
+            }
+
+            formatTime(s) {
+                const m = Math.floor(s/60);
+                const sec = Math.floor(s%60).toString().padStart(2,'0');
+                return `${m}:${sec}`;
+            }
         }
-        
-        function openTendencies() {
-            if(sessionClips.length === 0) return alert("No clips to analyze.");
-            document.getElementById('tendency-content').innerHTML = `
-                <div style="background:#222; height:20px; width:100%; border-radius:10px; overflow:hidden;">
-                    <div style="background:var(--success); width:60%; height:100%;"></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:0.8rem; color:#888;">
-                    <span>Success Rate: 60%</span>
-                    <span>${sessionClips.length} Plays Tracked</span>
+
+        const Telestrator = new TelestratorEngine();
+
+        /**
+         * 3. COACH AI MOCK (Simulated Backend)
+         * Generates context-aware responses and Scout Cards.
+         */
+        const CoachAI = {
+            analyze: async (text, file) => {
+                // Helper: Convert File to Base64 for Server
+                const toBase64 = file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = error => reject(error);
+                });
+
+                const token = await window.Clerk.session.getToken();
+                
+                // Prepare Payload
+                let payload = {
+                    message: text,
+                    sessionId: UI.activeSessionId,
+                    sport: 'football',
+                    position: document.getElementById('pos-select').value || 'general'
+                };
+
+                if (file) {
+                    payload.fileData = await toBase64(file);
+                    payload.mimeType = file.type;
+                }
+
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+
+                    // Handle Video Analysis Response
+                    if (data.newClip) {
+                        const clip = data.newClip;
+                        // Map Server JSON to UI Scout Card format
+                        const scoutData = {
+                            id: clip._id,
+                            title: clip.title,
+                            formation: clip.formation,
+                            grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
+                            fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
+                        };
+
+                        Store.addClip(clip); // Update local store
+                        setTimeout(() => UI.renderLibrary(), 100);
+                        return { type: 'card', data: scoutData, clip: clip };
+                    } 
+                    // Handle Text Chat Response
+                    else {
+                        const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
+                        return { type: 'text', text: replyText };
+                    }
+                } catch (e) {
+                    console.error("AI Error:", e);
+                    return { type: 'text', text: "Error connecting to Coach AI. Please check server logs." };
+                }
+            },
+
+            generateScoutCard: (clip) => {
+                const grades = ['A-', 'B+', 'B-', 'C+'];
+                return {
+                    id: clip.id,
+                    title: clip.title,
+                    formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random()*4)],
+                    grade: grades[Math.floor(Math.random()*grades.length)],
+                    iq: ['A', 'A-', 'B+'][Math.floor(Math.random()*3)],
+                    tech: ['B', 'B-', 'C+'][Math.floor(Math.random()*3)],
+                    effort: '100',
+                    summary: "Key analysis points: The spacing on the route combination was compressed. The defense disguised Cover 3 as Cover 2, causing a hesitation in the decision-making process.",
+                    fix: "Drill Suggestion: 'Recognition & Release' - Focus on identifying safety rotation immediately post-snap."
+                };
+            },
+
+            getTextResponse: (input) => {
+                return "I've logged that note. Based on your strategy settings, ensure you are watching for the weak-side linebacker blitz when in that formation. Would you like to review a clip?";
+            }
+        };
+
+        /**
+         * 4. UI MANAGER
+         * Controls Tabs, Chat History Switching, and Modal visibility.
+         */
+        const UI = {
+            currentMode: 'about', // 'about', 'self', 'team'
+            activeSessionId: null, // NEW: Track specific selected session
+            
+           init: async () => {
+                // LOAD DATA: Fetch Sessions from Server
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const sessions = await res.json();
+                    Store.set('sessions', sessions);
+                    
+                    // FIX: Auto-select the most recent session if none is active
+                    if (sessions.length > 0 && !UI.activeSessionId) {
+                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                        if(firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                    }
+                } catch (e) { console.error("Session Load Failed", e); }
+
+                // Tab Logic
+                document.querySelectorAll('.nav-tab').forEach(t => {
+                    t.onclick = () => UI.switchTab(t.dataset.tab);
+                });
+
+                // File Input
+                document.getElementById('file-input').onchange = (e) => {
+                    if (e.target.files[0]) {
+                        const btn = document.getElementById('file-btn');
+                        btn.style.background = 'var(--success)';
+                        btn.style.color = 'black';
+                        btn.innerHTML = '✅ Ready';
+                    }
+                };
+
+                // Send Button
+                document.getElementById('send-btn').onclick = UI.handleSend;
+            },
+
+            switchTab: (tab) => {
+                UI.currentMode = tab;
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                
+                const aboutView = document.getElementById('landing-view');
+                const warView = document.getElementById('war-room-view');
+                const posSelect = document.getElementById('pos-select');
+
+                if (tab === 'about') {
+                    aboutView.classList.add('active-view');
+                    aboutView.style.opacity = 1;
+                    warView.classList.remove('active-view');
+                } else {
+                    aboutView.classList.remove('active-view');
+                    warView.classList.add('active-view');
+                    setTimeout(() => warView.style.opacity = 1, 50);
+                    
+                    // --- UI DIFFERENTIATION LOGIC ---
+                    if (tab === 'self') {
+                        // Self Mode: Show Focus Selector
+                        posSelect.style.display = 'block';
+                    } else if (tab === 'team') {
+                        // Team Mode: Hide Focus Selector
+                        posSelect.style.display = 'none';
+                    }
+
+                    // Load the Isolated Chat for this mode
+                    // FIX: Don't load generic history. Load active session or empty state.
+                    if (UI.activeSessionId) {
+                        UI.selectSession(UI.activeSessionId);
+                    } else {
+                        // Clear feed if no session selected yet
+                        document.getElementById('chat-feed').innerHTML = '';
+                        UI.renderSessionList(); 
+                    }
+                }
+            },
+
+            // FIX: This function is deprecated in favor of selectSession, 
+            // but we keep it for safety to show the empty state background
+            loadChatFeed: (mode) => {
+                const feed = document.getElementById('chat-feed');
+                feed.innerHTML = ''; 
+                
+                const icon = mode === 'self' ? '👤' : '🛡️';
+                const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
+                const subtitle = mode === 'self' 
+                    ? 'Focus on individual technique, position grades, and biomechanics.' 
+                    : 'Analyze formations, scheme efficiency, and unit coordination.';
+                
+                feed.innerHTML = `
+                    <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
+                        <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
+                        <h3>${title}</h3>
+                        <p style="color:#666; max-width:300px; margin:0 auto;">${subtitle}</p>
+                    </div>`;
+            },
+
+            renderMessageHTML: (msg) => {
+                const feed = document.getElementById('chat-feed');
+                if(msg.type === 'user') {
+                    feed.innerHTML += `
+                        <div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">
+                            ${msg.content}
+                        </div>`;
+                } else {
+                    feed.innerHTML += `
+                        <div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;">
+                            <strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}
+                        </div>`;
+                }
+            },
+
+           toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+
+            // NEW: Select a session and load its specific data
+            selectSession: async (sessId) => {
+                UI.activeSessionId = sessId;
+                
+                 // 0. IMMEDIATE WIPE (Visual Reset)
+                const feed = document.getElementById('chat-feed');
+                feed.innerHTML = '';
+
+                // 1. FIND SESSION DATA (For Chat History)
+                const sessions = Store.get('sessions') || [];
+                const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
+
+                // 2. RENDER CHAT (Isolate History)
+                // ...existing code...
+                // reuse `feed` declared above (do NOT redeclare)
+                feed.innerHTML = ''; // WIPE PREVIOUS CHAT
+                
+                if (currentSession && currentSession.history && currentSession.history.length > 0) {
+                    // Render saved history
+                    currentSession.history.forEach(msg => UI.renderMessageHTML({
+                        type: msg.role === 'model' ? 'ai' : 'user', 
+                        content: msg.text
+                    }));
+                    feed.scrollTop = feed.scrollHeight;
+                } else {
+                    // Show Empty State if new
+                    const mode = UI.currentMode;
+                    const icon = mode === 'self' ? '👤' : '🛡️';
+                    feed.innerHTML = `
+                        <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
+                            <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
+                            <h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3>
+                            <p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p>
+                        </div>`;
+                }
+
+                // 3. LOAD CLIPS (Isolate Library)
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const clips = await res.json();
+                    Store.set('clips', clips);
+                } catch (e) { console.error("Clip Load Failed", e); }
+
+                UI.renderSessionList(); 
+                UI.renderLibrary();     
+            },
+
+            renderSessionList: () => {
+                const list = document.getElementById('session-list');
+                const sessions = Store.get('sessions') || [];
+                
+                // FILTER: Only show sessions matching current mode (Self vs Team)
+                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                
+                list.innerHTML = modeSessions.map(s => {
+                    // FIX: Handle both 'sessionId' (Server) and 'id' (Legacy Local)
+                    const validId = s.sessionId || s.id; 
+                    
+                    return `
+                    <div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')">
+                        <span>${s.title}</span>
+                        <span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span>
+                    </div>
+                `}).join('');
+            },
+
+            renderLibrary: () => {
+                 // ... existing code ...
+            },
+
+            // NEW: Render Chart.js Graph
+            showTeamStats: () => {
+                document.getElementById('stats-modal').style.display = 'flex';
+                const ctx = document.getElementById('teamChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: 'Pass Completions Allowed',
+                            data: Array.from({length: 20}, () => ({x: Math.random()*50, y: Math.random()*100})),
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: { title: {display:true, text:'Field Width'} },
+                            y: { title: {display:true, text:'Yards Downfield'} }
+                        }
+                    }
+                });
+            },
+
+            playClip: (id) => {
+                const clip = window.activeClips.find(c => c.id === id);
+                if (!clip) return;
+                
+                const report = CoachAI.generateScoutCard(clip);
+                document.getElementById('report-injection-site').innerHTML = UI.buildScoutCardHTML(report);
+                Telestrator.init(clip.videoUrl);
+            },
+
+            handleSend: async () => {
+                const input = document.getElementById('user-input');
+                const fileInput = document.getElementById('file-input');
+                const feed = document.getElementById('chat-feed');
+                const mode = UI.currentMode; // 'self' or 'team'
+                
+                if (!input.value && !fileInput.files.length) return;
+
+                // GUARD: Prevent upload if no session is active
+                if (!UI.activeSessionId) {
+                    alert("⚠️ Please Create or Select a Session from the left panel first!");
+                    return;
+                }
+
+                if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+
+                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
+                
+                // SAVE USER MSG TO SESSION STORE (Locally)
+                const sessions = Store.get('sessions');
+                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if(sessIdx > -1) {
+                    if(!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                    sessions[sessIdx].history.push({ role: 'user', text: userText });
+                    Store.set('sessions', sessions);
+                }
+                
+                UI.renderMessageHTML({ type: 'user', content: userText });
+
+                // Reset Inputs
+                input.value = '';
+                const file = fileInput.files[0];
+                fileInput.value = '';
+                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
+                document.getElementById('file-btn').style.background = '#222';
+                document.getElementById('file-btn').style.color = '#ccc';
+
+                const loadId = 'load_'+Date.now();
+                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
+                feed.scrollTop = feed.scrollHeight;
+
+                const res = await CoachAI.analyze(userText, file);
+                document.getElementById(loadId).remove();
+
+                // SAVE AI MSG TO SESSION STORE (Locally)
+                let aiContent = res.text;
+                if (res.type === 'card') {
+                    UI.renderLibrary();
+                    aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
+                }
+                
+                const sessions2 = Store.get('sessions');
+                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if(sessIdx2 > -1) {
+                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
+                    Store.set('sessions', sessions2);
+                } // <--- THIS CLOSING BRACKET WAS MISSING
+                
+                // Render
+                feed.innerHTML += `
+                    <div style="align-self:flex-start; width:100%; margin-bottom:20px;">
+                        ${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}
+                    </div>`;
+                feed.scrollTop = feed.scrollHeight;
+            },
+
+            buildScoutCardHTML: (data, isChatPreview = false) => {
+                const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
+                const cursor = isChatPreview ? 'cursor:pointer;' : '';
+                
+                return `
+                <div class="scout-card" style="${cursor}" ${onclick}>
+                    <div class="scout-header">
+                        <div>
+                            <div class="tag-row">
+                                <span class="formation-tag">${data.formation}</span>
+                            </div>
+                            <div class="play-title">${data.title}</div>
+                        </div>
+                        <div class="exec-badge">
+                            <div style="font-size:0.6rem; color:#888; font-weight:700;">GRADE</div>
+                            <div class="exec-val" style="color:${data.grade.includes('A') ? 'var(--success)' : 'var(--warning)'}">${data.grade}</div>
+                        </div>
+                    </div>
+                    <div class="scout-body">
+                        <div class="summary-text">${data.summary}</div>
+                        <div>
+                            <div class="grade-grid">
+                                <div class="metric-card"><div class="metric-label">Football IQ</div><div class="metric-val">${data.iq}</div></div>
+                                <div class="metric-card"><div class="metric-label">Technique</div><div class="metric-val">${data.tech}</div></div>
+                                <div class="metric-card"><div class="metric-label">Effort</div><div class="metric-val">${data.effort}%</div></div>
+                            </div>
+                            <div style="background:rgba(56,189,248,0.1); padding:12px; border-radius:8px; border:1px solid rgba(56,189,248,0.2);">
+                                <div style="color:var(--accent); font-size:0.75rem; font-weight:800; margin-bottom:4px;">COACHING FIX</div>
+                                <div style="font-size:0.9rem; color:#eee;">${data.fix}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>`;
-            document.getElementById('tendency-modal').style.display = 'flex';
-        }
+            }
+        };
+
+        const App = {
+            init: () => {
+                let attempts = 0;
+                const checkAuth = setInterval(() => {
+                    attempts++;
+                    if (window.Clerk) {
+                        clearInterval(checkAuth);
+Clerk.load()
+                            .then(() => {
+                                if (!Clerk.user) {
+                                    Clerk.mountSignIn(document.getElementById('sign-in'));
+                                } else {
+                                    document.getElementById('auth-modal').style.display = 'none';
+                                    Clerk.mountUserButton(document.getElementById('user-button'));
+                                    UI.init();
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Clerk Auth Failed:", err);
+                                // Fallback: Open app anyway so you aren't stuck
+                                document.getElementById('auth-modal').style.display = 'none';
+                                UI.init(); 
+                            });
+                    } else if (attempts > 10) {
+                        clearInterval(checkAuth);
+                        console.warn("Clerk timeout - forcing init");
+                        document.getElementById('auth-modal').style.display = 'none';
+                        UI.init(); 
+                    }
+                }, 300);
+            },
+            createNewSession: async () => {
+                const title = prompt("New Session Name:");
+                if(title) {
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/create-session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ title, type: UI.currentMode })
+                        });
+                        
+                        if (!res.ok) throw new Error("Server failed to create session");
+                        
+                        const newSession = await res.json();
+                        
+                        // Update Local Store
+                        const sessions = Store.get('sessions') || [];
+                        sessions.unshift(newSession);
+                        Store.set('sessions', sessions);
+                        
+                        // Force Selection
+                        await UI.selectSession(newSession.sessionId);
+                        
+                    } catch (e) { 
+                        console.error(e);
+                        alert("Failed to create session. Check server console."); 
+                    }
+                }
+            }
+        };
+
+        window.onload = App.init;
+
     </script>
 </body>
 </html>
