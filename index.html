@@ -550,6 +550,37 @@
             .tool-btn span { display: none; } /* Hide text on small screens */
             .tool-btn { padding: 10px; }
         }
+        /* --- NEW: Active Draw Button State --- */
+        #draw-btn.active {
+            border: 1px solid var(--accent) !important;
+            box-shadow: 0 0 15px var(--accent-glow) !important;
+            color: var(--accent) !important;
+            background: rgba(56, 189, 248, 0.15) !important;
+        }
+
+        /* --- NEW: AI Thinking Progress Bar --- */
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .thinking-bar {
+            width: 100%;
+            height: 3px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+            position: relative;
+        }
+        
+        .thinking-bar::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0; width: 50%;
+            background: var(--accent);
+            animation: indeterminate 1.5s infinite linear;
+        }
     </style>
 </head>
 <body>
@@ -906,13 +937,16 @@
             toggleMode() {
                 this.mode = this.mode === 'view' ? 'draw' : 'view';
                 const btn = document.getElementById('draw-btn');
+                
                 if (this.mode === 'draw') {
-                    btn.classList.add('active');
+                    btn.classList.add('active'); // Adds the blue outline
+                    btn.innerText = "✏️ Drawing...";
                     this.canvas.style.pointerEvents = 'auto';
                     this.canvas.style.cursor = 'crosshair';
                     this.video.pause();
                 } else {
-                    btn.classList.remove('active');
+                    btn.classList.remove('active'); // Removes the blue outline
+                    btn.innerText = "✏️ Draw";
                     this.canvas.style.pointerEvents = 'none';
                     this.canvas.style.cursor = 'default';
                 }
@@ -1123,8 +1157,98 @@
                 }
             },
 
-            // FIX: This function is deprecated in favor of selectSession, 
-            // but we keep it for safety to show the empty state background
+            // --- START NEW CODE ---
+            playClip: (id) => {
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === id);
+                if (!clip) return;
+                
+                UI.overlayClipId = clip._id || clip.id;
+                
+                // 1. Reset Chat
+                const chatHistory = document.getElementById('overlay-chat-history');
+                const chatInput = document.getElementById('overlay-chat-input');
+                if(chatHistory) chatHistory.innerHTML = '';
+                if(chatInput) chatInput.value = '';
+
+                // 2. Show AI Analysis Report (Below the chat area)
+                const reportContainer = document.getElementById('report-injection-site');
+                if (clip.fullData) {
+                    const scoutData = {
+                        id: clip._id,
+                        title: clip.title,
+                        formation: clip.formation,
+                        grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                        iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                        tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                        effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                        summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                        fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                    };
+                    reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                } else {
+                    reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Analysis in progress...<br>Check back shortly.</div>';
+                }
+
+                // 3. Open Video
+                Telestrator.init(clip.videoUrl);
+            },
+
+            handleOverlayChat: async () => {
+                const input = document.getElementById('overlay-chat-input');
+                const history = document.getElementById('overlay-chat-history');
+                const txt = input.value;
+                
+                if(!txt || !UI.overlayClipId) return;
+
+                // 1. Add User Message
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:10px; font-weight:600;">${txt}</div>`;
+                input.value = '';
+                history.scrollTop = history.scrollHeight;
+
+                // 2. Add Thinking Indicator
+                const loadingId = 'thinking_' + Date.now();
+                history.innerHTML += `
+                    <div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;">
+                        <div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div>
+                        <div class="thinking-bar"></div>
+                    </div>`;
+                history.scrollTop = history.scrollHeight;
+
+                try {
+                    // 3. Fetch Response
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/clip-chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                    });
+
+                    const data = await res.json();
+                    
+                    // 4. Remove Thinking Indicator
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+
+                    if (data.reply) {
+                        const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        history.innerHTML += `
+                            <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#e4e4e7; padding:10px 14px; border-radius:8px; font-size:0.9rem; max-width:90%; margin-bottom:12px; line-height:1.5;">
+                                <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach:</strong> ${cleanReply}
+                            </div>`;
+                    } else {
+                        throw new Error("No reply received");
+                    }
+                    
+                } catch(e) {
+                    console.error("Chat Error:", e);
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+                    history.innerHTML += `<div style="color:var(--danger); font-size:0.8rem; margin-bottom:10px; padding:8px;">⚠️ Connection Error. Please try again.</div>`;
+                }
+                history.scrollTop = history.scrollHeight;
+            },
+            // --- END NEW CODE ---
             loadChatFeed: (mode) => {
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = ''; 
