@@ -686,9 +686,11 @@
         <div id="popup-report-container">
             <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
                 <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
+                <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                
                 <div style="display:flex; gap:8px;">
-                    <input type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
-                    <button class="tool-btn" style="padding:6px 12px;">Ask</button>
+                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;" onclick="UI.handleOverlayChat()">Ask</button>
                 </div>
             </div>
 
@@ -1295,11 +1297,10 @@
                 });
             },
 
+            // [REPLACE your existing playClip with this FULL version]
             playClip: (id) => {
                 // 1. Get real clips from the Store
                 const clips = Store.get('clips') || [];
-                
-                // 2. Find the specific clip (handle _id from Mongo or id from local)
                 const clip = clips.find(c => (c._id || c.id) === id);
                 
                 if (!clip) {
@@ -1307,13 +1308,71 @@
                     return;
                 }
                 
-                // 3. Open the Video Player with the real URL
+                // 2. Set Active Clip ID for Chat & Persistence
+                UI.overlayClipId = clip._id || clip.id;
+                localStorage.setItem('lastClip', UI.overlayClipId);
+
+                // 3. Reset & Setup Overlay Chat
+                const chatHistory = document.getElementById('overlay-chat-history');
+                const chatInput = document.getElementById('overlay-chat-input');
+                if(chatHistory) chatHistory.innerHTML = '';
+                if(chatInput) chatInput.value = '';
+
+                // 4. Inject Scout Report into the Side Panel
+                const reportContainer = document.getElementById('report-injection-site');
+                if (reportContainer) {
+                    if (clip.fullData) {
+                        // Map database JSON to UI Format
+                        const scoutData = {
+                            id: clip._id,
+                            title: clip.title,
+                            formation: clip.formation,
+                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                        };
+                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                    } else {
+                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+                    }
+                }
+
+                // 5. Open Video Player
                 Telestrator.init(clip.videoUrl);
+            },
+
+            // [ADD this new function immediately after playClip]
+            handleOverlayChat: async () => {
+                const input = document.getElementById('overlay-chat-input');
+                const history = document.getElementById('overlay-chat-history');
+                const txt = input.value;
                 
-                // 4. (Optional) If you want to show the report in the popup too:
-                if (clip.fullData) {
-                    // Convert raw data to UI format if needed, or render raw
-                    // For now, let's just ensure the video plays
+                if(!txt || !UI.overlayClipId) return;
+
+                // User Bubble
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
+                input.value = '';
+                history.scrollTop = history.scrollHeight;
+
+                try {
+                    // Call Server
+                    const res = await apiFetch('/api/clip-chat', { message: txt, clipId: UI.overlayClipId });
+                    
+                    // AI Bubble
+                    const cleanReply = res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    
+                    history.innerHTML += `
+                        <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;">
+                            <span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}
+                        </div>`;
+                    history.scrollTop = history.scrollHeight;
+                    
+                } catch(e) {
+                    console.error(e);
+                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem;">Error connecting to coach.</div>`;
                 }
             },
 
