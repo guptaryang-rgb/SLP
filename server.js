@@ -440,46 +440,48 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
-   // --- [UPDATED PROMPT: SPECIFIC TERMINOLOGY] ---
+   // --- [UPDATED PROMPT: FIELD VISION 2.0] ---
     let systemInstruction = `
     ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
     TASK: Analyze video clip. Focus: ${specificFocus}.
     ROSTER CONTEXT: ${rosterContext}
 
     REQUIREMENTS:
-    1. OFFENSE: Identify specific formation (e.g. "Gun Trips Right", "Empty 3x2", "I-Form Pro").
-    2. DEFENSE: Identify SPECIFIC COVERAGE. Do NOT use generic terms like "MOFO/MOFC". Use "Cover 3", "Cover 2", "Quarters", "Cover 1 Hole", "0 Blitz".
-    3. EFFICIENCY: Grade the play success based on EPA principles.
+    1. OFFENSE: Identify specific formation (e.g. "Gun Trips Right").
+    2. DEFENSE: Identify SPECIFIC COVERAGE (e.g. "Cover 3 Sky").
+    3. FIELD VISION:
+       - PASS: Identify Start (Pocket/Rollout) and End Location (Hash/Numbers/Yards).
+       - RUN: Identify Gap (A/B/C/D/Sweep) and Direction (Left/Right).
+       - RESULT: Estimate Yards Gained.
 
-    OUTPUT JSON FORMAT (Strict JSON, no markdown):
+    OUTPUT JSON FORMAT (Strict JSON):
     { 
-        "title": "Descriptive Title (e.g. 'Gun Trips - Four Verts vs Cover 3')", 
+        "title": "Descriptive Title", 
         "data": { 
-            "o_formation": "Specific Offensive Formation", 
-            "d_formation": "Specific Defensive Coverage (e.g. Cover 3)", 
-            "situation": {
-                "down": "1/2/3/4",
-                "distance": "Short/Medium/Long",
-                "zone": "Red/Open/Backed"
-            }
+            "o_formation": "Specific Formation", 
+            "d_formation": "Specific Coverage", 
+            "situation": { "down": "1/2/3/4", "distance": "Short/Med/Long", "zone": "Red/Open" }
         }, 
         "tactical_breakdown": {
             "concept": "Scheme Name",
-            "box_count": "Light/Standard/Loaded",
-            "key_matchup": "Player vs Player (#11 vs #24)",
+            "play_type": "Run/Pass",
+            "yards_gained": 5,
             "pass_chart": {
-                "is_pass": true,
-                "distance_yards": 15,
-                "horizontal": "Left Numbers/Left Hash/Middle/Right Hash/Right Numbers",
-                "result": "Complete/Incomplete/Intercepted"
+                "start": "Pocket/Rollout Left/Rollout Right",
+                "end": "Left Numbers/Left Hash/Middle/Right Hash/Right Numbers",
+                "depth": 15,
+                "result": "Complete/Incomplete/Int"
+            },
+            "run_chart": {
+                "gap": "A/B/C/D/Sweep",
+                "direction": "Left/Right/Middle"
             }
         },
         "scouting_report": { 
-            "summary": "Detailed breakdown.", 
-            "coaching_prescription": { "fix": "Technical Fix", "drill": "Drill Name" },
-            "report_card": { "football_iq": "Grade", "technique": "Grade", "effort": "Grade", "overall": "Grade" }
-        },
-        "players_detected": [ { "identifier": "#Jersey", "position": "Pos", "grade": "Grade", "observation": "Note" } ] 
+            "summary": "Breakdown.", 
+            "coaching_prescription": { "fix": "Fix", "drill": "Drill" },
+            "report_card": { "overall": "Grade" }
+        }
     }`;
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
