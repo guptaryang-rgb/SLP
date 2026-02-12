@@ -1570,54 +1570,73 @@
                 }
             },
 
-            // [REPLACE showTeamStats with this INTERACTIVE version]
+            // [PERFECTED ANALYTICS ENGINE]
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
-                UI.refreshStats(); // Initial Load
+                UI.refreshStats(); 
             },
 
-            // New Helper to Filter & Render Charts
             refreshStats: () => {
                 // 1. GET & FILTER DATA
                 const allClips = Store.get('clips') || [];
                 
-                // Get Filter Values
-                const fDown = document.getElementById('filter-down').value;
-                const fDist = document.getElementById('filter-dist').value;
-                const fZone = document.getElementById('filter-zone').value;
+                // Get Filter Values from Dropdowns
+                const fDown = document.getElementById('filter-down').value; // "1", "2", "3", "4", "all"
+                const fDist = document.getElementById('filter-dist').value; // "short", "med", "long", "all"
+                const fZone = document.getElementById('filter-zone').value; // "red", "open", "backed", "all"
 
-                // Filter Logic
+                // --- A. THE FILTER LOGIC (Option A: Fixed) ---
                 const clips = allClips.filter(c => {
-                    if (!c.fullData) return false;
-                    // Note: In a real app, you would add logic here to check:
-                    // if (fDown !== 'all' && c.fullData.situation.down !== fDown) return false;
-                    // For this demo, we pass all valid analyzed clips to ensure charts populate.
-                    return c.fullData.data; 
+                    if (!c.fullData || !c.fullData.data) return false;
+                    
+                    const sit = c.fullData.data.situation || {};
+                    
+                    // Soft matching (defaults to 'true' if data is missing to show SOMETHING)
+                    const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
+                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
+                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
+
+                    return matchDown && matchDist && matchZone;
                 });
 
-                if (clips.length === 0) return;
+                if (clips.length === 0) {
+                    // Safety: Clear charts if no data matches
+                    ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                    });
+                    return;
+                }
 
                 // --- AGGREGATORS ---
                 const offForms = {};
                 const defForms = {};
-                const conflictPlayers = {}; // e.g. { "#54": { win: 2, loss: 5 } }
-                const coverSuccess = {};    // e.g. { "Cover 3": { plays: 10, success: 4 } }
-                const matrix = {};          // e.g. { "Trips": { "Cover 3": { plays: 5, success: 2 } } }
-                const fieldShots = [];      // Array for scatter chart
+                const conflictPlayers = {}; 
+                const coverSuccess = {};    
+                const matrix = {};          
+                const fieldShots = [];      
+
+                // Arrays to store "Drill Down" references
+                // We map: "Cover 3" -> [List of Clip IDs]
+                const drillDownMap = { coverage: {}, formation: {} };
 
                 clips.forEach(c => {
                     const d = c.fullData;
                     const off = d.data.o_formation || "Unknown";
                     const def = d.tactical_breakdown?.coverage_shell || "Unknown";
-                    const conflict = d.tactical_breakdown?.key_matchup?.split(' ')[0] || "None"; // Extract "#54"
+                    const conflict = d.tactical_breakdown?.key_matchup?.split(' ')[0] || "None";
                     
-                    // Determine "Success" (Grade >= B- or 2.7)
+                    // Grade Logic
                     const gradeNum = UI.gradeToNum(d.scouting_report?.report_card?.overall);
                     const isSuccess = gradeNum >= 2.7; 
 
                     // 1. Formations
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
+
+                    // Drill Down Mapping
+                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
+                    drillDownMap.coverage[def].push(c);
 
                     // 3. Efficiency Matrix
                     if(!matrix[off]) matrix[off] = {};
@@ -1633,55 +1652,85 @@
                     // 5. Conflict Player
                     if(conflict !== "None") {
                         if(!conflictPlayers[conflict]) conflictPlayers[conflict] = { win: 0, loss: 0 };
-                        if(isSuccess) conflictPlayers[conflict].loss++; // Offense success = Defender loss
+                        if(isSuccess) conflictPlayers[conflict].loss++;
                         else conflictPlayers[conflict].win++;
                     }
 
-                    // 6. Field Vision (Mocking coords based on concept for Demo)
-                    // In a production app, the AI would output { start: [x,y], end: [x,y] }
-                    fieldShots.push({
-                        x: Math.random() * 53.3, // Field Width
-                        y: Math.random() * 40 + 10, // Yards downfield
-                        result: isSuccess ? 'Complete' : 'Incomplete'
-                    });
+                    // --- B. FIELD CHART MAPPING (Option B: Fixed) ---
+                    // Maps standard football terms to X/Y coordinates
+                    const pass = d.tactical_breakdown?.pass_chart;
+                    if (pass && pass.is_pass) {
+                        let x = 26.65; // Default Middle
+                        
+                        // Map Horizontal Terms to X (Field Width 0-53.3)
+                        const h = pass.horizontal?.toLowerCase() || "";
+                        if (h.includes("left number")) x = 8;
+                        else if (h.includes("left hash")) x = 20;
+                        else if (h.includes("right hash")) x = 33;
+                        else if (h.includes("right number")) x = 45;
+
+                        // Add slight randomness so dots don't stack perfectly
+                        x += (Math.random() * 4 - 2); 
+                        
+                        fieldShots.push({
+                            x: x, 
+                            y: (pass.distance_yards || 5) + (Math.random()), // Vertical Yards
+                            result: pass.result || "Complete",
+                            clipId: c._id || c.id // Store ID for click event
+                        });
+                    }
                 });
 
-                // --- CLEANUP OLD CHARTS ---
+                // --- CLEANUP ---
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
                     const el = document.getElementById(id);
-                    // Destroy existing chart instance if it exists to prevent overlay issues
-                    const chartInstance = Chart.getChart(el);
-                    if (chartInstance) chartInstance.destroy();
+                    if(Chart.getChart(el)) Chart.getChart(el).destroy();
                 });
 
                 // --- RENDER VISUALS ---
 
-                // 1. Formations (Doughnuts)
-                const renderDoughnut = (id, data, colors) => {
-                    new Chart(document.getElementById(id), {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(data),
-                            datasets: [{ data: Object.values(data), backgroundColor: colors, borderWidth: 0 }]
-                        },
-                        options: { 
-                            plugins: { legend: { position: 'right', labels: { color:'white', boxWidth:10 } } },
-                            cutout: '70%',
-                            responsive: true,
-                            maintainAspectRatio: false
+                // Helper: Common Drill Down Click Handler
+                const drillClick = (e, elements, chart) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const label = chart.data.labels[index];
+                        // If we have clips for this label, play the first one (or open a list - advanced)
+                        // For now, we will auto-play the most recent clip of that type
+                        if(drillDownMap.coverage[label]) {
+                            alert(`Drilling down into ${drillDownMap.coverage[label].length} clips of ${label}`);
+                            UI.playClip(drillDownMap.coverage[label][0]._id || drillDownMap.coverage[label][0].id);
+                            document.getElementById('stats-modal').style.display = 'none';
                         }
-                    });
+                    }
                 };
-                // Blue shades for Offense, Red shades for Defense
-                renderDoughnut('chart-off-form', offForms, ['#38bdf8', '#0ea5e9', '#0284c7', '#0369a1']);
-                renderDoughnut('chart-def-form', defForms, ['#ef4444', '#dc2626', '#b91c1c', '#991b1b']);
+
+                // 1. Formations (Doughnut)
+                new Chart(document.getElementById('chart-off-form'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(offForms),
+                        datasets: [{ data: Object.values(offForms), backgroundColor: ['#38bdf8', '#0ea5e9', '#0284c7', '#0369a1'], borderWidth:0 }]
+                    },
+                    options: { 
+                        plugins: { legend: { position:'right', labels:{color:'white'} } }, cutout: '70%', responsive:true, maintainAspectRatio:false 
+                    }
+                });
+
+                new Chart(document.getElementById('chart-def-form'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(defForms),
+                        datasets: [{ data: Object.values(defForms), backgroundColor: ['#ef4444', '#dc2626', '#b91c1c', '#991b1b'], borderWidth:0 }]
+                    },
+                    options: { 
+                        plugins: { legend: { position:'right', labels:{color:'white'} } }, cutout: '70%', responsive:true, maintainAspectRatio:false 
+                    }
+                });
 
                 // 3. Efficiency Matrix (HTML Table)
                 const table = document.getElementById('efficiency-table');
-                // Build Header
                 let headerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead>`;
                 let bodyHTML = `<tbody>`;
-                
                 Object.keys(matrix).forEach(off => {
                     let row = `<tr><td><strong style="color:white;">${off}</strong></td>`;
                     Object.keys(defForms).forEach(def => {
@@ -1690,7 +1739,8 @@
                             const pct = Math.round((cell.s / cell.p) * 100);
                             const color = pct > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
                             const text = pct > 50 ? '#34d399' : '#f87171';
-                            row += `<td><div class="heat-cell" style="background:${color}; color:${text};">${pct}%</div></td>`;
+                            // Add Drill Down Interaction to Table Cells
+                            row += `<td style="cursor:pointer;" onclick="alert('Drilling into ${off} vs ${def}')"><div class="heat-cell" style="background:${color}; color:${text};">${pct}%</div></td>`;
                         } else {
                             row += `<td><span style="color:#444;">-</span></td>`;
                         }
@@ -1701,7 +1751,7 @@
                 bodyHTML += `</tbody>`;
                 table.innerHTML = headerHTML + bodyHTML;
 
-                // 4. Coverage Vulnerability (Horizontal Bar)
+                // 4. Coverage Vulnerability (Horizontal Bar with Drill Down)
                 const covLabels = Object.keys(coverSuccess);
                 const covData = covLabels.map(c => Math.round((coverSuccess[c].s / coverSuccess[c].p) * 100));
                 
@@ -1710,40 +1760,36 @@
                     indexAxis: 'y',
                     data: {
                         labels: covLabels,
-                        datasets: [{ 
-                            label: 'Offensive Success Rate %', 
-                            data: covData, 
-                            backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') 
-                        }]
+                        datasets: [{ label: 'Success %', data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }]
                     },
                     options: { 
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         scales: { x: { max: 100, ticks: { color:'#888' } }, y: { ticks: { color:'white' } } },
-                        plugins: { legend: { display: false } }
+                        plugins: { legend: { display: false } },
+                        // --- C. DRILL DOWN EVENT (Option C: Fixed) ---
+                        onClick: drillClick 
                     }
                 });
 
-                // 5. Conflict Player (Stacked Bar)
+                // 5. Conflict Player
                 const players = Object.keys(conflictPlayers);
                 new Chart(document.getElementById('chart-conflict'), {
                     type: 'bar',
                     data: {
                         labels: players,
                         datasets: [
-                            { label: 'Defense Won', data: players.map(p => conflictPlayers[p].win), backgroundColor: '#ef4444' },
-                            { label: 'Offense Won', data: players.map(p => conflictPlayers[p].loss), backgroundColor: '#10b981' }
+                            { label: 'Def Won', data: players.map(p => conflictPlayers[p].win), backgroundColor: '#ef4444' },
+                            { label: 'Off Won', data: players.map(p => conflictPlayers[p].loss), backgroundColor: '#10b981' }
                         ]
                     },
                     options: { 
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         scales: { x: { stacked: true, ticks: { color:'white' } }, y: { stacked: true, display:false } },
                         plugins: { legend: { labels: { color: 'white' } } }
                     }
                 });
 
-                // 6. Field Vision (Scatter Chart)
+                // 6. Field Vision (Scatter with Real Click)
                 new Chart(document.getElementById('chart-field'), {
                     type: 'scatter',
                     data: {
@@ -1751,7 +1797,7 @@
                             { 
                                 label: 'Complete', 
                                 data: fieldShots.filter(s => s.result === 'Complete'), 
-                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 5 
+                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 6 
                             },
                             { 
                                 label: 'Incomplete', 
@@ -1761,17 +1807,28 @@
                         ]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         scales: {
-                            x: { display: false, min: 0, max: 53.3 }, // NFL Width
-                            y: { display: false, min: -10, max: 60 }  // Yards downfield
+                            x: { display: false, min: 0, max: 53.3 }, 
+                            y: { display: false, min: -10, max: 60 } 
                         },
-                        plugins: { legend: { labels: { color:'white' } } }
+                        plugins: { legend: { labels: { color:'white' } } },
+                        onClick: (e, elements, chart) => {
+                            if (elements.length > 0) {
+                                const datasetIndex = elements[0].datasetIndex;
+                                const index = elements[0].index;
+                                const point = chart.data.datasets[datasetIndex].data[index];
+                                
+                                if(point.clipId) {
+                                    UI.playClip(point.clipId);
+                                    document.getElementById('stats-modal').style.display = 'none';
+                                }
+                            }
+                        }
                     }
                 });
             },
-            
+
             // [REPLACE existing playClip with this fixed version]
             playClip: (id) => {
                 // 1. Get real clips from the Store (NOT window.activeClips)
