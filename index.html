@@ -670,6 +670,57 @@
             /* Yard lines pattern */
             background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255,255,255,0.3) 20%);
         }
+        /* --- CONTEXT EDITOR STYLES --- */
+        
+        /* The specific modal container */
+        #edit-context-modal .modal-content {
+            background: #111;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        /* Toggle Buttons for Down (1st, 2nd, etc.) */
+        .sit-btn {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid var(--border);
+            color: #666;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: var(--font-mono); /* Uses your JetBrains Mono font */
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .sit-btn:hover {
+            border-color: #555;
+            color: white;
+            background: #222;
+        }
+
+        /* Active State (When selected) */
+        .sit-btn.selected {
+            background: rgba(56, 189, 248, 0.15); /* Light Blue Tint */
+            color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+        }
+
+        /* Input Fields in the Modal */
+        #edit-context-modal .input-box {
+            background: #080808;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+        }
+        
+        #edit-context-modal .input-box:focus {
+            border-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -1557,7 +1608,7 @@
                         // FIX: Moved onclick to the parent div and added stopPropagation to the menu button
                         list.innerHTML += `
                         <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
-                            <button class="clip-menu-btn" onclick='event.stopPropagation(); openOptions(${JSON.stringify(c).replace(/'/g, "&apos;")})'>⋮</button>
+                            <button class="clip-menu-btn" onclick='event.stopPropagation(); UI.openContextEditor("${c._id || c.id}")'>⋮</button>
                             <div class="clip-thumb-mini" style="background:#000;">
                                 ${c.thumbnailUrl ? `<img src="${c.thumbnailUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">` : '▶'}
                             </div>
@@ -1856,6 +1907,117 @@
                     }
                 });
             },
+            // --- NEW: Context Editor Logic ---
+
+            // 1. OPEN EDITOR (Populates the modal with current clip data)
+            openContextEditor: (clipId) => {
+                // Find the clip in our local store
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === clipId);
+                
+                if (!clip) {
+                    console.error("Clip not found:", clipId);
+                    return;
+                }
+
+                // Show Modal
+                document.getElementById('edit-context-modal').style.display = 'flex';
+                
+                // Set Hidden ID so we know which clip to save later
+                document.getElementById('edit-clip-id').value = clipId;
+                
+                // Get existing situation data (or default to 1st & 10)
+                const s = clip.fullData?.data?.situation || {};
+                
+                // Pre-select the Down button
+                UI.setEditVal('down', s.down || 1); 
+                
+                // Pre-fill Distance
+                document.getElementById('edit-dist').value = s.distance_val || 10;
+                
+                // Pre-fill Field Position (Parse "Own 25" -> Side: Own, Yard: 25)
+                if(s.yard_line) {
+                    const parts = s.yard_line.split(' '); // Splitting "Own 25"
+                    document.getElementById('edit-side').value = parts[0] || "Own";
+                    document.getElementById('edit-yard').value = parts[1] || 25;
+                } else {
+                    // Defaults if no data exists
+                    document.getElementById('edit-side').value = "Own";
+                    document.getElementById('edit-yard').value = 25;
+                }
+            },
+
+            // 2. HELPER (Highlights the selected button)
+            setEditVal: (field, val) => {
+                if (field === 'down') {
+                    // Update the hidden input
+                    document.getElementById('edit-down').value = val;
+                    
+                    // Visual Toggle: Turn all buttons off, then turn the selected one on
+                    document.querySelectorAll('.sit-btn').forEach((b, i) => {
+                        // (i + 1) matches the button index to the down number (0->1st, 1->2nd...)
+                        if ((i + 1) === Number(val)) {
+                            b.classList.add('selected');
+                        } else {
+                            b.classList.remove('selected');
+                        }
+                    });
+                }
+            },
+
+            // 3. SAVE CONTEXT (Calculates Zones & Updates Data)
+            saveContext: async () => {
+                const id = document.getElementById('edit-clip-id').value;
+                const down = Number(document.getElementById('edit-down').value) || 1;
+                const dist = Number(document.getElementById('edit-dist').value) || 10;
+                const side = document.getElementById('edit-side').value; // "Own" or "Opp"
+                const yard = Number(document.getElementById('edit-yard').value) || 20;
+
+                // A. AUTOMATIC ZONE CALCULATION
+                // Logic: Opp 0-20 is Red Zone. Own 0-15 is Backed Up. Rest is Open Field.
+                let zone = "Open";
+                if (side === "Opp" && yard <= 20) zone = "Red";
+                if (side === "Own" && yard <= 15) zone = "Backed";
+
+                // B. AUTOMATIC DISTANCE CATEGORY
+                // Logic: Short (<=3), Long (>=8), Med (4-7)
+                let distType = "med";
+                if (dist <= 3) distType = "short";
+                if (dist >= 8) distType = "long";
+
+                // C. UPDATE LOCAL STORAGE
+                const clips = Store.get('clips') || [];
+                const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+                
+                if (clipIndex > -1) {
+                    // Ensure the nested structure exists
+                    if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
+                    if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+                    
+                    // Write the new data
+                    clips[clipIndex].fullData.data.situation = {
+                        down: down,
+                        distance: distType,   // Used for the "Short/Med/Long" filter
+                        distance_val: dist,   // The actual number (e.g., 8)
+                        zone: zone,           // Used for "Red Zone" filter
+                        yard_line: `${side} ${yard}` // Readable string (e.g., "Opp 15")
+                    };
+
+                    // Save back to browser storage
+                    Store.set('clips', clips);
+                    
+                    // D. REFRESH UI
+                    UI.refreshStats(); // Updates the charts instantly
+                    UI.renderLibrary(); // Updates the clip list in the sidebar
+                    
+                    // Close Modal
+                    document.getElementById('edit-context-modal').style.display = 'none';
+                    
+                    // Optional: Visual confirmation
+                    const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
+                    if(btn) btn.style.borderColor = 'var(--success)';
+                }
+            },
 
             // [REPLACE existing playClip with this fixed version]
             playClip: (id) => {
@@ -2128,5 +2290,42 @@ Clerk.load()
         window.onload = App.init;
 
     </script>
+    <div id="edit-context-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="max-width:400px;">
+            <h3 style="margin-top:0; color:white;">Game Situation</h3>
+            <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">Accurate context improves AI grading.</p>
+            
+            <input type="hidden" id="edit-clip-id">
+
+            <div style="margin-bottom:16px;">
+                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DOWN</label>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
+                    <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
+                    <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
+                    <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                </div>
+                <input type="hidden" id="edit-down">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DISTANCE TO GO</label>
+                <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="e.g. 10">
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON (YARD LINE)</label>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <select id="edit-side" class="input-box" style="width:110px;">
+                        <option value="Own">Own</option>
+                        <option value="Opp">Opp</option>
+                    </select>
+                    <input type="number" id="edit-yard" class="input-box" placeholder="0-50" min="0" max="50" style="flex:1;">
+                </div>
+            </div>
+
+            <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save Situation</button>
+        </div>
+    </div>
 </body>
 </html>
