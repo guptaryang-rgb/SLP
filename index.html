@@ -1266,64 +1266,76 @@
         </div>
     </div>
 
-    <div class="overlay-header">
-        <div class="overlay-title">
-            <div class="live-dot"></div>
-            Vantage Cinema Mode
-        </div>
-        <div style="display:flex; gap:12px;">
-            <button class="tool-btn" onclick="UI.openContextEditor(UI.overlayClipId)">📝 Edit Situation</button>
-            <button class="tool-btn" onclick="Telestrator.close()">✕ Close</button>
-        </div>
-    </div>
+    <div id="analysis-overlay"> 
 
-    <div id="popup-video-container">
-        <div id="telestrator-view">
-            <video id="ghost-video" playsinline webkit-playsinline muted></video>
-            <video id="main-video" playsinline webkit-playsinline></video>
-            <canvas id="draw-canvas"></canvas>
-        </div>
-
-        <div class="video-controls">
-            <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
-                <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
-                <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);"
-                    oninput="document.getElementById('ghost-video').style.opacity = this.value">
+        <div class="overlay-header">
+            <div class="overlay-title">
+                <div class="live-dot"></div>
+                Vantage Cinema Mode
             </div>
-
-            <button class="v-btn" id="play-pause-btn">⏯</button>
-            <div class="scrubber-container">
-                <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                <div id="video-time"
-                    style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
-            </div>
-            <div class="tele-tools">
-                <button id="draw-btn" class="tool-btn">✏️ Draw</button>
-                <button id="clear-btn" class="tool-btn">Clear</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="popup-report-container">
-        <div
-            style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-            <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)
-            </div>
-            <div id="overlay-chat-history"
-                style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
-            </div>
-
-            <div style="display:flex; gap:8px;">
-                <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
-                    style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
-                <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;"
-                    onclick="UI.handleOverlayChat()">Ask</button>
+            <div style="display:flex; gap:12px;">
+                <button class="tool-btn" onclick="UI.openContextEditor(UI.overlayClipId)">📝 Edit Situation</button>
+                <button class="tool-btn" onclick="Telestrator.close()">✕ Close</button>
             </div>
         </div>
 
-        <div class="report-wrapper" id="report-injection-site"></div>
-    </div>
-    </div>
+        <div id="popup-video-container">
+            <div id="telestrator-view">
+                <video id="ghost-video" playsinline webkit-playsinline muted></video>
+                <video id="main-video" playsinline webkit-playsinline></video>
+                <canvas id="draw-canvas"></canvas>
+            </div>
+
+            <div class="video-controls">
+                <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
+                    <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
+                    <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);"
+                        oninput="document.getElementById('ghost-video').style.opacity = this.value">
+                </div>
+
+                <button class="v-btn" id="play-pause-btn">⏯</button>
+                <div class="scrubber-container">
+                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                    <div id="video-time"
+                        style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+                </div>
+                <div class="tele-tools">
+                    <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                    <button id="clear-btn" class="tool-btn">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="popup-report-container">
+            <div
+                style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)
+                </div>
+                <div id="overlay-chat-history"
+                    style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
+                </div>
+
+                <div style="display:flex; gap:8px;">
+                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
+                        style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;"
+                        onclick="UI.handleOverlayChat()">Ask</button>
+                </div>
+            </div>
+
+            <div class="report-wrapper" id="report-injection-site"></div>
+        </div>
+        
+    </div> 
+    ```
+
+### **Why this happened:**
+In your CSS, you have:
+```css
+#analysis-overlay {
+    display: none; /* This hides everything inside it by default */
+    ...
+}
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
