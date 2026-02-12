@@ -1,51 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vantage Vision | Pro Suite | Intelligence Platform</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
-    <script crossorigin="anonymous" data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <script crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYWNjb3VudHMuZGV2JA"
+        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* ==========================================================================
            1. CORE DESIGN SYSTEM (TOKENS)
            ========================================================================== */
-        :root { 
+        :root {
             /* Color Palette */
-            --bg-deep: #050505; 
-            --bg-panel: rgba(20, 20, 20, 0.85); 
+            --bg-deep: #050505;
+            --bg-panel: rgba(20, 20, 20, 0.85);
             --bg-card: #141414;
             --bg-overlay: rgba(0, 0, 0, 0.95);
 
             /* Borders */
-            --border: rgba(255, 255, 255, 0.08); 
+            --border: rgba(255, 255, 255, 0.08);
             --border-hover: rgba(255, 255, 255, 0.15);
             --border-light: rgba(255, 255, 255, 0.2);
 
             /* Text */
-            --text: #e4e4e7; 
+            --text: #e4e4e7;
             --text-dim: #a1a1aa;
             --text-dark: #71717a;
 
             /* Brand Identity */
-            --accent: #38bdf8; 
+            --accent: #38bdf8;
             --accent-glow: rgba(56, 189, 248, 0.15);
             --accent-dim: rgba(56, 189, 248, 0.4);
 
             /* Semantic Colors */
-            --danger: #ef4444; 
+            --danger: #ef4444;
             --danger-bg: rgba(239, 68, 68, 0.1);
-            --success: #10b981; 
+            --success: #10b981;
             --success-bg: rgba(16, 185, 129, 0.1);
-            --warning: #f59e0b; 
+            --warning: #f59e0b;
             --warning-bg: rgba(245, 158, 11, 0.1);
-            
+
             /* Typography */
             --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
@@ -54,148 +59,168 @@
             --nav-height: 64px;
             --sidebar-width: 280px;
             --lib-width: 320px;
-            --app-height: 100dvh; /* Dynamic Viewport Height for Mobile */
+            --app-height: 100dvh;
+            /* Dynamic Viewport Height for Mobile */
         }
-        
+
         /* Global Reset */
-        * { 
-            box-sizing: border-box; 
-            outline: none; 
+        * {
+            box-sizing: border-box;
+            outline: none;
             -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent; 
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        body { 
-            background: var(--bg-deep); 
-            color: var(--text); 
-            font-family: var(--font-main); 
-            height: var(--app-height); 
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text);
+            font-family: var(--font-main);
+            height: var(--app-height);
             width: 100vw;
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            margin: 0; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 0;
             padding: 0;
-            overscroll-behavior: none; 
+            overscroll-behavior: none;
         }
-        
+
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 
         /* ==========================================================================
            2. NAVIGATION COMPONENTS
            ========================================================================== */
-        .navbar { 
-            height: var(--nav-height); 
-            border-bottom: 1px solid var(--border); 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 0 24px; 
-            background: rgba(5, 5, 5, 0.9); 
-            backdrop-filter: blur(12px); 
-            z-index: 100; 
+        .navbar {
+            height: var(--nav-height);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 100;
             flex-shrink: 0;
         }
 
-        .logo { 
-            font-weight: 800; 
-            font-size: 1.25rem; 
-            letter-spacing: -0.5px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            color: white; 
+        .logo {
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
             user-select: none;
             cursor: pointer;
-        } 
-        
-        .logo span { color: var(--accent); }
-        
-        .logo-icon { 
-            width: 28px; 
-            height: 28px; 
-            background: linear-gradient(135deg, var(--accent), #1e40af); 
-            border-radius: 6px; 
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent), #1e40af);
+            border-radius: 6px;
             box-shadow: 0 0 15px var(--accent-glow);
         }
 
-        .nav-tabs { 
-            display: flex; 
-            gap: 4px; 
-            background: #0f0f0f; 
-            padding: 4px; 
-            border-radius: 10px; 
-            border: 1px solid var(--border); 
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            background: #0f0f0f;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
         }
-        
-        .nav-tab { 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-weight: 500; 
-            font-size: 0.85rem; 
-            cursor: pointer; 
-            transition: all 0.2s ease; 
-            color: var(--text-dim); 
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-dim);
             white-space: nowrap;
         }
-        
-        .nav-tab:hover { color: white; background: rgba(255,255,255,0.03); }
-        
-        .nav-tab.active { 
-            background: #222; 
-            color: white; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
-            border: 1px solid rgba(255,255,255,0.05); 
+
+        .nav-tab:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-tab.active {
+            background: #222;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* ==========================================================================
            3. VIEW & ROUTING SYSTEM
            ========================================================================== */
-        .view-container { 
-            flex: 1; 
-            position: relative; 
-            overflow: hidden; 
+        .view-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
             display: flex;
         }
-        
-        .view { 
-            position: absolute; 
-            inset: 0; 
-            display: none; 
-            flex-direction: column; 
-            opacity: 0; 
-            transform: scale(0.99); 
-            transition: opacity 0.3s ease, transform 0.3s ease; 
+
+        .view {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.99);
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        
-        .view.active-view { 
-            display: flex; 
-            opacity: 1; 
-            transform: scale(1); 
+
+        .view.active-view {
+            display: flex;
+            opacity: 1;
+            transform: scale(1);
         }
 
         /* --- Landing View Specifics --- */
         #landing-view {
-            align-items: center; 
+            align-items: center;
             text-align: center;
             background: radial-gradient(circle at 50% 0%, #111827 0%, #000 70%);
-            overflow-y: auto; 
+            overflow-y: auto;
             padding-bottom: 50px;
         }
-        
-        .hero-wrapper { 
-            max-width: 1000px; 
-            padding: 80px 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100%; /* Ensure footer pushes down */
+
+        .hero-wrapper {
+            max-width: 1000px;
+            padding: 80px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100%;
+            /* Ensure footer pushes down */
         }
-        
+
         .hero-badge {
             font-size: 0.8rem;
             color: var(--accent);
@@ -207,65 +232,82 @@
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
 
-        .hero-title { 
-            font-size: 4.5rem; 
-            font-weight: 900; 
-            line-height: 1.05; 
-            letter-spacing: -2px; 
-            margin: 0 0 24px 0; 
-            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%); 
-            -webkit-background-clip: text; 
-            color: transparent; 
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin: 0 0 24px 0;
+            background: linear-gradient(180deg, #fff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            color: transparent;
         }
-        
-        .hero-subtitle { 
-            font-size: 1.15rem; 
-            color: var(--text-dim); 
-            margin-bottom: 30px; 
-            font-weight: 300; 
-            max-width: 700px; 
-            line-height: 1.6; 
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-dim);
+            margin-bottom: 30px;
+            font-weight: 300;
+            max-width: 700px;
+            line-height: 1.6;
         }
-        
-        .onboarding-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 24px; 
-            margin: 40px 0; 
-            width: 100%; 
-            text-align: left; 
+
+        .onboarding-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 40px 0;
+            width: 100%;
+            text-align: left;
         }
-        
-        .step-card { 
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); 
-            padding: 24px; 
-            border-radius: 12px; 
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 12px;
             transition: transform 0.3s ease;
         }
-        
-        .step-num { color: var(--accent); font-weight: 900; font-size: 1.5rem; margin-bottom: 12px; font-family: var(--font-mono); }
-        .step-title { color: white; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
-        .step-desc { color: #888; font-size: 0.9rem; line-height: 1.5; }
 
-        .cta-btn { 
-            background: var(--text); 
-            color: black; 
-            padding: 18px 48px; 
-            border-radius: 12px; 
-            border: none; 
-            font-weight: 700; 
-            cursor: pointer; 
-            font-size: 1rem; 
-            transition: all 0.2s ease; 
-            margin-top: 30px; 
-            box-shadow: 0 0 40px rgba(255,255,255,0.1); 
+        .step-num {
+            color: var(--accent);
+            font-weight: 900;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
         }
-        
-        .cta-btn:hover { 
-            transform: translateY(-2px); 
-            background: white; 
-            box-shadow: 0 0 60px rgba(255,255,255,0.25); 
+
+        .step-title {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .step-desc {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .cta-btn {
+            background: var(--text);
+            color: black;
+            padding: 18px 48px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            margin-top: 30px;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            background: white;
+            box-shadow: 0 0 60px rgba(255, 255, 255, 0.25);
         }
 
         .legal-footer {
@@ -279,23 +321,33 @@
             font-size: 0.8rem;
             color: var(--text-dim);
         }
-        .legal-footer a { color: var(--text-dark); text-decoration: none; transition: 0.2s; }
-        .legal-footer a:hover { color: var(--accent); }
+
+        .legal-footer a {
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .legal-footer a:hover {
+            color: var(--accent);
+        }
 
         /* ==========================================================================
            4. WORKSPACE LAYOUT (Sidebars & Main)
            ========================================================================== */
-       .dashboard-header {
+        .dashboard-header {
             padding: 16px 24px;
             background: #0a0a0a;
             border-bottom: 1px solid var(--border);
             display: flex;
             gap: 12px;
             align-items: center;
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
+            /* Prevent shrinking */
         }
+
         .dash-btn {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
             color: var(--text-dim);
             padding: 8px 16px;
@@ -308,248 +360,620 @@
             gap: 8px;
             transition: 0.2s;
         }
-        .dash-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: var(--text-dim); } .app-body { 
-            flex: 1; 
-            display: flex; 
-            overflow: hidden; 
-            width: 100vw; 
-            justify-content: space-between; 
+
+        .dash-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: var(--text-dim);
+        }
+
+        .app-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            width: 100vw;
+            justify-content: space-between;
             position: relative;
         }
-        
-        .sidebar, .lib-panel { 
-            width: var(--sidebar-width); 
-            background: var(--bg-panel); 
-            border-right: 1px solid var(--border); 
-            display: flex; 
-            flex-direction: column; 
-            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-            flex-shrink: 0; 
-            backdrop-filter: blur(20px); 
+
+        .sidebar,
+        .lib-panel {
+            width: var(--sidebar-width);
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-shrink: 0;
+            backdrop-filter: blur(20px);
             z-index: 5;
         }
-        
-        .lib-panel { 
-            border-right: none; 
-            border-left: 1px solid var(--border); 
-            width: var(--lib-width); 
-        }
-        
-        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); opacity: 0; }
-        .lib-panel.collapsed { margin-right: calc(var(--lib-width) * -1); opacity: 0; }
 
-        .panel-header { 
-            padding: 16px 20px; 
-            font-size: 0.75rem; 
-            font-weight: 800; 
-            color: var(--text-dim); 
-            letter-spacing: 1px; 
-            text-transform: uppercase; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid var(--border); 
-            background: rgba(0,0,0,0.3);
+        .lib-panel {
+            border-right: none;
+            border-left: 1px solid var(--border);
+            width: var(--lib-width);
         }
-        
-        .panel-btn { 
-            background: none; border: none; color: white; cursor: pointer; 
-            font-size: 1.2rem; transition: 0.2s; opacity: 0.7; padding: 4px;
-        }
-        .panel-btn:hover { opacity: 1; color: var(--accent); }
 
-        .session-item { 
-            padding: 12px 16px; margin: 4px 12px; border-radius: 8px; 
-            color: var(--text-dim); font-size: 0.9rem; cursor: pointer; 
-            transition: 0.2s; display: flex; justify-content: space-between; align-items: center; user-select: none;
+        .sidebar.collapsed {
+            margin-left: calc(var(--sidebar-width) * -1);
+            opacity: 0;
         }
-        .session-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .session-item.active { background: #1a1a1a; color: white; border-left: 3px solid var(--accent); }
 
-        .main { 
-            flex: 1; display: flex; flex-direction: column; width: 100%; 
-            min-width: 0; background-color: #050505; position: relative;
+        .lib-panel.collapsed {
+            margin-right: calc(var(--lib-width) * -1);
+            opacity: 0;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.2s;
+            opacity: 0.7;
+            padding: 4px;
+        }
+
+        .panel-btn:hover {
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .session-item {
+            padding: 12px 16px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .session-item.active {
+            background: #1a1a1a;
+            color: white;
+            border-left: 3px solid var(--accent);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-width: 0;
+            background-color: #050505;
+            position: relative;
         }
 
         /* ==========================================================================
            5. ANALYSIS OVERLAY (THE TELESTRATOR POPUP)
            ========================================================================== */
         #analysis-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: var(--app-height);
-            background: #000; z-index: 5000; display: none; flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: var(--app-height);
+            background: #000;
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
             animation: overlayFadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        
-        @keyframes overlayFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-        .overlay-header {
-            height: 56px; border-bottom: 1px solid var(--border); display: flex;
-            justify-content: space-between; align-items: center; padding: 0 20px;
-            background: #080808; flex-shrink: 0;
+        @keyframes overlayFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        .overlay-title { font-weight: 700; color: white; display: flex; align-items: center; gap: 10px; font-size: 1rem; }
-        .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.5; } 100% { opacity:1; } }
+        .overlay-header {
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            background: #080808;
+            flex-shrink: 0;
+        }
+
+        .overlay-title {
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
 
         /* Video Area */
         #popup-video-container {
-            flex: 6; position: relative; background: #050505; display: flex;
-            flex-direction: column; justify-content: center; align-items: center;
-            border-bottom: 1px solid var(--border); overflow: hidden; touch-action: none;
+            flex: 6;
+            position: relative;
+            background: #050505;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            touch-action: none;
         }
 
-        #telestrator-view { 
-            width: 100%; height: 100%; position: relative; display: flex; 
-            justify-content: center; align-items: center; background: #000; overflow: hidden;
+        #telestrator-view {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            overflow: hidden;
         }
 
         /* NEW: Ghost Video Layer */
         #ghost-video {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            object-fit: contain; opacity: 0; pointer-events: none; z-index: 5;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
         }
-        
-        #main-video { max-height: 100%; max-width: 100%; object-fit: contain; display: block; }
-        #draw-canvas { position: absolute; top:0; left:0; pointer-events:none; touch-action: none; z-index: 10; }
-        
-        .video-controls { 
-            position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 24px;
-            background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
-            display: flex; gap: 20px; align-items: center; z-index: 20; transition: opacity 0.3s;
+
+        #main-video {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            display: block;
         }
-        
-        .v-btn { 
-            background: none; border: none; color: white; cursor: pointer; font-size: 1.4rem;
-            display: flex; align-items: center; min-width: 44px; min-height: 44px; justify-content: center;
+
+        #draw-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            touch-action: none;
+            z-index: 10;
         }
-        .v-btn:hover { color: var(--accent); }
-        
-        .scrubber-container { flex: 1; display: flex; align-items: center; gap: 12px; }
-        .scrubber { 
-            flex: 1; cursor: pointer; accent-color: var(--accent); height: 4px;
-            border-radius: 2px; background: rgba(255,255,255,0.2); appearance: none;
+
+        .video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 20;
+            transition: opacity 0.3s;
         }
-        .scrubber:hover { height: 8px; }
-        
-        .tele-tools { display: flex; gap: 8px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 16px; margin-left: 8px; }
+
+        .v-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            min-width: 44px;
+            min-height: 44px;
+            justify-content: center;
+        }
+
+        .v-btn:hover {
+            color: var(--accent);
+        }
+
+        .scrubber-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scrubber {
+            flex: 1;
+            cursor: pointer;
+            accent-color: var(--accent);
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            appearance: none;
+        }
+
+        .scrubber:hover {
+            height: 8px;
+        }
+
+        .tele-tools {
+            display: flex;
+            gap: 8px;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            padding-left: 16px;
+            margin-left: 8px;
+        }
 
         /* Report Area */
         #popup-report-container {
-            flex: 4; background: #111; overflow-y: auto; padding: 24px;
-            display: flex; flex-direction: column; align-items: center;
+            flex: 4;
+            background: #111;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .report-wrapper { max-width: 900px; width: 100%; padding-bottom: 40px; }
+
+        .report-wrapper {
+            max-width: 900px;
+            width: 100%;
+            padding-bottom: 40px;
+        }
 
         /* ==========================================================================
            6. SCOUT CARD STYLING
            ========================================================================== */
-        .scout-card { 
-            background: #141414; border: 1px solid var(--border); border-radius: 16px;
-            overflow: hidden; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
-            margin-bottom: 20px; animation: slideUp 0.4s ease-out; width: 100%;
+        .scout-card {
+            background: #141414;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            animation: slideUp 0.4s ease-out;
+            width: 100%;
         }
 
-        .scout-header { 
-            padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex;
-            justify-content: space-between; align-items: center;
-            background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+        .scout-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
         }
-        
-        .play-title { font-weight: 800; font-size: 1.2rem; color: white; margin-top: 6px; }
-        .formation-tag { 
-            font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);
-            background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 4px;
+
+        .play-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 6px;
+        }
+
+        .formation-tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
             border: 1px solid rgba(56, 189, 248, 0.2);
         }
-        
-        .exec-badge { 
-            text-align: center; background: #050505; border: 1px solid var(--border);
-            padding: 8px 16px; border-radius: 8px; min-width: 70px;
+
+        .exec-badge {
+            text-align: center;
+            background: #050505;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            min-width: 70px;
         }
-        .exec-val { font-size: 1.4rem; font-weight: 900; line-height: 1; }
-        
-        .scout-body { padding: 24px; display: grid; grid-template-columns: 2fr 1.2fr; gap: 32px; }
-        .summary-text { 
-            color: #d4d4d8; font-size: 1rem; line-height: 1.7; margin-bottom: 24px;
-            grid-column: 1 / -1; border-left: 3px solid var(--border); padding-left: 16px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
-            padding: 16px; border-radius: 0 8px 8px 0;
+
+        .exec-val {
+            font-size: 1.4rem;
+            font-weight: 900;
+            line-height: 1;
         }
-        
-        .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-        .metric-card { background: #1a1a1a; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
-        .metric-label { font-size: 0.6rem; color: #888; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; }
-        .metric-val { font-size: 1.2rem; font-weight: 800; color: white; }
+
+        .scout-body {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 32px;
+        }
+
+        .summary-text {
+            color: #d4d4d8;
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+            grid-column: 1 / -1;
+            border-left: 3px solid var(--border);
+            padding-left: 16px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent);
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .grade-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .metric-label {
+            font-size: 0.6rem;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .metric-val {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: white;
+        }
 
         /* ==========================================================================
            7. INPUT BAR & TOOLS
            ========================================================================== */
-        .input-bar { 
-            padding: 20px 24px; background: rgba(5,5,5,0.95); border-top: 1px solid var(--border);
-            display: flex; gap: 12px; align-items: center; z-index: 50; backdrop-filter: blur(10px);
+        .input-bar {
+            padding: 20px 24px;
+            background: rgba(5, 5, 5, 0.95);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            z-index: 50;
+            backdrop-filter: blur(10px);
         }
-        
-        .input-box { 
-            flex: 1; background: #141414; border: 1px solid var(--border); color: white;
-            padding: 12px 16px; border-radius: 10px; outline: none; font-family: 'Inter'; font-size: 0.95rem;
+
+        .input-box {
+            flex: 1;
+            background: #141414;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            outline: none;
+            font-family: 'Inter';
+            font-size: 0.95rem;
         }
-        .input-box:focus { border-color: var(--accent); }
-        
-        .tool-btn { 
-            background: #222; border: 1px solid var(--border); color: #ccc;
-            font-size: 0.85rem; padding: 10px 16px; border-radius: 8px; cursor: pointer;
-            transition: 0.2s; font-weight: 600; display: flex; align-items: center;
-            gap: 6px; white-space: nowrap;
+
+        .input-box:focus {
+            border-color: var(--accent);
         }
-        .tool-btn:hover { color: white; background: #333; }
+
+        .tool-btn {
+            background: #222;
+            border: 1px solid var(--border);
+            color: #ccc;
+            font-size: 0.85rem;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .tool-btn:hover {
+            color: white;
+            background: #333;
+        }
 
         .pos-select {
-            background: #141414; color: white; border: 1px solid var(--border);
-            padding: 0 16px; height: 44px; border-radius: 8px; font-weight: 500;
-            cursor: pointer; outline: none; display: none; /* Hidden by default */
+            background: #141414;
+            color: white;
+            border: 1px solid var(--border);
+            padding: 0 16px;
+            height: 44px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            display: none;
+            /* Hidden by default */
         }
 
         /* Library Cards */
-        .clip-card { 
-            padding: 12px; margin: 0 12px 12px; background: #141414; border: 1px solid var(--border);
-            border-radius: 10px; cursor: pointer; display: flex; gap: 12px; align-items: center; transition: 0.2s;
+        .clip-card {
+            padding: 12px;
+            margin: 0 12px 12px;
+            background: #141414;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            transition: 0.2s;
         }
-        .clip-card:hover { border-color: var(--border-hover); background: #1a1a1a; }
-        .clip-thumb-mini { 
-            width: 60px; height: 40px; background: #000; border-radius: 6px;
-            display: flex; align-items: center; justify-content: center; color: #333;
-            font-size: 0.8rem; border: 1px solid #333;
+
+        .clip-card:hover {
+            border-color: var(--border-hover);
+            background: #1a1a1a;
+        }
+
+        .clip-thumb-mini {
+            width: 60px;
+            height: 40px;
+            background: #000;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 0.8rem;
+            border: 1px solid #333;
         }
 
         /* ==========================================================================
            8. MODALS & UTILITIES
            ========================================================================== */
-        .modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-            z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.2s ease;
-        }
-        .modal-content { 
-            background: #111; border: 1px solid var(--border); border-radius: 16px;
-            width: 90vw; max-width: 800px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-content {
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 90vw;
+            max-width: 800px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
 
         /* Mobile Breakpoints */
-        @media (max-width: 900px) { 
-            .sidebar, .lib-panel { position: absolute; height: 100%; background: rgba(10,10,10,0.98); box-shadow: 0 0 50px black; }
-            #popup-video-container { flex: 0 0 40dvh; }
-            #popup-report-container { flex: 1; }
-            .scout-body { grid-template-columns: 1fr; gap: 20px; }
-            .input-bar { flex-wrap: wrap; padding: 12px; }
-            .tool-group { border-right: none; width: 100%; justify-content: space-between; margin-bottom: 8px; }
-            .onboarding-grid { grid-template-columns: 1fr; }
-            .hero-title { font-size: 3rem; }
-            .tool-btn span { display: none; } /* Hide text on small screens */
-            .tool-btn { padding: 10px; }
+        @media (max-width: 900px) {
+
+            .sidebar,
+            .lib-panel {
+                position: absolute;
+                height: 100%;
+                background: rgba(10, 10, 10, 0.98);
+                box-shadow: 0 0 50px black;
+            }
+
+            #popup-video-container {
+                flex: 0 0 40dvh;
+            }
+
+            #popup-report-container {
+                flex: 1;
+            }
+
+            .scout-body {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .input-bar {
+                flex-wrap: wrap;
+                padding: 12px;
+            }
+
+            .tool-group {
+                border-right: none;
+                width: 100%;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+
+            .onboarding-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .tool-btn span {
+                display: none;
+            }
+
+            /* Hide text on small screens */
+            .tool-btn {
+                padding: 10px;
+            }
         }
+
         /* --- NEW: Active Draw Button State --- */
         #draw-btn.active {
             border: 1px solid var(--accent) !important;
@@ -560,10 +984,15 @@
 
         /* --- NEW: AI Thinking Progress Bar --- */
         @keyframes indeterminate {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
         }
-        
+
         .thinking-bar {
             width: 100%;
             height: 3px;
@@ -573,92 +1002,96 @@
             margin-top: 8px;
             position: relative;
         }
-        
+
         .thinking-bar::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; bottom: 0; width: 50%;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 50%;
             background: var(--accent);
             animation: indeterminate 1.5s infinite linear;
         }
+
         /* --- NEW: TEAM INTELLIGENCE HUB STYLES --- */
-        
+
         /* 1. Dashboard Grid Layout */
-        .stat-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-            margin-bottom: 20px; 
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
         }
-        
-        .stat-card { 
-            background: #1a1a1a; 
-            padding: 20px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border); 
-            display: flex; 
-            flex-direction: column; 
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
         }
-        
-        .stat-title { 
-            margin-top: 0; 
-            color: #888; 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            margin-bottom: 12px; 
+
+        .stat-title {
+            margin-top: 0;
+            color: #888;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
         }
-        
+
         /* 2. Situation Selector Bar */
-        .situation-bar { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 24px; 
-            background: rgba(255,255,255,0.05); 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border); 
+        .situation-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
-        
-        .sit-select { 
-            background: #000; 
-            color: white; 
-            border: 1px solid var(--border); 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            flex: 1; 
-            cursor: pointer; 
+
+        .sit-select {
+            background: #000;
+            color: white;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            flex: 1;
+            cursor: pointer;
         }
 
         /* 3. Efficiency Heatmap Table */
-        .heatmap-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            font-size: 0.8rem; 
+        .heatmap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
         }
-        
-        .heatmap-table th { 
-            text-align: left; 
-            color: #888; 
-            padding: 8px; 
-            border-bottom: 1px solid var(--border); 
+
+        .heatmap-table th {
+            text-align: left;
+            color: #888;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
         }
-        
-        .heatmap-table td { 
-            padding: 8px; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            color: #ddd; 
+
+        .heatmap-table td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #ddd;
         }
-        
-        .heat-cell { 
-            padding: 4px 8px; 
-            border-radius: 4px; 
-            font-weight: 700; 
-            text-align: center; 
-            width: 60px; 
+
+        .heat-cell {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-align: center;
+            width: 60px;
         }
-        
+
         /* 6. Field Vision Background */
         .football-field {
             background: linear-gradient(180deg, #355e3b 0%, #355e3b 100%);
@@ -668,15 +1101,16 @@
             height: 100%;
             border-radius: 4px;
             /* Yard lines pattern */
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255,255,255,0.3) 20%);
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255, 255, 255, 0.3) 20%);
         }
+
         /* --- CONTEXT EDITOR STYLES --- */
-        
+
         /* The specific modal container */
         #edit-context-modal .modal-content {
             background: #111;
             border: 1px solid var(--border);
-            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
         }
 
         /* Toggle Buttons for Down (1st, 2nd, etc.) */
@@ -689,7 +1123,8 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 700;
-            font-family: var(--font-mono); /* Uses your JetBrains Mono font */
+            font-family: var(--font-mono);
+            /* Uses your JetBrains Mono font */
             transition: all 0.2s ease;
             text-align: center;
         }
@@ -702,7 +1137,8 @@
 
         /* Active State (When selected) */
         .sit-btn.selected {
-            background: rgba(56, 189, 248, 0.15); /* Light Blue Tint */
+            background: rgba(56, 189, 248, 0.15);
+            /* Light Blue Tint */
             color: var(--accent);
             border-color: var(--accent);
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
@@ -717,17 +1153,18 @@
             border-radius: 6px;
             font-family: var(--font-mono);
         }
-        
+
         #edit-context-modal .input-box:focus {
             border-color: var(--accent);
         }
     </style>
 </head>
+
 <body>
 
     <div class="navbar">
         <div class="logo" onclick="window.location.reload()">
-            <div class="logo-icon"></div> 
+            <div class="logo-icon"></div>
             Vantage<span>Vision</span>
         </div>
         <div class="nav-tabs">
@@ -739,34 +1176,38 @@
     </div>
 
     <div class="view-container">
-        
+
         <div id="landing-view" class="view active-view">
             <div class="hero-wrapper">
                 <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
-                
+                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and
+                    team strategy.</p>
+
                 <div class="onboarding-grid">
                     <div class="step-card">
                         <div class="step-num">01</div>
                         <div class="step-title">Upload</div>
-                        <div class="step-desc">Upload raw MP4 footage directly from your device. Local processing ensures privacy.</div>
+                        <div class="step-desc">Upload raw MP4 footage directly from your device. Local processing
+                            ensures privacy.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">02</div>
                         <div class="step-title">Select Mode</div>
-                        <div class="step-desc">Choose <strong>Self</strong> for biomechanics & grades, or <strong>Team</strong> for scheme & coverage analysis.</div>
+                        <div class="step-desc">Choose <strong>Self</strong> for biomechanics & grades, or
+                            <strong>Team</strong> for scheme & coverage analysis.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
                         <div class="step-title">Execute</div>
-                        <div class="step-desc">Use the Telestrator engine to draw over film in real-time with Apple Pencil support.</div>
+                        <div class="step-desc">Use the Telestrator engine to draw over film in real-time with Apple
+                            Pencil support.</div>
                     </div>
                 </div>
 
                 <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
 
-               <div class="legal-footer">
+                <div class="legal-footer">
                     <a href="privacy.html" target="_blank">Privacy Policy</a>
                     <a href="terms.html" target="_blank">Terms of Service</a>
                 </div>
@@ -776,7 +1217,8 @@
         <div id="war-room-view" class="view">
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
+                    <div class="panel-header">Sessions <button class="panel-btn"
+                            onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
@@ -786,12 +1228,14 @@
                         <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
                         <button class="dash-btn" onclick="alert('Upload Playbook Feature')">📖 Playbook</button>
                         <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
-                        <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster / Tendency</button>
+                        <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster /
+                            Tendency</button>
                     </div>
 
-                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
-                        </div>
-                    
+                    <div id="chat-feed"
+                        style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
+                    </div>
+
                     <div class="input-bar">
                         <select id="pos-select" class="pos-select">
                             <option value="general">Select Focus...</option>
@@ -803,12 +1247,14 @@
                         </select>
 
                         <input type="file" id="file-input" hidden accept="video/*">
-                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
-                        
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);"
+                            onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
+
                         <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
                         <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
-                        
-                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
+
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library
+                            ☰</button>
                     </div>
                 </div>
 
@@ -820,73 +1266,89 @@
         </div>
     </div>
 
-    <div id="analysis-overlay">
-        <div class="overlay-header">
-            <div class="overlay-title">
-                <div class="live-dot"></div>
-                Vantage Cinema Mode
-            </div>
+    <div class="overlay-header">
+        <div class="overlay-title">
+            <div class="live-dot"></div>
+            Vantage Cinema Mode
+        </div>
+        <div style="display:flex; gap:12px;">
+            <button class="tool-btn" onclick="UI.openContextEditor(UI.overlayClipId)">📝 Edit Situation</button>
             <button class="tool-btn" onclick="Telestrator.close()">✕ Close</button>
         </div>
+    </div>
 
-        <div id="popup-video-container">
-            <div id="telestrator-view">
-                <video id="ghost-video" playsinline webkit-playsinline muted></video>
-                <video id="main-video" playsinline webkit-playsinline></video>
-                <canvas id="draw-canvas"></canvas>
+    <div id="popup-video-container">
+        <div id="telestrator-view">
+            <video id="ghost-video" playsinline webkit-playsinline muted></video>
+            <video id="main-video" playsinline webkit-playsinline></video>
+            <canvas id="draw-canvas"></canvas>
+        </div>
+
+        <div class="video-controls">
+            <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
+                <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
+                <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);"
+                    oninput="document.getElementById('ghost-video').style.opacity = this.value">
             </div>
-            
-            <div class="video-controls">
-                <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
-                    <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
-                    <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);" oninput="document.getElementById('ghost-video').style.opacity = this.value">
-                </div>
 
-                <button class="v-btn" id="play-pause-btn">⏯</button>
-                <div class="scrubber-container">
-                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                    <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
-                </div>
-                <div class="tele-tools">
-                    <button id="draw-btn" class="tool-btn">✏️ Draw</button>
-                    <button id="clear-btn" class="tool-btn">Clear</button>
-                </div>
+            <button class="v-btn" id="play-pause-btn">⏯</button>
+            <div class="scrubber-container">
+                <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                <div id="video-time"
+                    style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+            </div>
+            <div class="tele-tools">
+                <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                <button id="clear-btn" class="tool-btn">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="popup-report-container">
+        <div
+            style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)
+            </div>
+            <div id="overlay-chat-history"
+                style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
+                    style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;"
+                    onclick="UI.handleOverlayChat()">Ask</button>
             </div>
         </div>
 
-        <div id="popup-report-container">
-            <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
-                <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
-                
-                <div style="display:flex; gap:8px;">
-                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
-                    <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;" onclick="UI.handleOverlayChat()">Ask</button>
-                </div>
-            </div>
-
-            <div class="report-wrapper" id="report-injection-site"></div>
-        </div>
+        <div class="report-wrapper" id="report-injection-site"></div>
+    </div>
     </div>
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
             <h3 style="margin-top:0; color:white;">Strategy Hub</h3>
             <p style="color:#888; margin-bottom:16px;">Define analysis rules. These persist across all sessions.</p>
-            <textarea id="rules-input" style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
-            <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;" onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
+            <textarea id="rules-input"
+                style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;"
+                placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
+            <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;"
+                onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
         </div>
     </div>
 
     <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content" style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+        <div class="modal-content"
+            style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
+
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
                 <div>
                     <h2 style="margin:0; color:white;">Team Intelligence Hub</h2>
                     <div style="color:#666; font-size:0.8rem;">Opponent Scout & Tendency Report</div>
                 </div>
-                <button class="tool-btn" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+                <button class="tool-btn"
+                    onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
             </div>
 
             <div class="situation-bar">
@@ -910,9 +1372,9 @@
                     <option value="backed">Backed Up</option>
                 </select>
             </div>
-            
+
             <div style="overflow-y:auto; flex:1; padding-right:10px;">
-                
+
                 <div class="stat-grid">
                     <div class="stat-card">
                         <h4 class="stat-title">1. OFFENSIVE FORMATION USAGE</h4>
@@ -929,7 +1391,7 @@
                         <h4 class="stat-title">3. EFFICIENCY MATRIX (Success Rate %)</h4>
                         <div style="overflow-y:auto; height:250px;">
                             <table class="heatmap-table" id="efficiency-table">
-                                </table>
+                            </table>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -940,12 +1402,13 @@
 
                 <div class="stat-grid">
                     <div class="stat-card">
-                        <h4 class="stat-title">5. CONFLICT PLAYER (Target Outcomes)</h4>
+                        <h4 class="stat-title">5. TOP OFFENSIVE CONCEPTS</h4>
                         <div style="height:300px;"><canvas id="chart-conflict"></canvas></div>
                     </div>
                     <div class="stat-card">
                         <h4 class="stat-title">6. FIELD VISION (Pass Distribution)</h4>
-                        <div style="height:300px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                        <div
+                            style="height:300px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
                             <div class="football-field">
                                 <canvas id="chart-field" style="width:100%; height:100%;"></canvas>
                             </div>
@@ -957,7 +1420,9 @@
         </div>
     </div>
 
-    <div id="auth-modal" class="modal" style="display: flex; z-index:9999;"><div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div></div>
+    <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
+        <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
+    </div>
 
     <script>
         /**
@@ -967,7 +1432,7 @@
         const Store = {
             get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
             set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-            
+
             init: () => {
                 // Initialize Sessions
                 // FIX: Start with empty array. Do NOT create fake local sessions.
@@ -985,7 +1450,7 @@
                 Store.set('clips', clips);
                 return clips;
             },
-            
+
             getClips: () => Store.get('clips') || [],
 
             // --- CHAT ISOLATION LOGIC ---
@@ -1013,10 +1478,10 @@
                 this.canvas = document.getElementById('draw-canvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.isDrawing = false;
-                this.mode = 'view'; 
+                this.mode = 'view';
                 this.strokes = [];
                 this.currentPath = [];
-                
+
                 this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
                 this.bindEvents();
             }
@@ -1024,9 +1489,9 @@
             init(videoUrl) {
                 this.video.src = videoUrl;
                 this.strokes = [];
-                this.ctx.clearRect(0,0,this.canvas.width, this.canvas.height);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.resizeObserver.observe(this.video);
-                
+
                 document.getElementById('analysis-overlay').style.display = 'flex';
                 this.video.play().catch(e => console.log("Autoplay blocked", e));
                 this.fitCanvas();
@@ -1044,14 +1509,14 @@
             fitCanvas() {
                 const rect = this.video.getBoundingClientRect();
                 if (rect.width === 0) return;
-                
+
                 this.canvas.width = rect.width;
                 this.canvas.height = rect.height;
                 this.canvas.style.width = `${rect.width}px`;
                 this.canvas.style.height = `${rect.height}px`;
                 this.canvas.style.top = `${this.video.offsetTop}px`;
                 this.canvas.style.left = `${this.video.offsetLeft}px`;
-                
+
                 this.ctx.lineCap = 'round';
                 this.ctx.lineJoin = 'round';
             }
@@ -1068,15 +1533,15 @@
                 // --- APPLE PENCIL & TOUCH LOGIC ---
                 this.canvas.addEventListener('pointerdown', (e) => {
                     if (this.mode !== 'draw') return;
-                    e.preventDefault(); 
-                    
+                    e.preventDefault();
+
                     this.isDrawing = true;
                     this.canvas.setPointerCapture(e.pointerId); // CRITICAL: Locks pencil to canvas
-                    this.video.pause(); 
-                    
+                    this.video.pause();
+
                     const { x, y } = this.getCoords(e);
                     const pressure = e.pressure || 0.5;
-                    
+
                     this.currentPath = [{ x, y, p: pressure }];
                     this.ctx.beginPath();
                     this.ctx.moveTo(x, y);
@@ -1087,12 +1552,12 @@
                 this.canvas.addEventListener('pointermove', (e) => {
                     if (!this.isDrawing) return;
                     if (e.pointerType === 'touch') e.preventDefault(); // Stop scrolling
-                    
+
                     const { x, y } = this.getCoords(e);
                     const pressure = e.pressure || 0.5;
-                    
+
                     this.currentPath.push({ x, y, p: pressure });
-                    
+
                     // Dynamic line width based on Apple Pencil pressure
                     this.ctx.lineWidth = 2 + (pressure * 6);
                     this.ctx.lineTo(x, y);
@@ -1103,7 +1568,7 @@
                     this.canvas.releasePointerCapture(e.pointerId);
                     this.endStroke();
                 });
-                
+
                 this.canvas.addEventListener('pointercancel', (e) => {
                     this.canvas.releasePointerCapture(e.pointerId);
                     this.endStroke();
@@ -1111,9 +1576,9 @@
 
                 // UI Controls
                 document.getElementById('draw-btn').onclick = () => this.toggleMode();
-                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); };
+                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
                 document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
-                
+
                 // Scrubber Logic
                 const scrubber = document.getElementById('video-scrubber');
                 this.video.ontimeupdate = () => {
@@ -1147,7 +1612,7 @@
             toggleMode() {
                 this.mode = this.mode === 'view' ? 'draw' : 'view';
                 const btn = document.getElementById('draw-btn');
-                
+
                 if (this.mode === 'draw') {
                     btn.classList.add('active'); // Adds the blue outline
                     btn.innerText = "✏️ Drawing...";
@@ -1173,9 +1638,9 @@
                                 const opacity = 1 - (age / s.duration);
                                 this.ctx.beginPath();
                                 this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                                if(s.path.length > 0) {
+                                if (s.path.length > 0) {
                                     this.ctx.moveTo(s.path[0].x, s.path[0].y);
-                                    for(let i=1; i<s.path.length; i++) {
+                                    for (let i = 1; i < s.path.length; i++) {
                                         this.ctx.lineWidth = 2 + (s.path[i].p * 4);
                                         this.ctx.lineTo(s.path[i].x, s.path[i].y);
                                     }
@@ -1190,8 +1655,8 @@
             }
 
             formatTime(s) {
-                const m = Math.floor(s/60);
-                const sec = Math.floor(s%60).toString().padStart(2,'0');
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60).toString().padStart(2, '0');
                 return `${m}:${sec}`;
             }
         }
@@ -1213,7 +1678,7 @@
                 });
 
                 const token = await window.Clerk.session.getToken();
-                
+
                 // Prepare Payload
                 let payload = {
                     message: text,
@@ -1255,7 +1720,7 @@
                         Store.addClip(clip); // Update local store
                         setTimeout(() => UI.renderLibrary(), 100);
                         return { type: 'card', data: scoutData, clip: clip };
-                    } 
+                    }
                     // Handle Text Chat Response
                     else {
                         const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
@@ -1272,10 +1737,10 @@
                 return {
                     id: clip.id,
                     title: clip.title,
-                    formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random()*4)],
-                    grade: grades[Math.floor(Math.random()*grades.length)],
-                    iq: ['A', 'A-', 'B+'][Math.floor(Math.random()*3)],
-                    tech: ['B', 'B-', 'C+'][Math.floor(Math.random()*3)],
+                    formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random() * 4)],
+                    grade: grades[Math.floor(Math.random() * grades.length)],
+                    iq: ['A', 'A-', 'B+'][Math.floor(Math.random() * 3)],
+                    tech: ['B', 'B-', 'C+'][Math.floor(Math.random() * 3)],
                     effort: '100',
                     summary: "Key analysis points: The spacing on the route combination was compressed. The defense disguised Cover 3 as Cover 2, causing a hesitation in the decision-making process.",
                     fix: "Drill Suggestion: 'Recognition & Release' - Focus on identifying safety rotation immediately post-snap."
@@ -1296,24 +1761,24 @@
             activeSessionId: null, // NEW: Track specific selected session
 
             // [INSERT THIS NEW HELPER FUNCTION HERE]
-            gradeToNum: (g) => { 
-                if(!g) return 0;
+            gradeToNum: (g) => {
+                if (!g) return 0;
                 const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
-                return m[g.trim()] || 2.0; 
+                return m[g.trim()] || 2.0;
             },
 
-           init: async () => {
+            init: async () => {
                 // LOAD DATA: Fetch Sessions from Server
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
                     const sessions = await res.json();
                     Store.set('sessions', sessions);
-                    
+
                     // FIX: Auto-select the most recent session if none is active
                     if (sessions.length > 0 && !UI.activeSessionId) {
                         const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
-                        if(firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                        if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
                     }
                 } catch (e) { console.error("Session Load Failed", e); }
 
@@ -1339,7 +1804,7 @@
             switchTab: (tab) => {
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-                
+
                 const aboutView = document.getElementById('landing-view');
                 const warView = document.getElementById('war-room-view');
                 const posSelect = document.getElementById('pos-select');
@@ -1352,7 +1817,7 @@
                     aboutView.classList.remove('active-view');
                     warView.classList.add('active-view');
                     setTimeout(() => warView.style.opacity = 1, 50);
-                    
+
                     // --- UI DIFFERENTIATION LOGIC ---
                     if (tab === 'self') {
                         // Self Mode: Show Focus Selector
@@ -1369,7 +1834,7 @@
                     } else {
                         // Clear feed if no session selected yet
                         document.getElementById('chat-feed').innerHTML = '';
-                        UI.renderSessionList(); 
+                        UI.renderSessionList();
                     }
                 }
             },
@@ -1379,14 +1844,14 @@
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
                 if (!clip) return;
-                
+
                 UI.overlayClipId = clip._id || clip.id;
-                
+
                 // 1. Reset Chat
                 const chatHistory = document.getElementById('overlay-chat-history');
                 const chatInput = document.getElementById('overlay-chat-input');
-                if(chatHistory) chatHistory.innerHTML = '';
-                if(chatInput) chatInput.value = '';
+                if (chatHistory) chatHistory.innerHTML = '';
+                if (chatInput) chatInput.value = '';
 
                 // 2. Show AI Analysis Report (Below the chat area)
                 const reportContainer = document.getElementById('report-injection-site');
@@ -1415,8 +1880,8 @@
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
                 const txt = input.value;
-                
-                if(!txt || !UI.overlayClipId) return;
+
+                if (!txt || !UI.overlayClipId) return;
 
                 // 1. Add User Message
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:10px; font-weight:600;">${txt}</div>`;
@@ -1442,10 +1907,10 @@
                     });
 
                     const data = await res.json();
-                    
+
                     // 4. Remove Thinking Indicator
                     const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
+                    if (loader) loader.remove();
 
                     if (!res.ok || data.error) {
                         throw new Error(data.error || "Server Error");
@@ -1460,11 +1925,11 @@
                     } else {
                         throw new Error("No reply received");
                     }
-                    
-                } catch(e) {
+
+                } catch (e) {
                     console.error("Chat Error:", e);
                     const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
+                    if (loader) loader.remove();
                     // Show specific error to user
                     history.innerHTML += `<div style="color:var(--danger); font-size:0.8rem; margin-bottom:10px; padding:8px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                 }
@@ -1473,14 +1938,14 @@
             // --- END NEW CODE ---
             loadChatFeed: (mode) => {
                 const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; 
-                
+                feed.innerHTML = '';
+
                 const icon = mode === 'self' ? '👤' : '🛡️';
                 const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
-                const subtitle = mode === 'self' 
-                    ? 'Focus on individual technique, position grades, and biomechanics.' 
+                const subtitle = mode === 'self'
+                    ? 'Focus on individual technique, position grades, and biomechanics.'
                     : 'Analyze formations, scheme efficiency, and unit coordination.';
-                
+
                 feed.innerHTML = `
                     <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
                         <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
@@ -1491,7 +1956,7 @@
 
             renderMessageHTML: (msg) => {
                 const feed = document.getElementById('chat-feed');
-                if(msg.type === 'user') {
+                if (msg.type === 'user') {
                     feed.innerHTML += `
                         <div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">
                             ${msg.content}
@@ -1504,15 +1969,15 @@
                 }
             },
 
-           toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
             toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
             toggleModal: (id) => document.getElementById(id).style.display = 'flex',
 
             // NEW: Select a session and load its specific data
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
-                
-                 // 0. IMMEDIATE WIPE (Visual Reset)
+
+                // 0. IMMEDIATE WIPE (Visual Reset)
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
 
@@ -1524,11 +1989,11 @@
                 // ...existing code...
                 // reuse `feed` declared above (do NOT redeclare)
                 feed.innerHTML = ''; // WIPE PREVIOUS CHAT
-                
+
                 if (currentSession && currentSession.history && currentSession.history.length > 0) {
                     // Render saved history
                     currentSession.history.forEach(msg => UI.renderMessageHTML({
-                        type: msg.role === 'model' ? 'ai' : 'user', 
+                        type: msg.role === 'model' ? 'ai' : 'user',
                         content: msg.text
                     }));
                     feed.scrollTop = feed.scrollHeight;
@@ -1552,21 +2017,21 @@
                     Store.set('clips', clips);
                 } catch (e) { console.error("Clip Load Failed", e); }
 
-                UI.renderSessionList(); 
-                UI.renderLibrary();     
+                UI.renderSessionList();
+                UI.renderLibrary();
             },
 
             renderSessionList: () => {
                 const list = document.getElementById('session-list');
                 const sessions = Store.get('sessions') || [];
-                
+
                 // FILTER: Only show sessions matching current mode (Self vs Team)
                 const modeSessions = sessions.filter(s => s.type === UI.currentMode);
-                
+
                 list.innerHTML = modeSessions.map(s => {
                     // FIX: Handle both 'sessionId' (Server) and 'id' (Legacy Local)
-                    const validId = s.sessionId || s.id; 
-                    
+                    const validId = s.sessionId || s.id;
+
                     return `
                     <div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')">
                         <span>${s.title}</span>
@@ -1578,10 +2043,10 @@
             renderLibrary: () => {
                 const list = document.getElementById('lib-grid');
                 if (!list) return;
-                
+
                 list.innerHTML = '';
                 const clips = Store.get('clips') || [];
-                
+
                 // Filter clips by active session
                 const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
 
@@ -1599,11 +2064,11 @@
                 });
 
                 // Render
-                for(const [name, groupClips] of Object.entries(folders)) {
+                for (const [name, groupClips] of Object.entries(folders)) {
                     if (groupClips.length === 0) continue;
-                    
+
                     list.innerHTML += `<div class="folder-header">${name}</div>`;
-                    
+
                     groupClips.forEach(c => {
                         // FIX: Moved onclick to the parent div and added stopPropagation to the menu button
                         list.innerHTML += `
@@ -1624,14 +2089,14 @@
             // [PERFECTED ANALYTICS ENGINE]
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
-                UI.refreshStats(); 
+                UI.refreshStats();
             },
 
             // [FINAL MASTER VERSION: Filters + Specific Terms + Horizontal Bars]
             refreshStats: () => {
                 // 1. GET & FILTER DATA
                 const allClips = Store.get('clips') || [];
-                
+
                 // Get Filter Values
                 const fDown = document.getElementById('filter-down').value;
                 const fDist = document.getElementById('filter-dist').value;
@@ -1640,7 +2105,7 @@
                 // --- FILTER LOGIC ---
                 const clips = allClips.filter(c => {
                     if (!c.fullData || !c.fullData.data) return false;
-                    
+
                     const sit = c.fullData.data.situation || {};
                     // Soft matching (defaults to 'true' if data is missing)
                     const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
@@ -1653,7 +2118,7 @@
                 if (clips.length === 0) {
                     ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
                         const el = document.getElementById(id);
-                        if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                        if (Chart.getChart(el)) Chart.getChart(el).destroy();
                     });
                     return;
                 }
@@ -1661,57 +2126,70 @@
                 // --- AGGREGATORS ---
                 const offForms = {};
                 const defForms = {};
-                const conflictPlayers = {}; 
+                const concepts = {}; // <--- Correct (Replaced conflictPlayers)
                 const coverSuccess = {};    
                 const matrix = {};          
                 const fieldShots = [];      
 
-                // Drill Down Map
-                const drillDownMap = { coverage: {}, formation: {} };
+                // [CRITICAL] You MUST add this line for the click-to-play feature:
+                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
 
                 clips.forEach(c => {
                     const d = c.fullData;
-                    
+
                     // 1. OFFENSE: Use specific formation
                     const off = d.data.o_formation || "Unknown";
-                    
+
                     // 2. DEFENSE: Specific Coverage Logic (Removes MOFC/MOFO jargon)
                     let def = d.data.d_formation || d.tactical_breakdown?.coverage_shell || "Unknown";
-                    if (def.includes("MOFC")) def = "Cover 1 / 3"; 
+                    if (def.includes("MOFC")) def = "Cover 1 / 3";
                     if (def.includes("MOFO")) def = "Cover 2 / 4";
-                    
+
                     const conflict = d.tactical_breakdown?.key_matchup?.split(' ')[0] || "None";
-                    
+
                     // Grade Logic
                     const gradeNum = UI.gradeToNum(d.scouting_report?.report_card?.overall);
-                    const isSuccess = gradeNum >= 2.7; 
+                    const isSuccess = gradeNum >= 2.7;
 
                     // Aggregations
                     offForms[off] = (offForms[off] || 0) + 1;
-                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = [];
+                    if (!drillDownMap.formation[off]) drillDownMap.formation[off] = [];
                     drillDownMap.formation[off].push(c);
 
                     defForms[def] = (defForms[def] || 0) + 1;
-                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
+                    if (!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
                     drillDownMap.coverage[def].push(c);
 
                     // Efficiency Matrix
-                    if(!matrix[off]) matrix[off] = {};
-                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    if (!matrix[off]) matrix[off] = {};
+                    if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++;
-                    if(isSuccess) matrix[off][def].s++;
+                    if (isSuccess) matrix[off][def].s++;
 
                     // Coverage Vuln
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
+                    if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
                     coverSuccess[def].p++;
-                    if(isSuccess) coverSuccess[def].s++;
+                    if (isSuccess) coverSuccess[def].s++;
 
-                    // Conflict Player
-                    if(conflict !== "None") {
-                        if(!conflictPlayers[conflict]) conflictPlayers[conflict] = { win: 0, loss: 0 };
-                        if(isSuccess) conflictPlayers[conflict].loss++;
-                        else conflictPlayers[conflict].win++;
+                    // 5. CONCEPTS (Replacement for Conflict Player)
+                    // Get concept name from AI data
+                    let conceptName = d.tactical_breakdown?.concept || "Unknown";
+
+                    // Cleanup: Shorten extremely long names so they fit on the chart
+                    if (conceptName.length > 20) {
+                        conceptName = conceptName.substring(0, 18) + "..";
                     }
+
+                    // Count the concept frequency
+                    if (!concepts[conceptName]) concepts[conceptName] = 0;
+                    concepts[conceptName]++;
+
+                    // Initialize the drill-down array if it doesn't exist
+                    if (!drillDownMap.concept) drillDownMap.concept = {};
+                    if (!drillDownMap.concept[conceptName]) drillDownMap.concept[conceptName] = [];
+                    
+                    // Add this clip to the list for this concept
+                    drillDownMap.concept[conceptName].push(c);
 
                     // Field Chart Mapping
                     const pass = d.tactical_breakdown?.pass_chart;
@@ -1722,11 +2200,11 @@
                         else if (h.includes("left hash")) x = 20;
                         else if (h.includes("right hash")) x = 33;
                         else if (h.includes("right number")) x = 45;
-                        x += (Math.random() * 4 - 2); 
-                        
+                        x += (Math.random() * 4 - 2);
+
                         fieldShots.push({
-                            x: x, 
-                            y: (pass.distance_yards || 5) + (Math.random()), 
+                            x: x,
+                            y: (pass.distance_yards || 5) + (Math.random()),
                             result: pass.result || "Complete",
                             clipId: c._id || c.id
                         });
@@ -1736,13 +2214,13 @@
                 // --- CLEANUP ---
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
                     const el = document.getElementById(id);
-                    if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                    if (Chart.getChart(el)) Chart.getChart(el).destroy();
                 });
 
                 // --- RENDER VISUALS ---
 
                 // 1. OFFENSIVE FORMATION (Horizontal Bar)
-                const offLabels = Object.keys(offForms).sort((a,b) => offForms[b] - offForms[a]);
+                const offLabels = Object.keys(offForms).sort((a, b) => offForms[b] - offForms[a]);
                 const offData = offLabels.map(k => offForms[k]);
 
                 new Chart(document.getElementById('chart-off-form'), {
@@ -1750,15 +2228,15 @@
                     indexAxis: 'y', // Horizontal
                     data: {
                         labels: offLabels,
-                        datasets: [{ 
-                            label: 'Frequency', 
-                            data: offData, 
-                            backgroundColor: '#38bdf8', 
-                            barThickness: 20, 
-                            borderRadius: 4 
+                        datasets: [{
+                            label: 'Frequency',
+                            data: offData,
+                            backgroundColor: '#38bdf8',
+                            barThickness: 20,
+                            borderRadius: 4
                         }]
                     },
-                    options: { 
+                    options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
@@ -1766,7 +2244,7 @@
                             y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
                         },
                         onClick: (e, elements) => {
-                            if(elements.length > 0) {
+                            if (elements.length > 0) {
                                 const label = offLabels[elements[0].index];
                                 UI.playClip(drillDownMap.formation[label][0]._id || drillDownMap.formation[label][0].id);
                                 document.getElementById('stats-modal').style.display = 'none';
@@ -1776,7 +2254,7 @@
                 });
 
                 // 2. DEFENSIVE COVERAGE (Horizontal Bar)
-                const defLabels = Object.keys(defForms).sort((a,b) => defForms[b] - defForms[a]);
+                const defLabels = Object.keys(defForms).sort((a, b) => defForms[b] - defForms[a]);
                 const defData = defLabels.map(k => defForms[k]);
 
                 new Chart(document.getElementById('chart-def-form'), {
@@ -1784,15 +2262,15 @@
                     indexAxis: 'y', // Horizontal
                     data: {
                         labels: defLabels,
-                        datasets: [{ 
-                            label: 'Frequency', 
-                            data: defData, 
-                            backgroundColor: '#ef4444', 
-                            barThickness: 20, 
-                            borderRadius: 4 
+                        datasets: [{
+                            label: 'Frequency',
+                            data: defData,
+                            backgroundColor: '#ef4444',
+                            barThickness: 20,
+                            borderRadius: 4
                         }]
                     },
-                    options: { 
+                    options: {
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
@@ -1800,7 +2278,7 @@
                             y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
                         },
                         onClick: (e, elements) => {
-                            if(elements.length > 0) {
+                            if (elements.length > 0) {
                                 const label = defLabels[elements[0].index];
                                 UI.playClip(drillDownMap.coverage[label][0]._id || drillDownMap.coverage[label][0].id);
                                 document.getElementById('stats-modal').style.display = 'none';
@@ -1817,7 +2295,7 @@
                     let row = `<tr><td><strong style="color:white;">${off}</strong></td>`;
                     Object.keys(defForms).forEach(def => {
                         const cell = matrix[off][def];
-                        if(cell) {
+                        if (cell) {
                             const pct = Math.round((cell.s / cell.p) * 100);
                             const color = pct > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
                             const text = pct > 50 ? '#34d399' : '#f87171';
@@ -1835,7 +2313,7 @@
                 // 4. Coverage Vulnerability (Bar)
                 const covLabels = Object.keys(coverSuccess);
                 const covData = covLabels.map(c => Math.round((coverSuccess[c].s / coverSuccess[c].p) * 100));
-                
+
                 new Chart(document.getElementById('chart-coverage'), {
                     type: 'bar',
                     indexAxis: 'y',
@@ -1843,28 +2321,49 @@
                         labels: covLabels,
                         datasets: [{ label: 'Offensive Success %', data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }]
                     },
-                    options: { 
+                    options: {
                         responsive: true, maintainAspectRatio: false,
-                        scales: { x: { max: 100, ticks: { color:'#888' } }, y: { ticks: { color:'white' } } },
+                        scales: { x: { max: 100, ticks: { color: '#888' } }, y: { ticks: { color: 'white' } } },
                         plugins: { legend: { display: false } }
                     }
                 });
 
-                // 5. Conflict Player (Stacked)
-                const players = Object.keys(conflictPlayers);
+                // [PASTE THIS]
+                // 5. TOP CONCEPTS (Horizontal Bar)
+                // Sort by most frequent (High to Low) and take Top 8
+                const conLabels = Object.keys(concepts).sort((a, b) => concepts[b] - concepts[a]).slice(0, 8);
+                const conData = conLabels.map(k => concepts[k]);
+
                 new Chart(document.getElementById('chart-conflict'), {
                     type: 'bar',
+                    indexAxis: 'y', // Makes the bars horizontal
                     data: {
-                        labels: players,
-                        datasets: [
-                            { label: 'Def Won', data: players.map(p => conflictPlayers[p].win), backgroundColor: '#ef4444' },
-                            { label: 'Off Won', data: players.map(p => conflictPlayers[p].loss), backgroundColor: '#10b981' }
-                        ]
+                        labels: conLabels,
+                        datasets: [{
+                            label: 'Frequency',
+                            data: conData,
+                            backgroundColor: '#8b5cf6', // Purple color
+                            barThickness: 20,
+                            borderRadius: 4
+                        }]
                     },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false,
-                        scales: { x: { stacked: true, ticks: { color:'white' } }, y: { stacked: true, display:false } },
-                        plugins: { legend: { labels: { color: 'white' } } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                            y: { grid: { display: false }, ticks: { color: 'white' } }
+                        },
+                        // Enable Click-to-Play
+                        onClick: (e, elements) => {
+                            if (elements.length > 0) {
+                                const label = conLabels[elements[0].index];
+                                // Play the most recent clip of this concept
+                                UI.playClip(drillDownMap.concept[label][0]._id || drillDownMap.concept[label][0].id);
+                                document.getElementById('stats-modal').style.display = 'none';
+                            }
+                        }
                     }
                 });
 
@@ -1873,32 +2372,32 @@
                     type: 'scatter',
                     data: {
                         datasets: [
-                            { 
-                                label: 'Complete', 
-                                data: fieldShots.filter(s => s.result === 'Complete'), 
-                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 6 
+                            {
+                                label: 'Complete',
+                                data: fieldShots.filter(s => s.result === 'Complete'),
+                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 6
                             },
-                            { 
-                                label: 'Incomplete', 
-                                data: fieldShots.filter(s => s.result !== 'Complete'), 
-                                backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 6, borderWidth: 2 
+                            {
+                                label: 'Incomplete',
+                                data: fieldShots.filter(s => s.result !== 'Complete'),
+                                backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 6, borderWidth: 2
                             }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: {
-                            x: { display: false, min: 0, max: 53.3 }, 
-                            y: { display: false, min: -10, max: 60 } 
+                            x: { display: false, min: 0, max: 53.3 },
+                            y: { display: false, min: -10, max: 60 }
                         },
-                        plugins: { legend: { labels: { color:'white' } } },
+                        plugins: { legend: { labels: { color: 'white' } } },
                         onClick: (e, elements, chart) => {
                             if (elements.length > 0) {
                                 const datasetIndex = elements[0].datasetIndex;
                                 const index = elements[0].index;
                                 const point = chart.data.datasets[datasetIndex].data[index];
-                                
-                                if(point.clipId) {
+
+                                if (point.clipId) {
                                     UI.playClip(point.clipId);
                                     document.getElementById('stats-modal').style.display = 'none';
                                 }
@@ -1914,7 +2413,7 @@
                 // Find the clip in our local store
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === clipId);
-                
+
                 if (!clip) {
                     console.error("Clip not found:", clipId);
                     return;
@@ -1922,21 +2421,21 @@
 
                 // Show Modal
                 document.getElementById('edit-context-modal').style.display = 'flex';
-                
+
                 // Set Hidden ID so we know which clip to save later
                 document.getElementById('edit-clip-id').value = clipId;
-                
+
                 // Get existing situation data (or default to 1st & 10)
                 const s = clip.fullData?.data?.situation || {};
-                
+
                 // Pre-select the Down button
-                UI.setEditVal('down', s.down || 1); 
-                
+                UI.setEditVal('down', s.down || 1);
+
                 // Pre-fill Distance
                 document.getElementById('edit-dist').value = s.distance_val || 10;
-                
+
                 // Pre-fill Field Position (Parse "Own 25" -> Side: Own, Yard: 25)
-                if(s.yard_line) {
+                if (s.yard_line) {
                     const parts = s.yard_line.split(' '); // Splitting "Own 25"
                     document.getElementById('edit-side').value = parts[0] || "Own";
                     document.getElementById('edit-yard').value = parts[1] || 25;
@@ -1952,7 +2451,7 @@
                 if (field === 'down') {
                     // Update the hidden input
                     document.getElementById('edit-down').value = val;
-                    
+
                     // Visual Toggle: Turn all buttons off, then turn the selected one on
                     document.querySelectorAll('.sit-btn').forEach((b, i) => {
                         // (i + 1) matches the button index to the down number (0->1st, 1->2nd...)
@@ -1988,12 +2487,12 @@
                 // C. UPDATE LOCAL STORAGE
                 const clips = Store.get('clips') || [];
                 const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
-                
+
                 if (clipIndex > -1) {
                     // Ensure the nested structure exists
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
-                    
+
                     // Write the new data
                     clips[clipIndex].fullData.data.situation = {
                         down: down,
@@ -2005,17 +2504,17 @@
 
                     // Save back to browser storage
                     Store.set('clips', clips);
-                    
+
                     // D. REFRESH UI
                     UI.refreshStats(); // Updates the charts instantly
                     UI.renderLibrary(); // Updates the clip list in the sidebar
-                    
+
                     // Close Modal
                     document.getElementById('edit-context-modal').style.display = 'none';
-                    
+
                     // Optional: Visual confirmation
                     const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
-                    if(btn) btn.style.borderColor = 'var(--success)';
+                    if (btn) btn.style.borderColor = 'var(--success)';
                 }
             },
 
@@ -2024,20 +2523,20 @@
                 // 1. Get real clips from the Store (NOT window.activeClips)
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
-                
+
                 if (!clip) {
                     console.error("Clip not found:", id);
                     return;
                 }
-                
+
                 // 2. Set Active Clip ID for Chat & Persistence
                 UI.overlayClipId = clip._id || clip.id;
 
                 // 3. Reset & Setup Overlay Chat
                 const chatHistory = document.getElementById('overlay-chat-history');
                 const chatInput = document.getElementById('overlay-chat-input');
-                if(chatHistory) chatHistory.innerHTML = '';
-                if(chatInput) chatInput.value = '';
+                if (chatHistory) chatHistory.innerHTML = '';
+                if (chatInput) chatInput.value = '';
 
                 // 4. Inject Scout Report into the Side Panel
                 const reportContainer = document.getElementById('report-injection-site');
@@ -2069,8 +2568,8 @@
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
                 const txt = input.value;
-                
-                if(!txt || !UI.overlayClipId) return;
+
+                if (!txt || !UI.overlayClipId) return;
 
                 // 1. Add User Message
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
@@ -2091,33 +2590,33 @@
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/clip-chat', {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` 
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
                     });
 
                     const data = await res.json();
-                    
+
                     // 4. Remove Thinking Indicator
                     const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
+                    if (loader) loader.remove();
 
                     if (!res.ok) throw new Error(data.error || "Server Error");
 
                     // 5. Add AI Message
                     const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    
+
                     history.innerHTML += `
                         <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;">
                             <span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}
                         </div>`;
-                    
-                } catch(e) {
+
+                } catch (e) {
                     console.error(e);
                     const loader = document.getElementById(loadingId);
-                    if(loader) loader.remove();
+                    if (loader) loader.remove();
                     history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                 }
                 history.scrollTop = history.scrollHeight;
@@ -2128,7 +2627,7 @@
                 const fileInput = document.getElementById('file-input');
                 const feed = document.getElementById('chat-feed');
                 const mode = UI.currentMode; // 'self' or 'team'
-                
+
                 if (!input.value && !fileInput.files.length) return;
 
                 // GUARD: Prevent upload if no session is active
@@ -2137,19 +2636,19 @@
                     return;
                 }
 
-                if(document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+                if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
                 const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                
+
                 // SAVE USER MSG TO SESSION STORE (Locally)
                 const sessions = Store.get('sessions');
                 const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if(sessIdx > -1) {
-                    if(!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                if (sessIdx > -1) {
+                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
                     sessions[sessIdx].history.push({ role: 'user', text: userText });
                     Store.set('sessions', sessions);
                 }
-                
+
                 UI.renderMessageHTML({ type: 'user', content: userText });
 
                 // Reset Inputs
@@ -2160,7 +2659,7 @@
                 document.getElementById('file-btn').style.background = '#222';
                 document.getElementById('file-btn').style.color = '#ccc';
 
-                const loadId = 'load_'+Date.now();
+                const loadId = 'load_' + Date.now();
                 feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
                 feed.scrollTop = feed.scrollHeight;
 
@@ -2173,14 +2672,14 @@
                     UI.renderLibrary();
                     aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
                 }
-                
+
                 const sessions2 = Store.get('sessions');
                 const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if(sessIdx2 > -1) {
+                if (sessIdx2 > -1) {
                     sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
                     Store.set('sessions', sessions2);
                 } // <--- THIS CLOSING BRACKET WAS MISSING
-                
+
                 // Render
                 feed.innerHTML += `
                     <div style="align-self:flex-start; width:100%; margin-bottom:20px;">
@@ -2192,7 +2691,7 @@
             buildScoutCardHTML: (data, isChatPreview = false) => {
                 const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
                 const cursor = isChatPreview ? 'cursor:pointer;' : '';
-                
+
                 return `
                 <div class="scout-card" style="${cursor}" ${onclick}>
                     <div class="scout-header">
@@ -2232,7 +2731,7 @@
                     attempts++;
                     if (window.Clerk) {
                         clearInterval(checkAuth);
-Clerk.load()
+                        Clerk.load()
                             .then(() => {
                                 if (!Clerk.user) {
                                     Clerk.mountSignIn(document.getElementById('sign-in'));
@@ -2246,19 +2745,19 @@ Clerk.load()
                                 console.error("Clerk Auth Failed:", err);
                                 // Fallback: Open app anyway so you aren't stuck
                                 document.getElementById('auth-modal').style.display = 'none';
-                                UI.init(); 
+                                UI.init();
                             });
                     } else if (attempts > 10) {
                         clearInterval(checkAuth);
                         console.warn("Clerk timeout - forcing init");
                         document.getElementById('auth-modal').style.display = 'none';
-                        UI.init(); 
+                        UI.init();
                     }
                 }, 300);
             },
             createNewSession: async () => {
                 const title = prompt("New Session Name:");
-                if(title) {
+                if (title) {
                     try {
                         const token = await window.Clerk.session.getToken();
                         const res = await fetch('/api/create-session', {
@@ -2266,22 +2765,22 @@ Clerk.load()
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
-                        
+
                         if (!res.ok) throw new Error("Server failed to create session");
-                        
+
                         const newSession = await res.json();
-                        
+
                         // Update Local Store
                         const sessions = Store.get('sessions') || [];
                         sessions.unshift(newSession);
                         Store.set('sessions', sessions);
-                        
+
                         // Force Selection
                         await UI.selectSession(newSession.sessionId);
-                        
-                    } catch (e) { 
+
+                    } catch (e) {
                         console.error(e);
-                        alert("Failed to create session. Check server console."); 
+                        alert("Failed to create session. Check server console.");
                     }
                 }
             }
@@ -2294,7 +2793,7 @@ Clerk.load()
         <div class="modal-content" style="max-width:400px;">
             <h3 style="margin-top:0; color:white;">Game Situation</h3>
             <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">Accurate context improves AI grading.</p>
-            
+
             <input type="hidden" id="edit-clip-id">
 
             <div style="margin-bottom:16px;">
@@ -2310,7 +2809,8 @@ Clerk.load()
 
             <div style="margin-bottom:16px;">
                 <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DISTANCE TO GO</label>
-                <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="e.g. 10">
+                <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;"
+                    placeholder="e.g. 10">
             </div>
 
             <div style="margin-bottom:24px;">
@@ -2320,7 +2820,8 @@ Clerk.load()
                         <option value="Own">Own</option>
                         <option value="Opp">Opp</option>
                     </select>
-                    <input type="number" id="edit-yard" class="input-box" placeholder="0-50" min="0" max="50" style="flex:1;">
+                    <input type="number" id="edit-yard" class="input-box" placeholder="0-50" min="0" max="50"
+                        style="flex:1;">
                 </div>
             </div>
 
@@ -2328,4 +2829,5 @@ Clerk.load()
         </div>
     </div>
 </body>
+
 </html>
