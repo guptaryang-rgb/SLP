@@ -739,10 +739,45 @@
     </div>
 
     <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content" style="max-width:600px;">
-            <h3 style="margin-top:0; color:white;">Defensive Shot Chart</h3>
-            <div style="background:white; padding:10px; border-radius:8px;">
-                <canvas id="teamChart"></canvas>
+        <div class="modal-content" style="max-width:1200px; max-height:90vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0; color:white;">Team Intelligence Hub</h2>
+                <button class="tool-btn" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+            </div>
+            
+            <div style="overflow-y:auto; flex:1; padding-right:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">1. FORMATION USAGE</h4>
+                        <div style="height:250px;"><canvas id="chart-formations"></canvas></div>
+                    </div>
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">2. SITUATIONAL SHELLS (Box Count vs Coverage)</h4>
+                        <div style="height:250px;"><canvas id="chart-situation"></canvas></div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">3. EFFICIENCY HEATMAP (GPA by Formation)</h4>
+                        <div style="height:250px;"><canvas id="chart-efficiency"></canvas></div>
+                    </div>
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">4. QB DECISION GRADE vs COVERAGE</h4>
+                        <div style="height:250px;"><canvas id="chart-coverage"></canvas></div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">5. CONFLICT PLAYER HOTSPOT</h4>
+                        <div style="height:250px;"><canvas id="chart-conflict"></canvas></div>
+                    </div>
+                    <div style="background:#1a1a1a; padding:20px; border-radius:12px; border:1px solid var(--border);">
+                        <h4 style="margin-top:0; color:#aaa; font-size:0.8rem;">6. CONCEPT FREQUENCY (Shot Chart)</h4>
+                        <div style="height:250px;"><canvas id="chart-concepts"></canvas></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1084,7 +1119,14 @@
         const UI = {
             currentMode: 'about', // 'about', 'self', 'team'
             activeSessionId: null, // NEW: Track specific selected session
-            
+
+            // [INSERT THIS NEW HELPER FUNCTION HERE]
+            gradeToNum: (g) => { 
+                if(!g) return 0;
+                const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
+                return m[g.trim()] || 2.0; 
+            },
+
            init: async () => {
                 // LOAD DATA: Fetch Sessions from Server
                 try {
@@ -1405,24 +1447,158 @@
             },
 
             // NEW: Render Chart.js Graph
+            // [REPLACE your old showTeamStats with this NEW version]
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
-                const ctx = document.getElementById('teamChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'scatter',
+                
+                // 1. Get Data
+                const clips = Store.get('clips') || [];
+                // Filter only clips that have actual analysis data
+                const analyzedClips = clips.filter(c => c.fullData && c.fullData.data);
+
+                if (analyzedClips.length === 0) return; // No data to show
+
+                // --- DATA PROCESSING AGGREGATORS ---
+                const formations = {};
+                const concepts = {};
+                const keyMatchups = {};
+                const coverageStats = {}; // { "Cover 3": { totalIQ: 12, count: 4 } }
+                const formationGrades = {}; // { "Trips": { totalGPA: 10, count: 3 } }
+                const boxVsCover = {}; // { "Loaded Box": { "Cover 1": 2, "Cover 3": 5 } }
+
+                analyzedClips.forEach(c => {
+                    const d = c.fullData;
+                    const form = d.data.o_formation || "Unknown";
+                    const concept = d.tactical_breakdown?.concept || "Unknown";
+                    const matchup = d.tactical_breakdown?.key_matchup || "N/A";
+                    const cover = d.tactical_breakdown?.coverage_shell || "Unknown";
+                    const box = d.tactical_breakdown?.box_count || "Standard";
+                    
+                    const gradeOverall = UI.gradeToNum(d.scouting_report?.report_card?.overall);
+                    const gradeIQ = UI.gradeToNum(d.scouting_report?.report_card?.football_iq);
+
+                    // 1. Formations
+                    formations[form] = (formations[form] || 0) + 1;
+
+                    // 2. Situational (Box vs Cover)
+                    if(!boxVsCover[box]) boxVsCover[box] = {};
+                    boxVsCover[box][cover] = (boxVsCover[box][cover] || 0) + 1;
+
+                    // 3. Efficiency (Formation GPA)
+                    if(!formationGrades[form]) formationGrades[form] = { total: 0, count: 0 };
+                    formationGrades[form].total += gradeOverall;
+                    formationGrades[form].count++;
+
+                    // 4. Coverage IQ
+                    if(!coverageStats[cover]) coverageStats[cover] = { total: 0, count: 0 };
+                    coverageStats[cover].total += gradeIQ;
+                    coverageStats[cover].count++;
+
+                    // 5. Conflict Player
+                    keyMatchups[matchup] = (keyMatchups[matchup] || 0) + 1;
+
+                    // 6. Concepts
+                    concepts[concept] = (concepts[concept] || 0) + 1;
+                });
+
+                // --- HELPER: DESTROY OLD CHARTS ---
+                ['chart-formations', 'chart-situation', 'chart-efficiency', 'chart-coverage', 'chart-conflict', 'chart-concepts'].forEach(id => {
+                    const canvas = document.getElementById(id);
+                    if (Chart.getChart(canvas)) Chart.getChart(canvas).destroy();
+                });
+
+                // --- RENDER CHARTS ---
+
+                // 1. Formations (Pie)
+                new Chart(document.getElementById('chart-formations'), {
+                    type: 'doughnut',
                     data: {
-                        datasets: [{
-                            label: 'Pass Completions Allowed',
-                            data: Array.from({length: 20}, () => ({x: Math.random()*50, y: Math.random()*100})),
-                            backgroundColor: 'rgba(239, 68, 68, 0.6)'
+                        labels: Object.keys(formations),
+                        datasets: [{ data: Object.values(formations), backgroundColor: ['#38bdf8', '#fbbf24', '#ef4444', '#10b981', '#8b5cf6'] }]
+                    },
+                    options: { plugins: { legend: { position: 'right', labels: { color:'white' } } } }
+                });
+
+                // 2. Situational Matrix (Stacked Bar - Box vs Coverage)
+                const boxLabels = Object.keys(boxVsCover);
+                const uniqueCovers = [...new Set(analyzedClips.map(c => c.fullData.tactical_breakdown?.coverage_shell || "Unknown"))];
+                
+                const boxDatasets = uniqueCovers.map((cover, i) => ({
+                    label: cover,
+                    data: boxLabels.map(box => boxVsCover[box][cover] || 0),
+                    backgroundColor: `hsl(${i * 60}, 70%, 50%)`
+                }));
+
+                new Chart(document.getElementById('chart-situation'), {
+                    type: 'bar',
+                    data: { labels: boxLabels, datasets: boxDatasets },
+                    options: { 
+                        scales: { x: { stacked: true, ticks: { color:'white' } }, y: { stacked: true, ticks: { color:'white' } } },
+                        plugins: { legend: { labels: { color:'white' } } }
+                    }
+                });
+
+                // 3. Efficiency Heatmap (Bar - Green/Red based on GPA)
+                const formLabels = Object.keys(formationGrades);
+                const gpaData = formLabels.map(f => (formationGrades[f].total / formationGrades[f].count).toFixed(2));
+                const gpaColors = gpaData.map(g => g >= 3.0 ? '#10b981' : (g >= 2.0 ? '#fbbf24' : '#ef4444'));
+
+                new Chart(document.getElementById('chart-efficiency'), {
+                    type: 'bar',
+                    data: {
+                        labels: formLabels,
+                        datasets: [{ label: 'Avg Grade (GPA)', data: gpaData, backgroundColor: gpaColors }]
+                    },
+                    options: { 
+                        scales: { y: { min: 0, max: 4.3, ticks: { color:'white' } }, x: { ticks: { color:'white' } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // 4. Coverage IQ (Radar)
+                const covLabels = Object.keys(coverageStats);
+                const iqData = covLabels.map(c => (coverageStats[c].total / coverageStats[c].count).toFixed(2));
+
+                new Chart(document.getElementById('chart-coverage'), {
+                    type: 'radar',
+                    data: {
+                        labels: covLabels,
+                        datasets: [{ 
+                            label: 'QB Decision Grade', 
+                            data: iqData, 
+                            backgroundColor: 'rgba(56, 189, 248, 0.2)', 
+                            borderColor: '#38bdf8',
+                            pointBackgroundColor: '#fff'
                         }]
                     },
-                    options: {
-                        scales: {
-                            x: { title: {display:true, text:'Field Width'} },
-                            y: { title: {display:true, text:'Yards Downfield'} }
-                        }
+                    options: { 
+                        scales: { r: { min: 0, max: 4.3, grid: { color: '#333' }, ticks: { display: false } } },
+                        plugins: { legend: { display: false } }
                     }
+                });
+
+                // 5. Conflict Player (Horizontal Bar)
+                new Chart(document.getElementById('chart-conflict'), {
+                    type: 'bar',
+                    indexAxis: 'y',
+                    data: {
+                        labels: Object.keys(keyMatchups),
+                        datasets: [{ label: 'Times Targeted', data: Object.values(keyMatchups), backgroundColor: '#ef4444' }]
+                    },
+                    options: { 
+                        scales: { x: { ticks: { color:'white' } }, y: { ticks: { color:'white' } } },
+                        plugins: { legend: { display: false } } 
+                    }
+                });
+
+                // 6. Concept Frequency (Shot Chart Proxy)
+                new Chart(document.getElementById('chart-concepts'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(concepts),
+                        datasets: [{ data: Object.values(concepts), backgroundColor: ['#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b'] }]
+                    },
+                    options: { plugins: { legend: { position: 'right', labels: { color:'white' } } } }
                 });
             },
 
