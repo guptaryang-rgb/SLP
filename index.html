@@ -1426,9 +1426,9 @@
                 });
             },
 
-            // [REPLACE your existing playClip with this FULL version]
+            // [REPLACE existing playClip with this fixed version]
             playClip: (id) => {
-                // 1. Get real clips from the Store
+                // 1. Get real clips from the Store (NOT window.activeClips)
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
                 
@@ -1439,7 +1439,6 @@
                 
                 // 2. Set Active Clip ID for Chat & Persistence
                 UI.overlayClipId = clip._id || clip.id;
-                localStorage.setItem('lastClip', UI.overlayClipId);
 
                 // 3. Reset & Setup Overlay Chat
                 const chatHistory = document.getElementById('overlay-chat-history');
@@ -1451,7 +1450,6 @@
                 const reportContainer = document.getElementById('report-injection-site');
                 if (reportContainer) {
                     if (clip.fullData) {
-                        // Map database JSON to UI Format
                         const scoutData = {
                             id: clip._id,
                             title: clip.title,
@@ -1473,7 +1471,7 @@
                 Telestrator.init(clip.videoUrl);
             },
 
-            // [ADD this new function immediately after playClip]
+            // [ADD or REPLACE handleOverlayChat with this version that uses fetch()]
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
@@ -1481,28 +1479,55 @@
                 
                 if(!txt || !UI.overlayClipId) return;
 
-                // User Bubble
+                // 1. Add User Message
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
                 input.value = '';
                 history.scrollTop = history.scrollHeight;
 
+                // 2. Add Thinking Indicator
+                const loadingId = 'thinking_' + Date.now();
+                history.innerHTML += `
+                    <div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;">
+                        <div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div>
+                        <div class="thinking-bar"></div>
+                    </div>`;
+                history.scrollTop = history.scrollHeight;
+
                 try {
-                    // Call Server
-                    const res = await apiFetch('/api/clip-chat', { message: txt, clipId: UI.overlayClipId });
+                    // 3. Call Server (Using fetch + Clerk Token explicitly)
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/clip-chat', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                    });
+
+                    const data = await res.json();
                     
-                    // AI Bubble
-                    const cleanReply = res.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    // 4. Remove Thinking Indicator
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+
+                    if (!res.ok) throw new Error(data.error || "Server Error");
+
+                    // 5. Add AI Message
+                    const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                     
                     history.innerHTML += `
                         <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;">
                             <span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}
                         </div>`;
-                    history.scrollTop = history.scrollHeight;
                     
                 } catch(e) {
                     console.error(e);
-                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem;">Error connecting to coach.</div>`;
+                    const loader = document.getElementById(loadingId);
+                    if(loader) loader.remove();
+                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                 }
+                history.scrollTop = history.scrollHeight;
             },
 
             handleSend: async () => {
