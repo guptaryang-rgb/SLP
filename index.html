@@ -1576,22 +1576,22 @@
                 UI.refreshStats(); 
             },
 
+            // [FINAL MASTER VERSION: Filters + Specific Terms + Horizontal Bars]
             refreshStats: () => {
                 // 1. GET & FILTER DATA
                 const allClips = Store.get('clips') || [];
                 
-                // Get Filter Values from Dropdowns
-                const fDown = document.getElementById('filter-down').value; // "1", "2", "3", "4", "all"
-                const fDist = document.getElementById('filter-dist').value; // "short", "med", "long", "all"
-                const fZone = document.getElementById('filter-zone').value; // "red", "open", "backed", "all"
+                // Get Filter Values
+                const fDown = document.getElementById('filter-down').value;
+                const fDist = document.getElementById('filter-dist').value;
+                const fZone = document.getElementById('filter-zone').value;
 
-                // --- A. THE FILTER LOGIC (Option A: Fixed) ---
+                // --- FILTER LOGIC ---
                 const clips = allClips.filter(c => {
                     if (!c.fullData || !c.fullData.data) return false;
                     
                     const sit = c.fullData.data.situation || {};
-                    
-                    // Soft matching (defaults to 'true' if data is missing to show SOMETHING)
+                    // Soft matching (defaults to 'true' if data is missing)
                     const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
                     const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
                     const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
@@ -1600,7 +1600,6 @@
                 });
 
                 if (clips.length === 0) {
-                    // Safety: Clear charts if no data matches
                     ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
                         const el = document.getElementById(id);
                         if(Chart.getChart(el)) Chart.getChart(el).destroy();
@@ -1616,67 +1615,69 @@
                 const matrix = {};          
                 const fieldShots = [];      
 
-                // Arrays to store "Drill Down" references
-                // We map: "Cover 3" -> [List of Clip IDs]
+                // Drill Down Map
                 const drillDownMap = { coverage: {}, formation: {} };
 
                 clips.forEach(c => {
                     const d = c.fullData;
+                    
+                    // 1. OFFENSE: Use specific formation
                     const off = d.data.o_formation || "Unknown";
-                    const def = d.tactical_breakdown?.coverage_shell || "Unknown";
+                    
+                    // 2. DEFENSE: Specific Coverage Logic (Removes MOFC/MOFO jargon)
+                    let def = d.data.d_formation || d.tactical_breakdown?.coverage_shell || "Unknown";
+                    if (def.includes("MOFC")) def = "Cover 1 / 3"; 
+                    if (def.includes("MOFO")) def = "Cover 2 / 4";
+                    
                     const conflict = d.tactical_breakdown?.key_matchup?.split(' ')[0] || "None";
                     
                     // Grade Logic
                     const gradeNum = UI.gradeToNum(d.scouting_report?.report_card?.overall);
                     const isSuccess = gradeNum >= 2.7; 
 
-                    // 1. Formations
+                    // Aggregations
                     offForms[off] = (offForms[off] || 0) + 1;
-                    defForms[def] = (defForms[def] || 0) + 1;
+                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = [];
+                    drillDownMap.formation[off].push(c);
 
-                    // Drill Down Mapping
+                    defForms[def] = (defForms[def] || 0) + 1;
                     if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
                     drillDownMap.coverage[def].push(c);
 
-                    // 3. Efficiency Matrix
+                    // Efficiency Matrix
                     if(!matrix[off]) matrix[off] = {};
                     if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++;
                     if(isSuccess) matrix[off][def].s++;
 
-                    // 4. Coverage Vuln
+                    // Coverage Vuln
                     if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
                     coverSuccess[def].p++;
                     if(isSuccess) coverSuccess[def].s++;
 
-                    // 5. Conflict Player
+                    // Conflict Player
                     if(conflict !== "None") {
                         if(!conflictPlayers[conflict]) conflictPlayers[conflict] = { win: 0, loss: 0 };
                         if(isSuccess) conflictPlayers[conflict].loss++;
                         else conflictPlayers[conflict].win++;
                     }
 
-                    // --- B. FIELD CHART MAPPING (Option B: Fixed) ---
-                    // Maps standard football terms to X/Y coordinates
+                    // Field Chart Mapping
                     const pass = d.tactical_breakdown?.pass_chart;
                     if (pass && pass.is_pass) {
-                        let x = 26.65; // Default Middle
-                        
-                        // Map Horizontal Terms to X (Field Width 0-53.3)
+                        let x = 26.65; // Middle
                         const h = pass.horizontal?.toLowerCase() || "";
                         if (h.includes("left number")) x = 8;
                         else if (h.includes("left hash")) x = 20;
                         else if (h.includes("right hash")) x = 33;
                         else if (h.includes("right number")) x = 45;
-
-                        // Add slight randomness so dots don't stack perfectly
                         x += (Math.random() * 4 - 2); 
                         
                         fieldShots.push({
                             x: x, 
-                            y: (pass.distance_yards || 5) + (Math.random()), // Vertical Yards
+                            y: (pass.distance_yards || 5) + (Math.random()), 
                             result: pass.result || "Complete",
-                            clipId: c._id || c.id // Store ID for click event
+                            clipId: c._id || c.id
                         });
                     }
                 });
@@ -1689,45 +1690,75 @@
 
                 // --- RENDER VISUALS ---
 
-                // Helper: Common Drill Down Click Handler
-                const drillClick = (e, elements, chart) => {
-                    if (elements.length > 0) {
-                        const index = elements[0].index;
-                        const label = chart.data.labels[index];
-                        // If we have clips for this label, play the first one (or open a list - advanced)
-                        // For now, we will auto-play the most recent clip of that type
-                        if(drillDownMap.coverage[label]) {
-                            alert(`Drilling down into ${drillDownMap.coverage[label].length} clips of ${label}`);
-                            UI.playClip(drillDownMap.coverage[label][0]._id || drillDownMap.coverage[label][0].id);
-                            document.getElementById('stats-modal').style.display = 'none';
+                // 1. OFFENSIVE FORMATION (Horizontal Bar)
+                const offLabels = Object.keys(offForms).sort((a,b) => offForms[b] - offForms[a]);
+                const offData = offLabels.map(k => offForms[k]);
+
+                new Chart(document.getElementById('chart-off-form'), {
+                    type: 'bar',
+                    indexAxis: 'y', // Horizontal
+                    data: {
+                        labels: offLabels,
+                        datasets: [{ 
+                            label: 'Frequency', 
+                            data: offData, 
+                            backgroundColor: '#38bdf8', 
+                            barThickness: 20, 
+                            borderRadius: 4 
+                        }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                            y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
+                        },
+                        onClick: (e, elements) => {
+                            if(elements.length > 0) {
+                                const label = offLabels[elements[0].index];
+                                UI.playClip(drillDownMap.formation[label][0]._id || drillDownMap.formation[label][0].id);
+                                document.getElementById('stats-modal').style.display = 'none';
+                            }
                         }
                     }
-                };
-
-                // 1. Formations (Doughnut)
-                new Chart(document.getElementById('chart-off-form'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(offForms),
-                        datasets: [{ data: Object.values(offForms), backgroundColor: ['#38bdf8', '#0ea5e9', '#0284c7', '#0369a1'], borderWidth:0 }]
-                    },
-                    options: { 
-                        plugins: { legend: { position:'right', labels:{color:'white'} } }, cutout: '70%', responsive:true, maintainAspectRatio:false 
-                    }
                 });
+
+                // 2. DEFENSIVE COVERAGE (Horizontal Bar)
+                const defLabels = Object.keys(defForms).sort((a,b) => defForms[b] - defForms[a]);
+                const defData = defLabels.map(k => defForms[k]);
 
                 new Chart(document.getElementById('chart-def-form'), {
-                    type: 'doughnut',
+                    type: 'bar',
+                    indexAxis: 'y', // Horizontal
                     data: {
-                        labels: Object.keys(defForms),
-                        datasets: [{ data: Object.values(defForms), backgroundColor: ['#ef4444', '#dc2626', '#b91c1c', '#991b1b'], borderWidth:0 }]
+                        labels: defLabels,
+                        datasets: [{ 
+                            label: 'Frequency', 
+                            data: defData, 
+                            backgroundColor: '#ef4444', 
+                            barThickness: 20, 
+                            borderRadius: 4 
+                        }]
                     },
                     options: { 
-                        plugins: { legend: { position:'right', labels:{color:'white'} } }, cutout: '70%', responsive:true, maintainAspectRatio:false 
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                            y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
+                        },
+                        onClick: (e, elements) => {
+                            if(elements.length > 0) {
+                                const label = defLabels[elements[0].index];
+                                UI.playClip(drillDownMap.coverage[label][0]._id || drillDownMap.coverage[label][0].id);
+                                document.getElementById('stats-modal').style.display = 'none';
+                            }
+                        }
                     }
                 });
 
-                // 3. Efficiency Matrix (HTML Table)
+                // 3. Efficiency Matrix (Table)
                 const table = document.getElementById('efficiency-table');
                 let headerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead>`;
                 let bodyHTML = `<tbody>`;
@@ -1739,7 +1770,6 @@
                             const pct = Math.round((cell.s / cell.p) * 100);
                             const color = pct > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
                             const text = pct > 50 ? '#34d399' : '#f87171';
-                            // Add Drill Down Interaction to Table Cells
                             row += `<td style="cursor:pointer;" onclick="alert('Drilling into ${off} vs ${def}')"><div class="heat-cell" style="background:${color}; color:${text};">${pct}%</div></td>`;
                         } else {
                             row += `<td><span style="color:#444;">-</span></td>`;
@@ -1751,7 +1781,7 @@
                 bodyHTML += `</tbody>`;
                 table.innerHTML = headerHTML + bodyHTML;
 
-                // 4. Coverage Vulnerability (Horizontal Bar with Drill Down)
+                // 4. Coverage Vulnerability (Bar)
                 const covLabels = Object.keys(coverSuccess);
                 const covData = covLabels.map(c => Math.round((coverSuccess[c].s / coverSuccess[c].p) * 100));
                 
@@ -1760,18 +1790,16 @@
                     indexAxis: 'y',
                     data: {
                         labels: covLabels,
-                        datasets: [{ label: 'Success %', data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }]
+                        datasets: [{ label: 'Offensive Success %', data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }]
                     },
                     options: { 
                         responsive: true, maintainAspectRatio: false,
                         scales: { x: { max: 100, ticks: { color:'#888' } }, y: { ticks: { color:'white' } } },
-                        plugins: { legend: { display: false } },
-                        // --- C. DRILL DOWN EVENT (Option C: Fixed) ---
-                        onClick: drillClick 
+                        plugins: { legend: { display: false } }
                     }
                 });
 
-                // 5. Conflict Player
+                // 5. Conflict Player (Stacked)
                 const players = Object.keys(conflictPlayers);
                 new Chart(document.getElementById('chart-conflict'), {
                     type: 'bar',
@@ -1789,7 +1817,7 @@
                     }
                 });
 
-                // 6. Field Vision (Scatter with Real Click)
+                // 6. Field Vision (Scatter)
                 new Chart(document.getElementById('chart-field'), {
                     type: 'scatter',
                     data: {
