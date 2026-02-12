@@ -440,35 +440,33 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
-    // Construct the "Elite Coach" Prompt
-    // --- [UPDATED PROMPT FOR DATA EXTRACTION] ---
+   // --- [UPDATED PROMPT: SPECIFIC TERMINOLOGY] ---
     let systemInstruction = `
-    ROLE: ${position === 'team' ? "NFL Offensive/Defensive Coordinator" : "Elite Position Coach"}.
+    ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
     TASK: Analyze video clip. Focus: ${specificFocus}.
     ROSTER CONTEXT: ${rosterContext}
 
     REQUIREMENTS:
-    1. EXTRACT SITUATION: Estimate Down, Distance, and Field Zone from the HUD or context if visible.
-    2. PASS CHART: If a pass, estimate the target location (Horizontal: Left/Right Numbers, Left/Right Hash, Middle; Vertical: LOS distance).
+    1. OFFENSE: Identify specific formation (e.g. "Gun Trips Right", "Empty 3x2", "I-Form Pro").
+    2. DEFENSE: Identify SPECIFIC COVERAGE. Do NOT use generic terms like "MOFO/MOFC". Use "Cover 3", "Cover 2", "Quarters", "Cover 1 Hole", "0 Blitz".
     3. EFFICIENCY: Grade the play success based on EPA principles.
 
     OUTPUT JSON FORMAT (Strict JSON, no markdown):
     { 
-        "title": "Descriptive Title (e.g. '3rd & Long - Dagger vs Cover 2')", 
+        "title": "Descriptive Title (e.g. 'Gun Trips - Four Verts vs Cover 3')", 
         "data": { 
-            "o_formation": "Offensive Formation", 
-            "d_formation": "Defensive Front/Coverage",
+            "o_formation": "Specific Offensive Formation", 
+            "d_formation": "Specific Defensive Coverage (e.g. Cover 3)", 
             "situation": {
-                "down": "1/2/3/4 (integer)",
-                "distance": "Short/Medium/Long (string)",
-                "zone": "Red/Open/Backed (string)"
+                "down": "1/2/3/4",
+                "distance": "Short/Medium/Long",
+                "zone": "Red/Open/Backed"
             }
         }, 
         "tactical_breakdown": {
             "concept": "Scheme Name",
             "box_count": "Light/Standard/Loaded",
-            "coverage_shell": "MOFO (Middle Open) / MOFC (Middle Closed)",
-            "key_matchup": "Player vs Player (e.g. #11 vs #24)",
+            "key_matchup": "Player vs Player (#11 vs #24)",
             "pass_chart": {
                 "is_pass": true,
                 "distance_yards": 15,
@@ -478,13 +476,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         },
         "scouting_report": { 
             "summary": "Detailed breakdown.", 
-            "coaching_prescription": { 
-                "fix": "Technical Fix", 
-                "drill": "Drill Name"
-            },
+            "coaching_prescription": { "fix": "Technical Fix", "drill": "Drill Name" },
             "report_card": { "football_iq": "Grade", "technique": "Grade", "effort": "Grade", "overall": "Grade" }
         },
-        "players_detected": [ { "identifier": "#Jersey", "position": "Pos", "grade": "Grade", "observation": "Note", "weakness": "Weakness" } ] 
+        "players_detected": [ { "identifier": "#Jersey", "position": "Pos", "grade": "Grade", "observation": "Note" } ] 
     }`;
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
