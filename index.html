@@ -1157,6 +1157,10 @@
         #edit-context-modal .input-box:focus {
             border-color: var(--accent);
         }
+        /* --- FIX: Force Context Editor above Cinema Mode --- */
+        #edit-context-modal {
+            z-index: 6000 !important; /* Must be higher than #analysis-overlay (5000) */
+        }
     </style>
 </head>
 
@@ -1329,13 +1333,7 @@
     </div> 
     ```
 
-### **Why this happened:**
-In your CSS, you have:
-```css
-#analysis-overlay {
-    display: none; /* This hides everything inside it by default */
-    ...
-}
+
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
@@ -2203,25 +2201,72 @@ In your CSS, you have:
                     // Add this clip to the list for this concept
                     drillDownMap.concept[conceptName].push(c);
 
-                    // Field Chart Mapping
-                    const pass = d.tactical_breakdown?.pass_chart;
-                    if (pass && pass.is_pass) {
-                        let x = 26.65; // Middle
-                        const h = pass.horizontal?.toLowerCase() || "";
-                        if (h.includes("left number")) x = 8;
-                        else if (h.includes("left hash")) x = 20;
-                        else if (h.includes("right hash")) x = 33;
-                        else if (h.includes("right number")) x = 45;
-                        x += (Math.random() * 4 - 2);
+                    // --- FIELD VISION 2.0 MAPPING (Pass + Run Vectors) ---
+                    const playType = d.tactical_breakdown?.play_type || "Pass";
+                    const yards = d.tactical_breakdown?.yards_gained || 0;
+                    
+                    // Default Start Point (The Snap - Center Field)
+                    let startX = 26.65; 
+                    let startY = 0;     
 
+                    // A. PASSING LOGIC
+                    if (playType.toLowerCase().includes("pass")) {
+                        const pass = d.tactical_breakdown?.pass_chart || {};
+                        
+                        // 1. Start Point (Pocket vs Rollout)
+                        if(pass.start?.includes("Left")) startX = 20;
+                        if(pass.start?.includes("Right")) startX = 33;
+                        startY = -5; // QB drop depth
+                        
+                        // 2. End Point (Target)
+                        let endX = 26.65;
+                        const h = pass.end?.toLowerCase() || "";
+                        if (h.includes("left number")) endX = 8;
+                        else if (h.includes("left hash")) endX = 20;
+                        else if (h.includes("right hash")) endX = 33;
+                        else if (h.includes("right number")) endX = 45;
+                        
+                        // Add randomness
+                        endX += (Math.random() * 4 - 2);
+                        
                         fieldShots.push({
-                            x: x,
-                            y: (pass.distance_yards || 5) + (Math.random()),
+                            type: 'pass',
+                            startX: startX,
+                            startY: startY,
+                            endX: endX,
+                            endY: pass.depth || yards, 
                             result: pass.result || "Complete",
                             clipId: c._id || c.id
                         });
                     }
-                });
+                    
+                    // B. RUNNING LOGIC
+                    else if (playType.toLowerCase().includes("run")) {
+                        const run = d.tactical_breakdown?.run_chart || {};
+                        
+                        // 1. Calculate Gap (End X)
+                        let endX = 26.65;
+                        const dir = run.direction?.toLowerCase() || "middle";
+                        const gap = run.gap?.toLowerCase() || "a";
+                        
+                        // Gap Offsets from Center (26.65)
+                        const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
+                        const offset = offsets[gap] || 2;
+                        
+                        if (dir.includes("left")) endX -= offset;
+                        else if (dir.includes("right")) endX += offset;
+                        
+                        fieldShots.push({
+                            type: 'run',
+                            startX: 26.65,
+                            startY: -1, // Mesh point
+                            endX: endX, // The Hole
+                            endY: yards, // Yards gained
+                            result: "Run",
+                            clipId: c._id || c.id
+                        });
+                    }
+                }); // <--- Keeps your loop closed properly
 
                 // --- CLEANUP ---
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
@@ -2379,43 +2424,100 @@ In your CSS, you have:
                     }
                 });
 
-                // 6. Field Vision (Scatter)
-                new Chart(document.getElementById('chart-field'), {
+                // 6. FIELD VISION 2.0 (Vectors)
+                // Define the Custom Plugin for drawing play lines
+                const vectorPlugin = {
+                    id: 'vectorLines',
+                    beforeDatasetsDraw(chart) {
+                        const { ctx, scales: { x, y } } = chart;
+                        
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            if (meta.hidden) return;
+
+                            dataset.data.forEach(point => {
+                                // Only draw lines for points that have start coordinates
+                                if (point.startX !== undefined) {
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    
+                                    // Map data values to canvas pixels
+                                    const x1 = x.getPixelForValue(point.startX);
+                                    const y1 = y.getPixelForValue(point.startY);
+                                    const x2 = x.getPixelForValue(point.endX);
+                                    const y2 = y.getPixelForValue(point.endY);
+
+                                    ctx.moveTo(x1, y1);
+                                    ctx.lineTo(x2, y2);
+
+                                    // Style based on play type
+                                    if(point.type === 'run') {
+                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; // White for Run
+                                        ctx.lineWidth = 2;
+                                    } else if (point.result === 'Incomplete') {
+                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; // Faint Red
+                                        ctx.lineWidth = 1;
+                                        ctx.setLineDash([5, 5]); // Dashed line
+                                    } else {
+                                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)'; // Faint Green
+                                        ctx.lineWidth = 1;
+                                    }
+
+                                    ctx.stroke();
+                                    ctx.restore();
+                                }
+                            });
+                        });
+                    }
+                };
+
+                // Destroy old chart if it exists
+                const chartFieldCanvas = document.getElementById('chart-field');
+                if (Chart.getChart(chartFieldCanvas)) {
+                    Chart.getChart(chartFieldCanvas).destroy();
+                }
+
+                new Chart(chartFieldCanvas, {
                     type: 'scatter',
                     data: {
                         datasets: [
-                            {
-                                label: 'Complete',
-                                data: fieldShots.filter(s => s.result === 'Complete'),
-                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 6
+                            { 
+                                label: 'Pass (Complete)', 
+                                data: fieldShots.filter(s => s.type === 'pass' && s.result === 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 
                             },
-                            {
-                                label: 'Incomplete',
-                                data: fieldShots.filter(s => s.result !== 'Complete'),
-                                backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 6, borderWidth: 2
+                            { 
+                                label: 'Pass (Incomplete)', 
+                                data: fieldShots.filter(s => s.type === 'pass' && s.result !== 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 
+                            },
+                            { 
+                                label: 'Run', 
+                                data: fieldShots.filter(s => s.type === 'run').map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                backgroundColor: '#ffffff', pointStyle: 'rectRot', radius: 3 
                             }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: {
-                            x: { display: false, min: 0, max: 53.3 },
-                            y: { display: false, min: -10, max: 60 }
+                            x: { display: false, min: 0, max: 53.3 }, 
+                            y: { display: false, min: -10, max: 60 } 
                         },
-                        plugins: { legend: { labels: { color: 'white' } } },
+                        plugins: { legend: { labels: { color:'white' } } },
                         onClick: (e, elements, chart) => {
                             if (elements.length > 0) {
                                 const datasetIndex = elements[0].datasetIndex;
                                 const index = elements[0].index;
                                 const point = chart.data.datasets[datasetIndex].data[index];
-
-                                if (point.clipId) {
+                                if(point.clipId) {
                                     UI.playClip(point.clipId);
                                     document.getElementById('stats-modal').style.display = 'none';
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [vectorPlugin] // Activate our new drawing tool
                 });
             },
             // --- NEW: Context Editor Logic ---
