@@ -1190,9 +1190,18 @@
         #edit-context-modal .input-box:focus {
             border-color: var(--accent);
         }
-        /* [FIX: FORCE EDIT MODAL TO BE THE TOPMOST LAYER] */
+        /* [FIX: NUCLEAR Z-INDEX - FORCE EDITOR TO FRONT] */
         #edit-context-modal {
-            z-index: 9999 !important;
+            z-index: 2147483647 !important; /* Maximum possible value in a browser */
+            display: none; /* Ensure it starts hidden */
+        }
+        
+        /* Ensure the input fields inside don't get hidden either */
+        #edit-context-modal .modal-content {
+            position: relative;
+            z-index: 2147483647 !important;
+            background: #111;
+            border: 1px solid var(--accent); /* Blue border to confirm it's active */
         }
     </style>
 </head>
@@ -2007,47 +2016,51 @@
                     return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
-                // 2. PLUGIN: DRAW THE FIELD (Grass, Lines, Hashes)
+                // [FIX: HIGH CONTRAST FIELD GENERATOR]
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
                         
-                        // A. Grass
-                        ctx.fillStyle = '#355e3b'; 
+                        // 1. Grass (Brighter Green for Visibility)
+                        ctx.fillStyle = '#15803d'; // Brighter green
                         ctx.fillRect(left, top, width, height);
 
-                        // B. Endzones
+                        // 2. Endzones (Distinct Darker Green)
                         const zeroY = y.getPixelForValue(0);
                         const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; 
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
                         ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
 
-                        // C. Yard Lines & Hashes
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        // 3. Yard Lines (Bright White)
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; // High opacity
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
                         ctx.textAlign = 'center';
-                        ctx.font = '10px "JetBrains Mono"';
+                        ctx.font = 'bold 11px "JetBrains Mono"';
 
                         for (let i = -10; i <= 110; i++) {
                             const Y = y.getPixelForValue(i);
-                            if (i % 5 === 0) { // Major Lines
+                            // Major Lines (Every 5 yards)
+                            if (i % 5 === 0) { 
                                 ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; 
+                                ctx.lineWidth = (i === 0 || i === 100) ? 3 : 1; // Thicker Goal Lines
                                 ctx.stroke();
-                                // Numbers
+                                
+                                // Yard Numbers (Every 10)
                                 if (i % 10 === 0 && i > 0 && i < 100) { 
                                     const num = i <= 50 ? i : 100 - i;
+                                    // Draw numbers slightly offset from hash marks
                                     ctx.fillText(num, x.getPixelForValue(6), Y + 4);
                                     ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
                                 }
-                            } else { // Hashes
+                            } else { 
+                                // Hash Marks (Every 1 yard)
                                 const lHash = x.getPixelForValue(20); 
                                 const rHash = x.getPixelForValue(33.3);
                                 ctx.beginPath(); 
-                                ctx.moveTo(lHash-3, Y); ctx.lineTo(lHash+3, Y); 
-                                ctx.moveTo(rHash-3, Y); ctx.lineTo(rHash+3, Y); 
+                                ctx.moveTo(lHash-4, Y); ctx.lineTo(lHash+4, Y); 
+                                ctx.moveTo(rHash-4, Y); ctx.lineTo(rHash+4, Y); 
                                 ctx.lineWidth = 1; ctx.stroke();
                             }
                         }
@@ -2195,16 +2208,32 @@
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 3 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [UPDATED: OPEN EDITOR WITH HASH]
+            // [FIX: ROBUST CONTEXT EDITOR OPENER]
             openContextEditor: (clipId) => {
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === clipId);
-                if (!clip) { console.error("Clip not found:", clipId); return; }
-
-                document.getElementById('edit-context-modal').style.display = 'flex';
-                document.getElementById('edit-clip-id').value = clipId;
+                // 1. Fallback: If no ID passed, try to use the overlay ID
+                const targetId = clipId || UI.overlayClipId;
                 
+                if (!targetId) { 
+                    alert("No clip selected to edit."); 
+                    return; 
+                }
+
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === targetId);
+                
+                if (!clip) { 
+                    console.error("Clip not found in store:", targetId); 
+                    return; 
+                }
+
+                // 2. Force Display (Using the ID we confirmed exists in CSS)
+                const modal = document.getElementById('edit-context-modal');
+                modal.style.display = 'flex';
+                
+                // 3. Load Data
+                document.getElementById('edit-clip-id').value = targetId;
                 const s = clip.fullData?.data?.situation || {};
+                
                 UI.setEditVal('down', s.down || 1);
                 UI.setEditVal('hash', s.hash || 'M'); 
                 document.getElementById('edit-dist').value = s.distance_val || 10;
@@ -2213,9 +2242,6 @@
                     const parts = s.yard_line.split(' ');
                     document.getElementById('edit-side').value = parts[0] || "Own";
                     document.getElementById('edit-yard').value = parts[1] || 25;
-                } else {
-                    document.getElementById('edit-side').value = "Own";
-                    document.getElementById('edit-yard').value = 25;
                 }
             },
 
