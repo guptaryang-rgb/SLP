@@ -842,6 +842,40 @@
         }
 
         /* Library Cards */
+        /* --- RESTORED CLIP MENU BUTTON --- */
+        .clip-card {
+            position: relative; /* Needed for the absolute button to stick */
+        }
+
+        .clip-menu-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .clip-menu-btn:hover {
+            background: var(--accent);
+            color: black;
+        }
+
+        /* Show button when hovering over the card */
+        .clip-card:hover .clip-menu-btn {
+            display: flex;
+        }
+        
         .clip-card {
             padding: 12px;
             margin: 0 12px 12px;
@@ -1773,11 +1807,15 @@
          * 4. UI MANAGER
          * Controls Tabs, Chat History Switching, and Modal visibility.
          */
+        /**
+         * 4. UI MANAGER
+         * Controls Tabs, Chat History Switching, and Modal visibility.
+         */
         const UI = {
             currentMode: 'about', // 'about', 'self', 'team'
             activeSessionId: null, // NEW: Track specific selected session
+            overlayClipId: null,   // TRACKS CURRENT VIDEO CLIP ID
 
-            // [INSERT THIS NEW HELPER FUNCTION HERE]
             gradeToNum: (g) => {
                 if (!g) return 0;
                 const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
@@ -1785,26 +1823,22 @@
             },
 
             init: async () => {
-                // LOAD DATA: Fetch Sessions from Server
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
                     const sessions = await res.json();
                     Store.set('sessions', sessions);
 
-                    // FIX: Auto-select the most recent session if none is active
                     if (sessions.length > 0 && !UI.activeSessionId) {
                         const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
                         if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
                     }
                 } catch (e) { console.error("Session Load Failed", e); }
 
-                // Tab Logic
                 document.querySelectorAll('.nav-tab').forEach(t => {
                     t.onclick = () => UI.switchTab(t.dataset.tab);
                 });
 
-                // File Input
                 document.getElementById('file-input').onchange = (e) => {
                     if (e.target.files[0]) {
                         const btn = document.getElementById('file-btn');
@@ -1814,7 +1848,6 @@
                     }
                 };
 
-                // Send Button
                 document.getElementById('send-btn').onclick = UI.handleSend;
             },
 
@@ -1835,128 +1868,24 @@
                     warView.classList.add('active-view');
                     setTimeout(() => warView.style.opacity = 1, 50);
 
-                    // --- UI DIFFERENTIATION LOGIC ---
                     if (tab === 'self') {
-                        // Self Mode: Show Focus Selector
                         posSelect.style.display = 'block';
                     } else if (tab === 'team') {
-                        // Team Mode: Hide Focus Selector
                         posSelect.style.display = 'none';
                     }
 
-                    // Load the Isolated Chat for this mode
-                    // FIX: Don't load generic history. Load active session or empty state.
                     if (UI.activeSessionId) {
                         UI.selectSession(UI.activeSessionId);
                     } else {
-                        // Clear feed if no session selected yet
                         document.getElementById('chat-feed').innerHTML = '';
                         UI.renderSessionList();
                     }
                 }
             },
 
-            // --- START NEW CODE ---
-            playClip: (id) => {
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === id);
-                if (!clip) return;
-
-                UI.overlayClipId = clip._id || clip.id;
-
-                // 1. Reset Chat
-                const chatHistory = document.getElementById('overlay-chat-history');
-                const chatInput = document.getElementById('overlay-chat-input');
-                if (chatHistory) chatHistory.innerHTML = '';
-                if (chatInput) chatInput.value = '';
-
-                // 2. Show AI Analysis Report (Below the chat area)
-                const reportContainer = document.getElementById('report-injection-site');
-                if (clip.fullData) {
-                    const scoutData = {
-                        id: clip._id,
-                        title: clip.title,
-                        formation: clip.formation,
-                        grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
-                        iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
-                        tech: clip.fullData.scouting_report?.report_card?.technique || "-",
-                        effort: clip.fullData.scouting_report?.report_card?.effort || "-",
-                        summary: clip.fullData.scouting_report?.summary || "No summary available.",
-                        fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
-                    };
-                    reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
-                } else {
-                    reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Analysis in progress...<br>Check back shortly.</div>';
-                }
-
-                // 3. Open Video
-                Telestrator.init(clip.videoUrl);
-            },
-
-            handleOverlayChat: async () => {
-                const input = document.getElementById('overlay-chat-input');
-                const history = document.getElementById('overlay-chat-history');
-                const txt = input.value;
-
-                if (!txt || !UI.overlayClipId) return;
-
-                // 1. Add User Message
-                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:10px; font-weight:600;">${txt}</div>`;
-                input.value = '';
-                history.scrollTop = history.scrollHeight;
-
-                // 2. Add Thinking Indicator
-                const loadingId = 'thinking_' + Date.now();
-                history.innerHTML += `
-                    <div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;">
-                        <div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div>
-                        <div class="thinking-bar"></div>
-                    </div>`;
-                history.scrollTop = history.scrollHeight;
-
-                try {
-                    // 3. Fetch Response
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/clip-chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
-                    });
-
-                    const data = await res.json();
-
-                    // 4. Remove Thinking Indicator
-                    const loader = document.getElementById(loadingId);
-                    if (loader) loader.remove();
-
-                    if (!res.ok || data.error) {
-                        throw new Error(data.error || "Server Error");
-                    }
-
-                    if (data.reply) {
-                        const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        history.innerHTML += `
-                            <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#e4e4e7; padding:10px 14px; border-radius:8px; font-size:0.9rem; max-width:90%; margin-bottom:12px; line-height:1.5;">
-                                <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach:</strong> ${cleanReply}
-                            </div>`;
-                    } else {
-                        throw new Error("No reply received");
-                    }
-
-                } catch (e) {
-                    console.error("Chat Error:", e);
-                    const loader = document.getElementById(loadingId);
-                    if (loader) loader.remove();
-                    // Show specific error to user
-                    history.innerHTML += `<div style="color:var(--danger); font-size:0.8rem; margin-bottom:10px; padding:8px;">⚠️ ${e.message || "Connection Failed"}</div>`;
-                }
-                history.scrollTop = history.scrollHeight;
-            },
-            // --- END NEW CODE ---
             loadChatFeed: (mode) => {
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
-
                 const icon = mode === 'self' ? '👤' : '🛡️';
                 const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
                 const subtitle = mode === 'self'
@@ -1990,32 +1919,21 @@
             toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
             toggleModal: (id) => document.getElementById(id).style.display = 'flex',
 
-            // NEW: Select a session and load its specific data
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
-
-                // 0. IMMEDIATE WIPE (Visual Reset)
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
 
-                // 1. FIND SESSION DATA (For Chat History)
                 const sessions = Store.get('sessions') || [];
                 const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
 
-                // 2. RENDER CHAT (Isolate History)
-                // ...existing code...
-                // reuse `feed` declared above (do NOT redeclare)
-                feed.innerHTML = ''; // WIPE PREVIOUS CHAT
-
                 if (currentSession && currentSession.history && currentSession.history.length > 0) {
-                    // Render saved history
                     currentSession.history.forEach(msg => UI.renderMessageHTML({
                         type: msg.role === 'model' ? 'ai' : 'user',
                         content: msg.text
                     }));
                     feed.scrollTop = feed.scrollHeight;
                 } else {
-                    // Show Empty State if new
                     const mode = UI.currentMode;
                     const icon = mode === 'self' ? '👤' : '🛡️';
                     feed.innerHTML = `
@@ -2026,7 +1944,6 @@
                         </div>`;
                 }
 
-                // 3. LOAD CLIPS (Isolate Library)
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -2041,14 +1958,10 @@
             renderSessionList: () => {
                 const list = document.getElementById('session-list');
                 const sessions = Store.get('sessions') || [];
-
-                // FILTER: Only show sessions matching current mode (Self vs Team)
                 const modeSessions = sessions.filter(s => s.type === UI.currentMode);
 
                 list.innerHTML = modeSessions.map(s => {
-                    // FIX: Handle both 'sessionId' (Server) and 'id' (Legacy Local)
                     const validId = s.sessionId || s.id;
-
                     return `
                     <div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')">
                         <span>${s.title}</span>
@@ -2063,8 +1976,6 @@
 
                 list.innerHTML = '';
                 const clips = Store.get('clips') || [];
-
-                // Filter clips by active session
                 const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
 
                 if (sessionClips.length === 0) {
@@ -2072,7 +1983,6 @@
                     return;
                 }
 
-                // Group by Section
                 const folders = { 'Inbox': [] };
                 sessionClips.forEach(c => {
                     const sec = c.section || 'Inbox';
@@ -2080,14 +1990,11 @@
                     folders[sec].push(c);
                 });
 
-                // Render
                 for (const [name, groupClips] of Object.entries(folders)) {
                     if (groupClips.length === 0) continue;
-
                     list.innerHTML += `<div class="folder-header">${name}</div>`;
 
                     groupClips.forEach(c => {
-                        // FIX: Moved onclick to the parent div and added stopPropagation to the menu button
                         list.innerHTML += `
                         <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
                             <button class="clip-menu-btn" onclick='event.stopPropagation(); UI.openContextEditor("${c._id || c.id}")'>⋮</button>
@@ -2103,48 +2010,32 @@
                 }
             },
 
-            // [PERFECTED ANALYTICS ENGINE]
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
                 UI.refreshStats();
             },
 
-            // [FINAL FIELD VISION ENGINE: 100 YARDS + INTELLIGENT MAPPING]
+            // [FIELD VISION ENGINE: 100 YARDS + INTELLIGENT MAPPING]
             refreshStats: () => {
-                // 1. HELPER: Deterministic Random (Seeded by Clip ID)
-                // Ensures the "wobble" is exactly the same every time you load the clip.
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
-                    for (let i = 0; i < seedStr.length; i++) {
-                        h ^= seedStr.charCodeAt(i);
-                        h = Math.imul(h, 0x01000193);
-                    }
-                    return function() {
-                        h = Math.imul(h ^ (h >>> 16), 2246822507);
-                        h = Math.imul(h ^ (h >>> 13), 3266489909);
-                        return ((h ^= h >>> 16) >>> 0) / 4294967296;
-                    }
+                    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+                    return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
-                // 2. PLUGIN: Draw a Realistic 100-Yard Football Field
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        
-                        // A. Grass
                         ctx.fillStyle = '#355e3b'; 
                         ctx.fillRect(left, top, width, height);
-
-                        // B. Endzones (South: -10 to 0, North: 100 to 110)
+                        
                         const zeroY = y.getPixelForValue(0);
                         const hundredY = y.getPixelForValue(100);
-                        
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
                         ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
 
-                        // C. Yard Lines & Hashes
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                         ctx.textAlign = 'center';
@@ -2152,34 +2043,26 @@
 
                         for (let i = -10; i <= 110; i++) {
                             const Y = y.getPixelForValue(i);
-                            
-                            // Major Lines (Every 5 yards)
                             if (i % 5 === 0) { 
                                 ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; // Bold Goal Lines
+                                ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; 
                                 ctx.stroke();
-                                
-                                // Yard Numbers (Every 10, between goal lines)
                                 if (i % 10 === 0 && i > 0 && i < 100) { 
                                     const num = i <= 50 ? i : 100 - i;
                                     ctx.fillText(num, x.getPixelForValue(6), Y + 4);
                                     ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
                                 }
                             } else { 
-                                // Hash Marks (Every 1 yard)
                                 const lHash = x.getPixelForValue(20);
                                 const rHash = x.getPixelForValue(33.3);
-                                ctx.beginPath();
-                                ctx.moveTo(lHash-3, Y); ctx.lineTo(lHash+3, Y);
+                                ctx.beginPath(); ctx.moveTo(lHash-3, Y); ctx.lineTo(lHash+3, Y);
                                 ctx.moveTo(rHash-3, Y); ctx.lineTo(rHash+3, Y);
-                                ctx.lineWidth = 1;
-                                ctx.stroke();
+                                ctx.lineWidth = 1; ctx.stroke();
                             }
                         }
                     }
                 };
 
-                // 3. PLUGIN: Draw Vectors (Lines from Start to End)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
@@ -2189,30 +2072,23 @@
                             if (meta.hidden) return;
                             dataset.data.forEach(pt => {
                                 if (pt.startX !== undefined) {
-                                    ctx.save();
-                                    ctx.beginPath();
+                                    ctx.save(); ctx.beginPath();
                                     ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
                                     ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
-                                    
                                     if(pt.type === 'run') {
-                                        // Run = Thick White Line
                                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3;
                                     } else if (pt.result === 'Incomplete') {
-                                        // Incomplete = Dashed Red Line
                                         ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
                                     } else {
-                                        // Complete = Solid Green Line
                                         ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'; ctx.lineWidth = 2;
                                     }
-                                    ctx.stroke();
-                                    ctx.restore();
+                                    ctx.stroke(); ctx.restore();
                                 }
                             });
                         });
                     }
                 };
 
-                // --- DATA FILTERING ---
                 const allClips = Store.get('clips') || [];
                 const fDown = document.getElementById('filter-down').value;
                 const fDist = document.getElementById('filter-dist').value;
@@ -2227,7 +2103,6 @@
                     return matchDown && matchDist && matchZone;
                 });
 
-                // CLEANUP OLD CHARTS
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
                     const el = document.getElementById(id);
                     if(Chart.getChart(el)) Chart.getChart(el).destroy();
@@ -2235,7 +2110,6 @@
 
                 if (clips.length === 0) return;
 
-                // --- AGGREGATION & MAPPING ---
                 const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
                 const passShots = [], runShots = [];
                 const drillDownMap = { coverage: {}, formation: {}, concept: {} };
@@ -2243,19 +2117,15 @@
                 clips.forEach(c => {
                     const d = c.fullData;
                     const rng = getSeededRandom(c._id || c.id || "seed");
-
-                    // Standard Stats
                     const off = d.data.o_formation || "Unknown";
                     const def = d.data.d_formation || "Unknown";
                     const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
 
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
-                    
                     if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
                     if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
 
-                    // Efficiency & Matrix
                     if(!matrix[off]) matrix[off] = {};
                     if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++;
@@ -2265,73 +2135,48 @@
                     coverSuccess[def].p++;
                     if(isSuccess) coverSuccess[def].s++;
 
-                    // Concepts
                     let concept = d.tactical_breakdown?.concept || "Unknown";
                     if(concept.length > 20) concept = concept.substring(0, 18) + "..";
                     concepts[concept] = (concepts[concept] || 0) + 1;
                     if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = [];
                     drillDownMap.concept[concept].push(c);
 
-                    // --- INTELLIGENT FIELD MAPPING ---
-                    // 1. Detect Play Type (Robust Check)
                     let pType = (d.tactical_breakdown?.play_type || "Pass").toLowerCase();
                     if(pType === "unknown") {
                         if(concept.toLowerCase().match(/run|rush|handoff|duo|zone/)) pType = "run";
                         else pType = "pass";
                     }
-
                     const yards = d.tactical_breakdown?.yards_gained || 0;
-                    let startX = 26.65, startY = 0; // LOS Center
+                    let startX = 26.65, startY = 0; 
 
-                    // A. PASSING LOGIC
                     if (pType.includes("pass")) {
                         const pass = d.tactical_breakdown?.pass_chart || {};
-                        
-                        // Start Point (Pocket vs Rollout)
                         if(pass.start?.toLowerCase().includes("left")) startX = 20;
                         if(pass.start?.toLowerCase().includes("right")) startX = 33;
-                        startY = -5; // Dropback
-
-                        // End Point (Target)
+                        startY = -5; 
                         let endX = 26.65;
                         const h = (pass.end || "").toLowerCase();
                         if (h.includes("left number")) endX = 8;
                         else if (h.includes("left hash")) endX = 20;
                         else if (h.includes("right hash")) endX = 33;
                         else if (h.includes("right number")) endX = 45;
-                        endX += (rng() * 4 - 2); // Seeded Wobble
-
-                        // Depth Logic (Prioritize Air Yards)
+                        endX += (rng() * 4 - 2); 
                         let depth = pass.depth || yards || 10;
-                        if (pass.result === "Incomplete" && depth === 0) depth = 15; // Visual default
-
-                        passShots.push({
-                            type: 'pass', startX, startY, endX, endY: depth,
-                            result: pass.result || "Complete", clipId: c._id || c.id
-                        });
-                    } 
-                    // B. RUNNING LOGIC
-                    else {
+                        if (pass.result === "Incomplete" && depth === 0) depth = 15; 
+                        passShots.push({ type: 'pass', startX, startY, endX, endY: depth, result: pass.result || "Complete", clipId: c._id || c.id });
+                    } else {
                         const run = d.tactical_breakdown?.run_chart || {};
                         let endX = 26.65;
                         const dir = (run.direction || "middle").toLowerCase();
                         const gap = (run.gap || "a").toLowerCase();
-                        
                         const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
                         const offset = offsets[gap] || 2;
-                        
                         if (dir.includes("left")) endX -= offset;
                         else if (dir.includes("right")) endX += offset;
-
-                        runShots.push({
-                            type: 'run', startX: 26.65, startY: -1, endX, endY: (yards || 3),
-                            result: "Run", clipId: c._id || c.id
-                        });
+                        runShots.push({ type: 'run', startX: 26.65, startY: -1, endX, endY: (yards || 3), result: "Run", clipId: c._id || c.id });
                     }
                 });
 
-                // --- RENDERING ---
-                // Helper for Bar Charts
                 const renderBar = (id, data, color, map) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
                     new Chart(document.getElementById(id), {
@@ -2342,12 +2187,10 @@
                         scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } }
                     });
                 };
-
                 renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
                 renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
                 renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
 
-                // Efficiency Table
                 const table = document.getElementById('efficiency-table');
                 table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` +
                     Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + 
@@ -2359,7 +2202,6 @@
                         return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`;
                     }).join('') + '</tr>').join('') + '</tbody>';
 
-                // Coverage Vuln Chart
                 const covL = Object.keys(coverSuccess);
                 const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
                 new Chart(document.getElementById('chart-coverage'), {
@@ -2368,13 +2210,9 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } }
                 });
 
-                // 6. FIELD CHARTS (The Main Upgrade)
                 const commonOpts = {
                     responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        x: { display: false, min: 0, max: 53.3 },
-                        y: { display: false, min: -10, max: 110 } // Full 100 Yards + Endzones
-                    },
+                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } },
                     plugins: { legend: { labels: { color:'white' } } },
                     onClick: (e, els, chart) => {
                         if(els.length) {
@@ -2384,159 +2222,105 @@
                     }
                 };
 
-                // 6A. PASSING CHART
                 new Chart(document.getElementById('chart-field-pass'), {
                     type: 'scatter',
                     data: { datasets: [
                         { label: 'Complete', data: passShots.filter(s=>s.result==='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 },
                         { label: 'Incomplete', data: passShots.filter(s=>s.result!=='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 }
                     ]},
-                    options: commonOpts,
-                    plugins: [footballFieldPlugin, vectorPlugin]
+                    options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin]
                 });
 
-                // 6B. RUNNING CHART
                 new Chart(document.getElementById('chart-field-run'), {
                     type: 'scatter',
                     data: { datasets: [
                         { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 3 }
                     ]},
-                    options: commonOpts,
-                    plugins: [footballFieldPlugin, vectorPlugin]
+                    options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin]
                 });
             },
 
-            // 1. OPEN EDITOR (Populates the modal with current clip data)
             openContextEditor: (clipId) => {
-                // Find the clip in our local store
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === clipId);
+                if (!clip) { console.error("Clip not found:", clipId); return; }
 
-                if (!clip) {
-                    console.error("Clip not found:", clipId);
-                    return;
-                }
-
-                // Show Modal
                 document.getElementById('edit-context-modal').style.display = 'flex';
-
-                // Set Hidden ID so we know which clip to save later
                 document.getElementById('edit-clip-id').value = clipId;
-
-                // Get existing situation data (or default to 1st & 10)
                 const s = clip.fullData?.data?.situation || {};
-
-                // Pre-select the Down button
                 UI.setEditVal('down', s.down || 1);
-
-                // Pre-fill Distance
                 document.getElementById('edit-dist').value = s.distance_val || 10;
-
-                // Pre-fill Field Position (Parse "Own 25" -> Side: Own, Yard: 25)
                 if (s.yard_line) {
-                    const parts = s.yard_line.split(' '); // Splitting "Own 25"
+                    const parts = s.yard_line.split(' ');
                     document.getElementById('edit-side').value = parts[0] || "Own";
                     document.getElementById('edit-yard').value = parts[1] || 25;
                 } else {
-                    // Defaults if no data exists
                     document.getElementById('edit-side').value = "Own";
                     document.getElementById('edit-yard').value = 25;
                 }
             },
 
-            // 2. HELPER (Highlights the selected button)
             setEditVal: (field, val) => {
                 if (field === 'down') {
-                    // Update the hidden input
                     document.getElementById('edit-down').value = val;
-
-                    // Visual Toggle: Turn all buttons off, then turn the selected one on
                     document.querySelectorAll('.sit-btn').forEach((b, i) => {
-                        // (i + 1) matches the button index to the down number (0->1st, 1->2nd...)
-                        if ((i + 1) === Number(val)) {
-                            b.classList.add('selected');
-                        } else {
-                            b.classList.remove('selected');
-                        }
+                        if ((i + 1) === Number(val)) b.classList.add('selected');
+                        else b.classList.remove('selected');
                     });
                 }
             },
 
-            // 3. SAVE CONTEXT (Calculates Zones & Updates Data)
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const down = Number(document.getElementById('edit-down').value) || 1;
                 const dist = Number(document.getElementById('edit-dist').value) || 10;
-                const side = document.getElementById('edit-side').value; // "Own" or "Opp"
+                const side = document.getElementById('edit-side').value; 
                 const yard = Number(document.getElementById('edit-yard').value) || 20;
 
-                // A. AUTOMATIC ZONE CALCULATION
-                // Logic: Opp 0-20 is Red Zone. Own 0-15 is Backed Up. Rest is Open Field.
                 let zone = "Open";
                 if (side === "Opp" && yard <= 20) zone = "Red";
                 if (side === "Own" && yard <= 15) zone = "Backed";
 
-                // B. AUTOMATIC DISTANCE CATEGORY
-                // Logic: Short (<=3), Long (>=8), Med (4-7)
                 let distType = "med";
                 if (dist <= 3) distType = "short";
                 if (dist >= 8) distType = "long";
 
-                // C. UPDATE LOCAL STORAGE
                 const clips = Store.get('clips') || [];
                 const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
 
                 if (clipIndex > -1) {
-                    // Ensure the nested structure exists
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
-                    // Write the new data
                     clips[clipIndex].fullData.data.situation = {
                         down: down,
-                        distance: distType,   // Used for the "Short/Med/Long" filter
-                        distance_val: dist,   // The actual number (e.g., 8)
-                        zone: zone,           // Used for "Red Zone" filter
-                        yard_line: `${side} ${yard}` // Readable string (e.g., "Opp 15")
+                        distance: distType,   
+                        distance_val: dist,   
+                        zone: zone,           
+                        yard_line: `${side} ${yard}` 
                     };
 
-                    // Save back to browser storage
                     Store.set('clips', clips);
-
-                    // D. REFRESH UI
-                    UI.refreshStats(); // Updates the charts instantly
-                    UI.renderLibrary(); // Updates the clip list in the sidebar
-
-                    // Close Modal
+                    UI.refreshStats(); 
+                    UI.renderLibrary(); 
                     document.getElementById('edit-context-modal').style.display = 'none';
-
-                    // Optional: Visual confirmation
                     const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
                     if (btn) btn.style.borderColor = 'var(--success)';
                 }
             },
 
-            // [REPLACE existing playClip with this fixed version]
             playClip: (id) => {
-                // 1. Get real clips from the Store (NOT window.activeClips)
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
+                if (!clip) return;
 
-                if (!clip) {
-                    console.error("Clip not found:", id);
-                    return;
-                }
-
-                // 2. Set Active Clip ID for Chat & Persistence
                 UI.overlayClipId = clip._id || clip.id;
 
-                // 3. Reset & Setup Overlay Chat
                 const chatHistory = document.getElementById('overlay-chat-history');
                 const chatInput = document.getElementById('overlay-chat-input');
                 if (chatHistory) chatHistory.innerHTML = '';
                 if (chatInput) chatInput.value = '';
 
-                // 4. Inject Scout Report into the Side Panel
                 const reportContainer = document.getElementById('report-injection-site');
                 if (reportContainer) {
                     if (clip.fullData) {
@@ -2556,12 +2340,9 @@
                         reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
                     }
                 }
-
-                // 5. Open Video Player
                 Telestrator.init(clip.videoUrl);
             },
 
-            // [ADD or REPLACE handleOverlayChat with this version that uses fetch()]
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
@@ -2569,12 +2350,10 @@
 
                 if (!txt || !UI.overlayClipId) return;
 
-                // 1. Add User Message
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
                 input.value = '';
                 history.scrollTop = history.scrollHeight;
 
-                // 2. Add Thinking Indicator
                 const loadingId = 'thinking_' + Date.now();
                 history.innerHTML += `
                     <div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;">
@@ -2584,33 +2363,21 @@
                 history.scrollTop = history.scrollHeight;
 
                 try {
-                    // 3. Call Server (Using fetch + Clerk Token explicitly)
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/clip-chat', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
                     });
-
                     const data = await res.json();
-
-                    // 4. Remove Thinking Indicator
                     const loader = document.getElementById(loadingId);
                     if (loader) loader.remove();
-
                     if (!res.ok) throw new Error(data.error || "Server Error");
-
-                    // 5. Add AI Message
                     const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
                     history.innerHTML += `
                         <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;">
                             <span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}
                         </div>`;
-
                 } catch (e) {
                     console.error(e);
                     const loader = document.getElementById(loadingId);
@@ -2624,21 +2391,12 @@
                 const input = document.getElementById('user-input');
                 const fileInput = document.getElementById('file-input');
                 const feed = document.getElementById('chat-feed');
-                const mode = UI.currentMode; // 'self' or 'team'
-
+                
                 if (!input.value && !fileInput.files.length) return;
-
-                // GUARD: Prevent upload if no session is active
-                if (!UI.activeSessionId) {
-                    alert("⚠️ Please Create or Select a Session from the left panel first!");
-                    return;
-                }
-
+                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
                 if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
                 const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-
-                // SAVE USER MSG TO SESSION STORE (Locally)
                 const sessions = Store.get('sessions');
                 const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
                 if (sessIdx > -1) {
@@ -2648,8 +2406,6 @@
                 }
 
                 UI.renderMessageHTML({ type: 'user', content: userText });
-
-                // Reset Inputs
                 input.value = '';
                 const file = fileInput.files[0];
                 fileInput.value = '';
@@ -2664,7 +2420,6 @@
                 const res = await CoachAI.analyze(userText, file);
                 document.getElementById(loadId).remove();
 
-                // SAVE AI MSG TO SESSION STORE (Locally)
                 let aiContent = res.text;
                 if (res.type === 'card') {
                     UI.renderLibrary();
@@ -2676,9 +2431,8 @@
                 if (sessIdx2 > -1) {
                     sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
                     Store.set('sessions', sessions2);
-                } // <--- THIS CLOSING BRACKET WAS MISSING
+                }
 
-                // Render
                 feed.innerHTML += `
                     <div style="align-self:flex-start; width:100%; margin-bottom:20px;">
                         ${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}
