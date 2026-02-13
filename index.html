@@ -1414,13 +1414,20 @@
                     <div class="stat-card">
                         <h4 class="stat-title">5. TOP OFFENSIVE CONCEPTS</h4>
                         <div style="height:300px;"><canvas id="chart-conflict"></canvas></div>
-                    </div>
                     <div class="stat-card">
-                        <h4 class="stat-title">6. FIELD VISION (Pass Distribution)</h4>
-                        <div
-                            style="height:300px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                        <h4 class="stat-title">6A. PASSING DISTRIBUTION (Air Yards)</h4>
+                        <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
                             <div class="football-field">
-                                <canvas id="chart-field" style="width:100%; height:100%;"></canvas>
+                                <canvas id="chart-field-pass" style="width:100%; height:100%;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h4 class="stat-title">6B. RUSHING DISTRIBUTION (Gap Scheme)</h4>
+                        <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                            <div class="football-field">
+                                <canvas id="chart-field-run" style="width:100%; height:100%;"></canvas>
                             </div>
                         </div>
                     </div>
@@ -2103,366 +2110,115 @@
             },
 
             // [FINAL MASTER VERSION: Filters + Specific Terms + Horizontal Bars]
+            // [FINAL FIELD VISION ENGINE: SPLIT PASS & RUN]
             refreshStats: () => {
-                // 1. GET & FILTER DATA
-                const allClips = Store.get('clips') || [];
-
-                // Get Filter Values
-                const fDown = document.getElementById('filter-down').value;
-                const fDist = document.getElementById('filter-dist').value;
-                const fZone = document.getElementById('filter-zone').value;
-
-                // --- FILTER LOGIC ---
-                const clips = allClips.filter(c => {
-                    if (!c.fullData || !c.fullData.data) return false;
-
-                    const sit = c.fullData.data.situation || {};
-                    // Soft matching (defaults to 'true' if data is missing)
-                    const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
-                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
-                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
-
-                    return matchDown && matchDist && matchZone;
-                });
-
-                if (clips.length === 0) {
-                    ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
-                        const el = document.getElementById(id);
-                        if (Chart.getChart(el)) Chart.getChart(el).destroy();
-                    });
-                    return;
-                }
-
-                // --- AGGREGATORS ---
-                const offForms = {};
-                const defForms = {};
-                const concepts = {}; // <--- Correct (Replaced conflictPlayers)
-                const coverSuccess = {};    
-                const matrix = {};          
-                const fieldShots = [];      
-
-                // [CRITICAL] You MUST add this line for the click-to-play feature:
-                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
-
-                clips.forEach(c => {
-                    const d = c.fullData;
-
-                    // 1. OFFENSE: Use specific formation
-                    const off = d.data.o_formation || "Unknown";
-
-                    // 2. DEFENSE: Specific Coverage Logic (Removes MOFC/MOFO jargon)
-                    let def = d.data.d_formation || d.tactical_breakdown?.coverage_shell || "Unknown";
-                    if (def.includes("MOFC")) def = "Cover 1 / 3";
-                    if (def.includes("MOFO")) def = "Cover 2 / 4";
-
-                    const conflict = d.tactical_breakdown?.key_matchup?.split(' ')[0] || "None";
-
-                    // Grade Logic
-                    const gradeNum = UI.gradeToNum(d.scouting_report?.report_card?.overall);
-                    const isSuccess = gradeNum >= 2.7;
-
-                    // Aggregations
-                    offForms[off] = (offForms[off] || 0) + 1;
-                    if (!drillDownMap.formation[off]) drillDownMap.formation[off] = [];
-                    drillDownMap.formation[off].push(c);
-
-                    defForms[def] = (defForms[def] || 0) + 1;
-                    if (!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
-                    drillDownMap.coverage[def].push(c);
-
-                    // Efficiency Matrix
-                    if (!matrix[off]) matrix[off] = {};
-                    if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++;
-                    if (isSuccess) matrix[off][def].s++;
-
-                    // Coverage Vuln
-                    if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
-                    coverSuccess[def].p++;
-                    if (isSuccess) coverSuccess[def].s++;
-
-                    // 5. CONCEPTS (Replacement for Conflict Player)
-                    // Get concept name from AI data
-                    let conceptName = d.tactical_breakdown?.concept || "Unknown";
-
-                    // Cleanup: Shorten extremely long names so they fit on the chart
-                    if (conceptName.length > 20) {
-                        conceptName = conceptName.substring(0, 18) + "..";
+                // 1. HELPER: Deterministic Random (Seeded by Clip ID)
+                const getSeededRandom = (seedStr) => {
+                    let h = 0x811c9dc5;
+                    for (let i = 0; i < seedStr.length; i++) {
+                        h ^= seedStr.charCodeAt(i);
+                        h = Math.imul(h, 0x01000193);
                     }
-
-                    // Count the concept frequency
-                    if (!concepts[conceptName]) concepts[conceptName] = 0;
-                    concepts[conceptName]++;
-
-                    // Initialize the drill-down array if it doesn't exist
-                    if (!drillDownMap.concept) drillDownMap.concept = {};
-                    if (!drillDownMap.concept[conceptName]) drillDownMap.concept[conceptName] = [];
-                    
-                    // Add this clip to the list for this concept
-                    drillDownMap.concept[conceptName].push(c);
-
-                    // --- FIELD VISION 2.0 MAPPING (Pass + Run Vectors) ---
-                    const playType = d.tactical_breakdown?.play_type || "Pass";
-                    const yards = d.tactical_breakdown?.yards_gained || 0;
-                    
-                    // Default Start Point (The Snap - Center Field)
-                    let startX = 26.65; 
-                    let startY = 0;     
-
-                    // A. PASSING LOGIC
-                    if (playType.toLowerCase().includes("pass")) {
-                        const pass = d.tactical_breakdown?.pass_chart || {};
-                        
-                        // 1. Start Point (Pocket vs Rollout)
-                        if(pass.start?.includes("Left")) startX = 20;
-                        if(pass.start?.includes("Right")) startX = 33;
-                        startY = -5; // QB drop depth
-                        
-                        // 2. End Point (Target)
-                        let endX = 26.65;
-                        const h = pass.end?.toLowerCase() || "";
-                        if (h.includes("left number")) endX = 8;
-                        else if (h.includes("left hash")) endX = 20;
-                        else if (h.includes("right hash")) endX = 33;
-                        else if (h.includes("right number")) endX = 45;
-                        
-                        // Add randomness
-                        endX += (Math.random() * 4 - 2);
-                        
-                        fieldShots.push({
-                            type: 'pass',
-                            startX: startX,
-                            startY: startY,
-                            endX: endX,
-                            endY: pass.depth || yards, 
-                            result: pass.result || "Complete",
-                            clipId: c._id || c.id
-                        });
+                    return function() {
+                        h = Math.imul(h ^ (h >>> 16), 2246822507);
+                        h = Math.imul(h ^ (h >>> 13), 3266489909);
+                        return ((h ^= h >>> 16) >>> 0) / 4294967296;
                     }
-                    
-                    // B. RUNNING LOGIC
-                    else if (playType.toLowerCase().includes("run")) {
-                        const run = d.tactical_breakdown?.run_chart || {};
-                        
-                        // 1. Calculate Gap (End X)
-                        let endX = 26.65;
-                        const dir = run.direction?.toLowerCase() || "middle";
-                        const gap = run.gap?.toLowerCase() || "a";
-                        
-                        // Gap Offsets from Center (26.65)
-                        const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
-                        const offset = offsets[gap] || 2;
-                        
-                        if (dir.includes("left")) endX -= offset;
-                        else if (dir.includes("right")) endX += offset;
-                        
-                        fieldShots.push({
-                            type: 'run',
-                            startX: 26.65,
-                            startY: -1, // Mesh point
-                            endX: endX, // The Hole
-                            endY: yards, // Yards gained
-                            result: "Run",
-                            clipId: c._id || c.id
-                        });
-                    }
-                }); // <--- Keeps your loop closed properly
+                };
 
-                // --- CLEANUP ---
-                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (Chart.getChart(el)) Chart.getChart(el).destroy();
-                });
+                // 2. PLUGIN: Draw a Realistic Football Field
+                const footballFieldPlugin = {
+                    id: 'footballField',
+                    beforeDraw: (chart) => {
+                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                        
+                        // A. Grass Background
+                        ctx.fillStyle = '#355e3b'; // Field Green
+                        ctx.fillRect(left, top, width, height);
 
-                // --- RENDER VISUALS ---
+                        // B. Endzones
+                        const zeroY = y.getPixelForValue(0);
+                        const hundredY = y.getPixelForValue(100);
+                        
+                        // Own Endzone (-10 to 0)
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
+                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                        
+                        // Opp Endzone (100 to 110)
+                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
 
-                // 1. OFFENSIVE FORMATION (Horizontal Bar)
-                const offLabels = Object.keys(offForms).sort((a, b) => offForms[b] - offForms[a]);
-                const offData = offLabels.map(k => offForms[k]);
+                        // C. Yard Lines & Hash Marks
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'center';
+                        ctx.font = '10px "JetBrains Mono"';
 
-                new Chart(document.getElementById('chart-off-form'), {
-                    type: 'bar',
-                    indexAxis: 'y', // Horizontal
-                    data: {
-                        labels: offLabels,
-                        datasets: [{
-                            label: 'Frequency',
-                            data: offData,
-                            backgroundColor: '#38bdf8',
-                            barThickness: 20,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                            y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
-                        },
-                        onClick: (e, elements) => {
-                            if (elements.length > 0) {
-                                const label = offLabels[elements[0].index];
-                                UI.playClip(drillDownMap.formation[label][0]._id || drillDownMap.formation[label][0].id);
-                                document.getElementById('stats-modal').style.display = 'none';
+                        // Loop through yards from -10 to 110
+                        for (let i = -10; i <= 110; i++) {
+                            const Y = y.getPixelForValue(i);
+                            
+                            // Major Lines (Every 5 yards)
+                            if (i % 5 === 0) {
+                                ctx.beginPath();
+                                ctx.moveTo(left, Y);
+                                ctx.lineTo(right, Y);
+                                ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; // Bold Goal Lines
+                                ctx.stroke();
+                                
+                                // Yard Numbers (Every 10 yards, excluding goal lines)
+                                if (i % 10 === 0 && i > 0 && i < 100) {
+                                    const displayNum = i <= 50 ? i : 100 - i;
+                                    ctx.fillText(displayNum, x.getPixelForValue(6), Y + 4); // Left Numbers
+                                    ctx.fillText(displayNum, x.getPixelForValue(47.3), Y + 4); // Right Numbers
+                                }
+                            } 
+                            // Individual Hash Marks (Every 1 yard)
+                            else {
+                                const leftHash = x.getPixelForValue(20);
+                                const rightHash = x.getPixelForValue(33.3);
+                                
+                                ctx.beginPath();
+                                ctx.moveTo(leftHash - 3, Y); ctx.lineTo(leftHash + 3, Y);
+                                ctx.moveTo(rightHash - 3, Y); ctx.lineTo(rightHash + 3, Y);
+                                ctx.lineWidth = 1;
+                                ctx.stroke();
                             }
                         }
                     }
-                });
+                };
 
-                // 2. DEFENSIVE COVERAGE (Horizontal Bar)
-                const defLabels = Object.keys(defForms).sort((a, b) => defForms[b] - defForms[a]);
-                const defData = defLabels.map(k => defForms[k]);
-
-                new Chart(document.getElementById('chart-def-form'), {
-                    type: 'bar',
-                    indexAxis: 'y', // Horizontal
-                    data: {
-                        labels: defLabels,
-                        datasets: [{
-                            label: 'Frequency',
-                            data: defData,
-                            backgroundColor: '#ef4444',
-                            barThickness: 20,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                            y: { grid: { display: false }, ticks: { color: 'white', font: { size: 11 } } }
-                        },
-                        onClick: (e, elements) => {
-                            if (elements.length > 0) {
-                                const label = defLabels[elements[0].index];
-                                UI.playClip(drillDownMap.coverage[label][0]._id || drillDownMap.coverage[label][0].id);
-                                document.getElementById('stats-modal').style.display = 'none';
-                            }
-                        }
-                    }
-                });
-
-                // 3. Efficiency Matrix (Table)
-                const table = document.getElementById('efficiency-table');
-                let headerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead>`;
-                let bodyHTML = `<tbody>`;
-                Object.keys(matrix).forEach(off => {
-                    let row = `<tr><td><strong style="color:white;">${off}</strong></td>`;
-                    Object.keys(defForms).forEach(def => {
-                        const cell = matrix[off][def];
-                        if (cell) {
-                            const pct = Math.round((cell.s / cell.p) * 100);
-                            const color = pct > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
-                            const text = pct > 50 ? '#34d399' : '#f87171';
-                            row += `<td style="cursor:pointer;" onclick="alert('Drilling into ${off} vs ${def}')"><div class="heat-cell" style="background:${color}; color:${text};">${pct}%</div></td>`;
-                        } else {
-                            row += `<td><span style="color:#444;">-</span></td>`;
-                        }
-                    });
-                    row += '</tr>';
-                    bodyHTML += row;
-                });
-                bodyHTML += `</tbody>`;
-                table.innerHTML = headerHTML + bodyHTML;
-
-                // 4. Coverage Vulnerability (Bar)
-                const covLabels = Object.keys(coverSuccess);
-                const covData = covLabels.map(c => Math.round((coverSuccess[c].s / coverSuccess[c].p) * 100));
-
-                new Chart(document.getElementById('chart-coverage'), {
-                    type: 'bar',
-                    indexAxis: 'y',
-                    data: {
-                        labels: covLabels,
-                        datasets: [{ label: 'Offensive Success %', data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        scales: { x: { max: 100, ticks: { color: '#888' } }, y: { ticks: { color: 'white' } } },
-                        plugins: { legend: { display: false } }
-                    }
-                });
-
-                // [PASTE THIS]
-                // 5. TOP CONCEPTS (Horizontal Bar)
-                // Sort by most frequent (High to Low) and take Top 8
-                const conLabels = Object.keys(concepts).sort((a, b) => concepts[b] - concepts[a]).slice(0, 8);
-                const conData = conLabels.map(k => concepts[k]);
-
-                new Chart(document.getElementById('chart-conflict'), {
-                    type: 'bar',
-                    indexAxis: 'y', // Makes the bars horizontal
-                    data: {
-                        labels: conLabels,
-                        datasets: [{
-                            label: 'Frequency',
-                            data: conData,
-                            backgroundColor: '#8b5cf6', // Purple color
-                            barThickness: 20,
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                            y: { grid: { display: false }, ticks: { color: 'white' } }
-                        },
-                        // Enable Click-to-Play
-                        onClick: (e, elements) => {
-                            if (elements.length > 0) {
-                                const label = conLabels[elements[0].index];
-                                // Play the most recent clip of this concept
-                                UI.playClip(drillDownMap.concept[label][0]._id || drillDownMap.concept[label][0].id);
-                                document.getElementById('stats-modal').style.display = 'none';
-                            }
-                        }
-                    }
-                });
-
-                // 6. FIELD VISION 2.0 (Vectors)
-                // Define the Custom Plugin for drawing play lines
+                // 3. PLUGIN: Vector Lines (Draws the Pass/Run paths)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
                         const { ctx, scales: { x, y } } = chart;
-                        
                         chart.data.datasets.forEach((dataset, i) => {
                             const meta = chart.getDatasetMeta(i);
                             if (meta.hidden) return;
-
                             dataset.data.forEach(point => {
-                                // Only draw lines for points that have start coordinates
                                 if (point.startX !== undefined) {
                                     ctx.save();
                                     ctx.beginPath();
-                                    
-                                    // Map data values to canvas pixels
                                     const x1 = x.getPixelForValue(point.startX);
                                     const y1 = y.getPixelForValue(point.startY);
                                     const x2 = x.getPixelForValue(point.endX);
                                     const y2 = y.getPixelForValue(point.endY);
-
+                                    
                                     ctx.moveTo(x1, y1);
                                     ctx.lineTo(x2, y2);
 
-                                    // Style based on play type
+                                    // Styling
                                     if(point.type === 'run') {
-                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; // White for Run
+                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; 
                                         ctx.lineWidth = 2;
                                     } else if (point.result === 'Incomplete') {
-                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; // Faint Red
+                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)'; 
                                         ctx.lineWidth = 1;
-                                        ctx.setLineDash([5, 5]); // Dashed line
+                                        ctx.setLineDash([5, 5]);
                                     } else {
-                                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)'; // Faint Green
-                                        ctx.lineWidth = 1;
+                                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)'; 
+                                        ctx.lineWidth = 1.5;
                                     }
-
                                     ctx.stroke();
                                     ctx.restore();
                                 }
@@ -2471,30 +2227,205 @@
                     }
                 };
 
-                // Destroy old chart if it exists
-                const chartFieldCanvas = document.getElementById('chart-field');
-                if (Chart.getChart(chartFieldCanvas)) {
-                    Chart.getChart(chartFieldCanvas).destroy();
-                }
+                // --- DATA PROCESSING ---
+                const allClips = Store.get('clips') || [];
+                
+                // Filters
+                const fDown = document.getElementById('filter-down').value;
+                const fDist = document.getElementById('filter-dist').value;
+                const fZone = document.getElementById('filter-zone').value;
 
-                new Chart(chartFieldCanvas, {
+                const clips = allClips.filter(c => {
+                    if (!c.fullData || !c.fullData.data) return false;
+                    const sit = c.fullData.data.situation || {};
+                    const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
+                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
+                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
+                    return matchDown && matchDist && matchZone;
+                });
+
+                // Cleanup Old Charts
+                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                });
+
+                if (clips.length === 0) return;
+
+                // Aggregators
+                const offForms = {};
+                const defForms = {};
+                const concepts = {}; 
+                const coverSuccess = {};    
+                const matrix = {};          
+                const passShots = [];
+                const runShots = [];
+                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
+
+                clips.forEach(c => {
+                    const d = c.fullData;
+                    const rng = getSeededRandom(c._id || c.id || "seed"); // Stable Randomness
+
+                    // 1. STANDARD AGGREGATIONS
+                    const off = d.data.o_formation || "Unknown";
+                    let def = d.data.d_formation || d.tactical_breakdown?.coverage_shell || "Unknown";
+                    if (def.includes("MOFC")) def = "Cover 1 / 3"; 
+                    if (def.includes("MOFO")) def = "Cover 2 / 4";
+                    
+                    const gradeNum = UI.gradeToNum(d.scouting_report?.report_card?.overall);
+                    const isSuccess = gradeNum >= 2.7; 
+
+                    offForms[off] = (offForms[off] || 0) + 1;
+                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = [];
+                    drillDownMap.formation[off].push(c);
+
+                    defForms[def] = (defForms[def] || 0) + 1;
+                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = [];
+                    drillDownMap.coverage[def].push(c);
+
+                    if(!matrix[off]) matrix[off] = {};
+                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    matrix[off][def].p++;
+                    if(isSuccess) matrix[off][def].s++;
+
+                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
+                    coverSuccess[def].p++;
+                    if(isSuccess) coverSuccess[def].s++;
+
+                    // Concepts
+                    let conceptName = d.tactical_breakdown?.concept || "Unknown";
+                    if (conceptName.length > 20) conceptName = conceptName.substring(0, 18) + "..";
+                    concepts[conceptName] = (concepts[conceptName] || 0) + 1;
+                    if (!drillDownMap.concept) drillDownMap.concept = {};
+                    if (!drillDownMap.concept[conceptName]) drillDownMap.concept[conceptName] = [];
+                    drillDownMap.concept[conceptName].push(c);
+
+                    // --- FIELD VISION MAPPING ---
+                    const playType = d.tactical_breakdown?.play_type || "Pass";
+                    const yards = d.tactical_breakdown?.yards_gained || 0;
+                    
+                    let startX = 26.65; 
+                    let startY = 0; // Relative LOS
+
+                    // A. PASSING
+                    if (playType.toLowerCase().includes("pass")) {
+                        const pass = d.tactical_breakdown?.pass_chart || {};
+                        
+                        // Start
+                        if(pass.start?.includes("Left")) startX = 20;
+                        if(pass.start?.includes("Right")) startX = 33;
+                        startY = -5;
+                        
+                        // End
+                        let endX = 26.65;
+                        const h = pass.end?.toLowerCase() || "";
+                        if (h.includes("left number")) endX = 8;
+                        else if (h.includes("left hash")) endX = 20;
+                        else if (h.includes("right hash")) endX = 33;
+                        else if (h.includes("right number")) endX = 45;
+                        
+                        // Seeded Randomness (Wobble)
+                        endX += (rng() * 4 - 2); 
+                        
+                        passShots.push({
+                            type: 'pass',
+                            startX: startX, startY: startY,
+                            endX: endX, endY: (pass.depth || yards),
+                            result: pass.result || "Complete",
+                            clipId: c._id || c.id
+                        });
+                    }
+                    
+                    // B. RUNNING
+                    else if (playType.toLowerCase().includes("run")) {
+                        const run = d.tactical_breakdown?.run_chart || {};
+                        let endX = 26.65;
+                        const dir = run.direction?.toLowerCase() || "middle";
+                        const gap = run.gap?.toLowerCase() || "a";
+                        
+                        const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
+                        const offset = offsets[gap] || 2;
+                        
+                        if (dir.includes("left")) endX -= offset;
+                        else if (dir.includes("right")) endX += offset;
+                        
+                        runShots.push({
+                            type: 'run',
+                            startX: 26.65, startY: -1,
+                            endX: endX, endY: yards,
+                            result: "Run",
+                            clipId: c._id || c.id
+                        });
+                    }
+                });
+
+                // --- RENDER VISUALS ---
+
+                // 1. OFFENSIVE FORMATION
+                const offLabels = Object.keys(offForms).sort((a,b) => offForms[b] - offForms[a]);
+                new Chart(document.getElementById('chart-off-form'), {
+                    type: 'bar', indexAxis: 'y',
+                    data: { labels: offLabels, datasets: [{ label: 'Frequency', data: offLabels.map(k=>offForms[k]), backgroundColor: '#38bdf8', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { display: false }, ticks: { color: 'white' } } }, onClick: (e, els) => { if(els.length) UI.playClip(drillDownMap.formation[offLabels[els[0].index]][0]._id || drillDownMap.formation[offLabels[els[0].index]][0].id); } }
+                });
+
+                // 2. DEFENSIVE FORMATION
+                const defLabels = Object.keys(defForms).sort((a,b) => defForms[b] - defForms[a]);
+                new Chart(document.getElementById('chart-def-form'), {
+                    type: 'bar', indexAxis: 'y',
+                    data: { labels: defLabels, datasets: [{ label: 'Frequency', data: defLabels.map(k=>defForms[k]), backgroundColor: '#ef4444', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { display: false }, ticks: { color: 'white' } } }, onClick: (e, els) => { if(els.length) UI.playClip(drillDownMap.coverage[defLabels[els[0].index]][0]._id || drillDownMap.coverage[defLabels[els[0].index]][0].id); } }
+                });
+
+                // 3. TABLE RENDER
+                const table = document.getElementById('efficiency-table');
+                let headerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>`;
+                Object.keys(matrix).forEach(off => {
+                    let row = `<tr><td><strong style="color:white;">${off}</strong></td>`;
+                    Object.keys(defForms).forEach(def => {
+                        const cell = matrix[off][def];
+                        if(cell) {
+                            const pct = Math.round((cell.s / cell.p) * 100);
+                            const color = pct > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                            const text = pct > 50 ? '#34d399' : '#f87171';
+                            row += `<td style="cursor:pointer;" onclick="alert('Drilling into ${off} vs ${def}')"><div class="heat-cell" style="background:${color}; color:${text};">${pct}%</div></td>`;
+                        } else { row += `<td><span style="color:#444;">-</span></td>`; }
+                    });
+                    headerHTML += row + '</tr>';
+                });
+                table.innerHTML = headerHTML + `</tbody>`;
+
+                // 4. COVERAGE VULN
+                const covLabels = Object.keys(coverSuccess);
+                const covData = covLabels.map(c => Math.round((coverSuccess[c].s / coverSuccess[c].p) * 100));
+                new Chart(document.getElementById('chart-coverage'), {
+                    type: 'bar', indexAxis: 'y',
+                    data: { labels: covLabels, datasets: [{ data: covData, backgroundColor: covData.map(v => v > 50 ? '#10b981' : '#ef4444') }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } }
+                });
+
+                // 5. CONCEPTS
+                const conLabels = Object.keys(concepts).sort((a,b) => concepts[b] - concepts[a]).slice(0, 8);
+                new Chart(document.getElementById('chart-conflict'), {
+                    type: 'bar', indexAxis: 'y',
+                    data: { labels: conLabels, datasets: [{ data: conLabels.map(k => concepts[k]), backgroundColor: '#8b5cf6', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { display: false }, ticks: { color: 'white' } } }, onClick: (e, els) => { if(els.length) UI.playClip(drillDownMap.concept[conLabels[els[0].index]][0]._id || drillDownMap.concept[conLabels[els[0].index]][0].id); } }
+                });
+
+                // 6A. PASSING CHART (New Scatter)
+                new Chart(document.getElementById('chart-field-pass'), {
                     type: 'scatter',
                     data: {
                         datasets: [
                             { 
-                                label: 'Pass (Complete)', 
-                                data: fieldShots.filter(s => s.type === 'pass' && s.result === 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                label: 'Complete', 
+                                data: passShots.filter(s => s.result === 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
                                 backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 
                             },
                             { 
-                                label: 'Pass (Incomplete)', 
-                                data: fieldShots.filter(s => s.type === 'pass' && s.result !== 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                label: 'Incomplete', 
+                                data: passShots.filter(s => s.result !== 'Complete').map(s => ({x: s.endX, y: s.endY, ...s})), 
                                 backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 
-                            },
-                            { 
-                                label: 'Run', 
-                                data: fieldShots.filter(s => s.type === 'run').map(s => ({x: s.endX, y: s.endY, ...s})), 
-                                backgroundColor: '#ffffff', pointStyle: 'rectRot', radius: 3 
                             }
                         ]
                     },
@@ -2507,20 +2438,43 @@
                         plugins: { legend: { labels: { color:'white' } } },
                         onClick: (e, elements, chart) => {
                             if (elements.length > 0) {
-                                const datasetIndex = elements[0].datasetIndex;
-                                const index = elements[0].index;
-                                const point = chart.data.datasets[datasetIndex].data[index];
-                                if(point.clipId) {
-                                    UI.playClip(point.clipId);
-                                    document.getElementById('stats-modal').style.display = 'none';
-                                }
+                                const pt = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index];
+                                if(pt.clipId) { UI.playClip(pt.clipId); document.getElementById('stats-modal').style.display='none'; }
                             }
                         }
                     },
-                    plugins: [vectorPlugin] // Activate our new drawing tool
+                    plugins: [footballFieldPlugin, vectorPlugin]
+                });
+
+                // 6B. RUNNING CHART (New Scatter)
+                new Chart(document.getElementById('chart-field-run'), {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            { 
+                                label: 'Run', 
+                                data: runShots.map(s => ({x: s.endX, y: s.endY, ...s})), 
+                                backgroundColor: '#ffffff', pointStyle: 'rectRot', radius: 3 
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { display: false, min: 0, max: 53.3 }, 
+                            y: { display: false, min: -10, max: 30 } // Zoomed in for runs
+                        },
+                        plugins: { legend: { display: false } },
+                        onClick: (e, elements, chart) => {
+                            if (elements.length > 0) {
+                                const pt = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index];
+                                if(pt.clipId) { UI.playClip(pt.clipId); document.getElementById('stats-modal').style.display='none'; }
+                            }
+                        }
+                    },
+                    plugins: [footballFieldPlugin, vectorPlugin]
                 });
             },
-            // --- NEW: Context Editor Logic ---
 
             // 1. OPEN EDITOR (Populates the modal with current clip data)
             openContextEditor: (clipId) => {
