@@ -1126,16 +1126,15 @@
             width: 60px;
         }
 
-        /* 6. Field Vision Background */
+        /* [FIX: CLEARS CSS BACKGROUND SO CHART CAN DRAW THE LINES] */
         .football-field {
-            background: linear-gradient(180deg, #355e3b 0%, #355e3b 100%);
-            border: 2px solid white;
-            position: relative;
             width: 100%;
             height: 100%;
+            position: relative;
+            background: #111; /* Dark grey, allows chart to draw the grass */
+            border: 1px solid #333;
             border-radius: 4px;
-            /* Yard lines pattern */
-            background-image: repeating-linear-gradient(0deg, transparent, transparent 19%, rgba(255, 255, 255, 0.3) 20%);
+            overflow: hidden;
         }
 
         /* --- CONTEXT EDITOR STYLES --- */
@@ -1191,9 +1190,9 @@
         #edit-context-modal .input-box:focus {
             border-color: var(--accent);
         }
-        /* --- FIX: Force Context Editor above Cinema Mode --- */
+        /* [FIX: FORCE EDIT MODAL TO BE THE TOPMOST LAYER] */
         #edit-context-modal {
-            z-index: 6000 !important; /* Must be higher than #analysis-overlay (5000) */
+            z-index: 9999 !important;
         }
     </style>
 </head>
@@ -1805,18 +1804,7 @@
             }
         };
 
-        /**
-         * 4. UI MANAGER
-         * Controls Tabs, Chat History Switching, and Modal visibility.
-         */
-        /**
-         * 4. UI MANAGER
-         * Controls Tabs, Chat History Switching, and Modal visibility.
-         */
-        /**
-         * 4. UI MANAGER
-         * Controls Tabs, Chat History Switching, and Modal visibility.
-         */
+        
         const UI = {
             currentMode: 'about',
             activeSessionId: null,
@@ -1912,6 +1900,8 @@
             toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
             toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
             toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+            // [FIX: ADDS THE MISSING CLOSE FUNCTION]
+            closeOverlay: () => Telestrator.close(),
 
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
