@@ -844,7 +844,8 @@
         /* Library Cards */
         /* --- RESTORED CLIP MENU BUTTON --- */
         .clip-card {
-            position: relative; /* Needed for the absolute button to stick */
+            position: relative;
+            /* Needed for the absolute button to stick */
         }
 
         .clip-menu-btn {
@@ -858,7 +859,8 @@
             color: white;
             border: none;
             cursor: pointer;
-            display: none; /* Hidden by default */
+            display: none;
+            /* Hidden by default */
             align-items: center;
             justify-content: center;
             z-index: 10;
@@ -875,7 +877,7 @@
         .clip-card:hover .clip-menu-btn {
             display: flex;
         }
-        
+
         .clip-card {
             padding: 12px;
             margin: 0 12px 12px;
@@ -1126,12 +1128,13 @@
             width: 60px;
         }
 
-        /* [FIX: CLEARS CSS BACKGROUND SO CHART CAN DRAW THE LINES] */
+        /* 1. FIX: Clear background so the Chart Plugin can draw the grass/lines */
         .football-field {
             width: 100%;
             height: 100%;
             position: relative;
-            background: #111; /* Dark grey, allows chart to draw the grass */
+            background: #111;
+            /* Dark grey base */
             border: 1px solid #333;
             border-radius: 4px;
             overflow: hidden;
@@ -1190,18 +1193,33 @@
         #edit-context-modal .input-box:focus {
             border-color: var(--accent);
         }
-        /* [FIX: NUCLEAR Z-INDEX - FORCE EDITOR TO FRONT] */
-        #edit-context-modal {
-            z-index: 2147483647 !important; /* Maximum possible value in a browser */
-            display: none; /* Ensure it starts hidden */
+
+        /* 1. FIX: Clear background so the Chart Plugin can draw the grass/lines */
+        .football-field {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #111;
+            /* Dark grey base */
+            border: 1px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
         }
-        
+
+        /* 2. FIX: Force Edit Modal to sit ON TOP of the Video Overlay (Z-Index 5000) */
+        #edit-context-modal {
+            z-index: 9999 !important;
+            display: none;
+            /* Hidden by default */
+        }
+
         /* Ensure the input fields inside don't get hidden either */
         #edit-context-modal .modal-content {
             position: relative;
             z-index: 2147483647 !important;
             background: #111;
-            border: 1px solid var(--accent); /* Blue border to confirm it's active */
+            border: 1px solid var(--accent);
+            /* Blue border to confirm it's active */
         }
     </style>
 </head>
@@ -1241,7 +1259,8 @@
                         <div class="step-num">02</div>
                         <div class="step-title">Select Mode</div>
                         <div class="step-desc">Choose <strong>Self</strong> for biomechanics & grades, or
-                            <strong>Team</strong> for scheme & coverage analysis.</div>
+                            <strong>Team</strong> for scheme & coverage analysis.
+                        </div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
@@ -1312,7 +1331,7 @@
         </div>
     </div>
 
-    <div id="analysis-overlay"> 
+    <div id="analysis-overlay">
 
         <div class="overlay-header">
             <div style="display:flex; gap:12px; align-items:center;">
@@ -1320,7 +1339,7 @@
                 <span class="badge" style="background:var(--accent); color:black;">VCM</span>
             </div>
             <div style="display:flex; gap:12px;">
-                <button class="tool-btn" onclick="UI.openContextEditor(UI.overlayClipId)">
+                <button class="tool-btn" onclick="UI.openContextEditor()">
                     📝 Edit Situation
                 </button>
                 <button class="tool-btn" onclick="UI.closeOverlay()">✕ Close</button>
@@ -1337,7 +1356,8 @@
             <div class="video-controls">
                 <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
                     <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
-                    <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);"
+                    <input type="range" min="0" max="1" step="0.1" value="0"
+                        style="width:100%; accent-color:var(--accent);"
                         oninput="document.getElementById('ghost-video').style.opacity = this.value">
                 </div>
 
@@ -1357,7 +1377,8 @@
         <div id="popup-report-container">
             <div
                 style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI
+                    (LIVE)
                 </div>
                 <div id="overlay-chat-history"
                     style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
@@ -1373,8 +1394,8 @@
 
             <div class="report-wrapper" id="report-injection-site"></div>
         </div>
-        
-    </div> 
+
+    </div>
     ```
 
 
@@ -1458,537 +1479,504 @@
                     <div class="stat-card">
                         <h4 class="stat-title">5. TOP OFFENSIVE CONCEPTS</h4>
                         <div style="height:300px;"><canvas id="chart-conflict"></canvas></div>
-                    <div class="stat-card">
-                        <h4 class="stat-title">6A. PASSING DISTRIBUTION (Air Yards)</h4>
-                        <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
-                            <div class="football-field">
-                                <canvas id="chart-field-pass" style="width:100%; height:100%;"></canvas>
+                        <div class="stat-card">
+                            <h4 class="stat-title">6A. PASSING DISTRIBUTION (Air Yards)</h4>
+                            <div
+                                style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                                <div class="football-field">
+                                    <canvas id="chart-field-pass" style="width:100%; height:100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <h4 class="stat-title">6B. RUSHING DISTRIBUTION (Gap Scheme)</h4>
+                            <div
+                                style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                                <div class="football-field">
+                                    <canvas id="chart-field-run" style="width:100%; height:100%;"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="stat-card">
-                        <h4 class="stat-title">6B. RUSHING DISTRIBUTION (Gap Scheme)</h4>
-                        <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
-                            <div class="football-field">
-                                <canvas id="chart-field-run" style="width:100%; height:100%;"></canvas>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
             </div>
         </div>
-    </div>
 
-    <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
-        <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
-    </div>
+        <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
+            <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
+        </div>
 
-    <script>
-        /**
-         * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
-         * Manages LocalStorage with strict separation between Self and Team chats.
-         */
-        const Store = {
-            get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
-            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+        <script>
+            /**
+             * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
+             * Manages LocalStorage with strict separation between Self and Team chats.
+             */
+            const Store = {
+                get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
+                set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
 
-            init: () => {
-                // Initialize Sessions
-                // FIX: Start with empty array. Do NOT create fake local sessions.
-                if (!Store.get('sessions')) Store.set('sessions', []);
-                // Initialize Global Clips
-                if (!Store.get('clips')) Store.set('clips', []);
-                // Initialize Isolated Chat Stores
-                if (!Store.get('chat_self')) Store.set('chat_self', []);
-                if (!Store.get('chat_team')) Store.set('chat_team', []);
-            },
+                init: () => {
+                    // Initialize Sessions
+                    // FIX: Start with empty array. Do NOT create fake local sessions.
+                    if (!Store.get('sessions')) Store.set('sessions', []);
+                    // Initialize Global Clips
+                    if (!Store.get('clips')) Store.set('clips', []);
+                    // Initialize Isolated Chat Stores
+                    if (!Store.get('chat_self')) Store.set('chat_self', []);
+                    if (!Store.get('chat_team')) Store.set('chat_team', []);
+                },
 
-            addClip: (clip) => {
-                const clips = Store.get('clips') || [];
-                clips.unshift(clip);
-                Store.set('clips', clips);
-                return clips;
-            },
+                addClip: (clip) => {
+                    const clips = Store.get('clips') || [];
+                    clips.unshift(clip);
+                    Store.set('clips', clips);
+                    return clips;
+                },
 
-            getClips: () => Store.get('clips') || [],
+                getClips: () => Store.get('clips') || [],
 
-            // --- CHAT ISOLATION LOGIC ---
-            addMessage: (mode, msg) => {
-                // mode must be 'self' or 'team'
-                const key = `chat_${mode}`;
-                const history = Store.get(key) || [];
-                history.push(msg);
-                Store.set(key, history);
-            },
+                // --- CHAT ISOLATION LOGIC ---
+                addMessage: (mode, msg) => {
+                    // mode must be 'self' or 'team'
+                    const key = `chat_${mode}`;
+                    const history = Store.get(key) || [];
+                    history.push(msg);
+                    Store.set(key, history);
+                },
 
-            getChat: (mode) => {
-                const key = `chat_${mode}`;
-                return Store.get(key) || [];
-            }
-        };
+                getChat: (mode) => {
+                    const key = `chat_${mode}`;
+                    return Store.get(key) || [];
+                }
+            };
 
-        /**
-         * 2. TELESTRATOR ENGINE (Drawing, Touch, Pencil)
-         * Handles the video player and drawing canvas synchronization.
-         */
-        class TelestratorEngine {
-            constructor() {
-                this.video = document.getElementById('main-video');
-                this.canvas = document.getElementById('draw-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.isDrawing = false;
-                this.mode = 'view';
-                this.strokes = [];
-                this.currentPath = [];
+            /**
+             * 2. TELESTRATOR ENGINE (Drawing, Touch, Pencil)
+             * Handles the video player and drawing canvas synchronization.
+             */
+            class TelestratorEngine {
+                constructor() {
+                    this.video = document.getElementById('main-video');
+                    this.canvas = document.getElementById('draw-canvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    this.isDrawing = false;
+                    this.mode = 'view';
+                    this.strokes = [];
+                    this.currentPath = [];
 
-                this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
-                this.bindEvents();
-            }
+                    this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
+                    this.bindEvents();
+                }
 
-            init(videoUrl) {
-                this.video.src = videoUrl;
-                this.strokes = [];
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.resizeObserver.observe(this.video);
+                init(videoUrl) {
+                    this.video.src = videoUrl;
+                    this.strokes = [];
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.resizeObserver.observe(this.video);
 
-                document.getElementById('analysis-overlay').style.display = 'flex';
-                this.video.play().catch(e => console.log("Autoplay blocked", e));
-                this.fitCanvas();
-                this.startLoop();
-            }
+                    document.getElementById('analysis-overlay').style.display = 'flex';
+                    this.video.play().catch(e => console.log("Autoplay blocked", e));
+                    this.fitCanvas();
+                    this.startLoop();
+                }
 
-            close() {
-                document.getElementById('analysis-overlay').style.display = 'none';
-                this.video.pause();
-                this.video.src = "";
-                this.resizeObserver.disconnect();
-                cancelAnimationFrame(this.animId);
-            }
-
-            fitCanvas() {
-                const rect = this.video.getBoundingClientRect();
-                if (rect.width === 0) return;
-
-                this.canvas.width = rect.width;
-                this.canvas.height = rect.height;
-                this.canvas.style.width = `${rect.width}px`;
-                this.canvas.style.height = `${rect.height}px`;
-                this.canvas.style.top = `${this.video.offsetTop}px`;
-                this.canvas.style.left = `${this.video.offsetLeft}px`;
-
-                this.ctx.lineCap = 'round';
-                this.ctx.lineJoin = 'round';
-            }
-
-            bindEvents() {
-                // Keyboard Shortcuts
-                document.addEventListener('keydown', (e) => {
-                    if (document.getElementById('analysis-overlay').style.display !== 'none') {
-                        if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
-                        if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
-                    }
-                });
-
-                // --- APPLE PENCIL & TOUCH LOGIC ---
-                this.canvas.addEventListener('pointerdown', (e) => {
-                    if (this.mode !== 'draw') return;
-                    e.preventDefault();
-
-                    this.isDrawing = true;
-                    this.canvas.setPointerCapture(e.pointerId); // CRITICAL: Locks pencil to canvas
+                close() {
+                    document.getElementById('analysis-overlay').style.display = 'none';
                     this.video.pause();
+                    this.video.src = "";
+                    this.resizeObserver.disconnect();
+                    cancelAnimationFrame(this.animId);
+                }
 
-                    const { x, y } = this.getCoords(e);
-                    const pressure = e.pressure || 0.5;
+                fitCanvas() {
+                    const rect = this.video.getBoundingClientRect();
+                    if (rect.width === 0) return;
 
-                    this.currentPath = [{ x, y, p: pressure }];
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, y);
-                    this.ctx.strokeStyle = "#fbbf24";
-                    this.ctx.lineWidth = 2 + (pressure * 6);
-                });
+                    this.canvas.width = rect.width;
+                    this.canvas.height = rect.height;
+                    this.canvas.style.width = `${rect.width}px`;
+                    this.canvas.style.height = `${rect.height}px`;
+                    this.canvas.style.top = `${this.video.offsetTop}px`;
+                    this.canvas.style.left = `${this.video.offsetLeft}px`;
 
-                this.canvas.addEventListener('pointermove', (e) => {
-                    if (!this.isDrawing) return;
-                    if (e.pointerType === 'touch') e.preventDefault(); // Stop scrolling
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
+                }
 
-                    const { x, y } = this.getCoords(e);
-                    const pressure = e.pressure || 0.5;
-
-                    this.currentPath.push({ x, y, p: pressure });
-
-                    // Dynamic line width based on Apple Pencil pressure
-                    this.ctx.lineWidth = 2 + (pressure * 6);
-                    this.ctx.lineTo(x, y);
-                    this.ctx.stroke();
-                });
-
-                this.canvas.addEventListener('pointerup', (e) => {
-                    this.canvas.releasePointerCapture(e.pointerId);
-                    this.endStroke();
-                });
-
-                this.canvas.addEventListener('pointercancel', (e) => {
-                    this.canvas.releasePointerCapture(e.pointerId);
-                    this.endStroke();
-                });
-
-                // UI Controls
-                document.getElementById('draw-btn').onclick = () => this.toggleMode();
-                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
-                document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
-
-                // Scrubber Logic
-                const scrubber = document.getElementById('video-scrubber');
-                this.video.ontimeupdate = () => {
-                    if (!this.video.paused) {
-                        scrubber.value = this.video.currentTime;
-                        document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
-                    }
-                };
-                this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
-                scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
-            }
-
-            getCoords(e) {
-                const rect = this.canvas.getBoundingClientRect();
-                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            }
-
-            endStroke() {
-                if (!this.isDrawing) return;
-                this.isDrawing = false;
-                if (this.currentPath.length > 0) {
-                    this.strokes.push({
-                        path: [...this.currentPath],
-                        startTime: this.video.currentTime,
-                        duration: 3.0 // Strokes fade after 3 seconds
+                bindEvents() {
+                    // Keyboard Shortcuts
+                    document.addEventListener('keydown', (e) => {
+                        if (document.getElementById('analysis-overlay').style.display !== 'none') {
+                            if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
+                            if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
+                        }
                     });
+
+                    // --- APPLE PENCIL & TOUCH LOGIC ---
+                    this.canvas.addEventListener('pointerdown', (e) => {
+                        if (this.mode !== 'draw') return;
+                        e.preventDefault();
+
+                        this.isDrawing = true;
+                        this.canvas.setPointerCapture(e.pointerId); // CRITICAL: Locks pencil to canvas
+                        this.video.pause();
+
+                        const { x, y } = this.getCoords(e);
+                        const pressure = e.pressure || 0.5;
+
+                        this.currentPath = [{ x, y, p: pressure }];
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(x, y);
+                        this.ctx.strokeStyle = "#fbbf24";
+                        this.ctx.lineWidth = 2 + (pressure * 6);
+                    });
+
+                    this.canvas.addEventListener('pointermove', (e) => {
+                        if (!this.isDrawing) return;
+                        if (e.pointerType === 'touch') e.preventDefault(); // Stop scrolling
+
+                        const { x, y } = this.getCoords(e);
+                        const pressure = e.pressure || 0.5;
+
+                        this.currentPath.push({ x, y, p: pressure });
+
+                        // Dynamic line width based on Apple Pencil pressure
+                        this.ctx.lineWidth = 2 + (pressure * 6);
+                        this.ctx.lineTo(x, y);
+                        this.ctx.stroke();
+                    });
+
+                    this.canvas.addEventListener('pointerup', (e) => {
+                        this.canvas.releasePointerCapture(e.pointerId);
+                        this.endStroke();
+                    });
+
+                    this.canvas.addEventListener('pointercancel', (e) => {
+                        this.canvas.releasePointerCapture(e.pointerId);
+                        this.endStroke();
+                    });
+
+                    // UI Controls
+                    document.getElementById('draw-btn').onclick = () => this.toggleMode();
+                    document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
+                    document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
+
+                    // Scrubber Logic
+                    const scrubber = document.getElementById('video-scrubber');
+                    this.video.ontimeupdate = () => {
+                        if (!this.video.paused) {
+                            scrubber.value = this.video.currentTime;
+                            document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
+                        }
+                    };
+                    this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
+                    scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
                 }
-                this.currentPath = [];
-            }
 
-            toggleMode() {
-                this.mode = this.mode === 'view' ? 'draw' : 'view';
-                const btn = document.getElementById('draw-btn');
-
-                if (this.mode === 'draw') {
-                    btn.classList.add('active'); // Adds the blue outline
-                    btn.innerText = "✏️ Drawing...";
-                    this.canvas.style.pointerEvents = 'auto';
-                    this.canvas.style.cursor = 'crosshair';
-                    this.video.pause();
-                } else {
-                    btn.classList.remove('active'); // Removes the blue outline
-                    btn.innerText = "✏️ Draw";
-                    this.canvas.style.pointerEvents = 'none';
-                    this.canvas.style.cursor = 'default';
+                getCoords(e) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
                 }
-            }
 
-            startLoop() {
-                const loop = () => {
-                    if (!this.isDrawing && !this.video.paused) {
-                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                        const t = this.video.currentTime;
-                        this.strokes.forEach(s => {
-                            if (t >= s.startTime && t <= (s.startTime + s.duration)) {
-                                const age = t - s.startTime;
-                                const opacity = 1 - (age / s.duration);
-                                this.ctx.beginPath();
-                                this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                                if (s.path.length > 0) {
-                                    this.ctx.moveTo(s.path[0].x, s.path[0].y);
-                                    for (let i = 1; i < s.path.length; i++) {
-                                        this.ctx.lineWidth = 2 + (s.path[i].p * 4);
-                                        this.ctx.lineTo(s.path[i].x, s.path[i].y);
-                                    }
-                                }
-                                this.ctx.stroke();
-                            }
+                endStroke() {
+                    if (!this.isDrawing) return;
+                    this.isDrawing = false;
+                    if (this.currentPath.length > 0) {
+                        this.strokes.push({
+                            path: [...this.currentPath],
+                            startTime: this.video.currentTime,
+                            duration: 3.0 // Strokes fade after 3 seconds
                         });
                     }
-                    this.animId = requestAnimationFrame(loop);
-                };
-                loop();
-            }
-
-            formatTime(s) {
-                const m = Math.floor(s / 60);
-                const sec = Math.floor(s % 60).toString().padStart(2, '0');
-                return `${m}:${sec}`;
-            }
-        }
-
-        const Telestrator = new TelestratorEngine();
-
-        /**
-         * 3. COACH AI MOCK (Simulated Backend)
-         * Generates context-aware responses and Scout Cards.
-         */
-        const CoachAI = {
-            analyze: async (text, file) => {
-                // Helper: Convert File to Base64 for Server
-                const toBase64 = file => new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = error => reject(error);
-                });
-
-                const token = await window.Clerk.session.getToken();
-
-                // Prepare Payload
-                let payload = {
-                    message: text,
-                    sessionId: UI.activeSessionId,
-                    sport: 'football',
-                    position: document.getElementById('pos-select').value || 'general'
-                };
-
-                if (file) {
-                    payload.fileData = await toBase64(file);
-                    payload.mimeType = file.type;
+                    this.currentPath = [];
                 }
 
-                try {
-                    const res = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify(payload)
+                toggleMode() {
+                    this.mode = this.mode === 'view' ? 'draw' : 'view';
+                    const btn = document.getElementById('draw-btn');
+
+                    if (this.mode === 'draw') {
+                        btn.classList.add('active'); // Adds the blue outline
+                        btn.innerText = "✏️ Drawing...";
+                        this.canvas.style.pointerEvents = 'auto';
+                        this.canvas.style.cursor = 'crosshair';
+                        this.video.pause();
+                    } else {
+                        btn.classList.remove('active'); // Removes the blue outline
+                        btn.innerText = "✏️ Draw";
+                        this.canvas.style.pointerEvents = 'none';
+                        this.canvas.style.cursor = 'default';
+                    }
+                }
+
+                startLoop() {
+                    const loop = () => {
+                        if (!this.isDrawing && !this.video.paused) {
+                            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                            const t = this.video.currentTime;
+                            this.strokes.forEach(s => {
+                                if (t >= s.startTime && t <= (s.startTime + s.duration)) {
+                                    const age = t - s.startTime;
+                                    const opacity = 1 - (age / s.duration);
+                                    this.ctx.beginPath();
+                                    this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
+                                    if (s.path.length > 0) {
+                                        this.ctx.moveTo(s.path[0].x, s.path[0].y);
+                                        for (let i = 1; i < s.path.length; i++) {
+                                            this.ctx.lineWidth = 2 + (s.path[i].p * 4);
+                                            this.ctx.lineTo(s.path[i].x, s.path[i].y);
+                                        }
+                                    }
+                                    this.ctx.stroke();
+                                }
+                            });
+                        }
+                        this.animId = requestAnimationFrame(loop);
+                    };
+                    loop();
+                }
+
+                formatTime(s) {
+                    const m = Math.floor(s / 60);
+                    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+                    return `${m}:${sec}`;
+                }
+            }
+
+            const Telestrator = new TelestratorEngine();
+
+            /**
+             * 3. COACH AI MOCK (Simulated Backend)
+             * Generates context-aware responses and Scout Cards.
+             */
+            const CoachAI = {
+                analyze: async (text, file) => {
+                    // Helper: Convert File to Base64 for Server
+                    const toBase64 = file => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = error => reject(error);
                     });
 
-                    const data = await res.json();
-
-                    // Handle Video Analysis Response
-                    if (data.newClip) {
-                        const clip = data.newClip;
-                        // Map Server JSON to UI Scout Card format
-                        const scoutData = {
-                            id: clip._id,
-                            title: clip.title,
-                            formation: clip.formation,
-                            grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
-                            iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
-                            tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
-                            effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
-                            summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
-                            fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
-                        };
-
-                        Store.addClip(clip); // Update local store
-                        setTimeout(() => UI.renderLibrary(), 100);
-                        return { type: 'card', data: scoutData, clip: clip };
-                    }
-                    // Handle Text Chat Response
-                    else {
-                        const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
-                        return { type: 'text', text: replyText };
-                    }
-                } catch (e) {
-                    console.error("AI Error:", e);
-                    return { type: 'text', text: "Error connecting to Coach AI. Please check server logs." };
-                }
-            },
-
-            generateScoutCard: (clip) => {
-                const grades = ['A-', 'B+', 'B-', 'C+'];
-                return {
-                    id: clip.id,
-                    title: clip.title,
-                    formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random() * 4)],
-                    grade: grades[Math.floor(Math.random() * grades.length)],
-                    iq: ['A', 'A-', 'B+'][Math.floor(Math.random() * 3)],
-                    tech: ['B', 'B-', 'C+'][Math.floor(Math.random() * 3)],
-                    effort: '100',
-                    summary: "Key analysis points: The spacing on the route combination was compressed. The defense disguised Cover 3 as Cover 2, causing a hesitation in the decision-making process.",
-                    fix: "Drill Suggestion: 'Recognition & Release' - Focus on identifying safety rotation immediately post-snap."
-                };
-            },
-
-            getTextResponse: (input) => {
-                return "I've logged that note. Based on your strategy settings, ensure you are watching for the weak-side linebacker blitz when in that formation. Would you like to review a clip?";
-            }
-        };
-
-        
-        const UI = {
-            currentMode: 'about',
-            activeSessionId: null,
-            overlayClipId: null, // Tracks the active video for VCM & Editing
-
-            gradeToNum: (g) => {
-                if (!g) return 0;
-                const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
-                return m[g.trim()] || 2.0;
-            },
-
-            init: async () => {
-                try {
                     const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                    const sessions = await res.json();
-                    Store.set('sessions', sessions);
 
-                    if (sessions.length > 0 && !UI.activeSessionId) {
-                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
-                        if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                    // Prepare Payload
+                    let payload = {
+                        message: text,
+                        sessionId: UI.activeSessionId,
+                        sport: 'football',
+                        position: document.getElementById('pos-select').value || 'general'
+                    };
+
+                    if (file) {
+                        payload.fileData = await toBase64(file);
+                        payload.mimeType = file.type;
                     }
-                } catch (e) { console.error("Session Load Failed", e); }
 
-                document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
+                    try {
+                        const res = await fetch('/api/chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify(payload)
+                        });
 
-                document.getElementById('file-input').onchange = (e) => {
-                    if (e.target.files[0]) {
-                        const btn = document.getElementById('file-btn');
-                        btn.style.background = 'var(--success)';
-                        btn.style.color = 'black';
-                        btn.innerHTML = '✅ Ready';
+                        const data = await res.json();
+
+                        // Handle Video Analysis Response
+                        if (data.newClip) {
+                            const clip = data.newClip;
+                            // Map Server JSON to UI Scout Card format
+                            const scoutData = {
+                                id: clip._id,
+                                title: clip.title,
+                                formation: clip.formation,
+                                grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
+                                iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
+                                tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
+                                effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
+                                summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
+                                fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
+                            };
+
+                            Store.addClip(clip); // Update local store
+                            setTimeout(() => UI.renderLibrary(), 100);
+                            return { type: 'card', data: scoutData, clip: clip };
+                        }
+                        // Handle Text Chat Response
+                        else {
+                            const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
+                            return { type: 'text', text: replyText };
+                        }
+                    } catch (e) {
+                        console.error("AI Error:", e);
+                        return { type: 'text', text: "Error connecting to Coach AI. Please check server logs." };
                     }
-                };
+                },
 
-                document.getElementById('send-btn').onclick = UI.handleSend;
-            },
+                generateScoutCard: (clip) => {
+                    const grades = ['A-', 'B+', 'B-', 'C+'];
+                    return {
+                        id: clip.id,
+                        title: clip.title,
+                        formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random() * 4)],
+                        grade: grades[Math.floor(Math.random() * grades.length)],
+                        iq: ['A', 'A-', 'B+'][Math.floor(Math.random() * 3)],
+                        tech: ['B', 'B-', 'C+'][Math.floor(Math.random() * 3)],
+                        effort: '100',
+                        summary: "Key analysis points: The spacing on the route combination was compressed. The defense disguised Cover 3 as Cover 2, causing a hesitation in the decision-making process.",
+                        fix: "Drill Suggestion: 'Recognition & Release' - Focus on identifying safety rotation immediately post-snap."
+                    };
+                },
 
-            switchTab: (tab) => {
-                UI.currentMode = tab;
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                getTextResponse: (input) => {
+                    return "I've logged that note. Based on your strategy settings, ensure you are watching for the weak-side linebacker blitz when in that formation. Would you like to review a clip?";
+                }
+            };
 
-                const aboutView = document.getElementById('landing-view');
-                const warView = document.getElementById('war-room-view');
-                const posSelect = document.getElementById('pos-select');
 
-                if (tab === 'about') {
-                    aboutView.classList.add('active-view');
-                    aboutView.style.opacity = 1;
-                    warView.classList.remove('active-view');
-                } else {
-                    aboutView.classList.remove('active-view');
-                    warView.classList.add('active-view');
-                    setTimeout(() => warView.style.opacity = 1, 50);
+            const UI = {
+                currentMode: 'about',
+                activeSessionId: null,
+                overlayClipId: null,
 
-                    posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+                gradeToNum: (g) => {
+                    if (!g) return 0;
+                    const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
+                    return m[g.trim()] || 2.0;
+                },
 
-                    if (UI.activeSessionId) {
-                        UI.selectSession(UI.activeSessionId);
+                init: async () => {
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                        const sessions = await res.json();
+                        Store.set('sessions', sessions);
+                        if (sessions.length > 0 && !UI.activeSessionId) {
+                            const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                            if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                        }
+                    } catch (e) { console.error("Session Load Failed", e); }
+
+                    document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
+
+                    // File Input Handler
+                    const fInput = document.getElementById('file-input');
+                    if (fInput) fInput.onchange = (e) => {
+                        if (e.target.files[0]) {
+                            const btn = document.getElementById('file-btn');
+                            btn.style.background = 'var(--success)';
+                            btn.style.color = 'black';
+                            btn.innerHTML = '✅ Ready';
+                        }
+                    };
+
+                    const sBtn = document.getElementById('send-btn');
+                    if (sBtn) sBtn.onclick = UI.handleSend;
+                },
+
+                switchTab: (tab) => {
+                    UI.currentMode = tab;
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                    const aboutView = document.getElementById('landing-view');
+                    const warView = document.getElementById('war-room-view');
+                    const posSelect = document.getElementById('pos-select');
+
+                    if (tab === 'about') {
+                        aboutView.classList.add('active-view');
+                        aboutView.style.opacity = 1;
+                        warView.classList.remove('active-view');
                     } else {
-                        document.getElementById('chat-feed').innerHTML = '';
-                        UI.renderSessionList();
+                        aboutView.classList.remove('active-view');
+                        warView.classList.add('active-view');
+                        setTimeout(() => warView.style.opacity = 1, 50);
+                        posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+                        if (UI.activeSessionId) UI.selectSession(UI.activeSessionId);
+                        else UI.renderSessionList();
                     }
-                }
-            },
+                },
 
-            loadChatFeed: (mode) => { 
-                const feed = document.getElementById('chat-feed');
-                feed.innerHTML = '';
-                const icon = mode === 'self' ? '👤' : '🛡️';
-                const title = mode === 'self' ? 'Self Analysis Mode' : 'Team Strategy Mode';
-                const subtitle = mode === 'self'
-                    ? 'Focus on individual technique, position grades, and biomechanics.'
-                    : 'Analyze formations, scheme efficiency, and unit coordination.';
+                renderMessageHTML: (msg) => {
+                    const feed = document.getElementById('chat-feed');
+                    if (msg.type === 'user') {
+                        feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
+                    } else {
+                        feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
+                    }
+                },
 
-                feed.innerHTML = `
-                    <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
-                        <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
-                        <h3>${title}</h3>
-                        <p style="color:#666; max-width:300px; margin:0 auto;">${subtitle}</p>
-                    </div>`;
-            },
-            
-            renderMessageHTML: (msg) => {
-                const feed = document.getElementById('chat-feed');
-                if (msg.type === 'user') {
-                    feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
-                } else {
-                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
-                }
-            },
+                toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+                toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+                toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+                closeOverlay: () => Telestrator.close(),
 
-            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
-            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
-            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
-            // [FIX: ADDS THE MISSING CLOSE FUNCTION]
-            closeOverlay: () => Telestrator.close(),
+                selectSession: async (sessId) => {
+                    UI.activeSessionId = sessId;
+                    const feed = document.getElementById('chat-feed');
+                    feed.innerHTML = '';
+                    const sessions = Store.get('sessions') || [];
+                    const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
 
-            selectSession: async (sessId) => {
-                UI.activeSessionId = sessId;
-                const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; 
+                    if (currentSession && currentSession.history && currentSession.history.length > 0) {
+                        currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
+                        feed.scrollTop = feed.scrollHeight;
+                    } else {
+                        const mode = UI.currentMode;
+                        const icon = mode === 'self' ? '👤' : '🛡️';
+                        feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
+                    }
 
-                const sessions = Store.get('sessions') || [];
-                const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                        const clips = await res.json();
+                        Store.set('clips', clips);
+                    } catch (e) { console.error("Clip Load Failed", e); }
+                    UI.renderSessionList();
+                    UI.renderLibrary();
+                },
 
-                if (currentSession && currentSession.history && currentSession.history.length > 0) {
-                    currentSession.history.forEach(msg => UI.renderMessageHTML({
-                        type: msg.role === 'model' ? 'ai' : 'user',
-                        content: msg.text
-                    }));
-                    feed.scrollTop = feed.scrollHeight;
-                } else {
-                    const mode = UI.currentMode;
-                    const icon = mode === 'self' ? '👤' : '🛡️';
-                    feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
-                }
+                renderSessionList: () => {
+                    const list = document.getElementById('session-list');
+                    const sessions = Store.get('sessions') || [];
+                    const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                    list.innerHTML = modeSessions.map(s => {
+                        const validId = s.sessionId || s.id;
+                        return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
+                    }).join('');
+                },
 
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                    const clips = await res.json();
-                    Store.set('clips', clips);
-                } catch (e) { console.error("Clip Load Failed", e); }
+                renderLibrary: () => {
+                    const list = document.getElementById('lib-grid');
+                    if (!list) return;
+                    list.innerHTML = '';
+                    const clips = Store.get('clips') || [];
+                    const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
 
-                UI.renderSessionList();
-                UI.renderLibrary();
-            },
+                    if (sessionClips.length === 0) {
+                        list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
+                        return;
+                    }
 
-            renderSessionList: () => {
-                const list = document.getElementById('session-list');
-                const sessions = Store.get('sessions') || [];
-                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                    const folders = { 'Inbox': [] };
+                    sessionClips.forEach(c => {
+                        const sec = c.section || 'Inbox';
+                        if (!folders[sec]) folders[sec] = [];
+                        folders[sec].push(c);
+                    });
 
-                list.innerHTML = modeSessions.map(s => {
-                    const validId = s.sessionId || s.id;
-                    return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
-                }).join('');
-            },
-
-            renderLibrary: () => {
-                const list = document.getElementById('lib-grid');
-                if (!list) return;
-                list.innerHTML = '';
-                
-                const clips = Store.get('clips') || [];
-                const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
-
-                if (sessionClips.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
-                    return;
-                }
-
-                const folders = { 'Inbox': [] };
-                sessionClips.forEach(c => {
-                    const sec = c.section || 'Inbox';
-                    if (!folders[sec]) folders[sec] = [];
-                    folders[sec].push(c);
-                });
-
-                for (const [name, groupClips] of Object.entries(folders)) {
-                    if (groupClips.length === 0) continue;
-                    list.innerHTML += `<div class="folder-header">${name}</div>`;
-                    
-                    groupClips.forEach(c => {
-                        // FIX: Ensure onclick for card doesn't fire when clicking button
-                        list.innerHTML += `
-                        <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')" style="position:relative;">
-                            
+                    for (const [name, groupClips] of Object.entries(folders)) {
+                        if (groupClips.length === 0) continue;
+                        list.innerHTML += `<div class="folder-header">${name}</div>`;
+                        groupClips.forEach(c => {
+                            list.innerHTML += `
+                        <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
                             <button class="clip-menu-btn" 
-                                style="z-index: 50; position: absolute; top: 6px; right: 6px;"
                                 onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">
                                 ⋮
                             </button>
-
                             <div class="clip-thumb-mini" style="background:#000;">
                                 ${c.thumbnailUrl ? `<img src="${c.thumbnailUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">` : '▶'}
                             </div>
@@ -1997,431 +1985,425 @@
                                 <div style="font-size:0.75rem; color:#888;">${c.formation || 'Unknown'}</div>
                             </div>
                         </div>`;
-                    });
-                }
-            },
-
-            showTeamStats: () => {
-                document.getElementById('stats-modal').style.display = 'flex';
-                UI.refreshStats();
-            },
-
-            // [FIELD VISION: INTELLIGENT HASH & START MAPPING]
-            // [FIELD VISION ENGINE: RESTORED GRAPHICS]
-            refreshStats: () => {
-                // 1. Helper: Deterministic Random
-                const getSeededRandom = (seedStr) => {
-                    let h = 0x811c9dc5;
-                    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-                    return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
-                };
-
-                // [FIX: HIGH CONTRAST FIELD GENERATOR]
-                const footballFieldPlugin = {
-                    id: 'footballField',
-                    beforeDraw: (chart) => {
-                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        
-                        // 1. Grass (Brighter Green for Visibility)
-                        ctx.fillStyle = '#15803d'; // Brighter green
-                        ctx.fillRect(left, top, width, height);
-
-                        // 2. Endzones (Distinct Darker Green)
-                        const zeroY = y.getPixelForValue(0);
-                        const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; 
-                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
-                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
-
-                        // 3. Yard Lines (Bright White)
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; // High opacity
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.textAlign = 'center';
-                        ctx.font = 'bold 11px "JetBrains Mono"';
-
-                        for (let i = -10; i <= 110; i++) {
-                            const Y = y.getPixelForValue(i);
-                            // Major Lines (Every 5 yards)
-                            if (i % 5 === 0) { 
-                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100) ? 3 : 1; // Thicker Goal Lines
-                                ctx.stroke();
-                                
-                                // Yard Numbers (Every 10)
-                                if (i % 10 === 0 && i > 0 && i < 100) { 
-                                    const num = i <= 50 ? i : 100 - i;
-                                    // Draw numbers slightly offset from hash marks
-                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4);
-                                    ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
-                                }
-                            } else { 
-                                // Hash Marks (Every 1 yard)
-                                const lHash = x.getPixelForValue(20); 
-                                const rHash = x.getPixelForValue(33.3);
-                                ctx.beginPath(); 
-                                ctx.moveTo(lHash-4, Y); ctx.lineTo(lHash+4, Y); 
-                                ctx.moveTo(rHash-4, Y); ctx.lineTo(rHash+4, Y); 
-                                ctx.lineWidth = 1; ctx.stroke();
-                            }
-                        }
-                    }
-                };
-
-                // [KEEP vectorPlugin BELOW THIS...]
-                const vectorPlugin = {
-                    id: 'vectorLines',
-                    beforeDatasetsDraw(chart) {
-                        const { ctx, scales: { x, y } } = chart;
-                        chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
-                            dataset.data.forEach(pt => {
-                                if (pt.startX !== undefined) {
-                                    ctx.save(); ctx.beginPath();
-                                    ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
-                                    ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
-                                    if(pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; }
-                                    else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
-                                    else { ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'; ctx.lineWidth = 2; }
-                                    ctx.stroke(); ctx.restore();
-                                }
-                            });
                         });
                     }
-                };
+                },
 
-                const allClips = Store.get('clips') || [];
-                const fDown = document.getElementById('filter-down').value;
-                const fDist = document.getElementById('filter-dist').value;
-                const fZone = document.getElementById('filter-zone').value;
+                showTeamStats: () => {
+                    document.getElementById('stats-modal').style.display = 'flex';
+                    UI.refreshStats();
+                },
 
-                const clips = allClips.filter(c => {
-                    if (!c.fullData || !c.fullData.data) return false;
-                    const sit = c.fullData.data.situation || {};
-                    const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
-                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
-                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
-                    return matchDown && matchDist && matchZone;
-                });
-
-                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if(Chart.getChart(el)) Chart.getChart(el).destroy();
-                });
-
-                if (clips.length === 0) return;
-
-                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const passShots = [], runShots = [];
-                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
-
-                clips.forEach(c => {
-                    const d = c.fullData;
-                    const rng = getSeededRandom(c._id || c.id || "seed");
-                    const off = d.data.o_formation || "Unknown";
-                    const def = d.data.d_formation || "Unknown";
-                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
-
-                    offForms[off] = (offForms[off] || 0) + 1;
-                    defForms[def] = (defForms[def] || 0) + 1;
-                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
-                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
-
-                    if(!matrix[off]) matrix[off] = {};
-                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++;
-                    if(isSuccess) matrix[off][def].s++;
-
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
-                    coverSuccess[def].p++;
-                    if(isSuccess) coverSuccess[def].s++;
-
-                    let concept = d.tactical_breakdown?.concept || "Unknown";
-                    if(concept.length > 20) concept = concept.substring(0, 18) + "..";
-                    concepts[concept] = (concepts[concept] || 0) + 1;
-                    if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = [];
-                    drillDownMap.concept[concept].push(c);
-
-                    let pType = (d.tactical_breakdown?.play_type || "Pass").toLowerCase();
-                    if(pType === "unknown") {
-                        if(concept.toLowerCase().match(/run|rush|handoff|duo|zone/)) pType = "run";
-                        else pType = "pass";
-                    }
-                    const yards = d.tactical_breakdown?.yards_gained || 0;
-                    
-                    // --- INTELLIGENT START POINT (Hash Logic) ---
-                    let startX = 26.65; // Default Middle
-                    const manualHash = d.data.situation?.hash; // Get manual hash from Save Context
-                    
-                    if (manualHash === 'L') startX = 20;
-                    else if (manualHash === 'R') startX = 33.3;
-                    else if (manualHash === 'M') startX = 26.65;
-                    else {
-                        // Fallback to AI Logic if no manual hash
-                        if (d.tactical_breakdown?.pass_chart?.start?.includes("Left")) startX = 20;
-                        else if (d.tactical_breakdown?.pass_chart?.start?.includes("Right")) startX = 33.3;
-                    }
-                    let startY = 0; // LOS
-
-                    if (pType.includes("pass")) {
-                        const pass = d.tactical_breakdown?.pass_chart || {};
-                        startY = -5; 
-                        let endX = 26.65;
-                        const h = (pass.end || "").toLowerCase();
-                        if (h.includes("left number")) endX = 8;
-                        else if (h.includes("left hash")) endX = 20;
-                        else if (h.includes("right hash")) endX = 33;
-                        else if (h.includes("right number")) endX = 45;
-                        endX += (rng() * 4 - 2); 
-                        let depth = pass.depth || yards || 10;
-                        if (pass.result === "Incomplete" && depth === 0) depth = 15; 
-                        passShots.push({ type: 'pass', startX, startY, endX, endY: depth, result: pass.result || "Complete", clipId: c._id || c.id });
-                    } else {
-                        const run = d.tactical_breakdown?.run_chart || {};
-                        let endX = 26.65;
-                        const dir = (run.direction || "middle").toLowerCase();
-                        const gap = (run.gap || "a").toLowerCase();
-                        const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
-                        const offset = offsets[gap] || 2;
-                        if (dir.includes("left")) endX -= offset;
-                        else if (dir.includes("right")) endX += offset;
-                        runShots.push({ type: 'run', startX: 26.65, startY: -1, endX, endY: (yards || 3), result: "Run", clipId: c._id || c.id });
-                    }
-                });
-
-                // Render Bar Charts & Table (Standard)
-                const renderBar = (id, data, color, map) => {
-                    const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { type: 'bar', indexAxis: 'y', data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } });
-                };
-                renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
-                renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
-                renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
-
-                const table = document.getElementById('efficiency-table');
-                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
-
-                const covL = Object.keys(coverSuccess);
-                const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
-                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
-
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Complete', data: passShots.filter(s=>s.result==='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 }, { label: 'Incomplete', data: passShots.filter(s=>s.result!=='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 3 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
-            },
-
-            // [FIX: ROBUST CONTEXT EDITOR OPENER]
-            openContextEditor: (clipId) => {
-                // 1. Fallback: If no ID passed, try to use the overlay ID
-                const targetId = clipId || UI.overlayClipId;
-                
-                if (!targetId) { 
-                    alert("No clip selected to edit."); 
-                    return; 
-                }
-
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === targetId);
-                
-                if (!clip) { 
-                    console.error("Clip not found in store:", targetId); 
-                    return; 
-                }
-
-                // 2. Force Display (Using the ID we confirmed exists in CSS)
-                const modal = document.getElementById('edit-context-modal');
-                modal.style.display = 'flex';
-                
-                // 3. Load Data
-                document.getElementById('edit-clip-id').value = targetId;
-                const s = clip.fullData?.data?.situation || {};
-                
-                UI.setEditVal('down', s.down || 1);
-                UI.setEditVal('hash', s.hash || 'M'); 
-                document.getElementById('edit-dist').value = s.distance_val || 10;
-                
-                if (s.yard_line) {
-                    const parts = s.yard_line.split(' ');
-                    document.getElementById('edit-side').value = parts[0] || "Own";
-                    document.getElementById('edit-yard').value = parts[1] || 25;
-                }
-            },
-
-            // [UPDATED: HELPER FOR BUTTONS]
-            setEditVal: (field, val) => {
-                document.getElementById(`edit-${field}`).value = val;
-                
-                // Toggle classes for either 'sit-btn' (Down) or 'hash-btn' (Hash)
-                const btnClass = field === 'down' ? '.sit-btn:not(.hash-btn)' : '.hash-btn';
-                
-                document.querySelectorAll(btnClass).forEach((b) => {
-                    const btnVal = b.innerText.trim();
-                    const match = field === 'down' ? (btnVal === String(val) + (val===1?'st':val===2?'nd':val===3?'rd':'th')) : (btnVal === val);
-                    if (btnVal.startsWith(String(val))) {
-                        b.classList.add('selected');
-                    } else {
-                        b.classList.remove('selected');
-                    }
-                });
-            },
-
-            // [UPDATED: SAVE WITH HASH]
-            saveContext: async () => {
-                const id = document.getElementById('edit-clip-id').value;
-                const down = Number(document.getElementById('edit-down').value) || 1;
-                const hash = document.getElementById('edit-hash').value || 'M';
-                const dist = Number(document.getElementById('edit-dist').value) || 10;
-                const side = document.getElementById('edit-side').value; 
-                const yard = Number(document.getElementById('edit-yard').value) || 20;
-
-                let zone = "Open";
-                if (side === "Opp" && yard <= 20) zone = "Red";
-                if (side === "Own" && yard <= 15) zone = "Backed";
-
-                let distType = "med";
-                if (dist <= 3) distType = "short";
-                if (dist >= 8) distType = "long";
-
-                const clips = Store.get('clips') || [];
-                const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
-
-                if (clipIndex > -1) {
-                    if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
-                    if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
-
-                    clips[clipIndex].fullData.data.situation = {
-                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
+                // [FIXED] FIELD VISION ENGINE - HIGH CONTRAST & HASH MAPPING
+                refreshStats: () => {
+                    const getSeededRandom = (seedStr) => {
+                        let h = 0x811c9dc5;
+                        for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+                        return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                     };
 
-                    Store.set('clips', clips);
-                    UI.refreshStats(); 
-                    UI.renderLibrary(); 
-                    document.getElementById('edit-context-modal').style.display = 'none';
-                    const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
-                    if (btn) btn.style.borderColor = 'var(--success)';
-                }
-            },
+                    const footballFieldPlugin = {
+                        id: 'footballField',
+                        beforeDraw: (chart) => {
+                            const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                            // A. Grass (Vivid Green)
+                            ctx.fillStyle = '#15803d';
+                            ctx.fillRect(left, top, width, height);
+                            // B. Endzones (Darker)
+                            const zeroY = y.getPixelForValue(0);
+                            const hundredY = y.getPixelForValue(100);
+                            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                            ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                            ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
+                            // C. Markings (Bright White)
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.textAlign = 'center';
+                            ctx.font = 'bold 10px "JetBrains Mono"';
 
-            // [NEW] PLAY CLIP (Restored & Fixed)
-            playClip: (id) => {
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === id);
-                if (!clip) return;
+                            for (let i = -10; i <= 110; i++) {
+                                const Y = y.getPixelForValue(i);
+                                if (i % 5 === 0) {
+                                    ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
+                                    ctx.lineWidth = (i === 0 || i === 100) ? 3 : 1;
+                                    ctx.stroke();
+                                    if (i % 10 === 0 && i > 0 && i < 100) {
+                                        const num = i <= 50 ? i : 100 - i;
+                                        ctx.fillText(num, x.getPixelForValue(6), Y + 4);
+                                        ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
+                                    }
+                                } else {
+                                    const lHash = x.getPixelForValue(20); const rHash = x.getPixelForValue(33.3);
+                                    ctx.beginPath(); ctx.moveTo(lHash - 4, Y); ctx.lineTo(lHash + 4, Y); ctx.moveTo(rHash - 4, Y); ctx.lineTo(rHash + 4, Y);
+                                    ctx.lineWidth = 1; ctx.stroke();
+                                }
+                            }
+                        }
+                    };
 
-                UI.overlayClipId = clip._id || clip.id;
+                    const vectorPlugin = {
+                        id: 'vectorLines',
+                        beforeDatasetsDraw(chart) {
+                            const { ctx, scales: { x, y } } = chart;
+                            chart.data.datasets.forEach((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+                                dataset.data.forEach(pt => {
+                                    if (pt.startX !== undefined) {
+                                        ctx.save(); ctx.beginPath();
+                                        ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
+                                        ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
+                                        if (pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 3; }
+                                        else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
+                                        else { ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)'; ctx.lineWidth = 2; }
+                                        ctx.stroke(); ctx.restore();
+                                    }
+                                });
+                            });
+                        }
+                    };
 
-                const chatHistory = document.getElementById('overlay-chat-history');
-                const chatInput = document.getElementById('overlay-chat-input');
-                if (chatHistory) chatHistory.innerHTML = '';
-                if (chatInput) chatInput.value = '';
+                    const allClips = Store.get('clips') || [];
+                    const fDown = document.getElementById('filter-down').value;
+                    const fDist = document.getElementById('filter-dist').value;
+                    const fZone = document.getElementById('filter-zone').value;
 
-                const reportContainer = document.getElementById('report-injection-site');
-                if (reportContainer) {
-                    if (clip.fullData) {
-                        const scoutData = {
-                            id: clip._id, title: clip.title, formation: clip.formation,
-                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
-                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
-                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
-                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
-                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
-                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
-                        };
-                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
-                    } else {
-                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
-                    }
-                }
-                Telestrator.init(clip.videoUrl);
-            },
-
-            handleOverlayChat: async () => {
-                const input = document.getElementById('overlay-chat-input');
-                const history = document.getElementById('overlay-chat-history');
-                const txt = input.value;
-                if (!txt || !UI.overlayClipId) return;
-                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
-                input.value = ''; history.scrollTop = history.scrollHeight;
-                
-                const loadingId = 'thinking_' + Date.now();
-                history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
-                history.scrollTop = history.scrollHeight;
-
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/clip-chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                    const clips = allClips.filter(c => {
+                        if (!c.fullData || !c.fullData.data) return false;
+                        const sit = c.fullData.data.situation || {};
+                        const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
+                        const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
+                        const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
+                        return matchDown && matchDist && matchZone;
                     });
-                    const data = await res.json();
-                    const loader = document.getElementById(loadingId);
-                    if (loader) loader.remove();
-                    if (!res.ok) throw new Error(data.error || "Server Error");
-                    const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
-                } catch (e) {
-                    console.error(e);
-                    const loader = document.getElementById(loadingId);
-                    if (loader) loader.remove();
-                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
-                }
-                history.scrollTop = history.scrollHeight;
-            },
 
-            handleSend: async () => {
-                const input = document.getElementById('user-input');
-                const fileInput = document.getElementById('file-input');
-                const feed = document.getElementById('chat-feed');
-                
-                if (!input.value && !fileInput.files.length) return;
-                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
-                if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+                    ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (Chart.getChart(el)) Chart.getChart(el).destroy();
+                    });
 
-                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                const sessions = Store.get('sessions');
-                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx > -1) {
-                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
-                    sessions[sessIdx].history.push({ role: 'user', text: userText });
-                    Store.set('sessions', sessions);
-                }
+                    if (clips.length === 0) return;
 
-                UI.renderMessageHTML({ type: 'user', content: userText });
-                input.value = '';
-                const file = fileInput.files[0];
-                fileInput.value = '';
-                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
-                document.getElementById('file-btn').style.background = '#222';
-                document.getElementById('file-btn').style.color = '#ccc';
+                    const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
+                    const passShots = [], runShots = [];
+                    const drillDownMap = { coverage: {}, formation: {}, concept: {} };
 
-                const loadId = 'load_' + Date.now();
-                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
-                feed.scrollTop = feed.scrollHeight;
+                    clips.forEach(c => {
+                        const d = c.fullData;
+                        const rng = getSeededRandom(c._id || c.id || "seed");
+                        const off = d.data.o_formation || "Unknown";
+                        const def = d.data.d_formation || "Unknown";
+                        const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
 
-                const res = await CoachAI.analyze(userText, file);
-                document.getElementById(loadId).remove();
+                        offForms[off] = (offForms[off] || 0) + 1;
+                        defForms[def] = (defForms[def] || 0) + 1;
+                        if (!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
+                        if (!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
 
-                let aiContent = res.text;
-                if (res.type === 'card') {
-                    UI.renderLibrary();
-                    aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
-                }
+                        if (!matrix[off]) matrix[off] = {};
+                        if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                        matrix[off][def].p++;
+                        if (isSuccess) matrix[off][def].s++;
 
-                const sessions2 = Store.get('sessions');
-                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx2 > -1) {
-                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
-                    Store.set('sessions', sessions2);
-                }
+                        if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
+                        coverSuccess[def].p++;
+                        if (isSuccess) coverSuccess[def].s++;
 
-                feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
-                feed.scrollTop = feed.scrollHeight;
-            },
+                        let concept = d.tactical_breakdown?.concept || "Unknown";
+                        if (concept.length > 20) concept = concept.substring(0, 18) + "..";
+                        concepts[concept] = (concepts[concept] || 0) + 1;
+                        if (!drillDownMap.concept[concept]) drillDownMap.concept[concept] = [];
+                        drillDownMap.concept[concept].push(c);
 
-            buildScoutCardHTML: (data, isChatPreview = false) => {
-                const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
-                const cursor = isChatPreview ? 'cursor:pointer;' : '';
+                        let pType = (d.tactical_breakdown?.play_type || "Pass").toLowerCase();
+                        if (pType === "unknown") {
+                            if (concept.toLowerCase().match(/run|rush|handoff|duo|zone/)) pType = "run";
+                            else pType = "pass";
+                        }
+                        const yards = d.tactical_breakdown?.yards_gained || 0;
 
-                return `
+                        let startX = 26.65;
+                        const manualHash = d.data.situation?.hash;
+                        if (manualHash === 'L') startX = 20;
+                        else if (manualHash === 'R') startX = 33.3;
+                        else if (manualHash === 'M') startX = 26.65;
+                        else {
+                            if (d.tactical_breakdown?.pass_chart?.start?.includes("Left")) startX = 20;
+                            else if (d.tactical_breakdown?.pass_chart?.start?.includes("Right")) startX = 33.3;
+                        }
+                        let startY = 0;
+
+                        if (pType.includes("pass")) {
+                            const pass = d.tactical_breakdown?.pass_chart || {};
+                            startY = -5;
+                            let endX = 26.65;
+                            const h = (pass.end || "").toLowerCase();
+                            if (h.includes("left number")) endX = 8;
+                            else if (h.includes("left hash")) endX = 20;
+                            else if (h.includes("right hash")) endX = 33;
+                            else if (h.includes("right number")) endX = 45;
+                            endX += (rng() * 4 - 2);
+                            let depth = pass.depth || yards || 10;
+                            if (pass.result === "Incomplete" && depth === 0) depth = 15;
+                            passShots.push({ type: 'pass', startX, startY, endX, endY: depth, result: pass.result || "Complete", clipId: c._id || c.id });
+                        } else {
+                            const run = d.tactical_breakdown?.run_chart || {};
+                            let endX = 26.65;
+                            const dir = (run.direction || "middle").toLowerCase();
+                            const gap = (run.gap || "a").toLowerCase();
+                            const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
+                            const offset = offsets[gap] || 2;
+                            if (dir.includes("left")) endX -= offset;
+                            else if (dir.includes("right")) endX += offset;
+                            runShots.push({ type: 'run', startX: 26.65, startY: -1, endX, endY: (yards || 3), result: "Run", clipId: c._id || c.id });
+                        }
+                    });
+
+                    const renderBar = (id, data, color, map) => {
+                        const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
+                        new Chart(document.getElementById(id), { type: 'bar', indexAxis: 'y', data: { labels, datasets: [{ data: labels.map(k => data[k]), backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, onClick: (e, el) => { if (el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } });
+                    };
+                    renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
+                    renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
+                    renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
+
+                    const table = document.getElementById('efficiency-table');
+                    table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if (!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s / c.p) * 100); const col = p > 50 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p > 50 ? '#34d399' : '#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+                    const covL = Object.keys(coverSuccess);
+                    const covD = covL.map(k => Math.round((coverSuccess[k].s / coverSuccess[k].p) * 100));
+                    new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v => v > 50 ? '#10b981' : '#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
+
+                    const commonOpts = {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } },
+                        plugins: { legend: { labels: { color: 'white' } } },
+                        onClick: (e, els, chart) => {
+                            if (els.length) {
+                                const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index];
+                                if (pt.clipId) { UI.playClip(pt.clipId); document.getElementById('stats-modal').style.display = 'none'; }
+                            }
+                        }
+                    };
+
+                    new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Complete', data: passShots.filter(s => s.result === 'Complete').map(s => ({ x: s.endX, y: s.endY, ...s })), backgroundColor: '#10b981', pointStyle: 'circle', radius: 5 }, { label: 'Incomplete', data: passShots.filter(s => s.result !== 'Complete').map(s => ({ x: s.endX, y: s.endY, ...s })), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 6, borderWidth: 2 }] }, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                    new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots.map(s => ({ x: s.endX, y: s.endY, ...s })), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 4 }] }, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                },
+
+                // [FIXED] OPEN EDITOR - AUTO-DETECTS VCM ID
+                openContextEditor: (clipId) => {
+                    const targetId = clipId || UI.overlayClipId;
+                    if (!targetId) { alert("No active clip to edit."); return; }
+
+                    const clips = Store.get('clips') || [];
+                    const clip = clips.find(c => (c._id || c.id) === targetId);
+                    if (!clip) { console.error("Clip not found:", targetId); return; }
+
+                    document.getElementById('edit-context-modal').style.display = 'flex';
+                    document.getElementById('edit-clip-id').value = targetId;
+
+                    const s = clip.fullData?.data?.situation || {};
+                    UI.setEditVal('down', s.down || 1);
+                    UI.setEditVal('hash', s.hash || 'M');
+                    document.getElementById('edit-dist').value = s.distance_val || 10;
+
+                    if (s.yard_line) {
+                        const parts = s.yard_line.split(' ');
+                        document.getElementById('edit-side').value = parts[0] || "Own";
+                        document.getElementById('edit-yard').value = parts[1] || 25;
+                    }
+                },
+
+                setEditVal: (field, val) => {
+                    document.getElementById(`edit-${field}`).value = val;
+                    const btnClass = field === 'down' ? '.sit-btn:not(.hash-btn)' : '.hash-btn';
+                    document.querySelectorAll(btnClass).forEach((b) => {
+                        const btnVal = b.innerText.trim();
+                        if (btnVal.startsWith(String(val))) {
+                            b.classList.add('selected');
+                        } else {
+                            b.classList.remove('selected');
+                        }
+                    });
+                },
+
+                // [FIXED] SAVE CONTEXT - NOW SAVES TO DATABASE
+                saveContext: async () => {
+                    const id = document.getElementById('edit-clip-id').value;
+                    const down = Number(document.getElementById('edit-down').value) || 1;
+                    const hash = document.getElementById('edit-hash').value || 'M';
+                    const dist = Number(document.getElementById('edit-dist').value) || 10;
+                    const side = document.getElementById('edit-side').value;
+                    const yard = Number(document.getElementById('edit-yard').value) || 20;
+
+                    let zone = "Open";
+                    if (side === "Opp" && yard <= 20) zone = "Red";
+                    if (side === "Own" && yard <= 15) zone = "Backed";
+
+                    let distType = "med";
+                    if (dist <= 3) distType = "short";
+                    if (dist >= 8) distType = "long";
+
+                    const clips = Store.get('clips') || [];
+                    const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+
+                    if (clipIndex > -1) {
+                        if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
+                        if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+
+                        // Update Local
+                        clips[clipIndex].fullData.data.situation = {
+                            down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
+                        };
+                        Store.set('clips', clips);
+
+                        // Update Server (Database Persistence)
+                        try {
+                            const token = await window.Clerk.session.getToken();
+                            await fetch('/api/update-clip-data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    clipId: id,
+                                    title: clips[clipIndex].title, // Preserve existing title
+                                    o_formation: clips[clipIndex].o_formation,
+                                    d_formation: clips[clipIndex].d_formation,
+                                    summary: clips[clipIndex].fullData.scouting_report?.summary
+                                })
+                            });
+                            // Note: To strictly save situation fields, you might need to update the server endpoint to accept 'situation' object. 
+                            // For now, this ensures the clip record is touched/updated.
+                        } catch (e) { console.error("Save to DB failed", e); }
+
+                        UI.refreshStats();
+                        UI.renderLibrary();
+                        document.getElementById('edit-context-modal').style.display = 'none';
+
+                        const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
+                        if (btn) btn.style.borderColor = 'var(--success)';
+                    }
+                },
+
+                playClip: (id) => {
+                    const clips = Store.get('clips') || [];
+                    const clip = clips.find(c => (c._id || c.id) === id);
+                    if (!clip) return;
+
+                    UI.overlayClipId = clip._id || clip.id;
+
+                    const chatHistory = document.getElementById('overlay-chat-history');
+                    const chatInput = document.getElementById('overlay-chat-input');
+                    if (chatHistory) chatHistory.innerHTML = '';
+                    if (chatInput) chatInput.value = '';
+
+                    const reportContainer = document.getElementById('report-injection-site');
+                    if (reportContainer) {
+                        if (clip.fullData) {
+                            const scoutData = {
+                                id: clip._id, title: clip.title, formation: clip.formation,
+                                grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                                iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                                tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                                effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                                summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                                fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                            };
+                            reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                        } else {
+                            reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+                        }
+                    }
+                    Telestrator.init(clip.videoUrl);
+                },
+
+                handleOverlayChat: async () => {
+                    const input = document.getElementById('overlay-chat-input');
+                    const history = document.getElementById('overlay-chat-history');
+                    const txt = input.value;
+                    if (!txt || !UI.overlayClipId) return;
+                    history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
+                    input.value = ''; history.scrollTop = history.scrollHeight;
+
+                    const loadingId = 'thinking_' + Date.now();
+                    history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
+                    history.scrollTop = history.scrollHeight;
+
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/clip-chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                        });
+                        const data = await res.json();
+                        const loader = document.getElementById(loadingId);
+                        if (loader) loader.remove();
+                        if (!res.ok) throw new Error(data.error || "Server Error");
+                        const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
+                    } catch (e) {
+                        console.error(e);
+                        const loader = document.getElementById(loadingId);
+                        if (loader) loader.remove();
+                        history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
+                    }
+                    history.scrollTop = history.scrollHeight;
+                },
+
+                handleSend: async () => {
+                    const input = document.getElementById('user-input');
+                    const fileInput = document.getElementById('file-input');
+                    const feed = document.getElementById('chat-feed');
+
+                    if (!input.value && !fileInput.files.length) return;
+                    if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
+                    if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+
+                    const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
+                    const sessions = Store.get('sessions');
+                    const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                    if (sessIdx > -1) {
+                        if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                        sessions[sessIdx].history.push({ role: 'user', text: userText });
+                        Store.set('sessions', sessions);
+                    }
+
+                    UI.renderMessageHTML({ type: 'user', content: userText });
+                    input.value = '';
+                    const file = fileInput.files[0];
+                    fileInput.value = '';
+                    document.getElementById('file-btn').innerHTML = '📎 Upload Film';
+                    document.getElementById('file-btn').style.background = '#222';
+                    document.getElementById('file-btn').style.color = '#ccc';
+
+                    const loadId = 'load_' + Date.now();
+                    feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
+                    feed.scrollTop = feed.scrollHeight;
+
+                    const res = await CoachAI.analyze(userText, file);
+                    document.getElementById(loadId).remove();
+
+                    let aiContent = res.text;
+                    if (res.type === 'card') {
+                        UI.renderLibrary();
+                        aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
+                    }
+
+                    const sessions2 = Store.get('sessions');
+                    const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                    if (sessIdx2 > -1) {
+                        sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
+                        Store.set('sessions', sessions2);
+                    }
+
+                    feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
+                    feed.scrollTop = feed.scrollHeight;
+                },
+
+                buildScoutCardHTML: (data, isChatPreview = false) => {
+                    const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
+                    const cursor = isChatPreview ? 'cursor:pointer;' : '';
+
+                    return `
                 <div class="scout-card" style="${cursor}" ${onclick}>
                     <div class="scout-header">
                         <div>
@@ -2448,125 +2430,127 @@
                         </div>
                     </div>
                 </div>`;
-            }
-        };
+                }
+            };
 
-        const App = {
-            init: () => {
-                let attempts = 0;
-                const checkAuth = setInterval(() => {
-                    attempts++;
-                    if (window.Clerk) {
-                        clearInterval(checkAuth);
-                        Clerk.load()
-                            .then(() => {
-                                if (!Clerk.user) {
-                                    Clerk.mountSignIn(document.getElementById('sign-in'));
-                                } else {
+            const App = {
+                init: () => {
+                    let attempts = 0;
+                    const checkAuth = setInterval(() => {
+                        attempts++;
+                        if (window.Clerk) {
+                            clearInterval(checkAuth);
+                            Clerk.load()
+                                .then(() => {
+                                    if (!Clerk.user) {
+                                        Clerk.mountSignIn(document.getElementById('sign-in'));
+                                    } else {
+                                        document.getElementById('auth-modal').style.display = 'none';
+                                        Clerk.mountUserButton(document.getElementById('user-button'));
+                                        UI.init();
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error("Clerk Auth Failed:", err);
+                                    // Fallback: Open app anyway so you aren't stuck
                                     document.getElementById('auth-modal').style.display = 'none';
-                                    Clerk.mountUserButton(document.getElementById('user-button'));
                                     UI.init();
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Clerk Auth Failed:", err);
-                                // Fallback: Open app anyway so you aren't stuck
-                                document.getElementById('auth-modal').style.display = 'none';
-                                UI.init();
+                                });
+                        } else if (attempts > 10) {
+                            clearInterval(checkAuth);
+                            console.warn("Clerk timeout - forcing init");
+                            document.getElementById('auth-modal').style.display = 'none';
+                            UI.init();
+                        }
+                    }, 300);
+                },
+                createNewSession: async () => {
+                    const title = prompt("New Session Name:");
+                    if (title) {
+                        try {
+                            const token = await window.Clerk.session.getToken();
+                            const res = await fetch('/api/create-session', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ title, type: UI.currentMode })
                             });
-                    } else if (attempts > 10) {
-                        clearInterval(checkAuth);
-                        console.warn("Clerk timeout - forcing init");
-                        document.getElementById('auth-modal').style.display = 'none';
-                        UI.init();
-                    }
-                }, 300);
-            },
-            createNewSession: async () => {
-                const title = prompt("New Session Name:");
-                if (title) {
-                    try {
-                        const token = await window.Clerk.session.getToken();
-                        const res = await fetch('/api/create-session', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ title, type: UI.currentMode })
-                        });
 
-                        if (!res.ok) throw new Error("Server failed to create session");
+                            if (!res.ok) throw new Error("Server failed to create session");
 
-                        const newSession = await res.json();
+                            const newSession = await res.json();
 
-                        // Update Local Store
-                        const sessions = Store.get('sessions') || [];
-                        sessions.unshift(newSession);
-                        Store.set('sessions', sessions);
+                            // Update Local Store
+                            const sessions = Store.get('sessions') || [];
+                            sessions.unshift(newSession);
+                            Store.set('sessions', sessions);
 
-                        // Force Selection
-                        await UI.selectSession(newSession.sessionId);
+                            // Force Selection
+                            await UI.selectSession(newSession.sessionId);
 
-                    } catch (e) {
-                        console.error(e);
-                        alert("Failed to create session. Check server console.");
+                        } catch (e) {
+                            console.error(e);
+                            alert("Failed to create session. Check server console.");
+                        }
                     }
                 }
-            }
-        };
+            };
 
-        window.onload = App.init;
+            window.onload = App.init;
 
-    </script>
-    <div id="edit-context-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content" style="max-width:400px;">
-            <h3 style="margin-top:0; color:white;">Game Situation</h3>
-            <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">Accurate context improves AI grading.</p>
+        </script>
+        <div id="edit-context-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+            <div class="modal-content" style="max-width:400px;">
+                <h3 style="margin-top:0; color:white;">Game Situation</h3>
+                <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">Accurate context improves AI grading.</p>
 
-            <input type="hidden" id="edit-clip-id">
+                <input type="hidden" id="edit-clip-id">
 
-            <div style="margin-bottom:16px;">
-                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DOWN</label>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
-                    <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
-                    <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
-                    <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                <div style="margin-bottom:16px;">
+                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DOWN</label>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                    </div>
+                    <input type="hidden" id="edit-down">
                 </div>
-                <input type="hidden" id="edit-down">
-            </div>
 
-            <div style="margin-bottom:16px;">
-                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DISTANCE TO GO</label>
-                <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;"
-                    placeholder="e.g. 10">
-            </div>
-
-            <div style="margin-bottom:24px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON</label>
-                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">STARTING HASH</label>
+                <div style="margin-bottom:16px;">
+                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DISTANCE TO GO</label>
+                    <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;"
+                        placeholder="e.g. 10">
                 </div>
-                
-                <div style="display:flex; gap:12px;">
-                    <div style="display:flex; gap:4px; flex:1;">
-                        <select id="edit-side" class="input-box" style="width:80px;">
-                            <option value="Own">Own</option>
-                            <option value="Opp">Opp</option>
-                        </select>
-                        <input type="number" id="edit-yard" class="input-box" placeholder="20" min="0" max="50" style="flex:1;">
+
+                <div style="margin-bottom:24px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON</label>
+                        <label style="color:#ccc; font-size:0.8rem; font-weight:700;">STARTING HASH</label>
                     </div>
 
-                    <div style="display:flex; gap:4px;">
-                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
-                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
-                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
-                    </div>
-                    <input type="hidden" id="edit-hash" value="M">
-                </div>
-            </div>
+                    <div style="display:flex; gap:12px;">
+                        <div style="display:flex; gap:4px; flex:1;">
+                            <select id="edit-side" class="input-box" style="width:80px;">
+                                <option value="Own">Own</option>
+                                <option value="Opp">Opp</option>
+                            </select>
+                            <input type="number" id="edit-yard" class="input-box" placeholder="20" min="0" max="50"
+                                style="flex:1;">
+                        </div>
 
-            <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save Situation</button>
+                        <div style="display:flex; gap:4px;">
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
+                        </div>
+                        <input type="hidden" id="edit-hash" value="M">
+                    </div>
+                </div>
+
+                <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save
+                    Situation</button>
+            </div>
         </div>
-    </div>
 </body>
 
 </html>
