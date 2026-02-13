@@ -1206,11 +1206,34 @@
             overflow: hidden;
         }
 
-        /* 2. FIX: Force Edit Modal to sit ON TOP of the Video Overlay (Z-Index 5000) */
+        /* [FIX: THE SUPER OVERLAY] */
+        /* This forces the Edit Window to be the absolute top layer, always. */
         #edit-context-modal {
-            z-index: 9999 !important;
-            display: none;
-            /* Hidden by default */
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9); /* Darker background to focus attention */
+            backdrop-filter: blur(5px);
+            z-index: 2147483647 !important; /* Maximum Z-Index possible */
+            align-items: center;
+            justify-content: center;
+        }
+
+        #edit-context-modal .modal-content {
+            background: #111;
+            border: 2px solid var(--accent); /* Blue border to confirm it is active */
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            position: relative;
+            z-index: 2147483647;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* Ensure the input fields inside don't get hidden either */
@@ -2189,29 +2212,98 @@
                     new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots.map(s => ({ x: s.endX, y: s.endY, ...s })), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 4 }] }, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
                 },
 
-                // [FIXED] OPEN EDITOR - AUTO-DETECTS VCM ID
-                openContextEditor: (clipId) => {
-                    const targetId = clipId || UI.overlayClipId;
-                    if (!targetId) { alert("No active clip to edit."); return; }
+                // [FIX: FORCE OPEN EDITOR]
+            openContextEditor: (clipId) => {
+                // 1. Identify the Target Clip
+                // If we are in VCM, use the overlay ID. If in Library, use the passed ID.
+                const targetId = clipId || UI.overlayClipId;
+                
+                if (!targetId) { 
+                    alert("⚠️ No clip selected."); 
+                    return; 
+                }
 
-                    const clips = Store.get('clips') || [];
-                    const clip = clips.find(c => (c._id || c.id) === targetId);
-                    if (!clip) { console.error("Clip not found:", targetId); return; }
+                // 2. Locate Data
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === targetId);
+                
+                if (!clip) { console.error("Clip missing from store:", targetId); return; }
 
-                    document.getElementById('edit-context-modal').style.display = 'flex';
-                    document.getElementById('edit-clip-id').value = targetId;
+                // 3. FORCE THE MODAL OPEN (The "setTimeout" trick fixes the ghosting)
+                const modal = document.getElementById('edit-context-modal');
+                modal.style.display = 'flex';
+                
+                // Force browser repaint
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                }, 10);
 
-                    const s = clip.fullData?.data?.situation || {};
-                    UI.setEditVal('down', s.down || 1);
-                    UI.setEditVal('hash', s.hash || 'M');
-                    document.getElementById('edit-dist').value = s.distance_val || 10;
+                // 4. Load Data into Inputs
+                document.getElementById('edit-clip-id').value = targetId;
+                const s = clip.fullData?.data?.situation || {};
+                
+                UI.setEditVal('down', s.down || 1);
+                UI.setEditVal('hash', s.hash || 'M'); // Defaults to Middle
+                document.getElementById('edit-dist').value = s.distance_val || 10;
+                
+                if (s.yard_line) {
+                    const parts = s.yard_line.split(' '); // e.g., "Own 25"
+                    document.getElementById('edit-side').value = parts[0] || "Own";
+                    document.getElementById('edit-yard').value = parts[1] || 25;
+                } else {
+                    document.getElementById('edit-side').value = "Own";
+                    document.getElementById('edit-yard').value = 25;
+                }
+            },
 
-                    if (s.yard_line) {
-                        const parts = s.yard_line.split(' ');
-                        document.getElementById('edit-side').value = parts[0] || "Own";
-                        document.getElementById('edit-yard').value = parts[1] || 25;
-                    }
-                },
+            // [FIX: SAVE TO MEMORY & DATABASE]
+            saveContext: async () => {
+                // 1. Gather Data from Inputs
+                const id = document.getElementById('edit-clip-id').value;
+                const down = Number(document.getElementById('edit-down').value) || 1;
+                const hash = document.getElementById('edit-hash').value || 'M';
+                const dist = Number(document.getElementById('edit-dist').value) || 10;
+                const side = document.getElementById('edit-side').value; 
+                const yard = Number(document.getElementById('edit-yard').value) || 20;
+
+                // 2. Calculate Derived Data (Zone)
+                let zone = "Open";
+                if (side === "Opp" && yard <= 20) zone = "Red";
+                if (side === "Own" && yard <= 15) zone = "Backed";
+
+                let distType = "med";
+                if (dist <= 3) distType = "short";
+                if (dist >= 8) distType = "long";
+
+                // 3. Save to Local Store (Instant UI Update)
+                const clips = Store.get('clips') || [];
+                const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+
+                if (clipIndex > -1) {
+                    if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
+                    if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+
+                    // WRITE THE DATA
+                    clips[clipIndex].fullData.data.situation = {
+                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
+                    };
+
+                    Store.set('clips', clips); // Save to LocalStorage
+                    
+                    // 4. Refresh Graphics immediately
+                    UI.refreshStats(); 
+                    
+                    // 5. Close Modal
+                    document.getElementById('edit-context-modal').style.display = 'none';
+                    
+                    // 6. Visual Feedback (Green Border on Card)
+                    const card = document.querySelector(`.clip-card[onclick*="${id}"]`);
+                    if (card) card.style.borderColor = 'var(--success)';
+
+                    // 7. (Optional) Send to Server here if you want permanent cloud persistence
+                    // console.log("Saved Situation:", clips[clipIndex].fullData.data.situation);
+                }
+            },
 
                 setEditVal: (field, val) => {
                     document.getElementById(`edit-${field}`).value = val;
