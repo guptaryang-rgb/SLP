@@ -440,36 +440,39 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
-   // --- [UPDATED PROMPT: FIELD VISION 2.0] ---
+   // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
     ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
-    TASK: Analyze video clip. Focus: ${specificFocus}.
-    ROSTER CONTEXT: ${rosterContext}
+    CONTEXT: ${specificFocus}
+    ROSTER: ${rosterContext}
 
-    REQUIREMENTS:
-    1. OFFENSE: Identify specific formation (e.g. "Gun Trips Right").
-    2. DEFENSE: Identify SPECIFIC COVERAGE (e.g. "Cover 3 Sky").
-    3. FIELD VISION:
-       - PASS: Identify Start (Pocket/Rollout) and End Location (Hash/Numbers/Yards).
-       - RUN: Identify Gap (A/B/C/D/Sweep) and Direction (Left/Right).
-       - RESULT: Estimate Yards Gained.
+    YOUR DUAL OBJECTIVE:
+    1. THE ANALYST (Data): Extract precise coordinates for the "Field Vision" charts.
+       - CLASSIFY: Play must be "Pass" (Air Attack) or "Run" (Ground Attack).
+       - PASS VECTORS: Origin (Pocket/Rollout) -> Target (Deep/Short, Hash/Numbers).
+       - RUN VECTORS: Origin (Mesh) -> Gap (A/B/C/D).
+    
+    2. THE COACH (Insight): The 'scouting_report' must be detailed and specific.
+       - Do NOT just describe the play. DIAGNOSE it.
+       - Explain WHY it worked/failed based on the "CONTEXT" provided above.
+       - Use professional terminology (e.g., "Hi-Lo Read," "Conflict Player," "Leverage").
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
-        "title": "Descriptive Title", 
+        "title": "Descriptive Title (e.g. '3rd & Long - Dagger vs Cover 2')", 
         "data": { 
-            "o_formation": "Specific Formation", 
-            "d_formation": "Specific Coverage", 
+            "o_formation": "Formation", 
+            "d_formation": "Coverage Shell", 
             "situation": { "down": "1/2/3/4", "distance": "Short/Med/Long", "zone": "Red/Open" }
         }, 
         "tactical_breakdown": {
             "concept": "Scheme Name",
-            "play_type": "Run/Pass",
-            "yards_gained": 5,
+            "play_type": "Pass/Run",
+            "yards_gained": 0,
             "pass_chart": {
                 "start": "Pocket/Rollout Left/Rollout Right",
                 "end": "Left Numbers/Left Hash/Middle/Right Hash/Right Numbers",
-                "depth": 15,
+                "depth": 0, 
                 "result": "Complete/Incomplete/Int"
             },
             "run_chart": {
@@ -478,8 +481,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             }
         },
         "scouting_report": { 
-            "summary": "Breakdown.", 
-            "coaching_prescription": { "fix": "Fix", "drill": "Drill" },
+            "summary": "Detailed schematic analysis applying the coaching context.", 
+            "coaching_prescription": { "fix": "Technical Fix", "drill": "Specific Drill" },
             "report_card": { "overall": "Grade" }
         }
     }`;
