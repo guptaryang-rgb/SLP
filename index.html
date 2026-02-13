@@ -1811,10 +1811,14 @@
          * 4. UI MANAGER
          * Controls Tabs, Chat History Switching, and Modal visibility.
          */
+        /**
+         * 4. UI MANAGER
+         * Controls Tabs, Chat History Switching, and Modal visibility.
+         */
         const UI = {
-            currentMode: 'about', // 'about', 'self', 'team'
-            activeSessionId: null, // NEW: Track specific selected session
-            overlayClipId: null,   // TRACKS CURRENT VIDEO CLIP ID
+            currentMode: 'about',
+            activeSessionId: null,
+            overlayClipId: null, // Tracks the active video for VCM & Editing
 
             gradeToNum: (g) => {
                 if (!g) return 0;
@@ -1835,9 +1839,7 @@
                     }
                 } catch (e) { console.error("Session Load Failed", e); }
 
-                document.querySelectorAll('.nav-tab').forEach(t => {
-                    t.onclick = () => UI.switchTab(t.dataset.tab);
-                });
+                document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
 
                 document.getElementById('file-input').onchange = (e) => {
                     if (e.target.files[0]) {
@@ -1868,11 +1870,7 @@
                     warView.classList.add('active-view');
                     setTimeout(() => warView.style.opacity = 1, 50);
 
-                    if (tab === 'self') {
-                        posSelect.style.display = 'block';
-                    } else if (tab === 'team') {
-                        posSelect.style.display = 'none';
-                    }
+                    posSelect.style.display = (tab === 'self') ? 'block' : 'none';
 
                     if (UI.activeSessionId) {
                         UI.selectSession(UI.activeSessionId);
@@ -1883,7 +1881,7 @@
                 }
             },
 
-            loadChatFeed: (mode) => {
+            loadChatFeed: (mode) => { 
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
                 const icon = mode === 'self' ? '👤' : '🛡️';
@@ -1899,19 +1897,13 @@
                         <p style="color:#666; max-width:300px; margin:0 auto;">${subtitle}</p>
                     </div>`;
             },
-
+            
             renderMessageHTML: (msg) => {
                 const feed = document.getElementById('chat-feed');
                 if (msg.type === 'user') {
-                    feed.innerHTML += `
-                        <div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">
-                            ${msg.content}
-                        </div>`;
+                    feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
                 } else {
-                    feed.innerHTML += `
-                        <div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;">
-                            <strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}
-                        </div>`;
+                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
                 }
             },
 
@@ -1922,7 +1914,7 @@
             selectSession: async (sessId) => {
                 UI.activeSessionId = sessId;
                 const feed = document.getElementById('chat-feed');
-                feed.innerHTML = '';
+                feed.innerHTML = ''; 
 
                 const sessions = Store.get('sessions') || [];
                 const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
@@ -1936,12 +1928,7 @@
                 } else {
                     const mode = UI.currentMode;
                     const icon = mode === 'self' ? '👤' : '🛡️';
-                    feed.innerHTML = `
-                        <div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;">
-                            <div style="font-size:3rem; margin-bottom:16px;">${icon}</div>
-                            <h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3>
-                            <p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p>
-                        </div>`;
+                    feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
                 }
 
                 try {
@@ -1962,24 +1949,20 @@
 
                 list.innerHTML = modeSessions.map(s => {
                     const validId = s.sessionId || s.id;
-                    return `
-                    <div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')">
-                        <span>${s.title}</span>
-                        <span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span>
-                    </div>
-                `}).join('');
+                    return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
+                }).join('');
             },
 
             renderLibrary: () => {
                 const list = document.getElementById('lib-grid');
                 if (!list) return;
-
                 list.innerHTML = '';
+                
                 const clips = Store.get('clips') || [];
                 const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
 
                 if (sessionClips.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips in this session.<br>Upload video to begin.</div>';
+                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
                     return;
                 }
 
@@ -1993,7 +1976,6 @@
                 for (const [name, groupClips] of Object.entries(folders)) {
                     if (groupClips.length === 0) continue;
                     list.innerHTML += `<div class="folder-header">${name}</div>`;
-
                     groupClips.forEach(c => {
                         list.innerHTML += `
                         <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
@@ -2015,7 +1997,7 @@
                 UI.refreshStats();
             },
 
-            // [FIELD VISION ENGINE: 100 YARDS + INTELLIGENT MAPPING]
+            // [FIELD VISION: INTELLIGENT HASH & START MAPPING]
             refreshStats: () => {
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
@@ -2027,37 +2009,24 @@
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        ctx.fillStyle = '#355e3b'; 
-                        ctx.fillRect(left, top, width, height);
-                        
-                        const zeroY = y.getPixelForValue(0);
-                        const hundredY = y.getPixelForValue(100);
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
+                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
                         ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
-
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.textAlign = 'center';
-                        ctx.font = '10px "JetBrains Mono"';
-
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'center'; ctx.font = '10px "JetBrains Mono"';
                         for (let i = -10; i <= 110; i++) {
                             const Y = y.getPixelForValue(i);
                             if (i % 5 === 0) { 
-                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; 
-                                ctx.stroke();
+                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y); ctx.lineWidth = (i === 0 || i === 100) ? 2 : 1; ctx.stroke();
                                 if (i % 10 === 0 && i > 0 && i < 100) { 
                                     const num = i <= 50 ? i : 100 - i;
-                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4);
-                                    ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
+                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4); ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
                                 }
                             } else { 
-                                const lHash = x.getPixelForValue(20);
-                                const rHash = x.getPixelForValue(33.3);
-                                ctx.beginPath(); ctx.moveTo(lHash-3, Y); ctx.lineTo(lHash+3, Y);
-                                ctx.moveTo(rHash-3, Y); ctx.lineTo(rHash+3, Y);
-                                ctx.lineWidth = 1; ctx.stroke();
+                                const lHash = x.getPixelForValue(20); const rHash = x.getPixelForValue(33.3);
+                                ctx.beginPath(); ctx.moveTo(lHash-3, Y); ctx.lineTo(lHash+3, Y); ctx.moveTo(rHash-3, Y); ctx.lineTo(rHash+3, Y); ctx.lineWidth = 1; ctx.stroke();
                             }
                         }
                     }
@@ -2068,20 +2037,15 @@
                     beforeDatasetsDraw(chart) {
                         const { ctx, scales: { x, y } } = chart;
                         chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i);
-                            if (meta.hidden) return;
+                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
                             dataset.data.forEach(pt => {
                                 if (pt.startX !== undefined) {
                                     ctx.save(); ctx.beginPath();
                                     ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
                                     ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
-                                    if(pt.type === 'run') {
-                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3;
-                                    } else if (pt.result === 'Incomplete') {
-                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-                                    } else {
-                                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'; ctx.lineWidth = 2;
-                                    }
+                                    if(pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; }
+                                    else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
+                                    else { ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)'; ctx.lineWidth = 2; }
                                     ctx.stroke(); ctx.restore();
                                 }
                             });
@@ -2147,12 +2111,23 @@
                         else pType = "pass";
                     }
                     const yards = d.tactical_breakdown?.yards_gained || 0;
-                    let startX = 26.65, startY = 0; 
+                    
+                    // --- INTELLIGENT START POINT (Hash Logic) ---
+                    let startX = 26.65; // Default Middle
+                    const manualHash = d.data.situation?.hash; // Get manual hash from Save Context
+                    
+                    if (manualHash === 'L') startX = 20;
+                    else if (manualHash === 'R') startX = 33.3;
+                    else if (manualHash === 'M') startX = 26.65;
+                    else {
+                        // Fallback to AI Logic if no manual hash
+                        if (d.tactical_breakdown?.pass_chart?.start?.includes("Left")) startX = 20;
+                        else if (d.tactical_breakdown?.pass_chart?.start?.includes("Right")) startX = 33.3;
+                    }
+                    let startY = 0; // LOS
 
                     if (pType.includes("pass")) {
                         const pass = d.tactical_breakdown?.pass_chart || {};
-                        if(pass.start?.toLowerCase().includes("left")) startX = 20;
-                        if(pass.start?.toLowerCase().includes("right")) startX = 33;
                         startY = -5; 
                         let endX = 26.65;
                         const h = (pass.end || "").toLowerCase();
@@ -2177,69 +2152,27 @@
                     }
                 });
 
+                // Render Bar Charts & Table (Standard)
                 const renderBar = (id, data, color, map) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), {
-                        type: 'bar', indexAxis: 'y',
-                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, 
-                        onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); },
-                        scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } }
-                    });
+                    new Chart(document.getElementById(id), { type: 'bar', indexAxis: 'y', data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } });
                 };
                 renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
                 renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
                 renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
 
                 const table = document.getElementById('efficiency-table');
-                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` +
-                    Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + 
-                    Object.keys(defForms).map(def => {
-                        const c = matrix[off][def];
-                        if(!c) return `<td><span style="color:#444;">-</span></td>`;
-                        const p = Math.round((c.s/c.p)*100);
-                        const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)';
-                        return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`;
-                    }).join('') + '</tr>').join('') + '</tbody>';
+                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
 
                 const covL = Object.keys(coverSuccess);
                 const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
-                new Chart(document.getElementById('chart-coverage'), {
-                    type: 'bar', indexAxis: 'y',
-                    data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } }
-                });
+                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
 
-                const commonOpts = {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } },
-                    plugins: { legend: { labels: { color:'white' } } },
-                    onClick: (e, els, chart) => {
-                        if(els.length) {
-                            const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index];
-                            if(pt.clipId) { UI.playClip(pt.clipId); document.getElementById('stats-modal').style.display='none'; }
-                        }
-                    }
-                };
-
-                new Chart(document.getElementById('chart-field-pass'), {
-                    type: 'scatter',
-                    data: { datasets: [
-                        { label: 'Complete', data: passShots.filter(s=>s.result==='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 },
-                        { label: 'Incomplete', data: passShots.filter(s=>s.result!=='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 }
-                    ]},
-                    options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin]
-                });
-
-                new Chart(document.getElementById('chart-field-run'), {
-                    type: 'scatter',
-                    data: { datasets: [
-                        { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 3 }
-                    ]},
-                    options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin]
-                });
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Complete', data: passShots.filter(s=>s.result==='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#10b981', pointStyle: 'circle', radius: 4 }, { label: 'Incomplete', data: passShots.filter(s=>s.result!=='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 5, borderWidth: 2 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 3 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
+            // [UPDATED: OPEN EDITOR WITH HASH]
             openContextEditor: (clipId) => {
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === clipId);
@@ -2247,9 +2180,12 @@
 
                 document.getElementById('edit-context-modal').style.display = 'flex';
                 document.getElementById('edit-clip-id').value = clipId;
+                
                 const s = clip.fullData?.data?.situation || {};
                 UI.setEditVal('down', s.down || 1);
+                UI.setEditVal('hash', s.hash || 'M'); 
                 document.getElementById('edit-dist').value = s.distance_val || 10;
+                
                 if (s.yard_line) {
                     const parts = s.yard_line.split(' ');
                     document.getElementById('edit-side').value = parts[0] || "Own";
@@ -2260,19 +2196,29 @@
                 }
             },
 
+            // [UPDATED: HELPER FOR BUTTONS]
             setEditVal: (field, val) => {
-                if (field === 'down') {
-                    document.getElementById('edit-down').value = val;
-                    document.querySelectorAll('.sit-btn').forEach((b, i) => {
-                        if ((i + 1) === Number(val)) b.classList.add('selected');
-                        else b.classList.remove('selected');
-                    });
-                }
+                document.getElementById(`edit-${field}`).value = val;
+                
+                // Toggle classes for either 'sit-btn' (Down) or 'hash-btn' (Hash)
+                const btnClass = field === 'down' ? '.sit-btn:not(.hash-btn)' : '.hash-btn';
+                
+                document.querySelectorAll(btnClass).forEach((b) => {
+                    const btnVal = b.innerText.trim();
+                    const match = field === 'down' ? (btnVal === String(val) + (val===1?'st':val===2?'nd':val===3?'rd':'th')) : (btnVal === val);
+                    if (btnVal.startsWith(String(val))) {
+                        b.classList.add('selected');
+                    } else {
+                        b.classList.remove('selected');
+                    }
+                });
             },
 
+            // [UPDATED: SAVE WITH HASH]
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const down = Number(document.getElementById('edit-down').value) || 1;
+                const hash = document.getElementById('edit-hash').value || 'M';
                 const dist = Number(document.getElementById('edit-dist').value) || 10;
                 const side = document.getElementById('edit-side').value; 
                 const yard = Number(document.getElementById('edit-yard').value) || 20;
@@ -2293,11 +2239,7 @@
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
                     clips[clipIndex].fullData.data.situation = {
-                        down: down,
-                        distance: distType,   
-                        distance_val: dist,   
-                        zone: zone,           
-                        yard_line: `${side} ${yard}` 
+                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
                     };
 
                     Store.set('clips', clips);
@@ -2309,6 +2251,7 @@
                 }
             },
 
+            // [NEW] PLAY CLIP (Restored & Fixed)
             playClip: (id) => {
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
@@ -2325,9 +2268,7 @@
                 if (reportContainer) {
                     if (clip.fullData) {
                         const scoutData = {
-                            id: clip._id,
-                            title: clip.title,
-                            formation: clip.formation,
+                            id: clip._id, title: clip.title, formation: clip.formation,
                             grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
                             iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
                             tech: clip.fullData.scouting_report?.report_card?.technique || "-",
@@ -2347,19 +2288,12 @@
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
                 const txt = input.value;
-
                 if (!txt || !UI.overlayClipId) return;
-
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
-                input.value = '';
-                history.scrollTop = history.scrollHeight;
-
+                input.value = ''; history.scrollTop = history.scrollHeight;
+                
                 const loadingId = 'thinking_' + Date.now();
-                history.innerHTML += `
-                    <div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;">
-                        <div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div>
-                        <div class="thinking-bar"></div>
-                    </div>`;
+                history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
                 history.scrollTop = history.scrollHeight;
 
                 try {
@@ -2374,10 +2308,7 @@
                     if (loader) loader.remove();
                     if (!res.ok) throw new Error(data.error || "Server Error");
                     const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    history.innerHTML += `
-                        <div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;">
-                            <span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}
-                        </div>`;
+                    history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
                 } catch (e) {
                     console.error(e);
                     const loader = document.getElementById(loadingId);
@@ -2433,10 +2364,7 @@
                     Store.set('sessions', sessions2);
                 }
 
-                feed.innerHTML += `
-                    <div style="align-self:flex-start; width:100%; margin-bottom:20px;">
-                        ${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}
-                    </div>`;
+                feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
                 feed.scrollTop = feed.scrollHeight;
             },
 
@@ -2448,9 +2376,7 @@
                 <div class="scout-card" style="${cursor}" ${onclick}>
                     <div class="scout-header">
                         <div>
-                            <div class="tag-row">
-                                <span class="formation-tag">${data.formation}</span>
-                            </div>
+                            <div class="tag-row"><span class="formation-tag">${data.formation}</span></div>
                             <div class="play-title">${data.title}</div>
                         </div>
                         <div class="exec-badge">
@@ -2566,14 +2492,26 @@
             </div>
 
             <div style="margin-bottom:24px;">
-                <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON (YARD LINE)</label>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <select id="edit-side" class="input-box" style="width:110px;">
-                        <option value="Own">Own</option>
-                        <option value="Opp">Opp</option>
-                    </select>
-                    <input type="number" id="edit-yard" class="input-box" placeholder="0-50" min="0" max="50"
-                        style="flex:1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON</label>
+                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">STARTING HASH</label>
+                </div>
+                
+                <div style="display:flex; gap:12px;">
+                    <div style="display:flex; gap:4px; flex:1;">
+                        <select id="edit-side" class="input-box" style="width:80px;">
+                            <option value="Own">Own</option>
+                            <option value="Opp">Opp</option>
+                        </select>
+                        <input type="number" id="edit-yard" class="input-box" placeholder="20" min="0" max="50" style="flex:1;">
+                    </div>
+
+                    <div style="display:flex; gap:4px;">
+                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
+                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
+                        <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
+                    </div>
+                    <input type="hidden" id="edit-hash" value="M">
                 </div>
             </div>
 
