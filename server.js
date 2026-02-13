@@ -45,6 +45,7 @@ const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY);
 // *** AI MODEL STRATEGY ***
 // We prioritize 2.5 Pro for depth, fall back to 1.5 Pro for stability
 const MODEL_FALLBACK_LIST = [
+    "gemini-3-pro-preview",
     "gemini-2.5-pro", 
     "gemini-1.5-pro",
     "gemini-1.5-flash"
