@@ -1155,9 +1155,10 @@
             justify-content: center;
         }
 
+        /* [FIX: REMOVED ANIMATION TO PREVENT GHOSTING] */
         #edit-context-modal .modal-content {
             background: #111;
-            border: 2px solid var(--accent); /* Blue border for active state */
+            border: 2px solid var(--accent);
             box-shadow: 0 0 50px rgba(0,0,0,0.9);
             position: relative;
             z-index: 2147483647 !important;
@@ -1165,7 +1166,7 @@
             border-radius: 12px;
             width: 100%;
             max-width: 400px;
-            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Animation removed for stability */
         }
 
         /* Input Styling inside the Modal */
@@ -1982,14 +1983,10 @@
                 }
             },
 
-            // [FIXED] SHOW STATS: Added Delay to ensure Charts Draw correctly
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
-                // Wait 50ms for the modal to be visible before drawing charts
-                // This prevents the "blank chart" bug
-                setTimeout(() => {
-                    UI.refreshStats();
-                }, 50);
+                // Wait for layout to settle before drawing charts
+                setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
             refreshStats: () => {
@@ -2186,7 +2183,7 @@
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 4 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [FIXED] OPEN EDITOR - Simple display toggle
+            // [FIXED] OPEN EDITOR - NO ANIMATION, NO GHOSTING
             openContextEditor: (clipId) => {
                 const targetId = clipId || UI.overlayClipId;
                 if (!targetId) { alert("⚠️ No active clip to edit."); return; }
@@ -2196,8 +2193,11 @@
                 if (!clip) { console.error("Clip not found:", targetId); return; }
 
                 const modal = document.getElementById('edit-context-modal');
-                // SIMPLE display toggle - no fancy animations that might fail
-                modal.style.display = 'flex';
+                
+                // Force a clean state before showing
+                modal.style.display = 'none'; 
+                modal.offsetHeight; // Trigger Reflow
+                modal.style.display = 'flex'; // Show immediately
                 
                 // Load Data
                 document.getElementById('edit-clip-id').value = targetId;
@@ -2226,7 +2226,7 @@
                 });
             },
 
-            // [FIXED] SAVE CONTEXT - Updates DB and Refreshes Charts
+            // [FIXED] SAVE CONTEXT - SEND SITUATION DATA TO SERVER
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const down = Number(document.getElementById('edit-down').value) || 1;
@@ -2250,10 +2250,12 @@
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
-                    // Update Local
-                    clips[clipIndex].fullData.data.situation = {
+                    const newSituation = {
                         down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
                     };
+
+                    // Update Local
+                    clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
 
                     // Update Server (Persistence)
@@ -2267,12 +2269,12 @@
                                 title: clips[clipIndex].title, 
                                 o_formation: clips[clipIndex].o_formation,
                                 d_formation: clips[clipIndex].d_formation,
+                                situation: newSituation, // [FIX] Sending Situation Data
                                 summary: clips[clipIndex].fullData.scouting_report?.summary
                             })
                         });
                     } catch(e) { console.error("Save to DB failed", e); }
 
-                    // Refresh and Close
                     UI.refreshStats(); 
                     document.getElementById('edit-context-modal').style.display = 'none';
                     
