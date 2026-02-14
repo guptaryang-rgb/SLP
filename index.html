@@ -1321,73 +1321,117 @@
     </div>
 
     <div id="analysis-overlay">
-
         <div class="overlay-header">
             <div style="display:flex; gap:12px; align-items:center;">
                 <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
                 <span class="badge" style="background:var(--accent); color:black;">VCM</span>
             </div>
             <div style="display:flex; gap:12px;">
-                <button class="tool-btn" onclick="UI.openContextEditor()">
+                <button class="tool-btn" onclick="UI.toggleContextPanel(true)">
                     📝 Edit Situation
                 </button>
                 <button class="tool-btn" onclick="UI.closeOverlay()">✕ Close</button>
             </div>
         </div>
 
-        <div id="popup-video-container">
-            <div id="telestrator-view">
-                <video id="ghost-video" playsinline webkit-playsinline muted></video>
-                <video id="main-video" playsinline webkit-playsinline></video>
-                <canvas id="draw-canvas"></canvas>
-            </div>
-
-            <div class="video-controls">
-                <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
-                    <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
-                    <input type="range" min="0" max="1" step="0.1" value="0"
-                        style="width:100%; accent-color:var(--accent);"
-                        oninput="document.getElementById('ghost-video').style.opacity = this.value">
+        <div id="workspace-split" style="display:flex; flex:1; overflow:hidden; width:100%; position:relative;">
+            
+            <div id="popup-video-container" style="flex:1; position:relative; background:#050505; display:flex; flex-direction:column; transition:0.3s ease;">
+                <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    <video id="ghost-video" playsinline webkit-playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
+                    <video id="main-video" playsinline webkit-playsinline style="max-height:100%; max-width:100%; object-fit:contain; display:block;"></video>
+                    <canvas id="draw-canvas" style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
                 </div>
-
-                <button class="v-btn" id="play-pause-btn">⏯</button>
-                <div class="scrubber-container">
-                    <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                    <div id="video-time"
-                        style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
-                </div>
-                <div class="tele-tools">
-                    <button id="draw-btn" class="tool-btn">✏️ Draw</button>
-                    <button id="clear-btn" class="tool-btn">Clear</button>
+                <div class="video-controls">
+                    <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
+                        <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
+                        <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);" oninput="document.getElementById('ghost-video').style.opacity = this.value">
+                    </div>
+                    <button class="v-btn" id="play-pause-btn">⏯</button>
+                    <div class="scrubber-container">
+                        <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                        <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+                    </div>
+                    <div class="tele-tools">
+                        <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                        <button id="clear-btn" class="tool-btn">Clear</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
+            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:24px; overflow-y:auto; z-index:50;">
+                <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Game Situation</h3>
+                <input type="hidden" id="edit-clip-id">
+                
+                <div style="margin-bottom:16px;">
+                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DOWN</label>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                    </div>
+                    <input type="hidden" id="edit-down">
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DISTANCE</label>
+                    <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="10">
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">BALL ON</label>
+                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">HASH</label>
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                        <div style="display:flex; gap:4px; flex:1;">
+                            <select id="edit-side" class="input-box" style="width:70px; padding:0 8px;">
+                                <option value="Own">Own</option>
+                                <option value="Opp">Opp</option>
+                            </select>
+                            <input type="number" id="edit-yard" class="input-box" placeholder="20" style="flex:1;">
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
+                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
+                        </div>
+                        <input type="hidden" id="edit-hash" value="M">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid #222;">
+                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px; display:block; margin-bottom:12px;">PLAY DIRECTION</label>
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <span style="color:#ccc; font-size:0.8rem;">Wrong Side?</span>
+                        <button id="btn-mirror" class="tool-btn" onclick="UI.toggleMirror()" style="border:1px solid var(--accent); color:var(--accent);">
+                            ⇄ Flip Play
+                        </button>
+                    </div>
+                    <input type="hidden" id="edit-mirror" value="false">
+                </div>
+
+                <div style="margin-top:auto;">
+                    <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save Situation</button>
+                    <button class="tool-btn" style="width:100%; margin-top:12px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
+                </div>
+            </div>
+
+        </div> 
         <div id="popup-report-container">
-            <div
-                style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI
-                    (LIVE)
-                </div>
-                <div id="overlay-chat-history"
-                    style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
-                </div>
-
+            <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
+                <div id="overlay-chat-history" style="max-height:100px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
                 <div style="display:flex; gap:8px;">
-                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
-                        style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
-                    <button id="overlay-chat-btn" class="tool-btn" style="padding:6px 12px;"
-                        onclick="UI.handleOverlayChat()">Ask</button>
+                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
                 </div>
             </div>
-
             <div class="report-wrapper" id="report-injection-site"></div>
         </div>
 
     </div>
-    ```
-
-
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content">
@@ -1979,60 +2023,40 @@
 
             showTeamStats: () => {
                 document.getElementById('stats-modal').style.display = 'flex';
-                // Wait for layout to settle before drawing charts
                 setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
-            // [FIX: COMPLETE ANALYTICS ENGINE - CHARTS & FIELD MAPS]
+            // [NEW] COMPLETE CHARTING ENGINE (PHYSICS + AGGREGATION)
             refreshStats: () => {
-                // 1. Helper: Deterministic Random (Stable dots)
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
                     for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
                     return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
-                // 2. Field Drawer (Vivid Green)
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        
-                        // Grass
-                        ctx.fillStyle = '#15803d'; 
-                        ctx.fillRect(left, top, width, height);
-
-                        // LOS (Blue Line at Y=0)
+                        // Field (Dark Green)
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
+                        // LOS
                         const losY = y.getPixelForValue(0);
-                        ctx.strokeStyle = '#38bdf8'; 
-                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
                         ctx.beginPath(); ctx.moveTo(left, losY); ctx.lineTo(right, losY); ctx.stroke();
-
-                        // Yard Lines
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-                        ctx.textAlign = 'center';
-                        ctx.font = 'bold 10px "JetBrains Mono"';
-
+                        // Lines
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
                         for (let i = -10; i <= 60; i+=10) { 
                             const Y = y.getPixelForValue(i);
                             if(i !== 0) {
-                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = 1; ctx.stroke();
+                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y); ctx.lineWidth = 1; ctx.stroke();
                                 ctx.fillText(i > 0 ? `+${i}` : i, x.getPixelForValue(4), Y + 4);
                             }
                         }
-                        
-                        // Hash Marks
-                        const lHash = x.getPixelForValue(20); 
-                        const rHash = x.getPixelForValue(33.3);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                        ctx.beginPath(); ctx.moveTo(lHash, top); ctx.lineTo(lHash, bottom); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(rHash, top); ctx.lineTo(rHash, bottom); ctx.stroke();
                     }
                 };
 
-                // 3. Vector Drawer (Arrows)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
@@ -2044,14 +2068,9 @@
                                     ctx.save(); ctx.beginPath();
                                     ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
                                     ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
-                                    
-                                    if(pt.type === 'run') { 
-                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; 
-                                    } else if (pt.result === 'Incomplete') { 
-                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); 
-                                    } else { 
-                                        ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)'; ctx.lineWidth = 2; 
-                                    }
+                                    if(pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; }
+                                    else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
+                                    else { ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)'; ctx.lineWidth = 2; }
                                     ctx.stroke(); ctx.restore();
                                 }
                             });
@@ -2059,21 +2078,16 @@
                     }
                 };
 
-                // 4. Data Filter
                 const allClips = Store.get('clips') || [];
                 const fDown = document.getElementById('filter-down').value;
                 const fDist = document.getElementById('filter-dist').value;
-                const fZone = document.getElementById('filter-zone').value;
-
                 const clips = allClips.filter(c => {
                     const sit = c.fullData?.data?.situation || {};
                     const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
                     const matchDist = (fDist === 'all') || (sit.distance && sit.distance.includes(fDist));
-                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.includes(fZone));
-                    return matchDown && matchDist && matchZone;
+                    return matchDown && matchDist;
                 });
 
-                // Clear Charts
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
                     const el = document.getElementById(id);
                     if(Chart.getChart(el)) Chart.getChart(el).destroy();
@@ -2081,7 +2095,6 @@
 
                 if (clips.length === 0) return;
 
-                // 5. AGGREGATION & COORDINATES
                 const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
                 const drillDownMap = { coverage: {}, formation: {}, concept: {} };
                 const passShots = [], runShots = [];
@@ -2091,87 +2104,66 @@
                     const sit = d.data.situation || {};
                     const rng = getSeededRandom(c._id || c.id);
                     
-                    // -- AGGREGATION (Charts 1-5) --
+                    // Bar Chart Data
                     const off = d.data.o_formation || "Unknown";
                     const def = d.data.d_formation || "Unknown";
-                    const grade = UI.gradeToNum(d.scouting_report?.report_card?.overall);
-                    const isSuccess = grade >= 2.7;
-
+                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
-                    
-                    // Matrix Data
-                    if(!matrix[off]) matrix[off] = {};
-                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++;
-                    if(isSuccess) matrix[off][def].s++;
-
-                    // Coverage Data
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
-                    coverSuccess[def].p++;
-                    if(isSuccess) coverSuccess[def].s++;
-
-                    // Concept Data
+                    if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
+                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
                     let concept = d.tactical_breakdown?.concept || "Unknown";
                     if(concept.length > 15) concept = concept.substring(0, 15) + "..";
                     concepts[concept] = (concepts[concept] || 0) + 1;
-
-                    // Click Maps
                     if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
                     if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
                     if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = []; drillDownMap.concept[concept].push(c);
 
-                    // -- FIELD MAPPING (Charts 6A/6B) --
-                    let startX = 26.65; // Default Middle
+                    // Field Mapping
+                    let absoluteY = 20; 
+                    if (sit.yard_line) {
+                        const parts = sit.yard_line.split(' ');
+                        const val = parseInt(parts[1]) || 20;
+                        absoluteY = (parts[0] === 'Own') ? val : (100 - val);
+                    }
+                    const startY = 0; // Relative to LOS
+                    
+                    let startX = 26.65;
                     if (sit.hash === 'L') startX = 20;
                     else if (sit.hash === 'R') startX = 33.3;
                     
-                    const startY = 0; // LOS
+                    const isMirrored = sit.mirror === true || sit.mirror === "true";
+                    if (isMirrored) startX = 53.3 - startX;
+
+                    let endX = startX;
                     let distY = d.tactical_breakdown?.yards_gained || sit.distance_val || 5; 
-                    let endX = startX; 
-
                     const pType = (d.tactical_breakdown?.play_type || "pass").toLowerCase();
-                    const isPass = pType.includes('pass');
 
-                    if (isPass) {
+                    if (pType.includes('pass')) {
                         const pass = d.tactical_breakdown?.pass_chart || {};
                         const dir = (pass.end || "middle").toLowerCase();
-
-                        if (dir.includes("left number")) endX = 8;
-                        else if (dir.includes("left hash")) endX = 18;
-                        else if (dir.includes("right hash")) endX = 35;
-                        else if (dir.includes("right number")) endX = 45;
+                        let xOffset = 0;
+                        if (dir.includes("number")) xOffset = 18; else if (dir.includes("hash")) xOffset = 8;
+                        if (dir.includes("left")) endX = startX - xOffset; else if (dir.includes("right")) endX = startX + xOffset;
                         endX += (rng() * 4 - 2); 
-
+                        if (isMirrored) endX = 53.3 - endX;
                         let depth = pass.depth || distY;
                         passShots.push({ type: 'pass', startX, startY, endX, endY: depth, result: pass.result || "Complete", clipId: c._id || c.id });
                     } else {
                         const run = d.tactical_breakdown?.run_chart || {};
                         const dir = (run.direction || "middle").toLowerCase();
-                        
-                        if (dir.includes("left")) endX = startX - 4;
-                        else if (dir.includes("right")) endX = startX + 4;
+                        if (dir.includes("left")) endX = startX - 4; else if (dir.includes("right")) endX = startX + 4;
                         else if (dir.includes("sweep")) endX = (dir.includes("left")) ? 5 : 48;
-                        
+                        if (isMirrored) endX = 53.3 - endX;
                         runShots.push({ type: 'run', startX, startY, endX, endY: distY, result: "Run", clipId: c._id || c.id });
                     }
                 });
 
-                // 6. RENDER BAR CHARTS (1, 2, 4, 5)
                 const renderBar = (id, data, color, map) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { 
-                        type: 'bar', indexAxis: 'y', 
-                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
-                        options: { 
-                            responsive: true, maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } }, 
-                            onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, 
-                            scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } 
-                        } 
-                    });
+                    new Chart(document.getElementById(id), { type: 'bar', indexAxis: 'y', data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } });
                 };
-
                 renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
                 renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
                 renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
@@ -2180,81 +2172,73 @@
                 const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
                 new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
 
-                // 7. RENDER HEATMAP TABLE (3)
                 const table = document.getElementById('efficiency-table');
                 table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
 
-                // 8. RENDER FIELD VISION (6A/6B)
-                const commonOpts = {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 60 } },
-                    plugins: { legend: { display: false } },
-                    onClick: (e, els, chart) => {
-                        if(els.length) {
-                            const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index];
-                            if(pt.clipId) { UI.playClip(pt.clipId); }
-                        }
-                    }
-                };
-
+                const commonOpts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 60 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
                 new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Pass', data: passShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: passShots.map(s=>s.result==='Incomplete'?'#ef4444':'#10b981'), pointStyle: 'circle', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fbbf24', pointStyle: 'rectRot', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [FIX: AUTO-MOVES MENU TO CORRECT LAYER]
-            openContextEditor: (clipId) => {
-                // 1. Identify Target
-                const targetId = clipId || UI.overlayClipId;
-                if (!targetId) { alert("⚠️ No active clip to edit."); return; }
+            // [NEW] TOGGLE MIRROR
+            toggleMirror: () => {
+                const btn = document.getElementById('btn-mirror');
+                const val = document.getElementById('edit-mirror');
+                const isMirrored = val.value === "true";
+                val.value = !isMirrored;
+                btn.style.background = !isMirrored ? 'var(--accent)' : 'transparent';
+                btn.style.color = !isMirrored ? 'black' : 'var(--accent)';
+                btn.innerHTML = !isMirrored ? '⇄ Flipped' : '⇄ Flip Play';
+            },
 
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === targetId);
-                if (!clip) { console.error("Clip not found:", targetId); return; }
+            // [NEW] TOGGLE PANEL
+            toggleContextPanel: (show) => {
+                const panel = document.getElementById('context-side-panel');
+                const report = document.getElementById('popup-report-container'); 
+                if (show) {
+                    const targetId = UI.overlayClipId;
+                    if (!targetId) { alert("No clip active."); return; }
+                    const clips = Store.get('clips') || [];
+                    const clip = clips.find(c => (c._id || c.id) === targetId);
+                    if (!clip) return;
 
-                // 2. THE FIX: Move the modal inside the overlay container
-                // This ensures it sits physically ON TOP of the video player
-                const modal = document.getElementById('edit-context-modal');
-                const overlay = document.getElementById('analysis-overlay');
-                
-                if (modal && overlay && modal.parentNode !== overlay) {
-                    overlay.appendChild(modal); // Moves the HTML element
-                }
+                    document.getElementById('edit-clip-id').value = targetId;
+                    const s = clip.fullData?.data?.situation || {};
+                    UI.setEditVal('down', s.down || 1);
+                    UI.setEditVal('hash', s.hash || 'M');
+                    document.getElementById('edit-dist').value = s.distance_val || 10;
+                    
+                    const isMirrored = s.mirror === true || s.mirror === "true";
+                    document.getElementById('edit-mirror').value = isMirrored;
+                    const btn = document.getElementById('btn-mirror');
+                    btn.style.background = isMirrored ? 'var(--accent)' : 'transparent';
+                    btn.style.color = isMirrored ? 'black' : 'var(--accent)';
+                    btn.innerHTML = isMirrored ? '⇄ Flipped' : '⇄ Flip Play';
 
-                // 3. Show it (No flickering, no hiding video)
-                modal.style.display = 'flex';
-
-                // 4. Load Data
-                document.getElementById('edit-clip-id').value = targetId;
-                const s = clip.fullData?.data?.situation || {};
-                
-                UI.setEditVal('down', s.down || 1);
-                UI.setEditVal('hash', s.hash || 'M'); 
-                document.getElementById('edit-dist').value = s.distance_val || 10;
-                
-                if (s.yard_line) {
-                    const parts = s.yard_line.split(' ');
-                    document.getElementById('edit-side').value = parts[0] || "Own";
-                    document.getElementById('edit-yard').value = parts[1] || 25;
+                    if (s.yard_line) {
+                        const parts = s.yard_line.split(' ');
+                        document.getElementById('edit-side').value = parts[0] || "Own";
+                        document.getElementById('edit-yard').value = parts[1] || 25;
+                    }
+                    panel.style.display = 'flex';
+                    if(report) report.style.display = 'none'; 
                 } else {
-                    document.getElementById('edit-side').value = "Own";
-                    document.getElementById('edit-yard').value = 25;
+                    panel.style.display = 'none';
+                    if(report) report.style.display = 'flex'; 
                 }
             },
 
+            openContextEditor: () => { UI.toggleContextPanel(true); },
+            
             setEditVal: (field, val) => {
                 document.getElementById(`edit-${field}`).value = val;
                 const btnClass = field === 'down' ? '.sit-btn:not(.hash-btn)' : '.hash-btn';
                 document.querySelectorAll(btnClass).forEach((b) => {
                     const btnVal = b.innerText.trim();
-                    if (btnVal.startsWith(String(val))) {
-                        b.classList.add('selected');
-                    } else {
-                        b.classList.remove('selected');
-                    }
+                    if (btnVal.startsWith(String(val))) { b.classList.add('selected'); } else { b.classList.remove('selected'); }
                 });
             },
 
-            // [FIX: SAVES AND CLOSES INSTANTLY]
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const down = Number(document.getElementById('edit-down').value) || 1;
@@ -2262,6 +2246,7 @@
                 const dist = Number(document.getElementById('edit-dist').value) || 10;
                 const side = document.getElementById('edit-side').value; 
                 const yard = Number(document.getElementById('edit-yard').value) || 20;
+                const mirror = document.getElementById('edit-mirror').value;
 
                 let zone = "Open";
                 if (side === "Opp" && yard <= 20) zone = "Red";
@@ -2279,14 +2264,12 @@
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
                     const newSituation = {
-                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`
+                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`, mirror
                     };
 
-                    // Update Local
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
-
-                    // Update Server
+                    
                     try {
                         const token = await window.Clerk.session.getToken();
                         await fetch('/api/update-clip-data', {
@@ -2302,16 +2285,8 @@
                             })
                         });
                     } catch(e) { console.error("DB Save failed", e); }
-
-                    // Refresh Stats immediately
                     UI.refreshStats(); 
-                    
-                    // Force Close
-                    document.getElementById('edit-context-modal').style.display = 'none';
-                    
-                    // Visual Feedback
-                    const btn = document.querySelector(`.clip-card[onclick*="${id}"]`);
-                    if (btn) btn.style.borderColor = 'var(--success)';
+                    UI.toggleContextPanel(false); 
                 }
             },
 
@@ -2319,14 +2294,11 @@
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
                 if (!clip) return;
-
                 UI.overlayClipId = clip._id || clip.id;
-
                 const chatHistory = document.getElementById('overlay-chat-history');
                 const chatInput = document.getElementById('overlay-chat-input');
                 if (chatHistory) chatHistory.innerHTML = '';
                 if (chatInput) chatInput.value = '';
-
                 const reportContainer = document.getElementById('report-injection-site');
                 if (reportContainer) {
                     if (clip.fullData) {
@@ -2346,7 +2318,7 @@
                 }
                 Telestrator.init(clip.videoUrl);
             },
-
+            
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
@@ -2530,59 +2502,7 @@
             window.onload = App.init;
 
         </script>
-        <div id="edit-context-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-            <div class="modal-content" style="max-width:400px;">
-                <h3 style="margin-top:0; color:white;">Game Situation</h3>
-                <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">Accurate context improves AI grading.</p>
-
-                <input type="hidden" id="edit-clip-id">
-
-                <div style="margin-bottom:16px;">
-                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DOWN</label>
-                    <div style="display:flex; gap:8px; margin-top:8px;">
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
-                    </div>
-                    <input type="hidden" id="edit-down">
-                </div>
-
-                <div style="margin-bottom:16px;">
-                    <label style="color:#ccc; font-size:0.8rem; font-weight:700;">DISTANCE TO GO</label>
-                    <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;"
-                        placeholder="e.g. 10">
-                </div>
-
-                <div style="margin-bottom:24px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <label style="color:#ccc; font-size:0.8rem; font-weight:700;">BALL ON</label>
-                        <label style="color:#ccc; font-size:0.8rem; font-weight:700;">STARTING HASH</label>
-                    </div>
-
-                    <div style="display:flex; gap:12px;">
-                        <div style="display:flex; gap:4px; flex:1;">
-                            <select id="edit-side" class="input-box" style="width:80px;">
-                                <option value="Own">Own</option>
-                                <option value="Opp">Opp</option>
-                            </select>
-                            <input type="number" id="edit-yard" class="input-box" placeholder="20" min="0" max="50"
-                                style="flex:1;">
-                        </div>
-
-                        <div style="display:flex; gap:4px;">
-                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
-                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
-                            <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
-                        </div>
-                        <input type="hidden" id="edit-hash" value="M">
-                    </div>
-                </div>
-
-                <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save
-                    Situation</button>
-            </div>
-        </div>
+        
 </body>
 
 </html>
