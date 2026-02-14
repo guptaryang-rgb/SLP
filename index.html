@@ -1140,33 +1140,34 @@
         }
 
         /* --- 2. CONTEXT EDITOR (The Super Overlay) --- */
-        /* Forces the Edit Window to be the absolute top layer (Z-Index Max) */
+        /* [FIX: REMOVED BLUR & FORCED GPU RENDERING] */
         #edit-context-modal {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
-            z-index: 2147483647 !important; /* Maximum Z-Index possible */
+            /* Solid dark background instead of blur (Fixes rendering bug) */
+            background: rgba(0, 0, 0, 0.95); 
+            z-index: 2147483647 !important;
             align-items: center;
             justify-content: center;
+            /* Force this element to its own GPU layer */
+            transform: translateZ(1000px); 
+            -webkit-transform: translateZ(1000px);
         }
 
-        /* [FIX: REMOVED ANIMATION TO PREVENT GHOSTING] */
         #edit-context-modal .modal-content {
             background: #111;
             border: 2px solid var(--accent);
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            box-shadow: 0 0 100px rgba(0,0,0,1);
             position: relative;
-            z-index: 2147483647 !important;
+            z-index: 2147483647;
             padding: 24px;
             border-radius: 12px;
             width: 100%;
             max-width: 400px;
-            /* Animation removed for stability */
         }
 
         /* Input Styling inside the Modal */
@@ -2183,33 +2184,44 @@
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 4 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [FIXED] OPEN EDITOR - NO ANIMATION, NO GHOSTING
+            // [FIX: THE "JOLT" OPENER]
             openContextEditor: (clipId) => {
+                // 1. Get Target ID
                 const targetId = clipId || UI.overlayClipId;
-                if (!targetId) { alert("⚠️ No active clip to edit."); return; }
+                if (!targetId) { alert("⚠️ No active clip found."); return; }
 
+                // 2. Get Data
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === targetId);
-                if (!clip) { console.error("Clip not found:", targetId); return; }
+                if (!clip) { console.error("Clip not found in memory"); return; }
+
+                // 3. THE JOLT: Briefly hide the video container to force the browser to redraw layers
+                const videoContainer = document.getElementById('telestrator-view');
+                if (videoContainer) videoContainer.style.visibility = 'hidden';
 
                 const modal = document.getElementById('edit-context-modal');
-                
-                // Force a clean state before showing
-                modal.style.display = 'none'; 
-                modal.offsetHeight; // Trigger Reflow
-                modal.style.display = 'flex'; // Show immediately
-                
-                // Load Data
+                modal.style.display = 'flex';
+
+                // 4. Restore video visibility instantly
+                requestAnimationFrame(() => {
+                    if (videoContainer) videoContainer.style.visibility = 'visible';
+                });
+
+                // 5. Populate Data
                 document.getElementById('edit-clip-id').value = targetId;
                 const s = clip.fullData?.data?.situation || {};
+                
                 UI.setEditVal('down', s.down || 1);
-                UI.setEditVal('hash', s.hash || 'M'); 
+                UI.setEditVal('hash', s.hash || 'M');
                 document.getElementById('edit-dist').value = s.distance_val || 10;
                 
                 if (s.yard_line) {
                     const parts = s.yard_line.split(' ');
                     document.getElementById('edit-side').value = parts[0] || "Own";
                     document.getElementById('edit-yard').value = parts[1] || 25;
+                } else {
+                    document.getElementById('edit-side').value = "Own";
+                    document.getElementById('edit-yard').value = 25;
                 }
             },
 
