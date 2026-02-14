@@ -296,35 +296,49 @@ app.post("/api/update-clip", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Update failed" }); }
 });
 
-// 7. Manual Data Override (Edit Button)
+// // 7. Manual Data Override (Edit Button & Situation)
 app.post("/api/update-clip-data", requireAuth, async (req, res) => {
     try {
-        const { clipId, title, summary, o_formation, d_formation } = req.body;
+        // ADDED: 'situation' to the destructuring
+        const { clipId, title, summary, o_formation, d_formation, situation } = req.body;
         const clip = await Clip.findOne({ _id: clipId, owner: req.auth.userId });
         
         if (!clip) return res.status(404).json({ error: "Clip not found" });
 
         // Update Top Level
-        clip.title = title;
-        clip.o_formation = o_formation;
-        clip.d_formation = d_formation;
-        clip.formation = `${o_formation} vs ${d_formation}`;
+        if(title) clip.title = title;
+        if(o_formation) clip.o_formation = o_formation;
+        if(d_formation) clip.d_formation = d_formation;
+        if(o_formation && d_formation) clip.formation = `${o_formation} vs ${d_formation}`;
 
         // Update Nested JSON
         if (clip.fullData) {
-            clip.fullData.title = title;
-            if (clip.fullData.data) {
-                clip.fullData.data.o_formation = o_formation;
-                clip.fullData.data.d_formation = d_formation;
+            if(title) clip.fullData.title = title;
+            
+            if (!clip.fullData.data) clip.fullData.data = {};
+            
+            if(o_formation) clip.fullData.data.o_formation = o_formation;
+            if(d_formation) clip.fullData.data.d_formation = d_formation;
+
+            // [FIX: SAVE SITUATION DATA]
+            if (situation) {
+                clip.fullData.data.situation = {
+                    ...clip.fullData.data.situation, // Keep existing fields
+                    ...situation // Overwrite with new edits
+                };
             }
-            if (clip.fullData.scouting_report) {
+
+            if (clip.fullData.scouting_report && summary) {
                 clip.fullData.scouting_report.summary = summary;
             }
         }
         
         await clip.save();
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: "Data Update failed" }); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({ error: "Data Update failed" }); 
+    }
 });
 
 // 8. Delete Single Clip
