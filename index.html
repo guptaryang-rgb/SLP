@@ -1983,52 +1983,56 @@
                 setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
+            // [FIX: COMPLETE ANALYTICS ENGINE - CHARTS & FIELD MAPS]
             refreshStats: () => {
+                // 1. Helper: Deterministic Random (Stable dots)
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
                     for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
                     return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
+                // 2. Field Drawer (Vivid Green)
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        // A. Grass (Vivid Green)
+                        
+                        // Grass
                         ctx.fillStyle = '#15803d'; 
                         ctx.fillRect(left, top, width, height);
-                        // B. Endzones
-                        const zeroY = y.getPixelForValue(0);
-                        const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; 
-                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
-                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
-                        // C. Markings
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+                        // LOS (Blue Line at Y=0)
+                        const losY = y.getPixelForValue(0);
+                        ctx.strokeStyle = '#38bdf8'; 
+                        ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(left, losY); ctx.lineTo(right, losY); ctx.stroke();
+
+                        // Yard Lines
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
                         ctx.textAlign = 'center';
                         ctx.font = 'bold 10px "JetBrains Mono"';
 
-                        for (let i = -10; i <= 110; i++) {
+                        for (let i = -10; i <= 60; i+=10) { 
                             const Y = y.getPixelForValue(i);
-                            if (i % 5 === 0) { 
+                            if(i !== 0) {
                                 ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100) ? 3 : 1; 
-                                ctx.stroke();
-                                if (i % 10 === 0 && i > 0 && i < 100) { 
-                                    const num = i <= 50 ? i : 100 - i;
-                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4);
-                                    ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
-                                }
-                            } else { 
-                                const lHash = x.getPixelForValue(20); const rHash = x.getPixelForValue(33.3);
-                                ctx.beginPath(); ctx.moveTo(lHash-4, Y); ctx.lineTo(lHash+4, Y); ctx.moveTo(rHash-4, Y); ctx.lineTo(rHash+4, Y);
                                 ctx.lineWidth = 1; ctx.stroke();
+                                ctx.fillText(i > 0 ? `+${i}` : i, x.getPixelForValue(4), Y + 4);
                             }
                         }
+                        
+                        // Hash Marks
+                        const lHash = x.getPixelForValue(20); 
+                        const rHash = x.getPixelForValue(33.3);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath(); ctx.moveTo(lHash, top); ctx.lineTo(lHash, bottom); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(rHash, top); ctx.lineTo(rHash, bottom); ctx.stroke();
                     }
                 };
 
+                // 3. Vector Drawer (Arrows)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
@@ -2040,9 +2044,14 @@
                                     ctx.save(); ctx.beginPath();
                                     ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
                                     ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
-                                    if(pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 3; }
-                                    else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
-                                    else { ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)'; ctx.lineWidth = 2; }
+                                    
+                                    if(pt.type === 'run') { 
+                                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; 
+                                    } else if (pt.result === 'Incomplete') { 
+                                        ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); 
+                                    } else { 
+                                        ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)'; ctx.lineWidth = 2; 
+                                    }
                                     ctx.stroke(); ctx.restore();
                                 }
                             });
@@ -2050,20 +2059,21 @@
                     }
                 };
 
+                // 4. Data Filter
                 const allClips = Store.get('clips') || [];
                 const fDown = document.getElementById('filter-down').value;
                 const fDist = document.getElementById('filter-dist').value;
                 const fZone = document.getElementById('filter-zone').value;
 
                 const clips = allClips.filter(c => {
-                    if (!c.fullData || !c.fullData.data) return false;
-                    const sit = c.fullData.data.situation || {};
+                    const sit = c.fullData?.data?.situation || {};
                     const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
-                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.toLowerCase().includes(fDist));
-                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.toLowerCase().includes(fZone));
+                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.includes(fDist));
+                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.includes(fZone));
                     return matchDown && matchDist && matchZone;
                 });
 
+                // Clear Charts
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
                     const el = document.getElementById(id);
                     if(Chart.getChart(el)) Chart.getChart(el).destroy();
@@ -2071,110 +2081,124 @@
 
                 if (clips.length === 0) return;
 
+                // 5. AGGREGATION & COORDINATES
                 const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const passShots = [], runShots = [];
                 const drillDownMap = { coverage: {}, formation: {}, concept: {} };
+                const passShots = [], runShots = [];
 
                 clips.forEach(c => {
                     const d = c.fullData;
-                    const rng = getSeededRandom(c._id || c.id || "seed");
+                    const sit = d.data.situation || {};
+                    const rng = getSeededRandom(c._id || c.id);
+                    
+                    // -- AGGREGATION (Charts 1-5) --
                     const off = d.data.o_formation || "Unknown";
                     const def = d.data.d_formation || "Unknown";
-                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
+                    const grade = UI.gradeToNum(d.scouting_report?.report_card?.overall);
+                    const isSuccess = grade >= 2.7;
 
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
-                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
-                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
-
+                    
+                    // Matrix Data
                     if(!matrix[off]) matrix[off] = {};
                     if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++;
                     if(isSuccess) matrix[off][def].s++;
 
+                    // Coverage Data
                     if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
                     coverSuccess[def].p++;
                     if(isSuccess) coverSuccess[def].s++;
 
+                    // Concept Data
                     let concept = d.tactical_breakdown?.concept || "Unknown";
-                    if(concept.length > 20) concept = concept.substring(0, 18) + "..";
+                    if(concept.length > 15) concept = concept.substring(0, 15) + "..";
                     concepts[concept] = (concepts[concept] || 0) + 1;
-                    if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = [];
-                    drillDownMap.concept[concept].push(c);
 
-                    let pType = (d.tactical_breakdown?.play_type || "Pass").toLowerCase();
-                    if(pType === "unknown") {
-                        if(concept.toLowerCase().match(/run|rush|handoff|duo|zone/)) pType = "run";
-                        else pType = "pass";
-                    }
-                    const yards = d.tactical_breakdown?.yards_gained || 0;
+                    // Click Maps
+                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
+                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
+                    if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = []; drillDownMap.concept[concept].push(c);
+
+                    // -- FIELD MAPPING (Charts 6A/6B) --
+                    let startX = 26.65; // Default Middle
+                    if (sit.hash === 'L') startX = 20;
+                    else if (sit.hash === 'R') startX = 33.3;
                     
-                    let startX = 26.65; 
-                    const manualHash = d.data.situation?.hash; 
-                    if (manualHash === 'L') startX = 20;
-                    else if (manualHash === 'R') startX = 33.3;
-                    else if (manualHash === 'M') startX = 26.65;
-                    else {
-                        if (d.tactical_breakdown?.pass_chart?.start?.includes("Left")) startX = 20;
-                        else if (d.tactical_breakdown?.pass_chart?.start?.includes("Right")) startX = 33.3;
-                    }
-                    let startY = 0; 
+                    const startY = 0; // LOS
+                    let distY = d.tactical_breakdown?.yards_gained || sit.distance_val || 5; 
+                    let endX = startX; 
 
-                    if (pType.includes("pass")) {
+                    const pType = (d.tactical_breakdown?.play_type || "pass").toLowerCase();
+                    const isPass = pType.includes('pass');
+
+                    if (isPass) {
                         const pass = d.tactical_breakdown?.pass_chart || {};
-                        startY = -5; 
-                        let endX = 26.65;
-                        const h = (pass.end || "").toLowerCase();
-                        if (h.includes("left number")) endX = 8;
-                        else if (h.includes("left hash")) endX = 20;
-                        else if (h.includes("right hash")) endX = 33;
-                        else if (h.includes("right number")) endX = 45;
+                        const dir = (pass.end || "middle").toLowerCase();
+
+                        if (dir.includes("left number")) endX = 8;
+                        else if (dir.includes("left hash")) endX = 18;
+                        else if (dir.includes("right hash")) endX = 35;
+                        else if (dir.includes("right number")) endX = 45;
                         endX += (rng() * 4 - 2); 
-                        let depth = pass.depth || yards || 10;
-                        if (pass.result === "Incomplete" && depth === 0) depth = 15; 
+
+                        let depth = pass.depth || distY;
                         passShots.push({ type: 'pass', startX, startY, endX, endY: depth, result: pass.result || "Complete", clipId: c._id || c.id });
                     } else {
                         const run = d.tactical_breakdown?.run_chart || {};
-                        let endX = 26.65;
                         const dir = (run.direction || "middle").toLowerCase();
-                        const gap = (run.gap || "a").toLowerCase();
-                        const offsets = { 'a': 2, 'b': 4, 'c': 6, 'd': 8, 'sweep': 12 };
-                        const offset = offsets[gap] || 2;
-                        if (dir.includes("left")) endX -= offset;
-                        else if (dir.includes("right")) endX += offset;
-                        runShots.push({ type: 'run', startX: 26.65, startY: -1, endX, endY: (yards || 3), result: "Run", clipId: c._id || c.id });
+                        
+                        if (dir.includes("left")) endX = startX - 4;
+                        else if (dir.includes("right")) endX = startX + 4;
+                        else if (dir.includes("sweep")) endX = (dir.includes("left")) ? 5 : 48;
+                        
+                        runShots.push({ type: 'run', startX, startY, endX, endY: distY, result: "Run", clipId: c._id || c.id });
                     }
                 });
 
+                // 6. RENDER BAR CHARTS (1, 2, 4, 5)
                 const renderBar = (id, data, color, map) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { type: 'bar', indexAxis: 'y', data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } });
+                    new Chart(document.getElementById(id), { 
+                        type: 'bar', indexAxis: 'y', 
+                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, 
+                            plugins: { legend: { display: false } }, 
+                            onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, 
+                            scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } 
+                        } 
+                    });
                 };
+
                 renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
                 renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
                 renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
-
-                const table = document.getElementById('efficiency-table');
-                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
 
                 const covL = Object.keys(coverSuccess);
                 const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
                 new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
 
+                // 7. RENDER HEATMAP TABLE (3)
+                const table = document.getElementById('efficiency-table');
+                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+                // 8. RENDER FIELD VISION (6A/6B)
                 const commonOpts = {
                     responsive: true, maintainAspectRatio: false,
-                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } },
-                    plugins: { legend: { labels: { color:'white' } } },
+                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 60 } },
+                    plugins: { legend: { display: false } },
                     onClick: (e, els, chart) => {
                         if(els.length) {
                             const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index];
-                            if(pt.clipId) { UI.playClip(pt.clipId); document.getElementById('stats-modal').style.display='none'; }
+                            if(pt.clipId) { UI.playClip(pt.clipId); }
                         }
                     }
                 };
 
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Complete', data: passShots.filter(s=>s.result==='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#10b981', pointStyle: 'circle', radius: 5 }, { label: 'Incomplete', data: passShots.filter(s=>s.result!=='Complete').map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#ef4444', pointStyle: 'crossRot', radius: 6, borderWidth: 2 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fff', pointStyle: 'rectRot', radius: 4 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Pass', data: passShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: passShots.map(s=>s.result==='Incomplete'?'#ef4444':'#10b981'), pointStyle: 'circle', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fbbf24', pointStyle: 'rectRot', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
             // [FIX: AUTO-MOVES MENU TO CORRECT LAYER]
