@@ -1139,8 +1139,7 @@
             overflow: hidden;
         }
 
-        /* --- 2. CONTEXT EDITOR (The Super Overlay) --- */
-        /* [FIX: REMOVED BLUR & FORCED GPU RENDERING] */
+        /* [FIX: THE SUPER OVERLAY] */
         #edit-context-modal {
             display: none; 
             position: fixed;
@@ -1148,13 +1147,14 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            /* Solid dark background instead of blur (Fixes rendering bug) */
+            /* Solid dark background (Blur causes glitches over video) */
             background: rgba(0, 0, 0, 0.95); 
-            z-index: 2147483647 !important;
+            /* Nuclear Z-Index */
+            z-index: 2147483647 !important; 
             align-items: center;
             justify-content: center;
-            /* Force this element to its own GPU layer */
-            transform: translateZ(1000px); 
+            /* Force GPU to promote this layer above the video */
+            transform: translateZ(1000px);
             -webkit-transform: translateZ(1000px);
         }
 
@@ -1168,6 +1168,7 @@
             border-radius: 12px;
             width: 100%;
             max-width: 400px;
+            /* No animation to ensure instant visibility */
         }
 
         /* Input Styling inside the Modal */
@@ -2186,33 +2187,35 @@
 
             // [FIX: THE "JOLT" OPENER]
             openContextEditor: (clipId) => {
-                // 1. Get Target ID
+                // 1. Identify Target
                 const targetId = clipId || UI.overlayClipId;
-                if (!targetId) { alert("⚠️ No active clip found."); return; }
+                if (!targetId) { alert("⚠️ No active clip to edit."); return; }
 
-                // 2. Get Data
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === targetId);
-                if (!clip) { console.error("Clip not found in memory"); return; }
+                if (!clip) { console.error("Clip not found:", targetId); return; }
 
-                // 3. THE JOLT: Briefly hide the video container to force the browser to redraw layers
+                // 2. THE JOLT: Briefly hide the video container to break the layer lock
                 const videoContainer = document.getElementById('telestrator-view');
                 if (videoContainer) videoContainer.style.visibility = 'hidden';
 
+                // 3. Force the Modal Open
                 const modal = document.getElementById('edit-context-modal');
                 modal.style.display = 'flex';
 
-                // 4. Restore video visibility instantly
+                // 4. Restore video visibility instantly (Next Frame)
                 requestAnimationFrame(() => {
-                    if (videoContainer) videoContainer.style.visibility = 'visible';
+                    requestAnimationFrame(() => {
+                        if (videoContainer) videoContainer.style.visibility = 'visible';
+                    });
                 });
 
-                // 5. Populate Data
+                // 5. Load Data
                 document.getElementById('edit-clip-id').value = targetId;
                 const s = clip.fullData?.data?.situation || {};
                 
                 UI.setEditVal('down', s.down || 1);
-                UI.setEditVal('hash', s.hash || 'M');
+                UI.setEditVal('hash', s.hash || 'M'); 
                 document.getElementById('edit-dist').value = s.distance_val || 10;
                 
                 if (s.yard_line) {
