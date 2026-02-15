@@ -1355,77 +1355,80 @@
                 </div>
             </div>
 
-            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:24px; overflow-y:auto; z-index:50;">
-                <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Game Situation</h3>
-                <input type="hidden" id="edit-clip-id">
+            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
                 
-                <div style="margin-bottom:16px;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700;">DOWN</label>
-                    <div style="display:flex; gap:8px; margin-top:8px;">
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
-                    </div>
-                    <input type="hidden" id="edit-down">
+                <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Edit Situation</h3>
+                <input type="hidden" id="edit-clip-id">
+
+                <div style="margin-bottom:20px; background:#1a1a1a; padding:4px; border-radius:8px; display:flex;">
+                    <button id="btn-pass" class="sit-btn selected" onclick="UI.setPlayType('pass')" style="border:none; border-radius:6px;">PASS</button>
+                    <button id="btn-run" class="sit-btn" onclick="UI.setPlayType('run')" style="border:none; border-radius:6px;">RUN</button>
                 </div>
+                <input type="hidden" id="edit-type" value="pass">
 
                 <div style="margin-bottom:16px;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DOWN</label>
-                    <div style="display:flex; gap:8px; margin-top:8px;">
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
-                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">DOWN</label>
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">TO GO</label>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div style="display:flex; gap:2px; flex:2;">
+                            <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1</button>
+                            <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2</button>
+                            <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3</button>
+                            <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4</button>
+                        </div>
+                        <input type="number" id="edit-togo" class="input-box" style="flex:1; text-align:center;" placeholder="10">
                     </div>
                     <input type="hidden" id="edit-down">
-                </div>
-
-                <div style="margin-bottom:16px; display:flex; gap:12px;">
-                    <div style="flex:1;">
-                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">TOTAL YARDS</label>
-                        <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="Total Gain">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:0.7rem; font-weight:700; letter-spacing:1px; color:#38bdf8;">AIR YARDS</label>
-                        <input type="number" id="edit-air" class="input-box" style="margin-top:8px; width:100%; border-color:rgba(56,189,248,0.3);" placeholder="Catch Point">
-                    </div>
                 </div>
 
                 <div style="margin-bottom:20px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                         <label style="color:#888; font-size:0.7rem; font-weight:700;">BALL ON</label>
                         <label style="color:#888; font-size:0.7rem; font-weight:700;">HASH</label>
                     </div>
-                    <div style="display:flex; gap:12px;">
-                        <div style="display:flex; gap:4px; flex:1;">
-                            <select id="edit-side" class="input-box" style="width:70px; padding:0 8px;">
+                    <div style="display:flex; gap:10px;">
+                        <div style="display:flex; gap:0; flex:1;">
+                            <select id="edit-side" class="input-box" style="width:65px; border-radius:6px 0 0 6px; padding:0 4px; font-size:0.8rem;">
                                 <option value="Own">Own</option>
                                 <option value="Opp">Opp</option>
                             </select>
-                            <input type="number" id="edit-yard" class="input-box" placeholder="20" style="flex:1;">
+                            <input type="number" id="edit-yard" class="input-box" placeholder="20" style="border-radius:0 6px 6px 0; border-left:none; text-align:center;">
                         </div>
-                        <div style="display:flex; gap:4px;">
+                        <div style="display:flex; gap:2px; flex:1;">
                             <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'L')">L</button>
                             <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'M')">M</button>
                             <button class="sit-btn hash-btn" onclick="UI.setEditVal('hash', 'R')">R</button>
                         </div>
-                        <input type="hidden" id="edit-hash" value="M">
+                    </div>
+                    <input type="hidden" id="edit-hash" value="M">
+                </div>
+
+                <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <label style="color:#ccc; font-size:0.7rem; font-weight:700;">TOTAL GAIN</label>
+                        <label id="lbl-air" style="color:#38bdf8; font-size:0.7rem; font-weight:700;">AIR YARDS</label>
+                    </div>
+                    <div style="display:flex; gap:12px;">
+                        <input type="number" id="edit-gain" class="input-box" style="flex:1;" placeholder="Yards">
+                        <input type="number" id="edit-air" class="input-box" style="flex:1; border-color:rgba(56,189,248,0.3);" placeholder="Throw Dist.">
                     </div>
                 </div>
 
-                <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid #222;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700; display:block; margin-bottom:12px;">PLAY DIRECTION</label>
-                    <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <span style="color:#ccc; font-size:0.8rem;">Wrong Side?</span>
-                        <button id="btn-mirror" class="tool-btn" onclick="UI.toggleMirror()" style="border:1px solid var(--accent); color:var(--accent);">⇄ Flip Play</button>
-                    </div>
+                <div style="margin-bottom:24px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="color:#888; font-size:0.7rem; font-weight:700;">ORIENTATION</label>
+                    <button id="btn-mirror" class="tool-btn" onclick="UI.toggleMirror()" style="padding:6px 12px; font-size:0.8rem;">
+                        ⇄ Flip Play
+                    </button>
                     <input type="hidden" id="edit-mirror" value="false">
                 </div>
 
                 <div style="margin-top:auto;">
-                    <button class="cta-btn" style="width:100%; margin-top:0;" onclick="UI.saveContext()">Save Situation</button>
-                    <button class="tool-btn" style="width:100%; margin-top:12px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
+                    <button class="cta-btn" style="width:100%;" onclick="UI.saveContext()">Save Changes</button>
+                    <button class="tool-btn" style="width:100%; margin-top:10px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
                 </div>
             </div>
         </div>
@@ -1886,13 +1889,16 @@
             activeSessionId: null,
             overlayClipId: null,
 
+            // [HELPER] Standardize Grades
             gradeToNum: (g) => {
                 if (!g) return 0;
                 const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
                 return m[g.trim()] || 2.0;
             },
 
+            // [INIT] App Startup
             init: async () => {
+                // ... (Clerk & Session loading same as before) ...
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -1905,17 +1911,6 @@
                 } catch (e) { console.error("Session Load Failed", e); }
 
                 document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
-                
-                const fInput = document.getElementById('file-input');
-                if(fInput) fInput.onchange = (e) => {
-                    if (e.target.files[0]) {
-                        const btn = document.getElementById('file-btn');
-                        btn.style.background = 'var(--success)';
-                        btn.style.color = 'black';
-                        btn.innerHTML = '✅ Ready';
-                    }
-                };
-                
                 const sBtn = document.getElementById('send-btn');
                 if(sBtn) sBtn.onclick = UI.handleSend;
             },
@@ -1923,21 +1918,31 @@
             switchTab: (tab) => {
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-                const aboutView = document.getElementById('landing-view');
+                document.getElementById('landing-view').classList.toggle('active-view', tab === 'about');
                 const warView = document.getElementById('war-room-view');
-                const posSelect = document.getElementById('pos-select');
-
-                if (tab === 'about') {
-                    aboutView.classList.add('active-view');
-                    aboutView.style.opacity = 1;
-                    warView.classList.remove('active-view');
-                } else {
-                    aboutView.classList.remove('active-view');
-                    warView.classList.add('active-view');
+                warView.classList.toggle('active-view', tab !== 'about');
+                if (tab !== 'about') {
                     setTimeout(() => warView.style.opacity = 1, 50);
-                    posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+                    document.getElementById('pos-select').style.display = (tab === 'self') ? 'block' : 'none';
                     if (UI.activeSessionId) UI.selectSession(UI.activeSessionId);
                     else UI.renderSessionList();
+                }
+            },
+            
+            // [NEW] HANDLE RUN/PASS TOGGLE
+            setPlayType: (type) => {
+                document.getElementById('edit-type').value = type;
+                const btnPass = document.getElementById('btn-pass');
+                const btnRun = document.getElementById('btn-run');
+                const airInput = document.getElementById('edit-air');
+                const airLabel = document.getElementById('lbl-air');
+
+                if (type === 'pass') {
+                    btnPass.classList.add('selected'); btnRun.classList.remove('selected');
+                    airInput.style.visibility = 'visible'; airLabel.style.visibility = 'visible';
+                } else {
+                    btnRun.classList.add('selected'); btnPass.classList.remove('selected');
+                    airInput.style.visibility = 'hidden'; airLabel.style.visibility = 'hidden';
                 }
             },
 
@@ -2038,6 +2043,7 @@
             },
 
             // [FIX: MASTER ANALYTICS ENGINE - ALL CHARTS + PHYSICS]
+            // [FIXED] CHART ENGINE - CYAN & RED COLORS
             refreshStats: () => {
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
@@ -2045,50 +2051,32 @@
                     return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
-                // 1. FIELD DRAWER (0-100 Yards, Dark Green)
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height); // Dark Green
                         
-                        // Grass
-                        ctx.fillStyle = '#355e3b'; 
-                        ctx.fillRect(left, top, width, height);
+                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
+                        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
 
-                        // Endzones
-                        const zeroY = y.getPixelForValue(0);
-                        const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
-                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
-                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
-
-                        // Yard Lines
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.textAlign = 'center';
-                        ctx.font = 'bold 10px "JetBrains Mono"';
-
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
                         for (let i = 0; i <= 100; i+=10) { 
                             const Y = y.getPixelForValue(i);
                             ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                            ctx.lineWidth = (i === 0 || i === 100 || i === 50) ? 2 : 1; 
-                            ctx.stroke();
-                            
-                            if(i > 0 && i < 100) {
-                                const num = i <= 50 ? i : 100 - i;
-                                ctx.fillText(num, x.getPixelForValue(6), Y + 4);
-                                ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
+                            ctx.lineWidth = (i===0||i===100||i===50)?2:1; ctx.stroke();
+                            if(i>0&&i<100) { 
+                                const num = i<=50?i:100-i; 
+                                ctx.fillText(num, x.getPixelForValue(6), Y+4); 
+                                ctx.fillText(num, x.getPixelForValue(47.3), Y+4); 
                             }
                         }
-                        // Hashes
-                        const lHash = x.getPixelForValue(20); const rHash = x.getPixelForValue(33.3);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                        ctx.beginPath(); ctx.moveTo(lHash, top); ctx.lineTo(lHash, bottom); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(rHash, top); ctx.lineTo(rHash, bottom); ctx.stroke();
                     }
                 };
 
-                // 2. VECTOR DRAWER (Air vs YAC Logic)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
@@ -2102,39 +2090,29 @@
                                     const endX = x.getPixelForValue(pt.endX);
                                     const endY = y.getPixelForValue(pt.endY);
 
-                                    ctx.save(); 
-                                    ctx.lineWidth = 2;
-                                    
-                                    // Color Logic
-                                    if(pt.type === 'run') ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)'; // Amber
-                                    else if (pt.result === 'Incomplete') ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)'; // Red
-                                    else ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)'; // Blue/Cyan
+                                    ctx.save(); ctx.lineWidth = 3; // Thicker lines for visibility
 
-                                    // Draw Logic (Split vs Solid)
-                                    if (pt.catchY !== undefined && pt.catchY !== pt.endY) {
-                                        const catchYPixel = y.getPixelForValue(pt.catchY);
-                                        
-                                        // A. Air Yards (Solid)
-                                        ctx.beginPath();
-                                        ctx.setLineDash([]); 
-                                        ctx.moveTo(startX, startY);
-                                        ctx.lineTo(endX, catchYPixel); 
-                                        ctx.stroke();
-
-                                        // B. YAC (Dotted)
-                                        ctx.beginPath();
-                                        ctx.setLineDash([4, 4]); 
-                                        ctx.moveTo(endX, catchYPixel);
-                                        ctx.lineTo(endX, endY); 
-                                        ctx.stroke();
-                                    } else {
-                                        // Standard Line
-                                        ctx.beginPath();
-                                        if (pt.result === 'Incomplete') ctx.setLineDash([5, 5]);
-                                        else ctx.setLineDash([]);
-                                        ctx.moveTo(startX, startY);
-                                        ctx.lineTo(endX, endY);
-                                        ctx.stroke();
+                                    // RUN LOGIC (Simple Amber)
+                                    if(pt.type === 'run') {
+                                        ctx.strokeStyle = '#f59e0b'; // Amber
+                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                    } 
+                                    // PASS LOGIC (Cyan -> Red)
+                                    else {
+                                        if (pt.catchY !== undefined && pt.catchY !== pt.endY) {
+                                            const catchYPixel = y.getPixelForValue(pt.catchY);
+                                            // 1. THROW (Cyan)
+                                            ctx.strokeStyle = '#06b6d4'; // Bright Cyan
+                                            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, catchYPixel); ctx.stroke();
+                                            // 2. YAC (Red)
+                                            ctx.strokeStyle = '#ef4444'; // Red
+                                            ctx.beginPath(); ctx.moveTo(endX, catchYPixel); ctx.lineTo(endX, endY); ctx.stroke();
+                                        } else {
+                                            // Fallback or Incomplete
+                                            ctx.strokeStyle = pt.result==='Incomplete' ? '#ef4444' : '#06b6d4';
+                                            if(pt.result==='Incomplete') ctx.setLineDash([5,5]);
+                                            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        }
                                     }
                                     ctx.restore();
                                 }
@@ -2143,154 +2121,59 @@
                     }
                 };
 
-                // 3. DATA PROCESSING
+                // Filter & Data Prep
                 const allClips = Store.get('clips') || [];
-                const fDown = document.getElementById('filter-down').value;
-                const fDist = document.getElementById('filter-dist').value;
-                const fZone = document.getElementById('filter-zone').value;
-
-                const clips = allClips.filter(c => {
-                    const sit = c.fullData?.data?.situation || {};
-                    const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
-                    const matchDist = (fDist === 'all') || (sit.distance && sit.distance.includes(fDist));
-                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.includes(fZone));
-                    return matchDown && matchDist && matchZone;
-                });
-
-                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                const clips = allClips.filter(c => c.fullData?.data?.situation); 
+                
+                ['chart-field-pass', 'chart-field-run'].forEach(id => {
+                    const el = document.getElementById(id); if(Chart.getChart(el)) Chart.getChart(el).destroy();
                 });
 
                 if (clips.length === 0) return;
 
-                // Aggregation Containers
-                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
-                const passShots = [], runShots = [];
+                const passShots = [];
+                const runShots = [];
 
                 clips.forEach(c => {
-                    const d = c.fullData;
-                    const sit = d.data.situation || {};
+                    const s = c.fullData.data.situation;
                     const rng = getSeededRandom(c._id || c.id);
-                    
-                    // -- BAR CHART STATS --
-                    const off = d.data.o_formation || "Unknown";
-                    const def = d.data.d_formation || "Unknown";
-                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
 
-                    offForms[off] = (offForms[off] || 0) + 1;
-                    defForms[def] = (defForms[def] || 0) + 1;
-                    
-                    if(!matrix[off]) matrix[off] = {};
-                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
-
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
-                    coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
-
-                    let concept = d.tactical_breakdown?.concept || "Unknown";
-                    if(concept.length > 15) concept = concept.substring(0, 15) + "..";
-                    concepts[concept] = (concepts[concept] || 0) + 1;
-
-                    if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
-                    if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
-                    if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = []; drillDownMap.concept[concept].push(c);
-
-                    // -- FIELD MAPPING (PHYSICS) --
-                    
-                    // 1. Start Y (Ball On)
+                    // Y Calc (Start)
                     let startY = 20; 
-                    if (sit.yard_line) {
-                        const parts = sit.yard_line.split(' ');
-                        const val = parseInt(parts[1]) || 20;
-                        startY = (parts[0] === 'Own') ? val : (100 - val);
+                    if (s.yard_line) {
+                        const parts = s.yard_line.split(' ');
+                        startY = (parts[0] === 'Own') ? parseInt(parts[1]) : (100 - parseInt(parts[1]));
                     }
-                    
-                    // 2. Distances (Vectors)
-                    const totalGain = parseInt(sit.distance_val) || 5; 
-                    const airGain = parseInt(sit.air_yards) || totalGain;
-                    
-                    let endY = startY + totalGain;
-                    let catchY = startY + airGain;
-                    if (endY > 100) endY = 100;
-                    if (catchY > 100) catchY = 100;
 
-                    // 3. Start X (Hash + Mirror)
+                    // Y Calc (End)
+                    const gain = parseInt(s.yards_gained) || 5;
+                    const air = parseInt(s.air_yards) || gain;
+                    let endY = startY + gain;
+                    let catchY = startY + air;
+                    if(endY > 100) endY = 100; if(catchY > 100) catchY = 100;
+
+                    // X Calc
                     let startX = 26.65;
-                    if (sit.hash === 'L') startX = 20; else if (sit.hash === 'R') startX = 33.3;
-                    
-                    const isMirrored = sit.mirror === true || sit.mirror === "true";
-                    if (isMirrored) startX = 53.3 - startX;
+                    if (s.hash === 'L') startX = 20; else if (s.hash === 'R') startX = 33.3;
+                    const isMirrored = s.mirror === true || s.mirror === "true";
+                    if(isMirrored) startX = 53.3 - startX;
 
-                    let endX = startX;
-                    const pType = (d.tactical_breakdown?.play_type || "pass").toLowerCase();
+                    let endX = startX + (rng() * 6 - 3); // Jitter
+                    if(isMirrored) endX = 53.3 - endX;
 
-                    if (pType.includes('pass')) {
-                        const pass = d.tactical_breakdown?.pass_chart || {};
-                        const dir = (pass.end || "middle").toLowerCase();
-                        let xOffset = 0;
-                        if (dir.includes("number")) xOffset = 18; else if (dir.includes("hash")) xOffset = 8;
-                        
-                        if (dir.includes("left")) endX = startX - xOffset; else if (dir.includes("right")) endX = startX + xOffset;
-                        
-                        endX += (rng() * 4 - 2); 
-                        if (isMirrored) endX = 53.3 - endX;
-
-                        passShots.push({ 
-                            type: 'pass', startX, startY, catchY, endX, endY, 
-                            result: pass.result || "Complete", clipId: c._id || c.id 
-                        });
+                    if (s.play_type === 'run') {
+                        runShots.push({ type: 'run', startX, startY, endX, endY, clipId: c._id });
                     } else {
-                        const run = d.tactical_breakdown?.run_chart || {};
-                        const dir = (run.direction || "middle").toLowerCase();
-                        if (dir.includes("left")) endX = startX - 4; else if (dir.includes("right")) endX = startX + 4;
-                        else if (dir.includes("sweep")) endX = (dir.includes("left")) ? 5 : 48;
-                        
-                        if (isMirrored) endX = 53.3 - endX;
-                        
-                        runShots.push({ type: 'run', startX, startY, endX, endY, result: "Run", clipId: c._id || c.id });
+                        passShots.push({ type: 'pass', startX, startY, catchY, endX, endY, clipId: c._id });
                     }
                 });
 
-                // 4. RENDER ALL CHARTS
-                const renderBar = (id, data, color, map) => {
-                    const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { 
-                        type: 'bar', indexAxis: 'y', 
-                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
-                        options: { 
-                            responsive: true, maintainAspectRatio: false, 
-                            plugins: { legend: { display: false } }, 
-                            onClick: (e, el) => { if(el.length) UI.playClip(map[labels[el[0].index]][0]._id || map[labels[el[0].index]][0].id); }, 
-                            scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } 
-                        } 
-                    });
-                };
-
-                renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
-                renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
-                renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
-
-                const covL = Object.keys(coverSuccess);
-                const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
-                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
-
-                const table = document.getElementById('efficiency-table');
-                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
-
-                const commonOpts = { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } }, 
-                    plugins: { legend: { display: false } }, 
-                    onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } 
-                };
-
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Pass', data: passShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: passShots.map(s=>s.result==='Incomplete'?'#ef4444':'#10b981'), pointStyle: 'circle', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fbbf24', pointStyle: 'rectRot', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
+                const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } } };
+                
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ data: passShots.map(s=>({x:s.endX, y:s.endY, ...s})), pointStyle: 'circle', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), pointStyle: 'rectRot', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [NEW] TOGGLE MIRROR
             toggleMirror: () => {
                 const btn = document.getElementById('btn-mirror');
                 const val = document.getElementById('edit-mirror');
@@ -2301,26 +2184,41 @@
                 btn.innerHTML = !isMirrored ? '⇄ Flipped' : '⇄ Flip Play';
             },
 
-            // [FIX: SIMPLIFIED TOGGLE - KEEPS REPORT VISIBLE]
+            // [NEW] OPEN EDITOR & LOAD SAVED DATA
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
-                
                 if (show) {
-                    // 1. Get Active Clip
                     const targetId = UI.overlayClipId;
                     if (!targetId) { alert("No clip active."); return; }
+                    
                     const clips = Store.get('clips') || [];
                     const clip = clips.find(c => (c._id || c.id) === targetId);
                     if (!clip) return;
 
-                    // 2. Load Data (Population Logic)
+                    // LOAD: Populate Fields from Saved Data
                     document.getElementById('edit-clip-id').value = targetId;
                     const s = clip.fullData?.data?.situation || {};
-                    UI.setEditVal('down', s.down || 1);
-                    UI.setEditVal('hash', s.hash || 'M');
-                    document.getElementById('edit-dist').value = s.distance_val || 10;
-                    document.getElementById('edit-air').value = s.air_yards || "";
                     
+                    // 1. Play Type
+                    UI.setPlayType(s.play_type || 'pass');
+                    
+                    // 2. Down & Distance
+                    UI.setEditVal('down', s.down || 1);
+                    document.getElementById('edit-togo').value = s.distance_togo || 10;
+
+                    // 3. Location
+                    UI.setEditVal('hash', s.hash || 'M');
+                    if (s.yard_line) {
+                        const parts = s.yard_line.split(' ');
+                        document.getElementById('edit-side').value = parts[0] || "Own";
+                        document.getElementById('edit-yard').value = parts[1] || 20;
+                    }
+
+                    // 4. Result Stats
+                    document.getElementById('edit-gain').value = s.yards_gained || 0;
+                    document.getElementById('edit-air').value = s.air_yards || "";
+
+                    // 5. Mirror
                     const isMirrored = s.mirror === true || s.mirror === "true";
                     document.getElementById('edit-mirror').value = isMirrored;
                     const btn = document.getElementById('btn-mirror');
@@ -2328,17 +2226,8 @@
                     btn.style.color = isMirrored ? 'black' : 'var(--accent)';
                     btn.innerHTML = isMirrored ? '⇄ Flipped' : '⇄ Flip Play';
 
-                    if (s.yard_line) {
-                        const parts = s.yard_line.split(' ');
-                        document.getElementById('edit-side').value = parts[0] || "Own";
-                        document.getElementById('edit-yard').value = parts[1] || 25;
-                    }
-
-                    // 3. Show Panel (Video automatically resizes width to fit, height stays 75vh)
                     panel.style.display = 'flex';
-                    
                 } else {
-                    // Close Panel
                     panel.style.display = 'none';
                 }
             },
@@ -2349,37 +2238,34 @@
                 document.getElementById(`edit-${field}`).value = val;
                 const btnClass = field === 'down' ? '.sit-btn:not(.hash-btn)' : '.hash-btn';
                 document.querySelectorAll(btnClass).forEach((b) => {
-                    const btnVal = b.innerText.trim();
-                    if (btnVal.startsWith(String(val))) { b.classList.add('selected'); } else { b.classList.remove('selected'); }
+                    // Only remove/add class if it's inside the edit panel
+                    if(b.closest('#context-side-panel')){
+                       const btnVal = b.innerText.trim();
+                       if (btnVal.startsWith(String(val))) b.classList.add('selected'); 
+                       else b.classList.remove('selected');
+                    }
                 });
             },
 
-            // [FIX: UPDATED SAVE LOGIC - NOW SAVES AIR YARDS]
+            // [NEW] SAVE LOGIC (PERSISTENCE)
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
-                
-                // 1. Grab all values from the form
+                const type = document.getElementById('edit-type').value;
                 const down = Number(document.getElementById('edit-down').value) || 1;
-                const hash = document.getElementById('edit-hash').value || 'M';
-                const dist = Number(document.getElementById('edit-dist').value) || 10;
-                
-                // [NEW] Grab Air Yards (Default to 0 if empty)
-                const air = Number(document.getElementById('edit-air').value) || 0;
+                const togo = Number(document.getElementById('edit-togo').value) || 10;
                 
                 const side = document.getElementById('edit-side').value; 
                 const yard = Number(document.getElementById('edit-yard').value) || 20;
+                const hash = document.getElementById('edit-hash').value || 'M';
+                
+                const gain = Number(document.getElementById('edit-gain').value) || 0;
+                const air = Number(document.getElementById('edit-air').value) || 0;
                 const mirror = document.getElementById('edit-mirror').value;
 
-                // 2. Calculate Logic (Zone, Distance Type)
                 let zone = "Open";
                 if (side === "Opp" && yard <= 20) zone = "Red";
                 if (side === "Own" && yard <= 15) zone = "Backed";
 
-                let distType = "med";
-                if (dist <= 3) distType = "short";
-                if (dist >= 8) distType = "long";
-
-                // 3. Find Clip in Memory
                 const clips = Store.get('clips') || [];
                 const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
 
@@ -2387,19 +2273,19 @@
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
-                    // 4. Construct Data Object (Now includes air_yards)
+                    // Data Structure
                     const newSituation = {
+                        play_type: type,
                         down, 
+                        distance_togo: togo, // Saved specifically as 'To Go'
                         hash, 
-                        distance: distType, 
-                        distance_val: dist, 
-                        air_yards: air, // <--- SAVING IT HERE
+                        yards_gained: gain, // Saved result
+                        air_yards: air,
                         zone, 
                         yard_line: `${side} ${yard}`, 
                         mirror
                     };
 
-                    // 5. Update Local Store
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
                     
