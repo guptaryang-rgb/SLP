@@ -552,7 +552,7 @@
             align-items: center;
             border-bottom: 1px solid var(--border);
             overflow: hidden;
-            touch-action: none;
+            /* DELETED: touch-action: none; <--- This was blocking the scroll */
         }
 
         #telestrator-view {
@@ -1333,7 +1333,7 @@
             </div>
         </div>
 
-        <div id="workspace-split" style="display:flex; width:100%; min-height:75vh; border-bottom:1px solid var(--border); position:relative;">
+        <div id="workspace-split" style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
             
             <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
                 <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
