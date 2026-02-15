@@ -1371,8 +1371,25 @@
                 </div>
 
                 <div style="margin-bottom:16px;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700;">DISTANCE</label>
-                    <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="10">
+                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DOWN</label>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 3)">3rd</button>
+                        <button class="sit-btn" onclick="UI.setEditVal('down', 4)">4th</button>
+                    </div>
+                    <input type="hidden" id="edit-down">
+                </div>
+
+                <div style="margin-bottom:16px; display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">TOTAL YARDS</label>
+                        <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="Total Gain">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.7rem; font-weight:700; letter-spacing:1px; color:#38bdf8;">AIR YARDS</label>
+                        <input type="number" id="edit-air" class="input-box" style="margin-top:8px; width:100%; border-color:rgba(56,189,248,0.3);" placeholder="Catch Point">
+                    </div>
                 </div>
 
                 <div style="margin-bottom:20px;">
@@ -2020,7 +2037,7 @@
                 setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
-            // [FIX: ABSOLUTE FIELD POSITION ENGINE]
+            // [FIX: MASTER ANALYTICS ENGINE - ALL CHARTS + PHYSICS]
             refreshStats: () => {
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
@@ -2028,24 +2045,24 @@
                     return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                 };
 
-                // 1. FULL FIELD DRAWER (0 to 100 Yards)
+                // 1. FIELD DRAWER (0-100 Yards, Dark Green)
                 const footballFieldPlugin = {
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
                         
-                        // Grass (Dark Green)
+                        // Grass
                         ctx.fillStyle = '#355e3b'; 
                         ctx.fillRect(left, top, width, height);
 
-                        // Endzones (0 and 100)
+                        // Endzones
                         const zeroY = y.getPixelForValue(0);
                         const hundredY = y.getPixelForValue(100);
                         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10)); 
                         ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY); 
 
-                        // Yard Lines (10, 20, 30, 40, 50...)
+                        // Yard Lines
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                         ctx.textAlign = 'center';
@@ -2053,29 +2070,25 @@
 
                         for (let i = 0; i <= 100; i+=10) { 
                             const Y = y.getPixelForValue(i);
-                            
-                            // Line
                             ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                            ctx.lineWidth = (i === 0 || i === 100) ? 2 : (i === 50 ? 2 : 1); 
+                            ctx.lineWidth = (i === 0 || i === 100 || i === 50) ? 2 : 1; 
                             ctx.stroke();
-
-                            // Numbers (10, 20, 30, 40, 50, 40, 30...)
+                            
                             if(i > 0 && i < 100) {
                                 const num = i <= 50 ? i : 100 - i;
                                 ctx.fillText(num, x.getPixelForValue(6), Y + 4);
                                 ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
                             }
                         }
-                        
-                        // Hash Marks
-                        const lHash = x.getPixelForValue(20); 
-                        const rHash = x.getPixelForValue(33.3);
+                        // Hashes
+                        const lHash = x.getPixelForValue(20); const rHash = x.getPixelForValue(33.3);
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
                         ctx.beginPath(); ctx.moveTo(lHash, top); ctx.lineTo(lHash, bottom); ctx.stroke();
                         ctx.beginPath(); ctx.moveTo(rHash, top); ctx.lineTo(rHash, bottom); ctx.stroke();
                     }
                 };
 
+                // 2. VECTOR DRAWER (Air vs YAC Logic)
                 const vectorPlugin = {
                     id: 'vectorLines',
                     beforeDatasetsDraw(chart) {
@@ -2084,29 +2097,64 @@
                             const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
                             dataset.data.forEach(pt => {
                                 if (pt.startX !== undefined) {
-                                    ctx.save(); ctx.beginPath();
-                                    ctx.moveTo(x.getPixelForValue(pt.startX), y.getPixelForValue(pt.startY));
-                                    ctx.lineTo(x.getPixelForValue(pt.endX), y.getPixelForValue(pt.endY));
+                                    const startX = x.getPixelForValue(pt.startX);
+                                    const startY = y.getPixelForValue(pt.startY);
+                                    const endX = x.getPixelForValue(pt.endX);
+                                    const endY = y.getPixelForValue(pt.endY);
+
+                                    ctx.save(); 
+                                    ctx.lineWidth = 2;
                                     
-                                    if(pt.type === 'run') { ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; }
-                                    else if (pt.result === 'Incomplete') { ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); }
-                                    else { ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)'; ctx.lineWidth = 2; }
-                                    ctx.stroke(); ctx.restore();
+                                    // Color Logic
+                                    if(pt.type === 'run') ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)'; // Amber
+                                    else if (pt.result === 'Incomplete') ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)'; // Red
+                                    else ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)'; // Blue/Cyan
+
+                                    // Draw Logic (Split vs Solid)
+                                    if (pt.catchY !== undefined && pt.catchY !== pt.endY) {
+                                        const catchYPixel = y.getPixelForValue(pt.catchY);
+                                        
+                                        // A. Air Yards (Solid)
+                                        ctx.beginPath();
+                                        ctx.setLineDash([]); 
+                                        ctx.moveTo(startX, startY);
+                                        ctx.lineTo(endX, catchYPixel); 
+                                        ctx.stroke();
+
+                                        // B. YAC (Dotted)
+                                        ctx.beginPath();
+                                        ctx.setLineDash([4, 4]); 
+                                        ctx.moveTo(endX, catchYPixel);
+                                        ctx.lineTo(endX, endY); 
+                                        ctx.stroke();
+                                    } else {
+                                        // Standard Line
+                                        ctx.beginPath();
+                                        if (pt.result === 'Incomplete') ctx.setLineDash([5, 5]);
+                                        else ctx.setLineDash([]);
+                                        ctx.moveTo(startX, startY);
+                                        ctx.lineTo(endX, endY);
+                                        ctx.stroke();
+                                    }
+                                    ctx.restore();
                                 }
                             });
                         });
                     }
                 };
 
+                // 3. DATA PROCESSING
                 const allClips = Store.get('clips') || [];
                 const fDown = document.getElementById('filter-down').value;
                 const fDist = document.getElementById('filter-dist').value;
-                
+                const fZone = document.getElementById('filter-zone').value;
+
                 const clips = allClips.filter(c => {
                     const sit = c.fullData?.data?.situation || {};
                     const matchDown = (fDown === 'all') || (String(sit.down) === fDown);
                     const matchDist = (fDist === 'all') || (sit.distance && sit.distance.includes(fDist));
-                    return matchDown && matchDist;
+                    const matchZone = (fZone === 'all') || (sit.zone && sit.zone.includes(fZone));
+                    return matchDown && matchDist && matchZone;
                 });
 
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
@@ -2116,6 +2164,7 @@
 
                 if (clips.length === 0) return;
 
+                // Aggregation Containers
                 const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
                 const drillDownMap = { coverage: {}, formation: {}, concept: {} };
                 const passShots = [], runShots = [];
@@ -2125,44 +2174,52 @@
                     const sit = d.data.situation || {};
                     const rng = getSeededRandom(c._id || c.id);
                     
-                    // Bar Data Aggregation
+                    // -- BAR CHART STATS --
                     const off = d.data.o_formation || "Unknown";
                     const def = d.data.d_formation || "Unknown";
                     const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
+
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
-                    if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    
+                    if(!matrix[off]) matrix[off] = {};
+                    if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
+
+                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 };
+                    coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
+
                     let concept = d.tactical_breakdown?.concept || "Unknown";
                     if(concept.length > 15) concept = concept.substring(0, 15) + "..";
                     concepts[concept] = (concepts[concept] || 0) + 1;
+
                     if(!drillDownMap.formation[off]) drillDownMap.formation[off] = []; drillDownMap.formation[off].push(c);
                     if(!drillDownMap.coverage[def]) drillDownMap.coverage[def] = []; drillDownMap.coverage[def].push(c);
                     if(!drillDownMap.concept[concept]) drillDownMap.concept[concept] = []; drillDownMap.concept[concept].push(c);
 
-                    // --- ABSOLUTE PHYSICS MAPPING ---
+                    // -- FIELD MAPPING (PHYSICS) --
                     
-                    // 1. Determine START Y (Field Position)
-                    // If "Own 20", StartY = 20. If "Opp 20", StartY = 80.
-                    let startY = 20; // Default
+                    // 1. Start Y (Ball On)
+                    let startY = 20; 
                     if (sit.yard_line) {
                         const parts = sit.yard_line.split(' ');
                         const val = parseInt(parts[1]) || 20;
                         startY = (parts[0] === 'Own') ? val : (100 - val);
                     }
                     
-                    // 2. Determine DISTANCE Vector (Yards Gained)
-                    const gain = parseInt(d.tactical_breakdown?.yards_gained) || parseInt(sit.distance_val) || 5; 
-                    let endY = startY + gain;
-                    if (endY > 100) endY = 100; // Cap at Endzone
+                    // 2. Distances (Vectors)
+                    const totalGain = parseInt(sit.distance_val) || 5; 
+                    const airGain = parseInt(sit.air_yards) || totalGain;
+                    
+                    let endY = startY + totalGain;
+                    let catchY = startY + airGain;
+                    if (endY > 100) endY = 100;
+                    if (catchY > 100) catchY = 100;
 
-                    // 3. Determine START X (Hash)
-                    let startX = 26.65; // Middle
-                    if (sit.hash === 'L') startX = 20;
-                    else if (sit.hash === 'R') startX = 33.3;
-
-                    // Mirror Flip Logic
+                    // 3. Start X (Hash + Mirror)
+                    let startX = 26.65;
+                    if (sit.hash === 'L') startX = 20; else if (sit.hash === 'R') startX = 33.3;
+                    
                     const isMirrored = sit.mirror === true || sit.mirror === "true";
                     if (isMirrored) startX = 53.3 - startX;
 
@@ -2172,33 +2229,31 @@
                     if (pType.includes('pass')) {
                         const pass = d.tactical_breakdown?.pass_chart || {};
                         const dir = (pass.end || "middle").toLowerCase();
-                        
-                        // Map Direction Relative to StartX
                         let xOffset = 0;
-                        if (dir.includes("number")) xOffset = 18;
-                        else if (dir.includes("hash")) xOffset = 8;
+                        if (dir.includes("number")) xOffset = 18; else if (dir.includes("hash")) xOffset = 8;
                         
-                        if (dir.includes("left")) endX = startX - xOffset;
-                        else if (dir.includes("right")) endX = startX + xOffset;
+                        if (dir.includes("left")) endX = startX - xOffset; else if (dir.includes("right")) endX = startX + xOffset;
                         
-                        endX += (rng() * 4 - 2); // Jitter
+                        endX += (rng() * 4 - 2); 
                         if (isMirrored) endX = 53.3 - endX;
 
-                        // Pass Depth acts as the vector tip
-                        let depthY = pass.depth ? startY + pass.depth : endY;
-                        passShots.push({ type: 'pass', startX, startY, endX, endY: depthY, result: pass.result || "Complete", clipId: c._id || c.id });
+                        passShots.push({ 
+                            type: 'pass', startX, startY, catchY, endX, endY, 
+                            result: pass.result || "Complete", clipId: c._id || c.id 
+                        });
                     } else {
                         const run = d.tactical_breakdown?.run_chart || {};
                         const dir = (run.direction || "middle").toLowerCase();
-                        if (dir.includes("left")) endX = startX - 4;
-                        else if (dir.includes("right")) endX = startX + 4;
+                        if (dir.includes("left")) endX = startX - 4; else if (dir.includes("right")) endX = startX + 4;
                         else if (dir.includes("sweep")) endX = (dir.includes("left")) ? 5 : 48;
+                        
                         if (isMirrored) endX = 53.3 - endX;
+                        
                         runShots.push({ type: 'run', startX, startY, endX, endY, result: "Run", clipId: c._id || c.id });
                     }
                 });
 
-                // Render Bar Charts
+                // 4. RENDER ALL CHARTS
                 const renderBar = (id, data, color, map) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
                     new Chart(document.getElementById(id), { 
@@ -2212,6 +2267,7 @@
                         } 
                     });
                 };
+
                 renderBar('chart-off-form', offForms, '#38bdf8', drillDownMap.formation);
                 renderBar('chart-def-form', defForms, '#ef4444', drillDownMap.coverage);
                 renderBar('chart-conflict', concepts, '#8b5cf6', drillDownMap.concept);
@@ -2223,22 +2279,13 @@
                 const table = document.getElementById('efficiency-table');
                 table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
 
-                // Render Field Vision
-                const commonOpts = {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { 
-                        x: { display: false, min: 0, max: 53.3 }, 
-                        // Full Field Scale (Includes Endzones)
-                        y: { display: false, min: -10, max: 110 } 
-                    },
-                    plugins: { legend: { display: false } },
-                    onClick: (e, els, chart) => {
-                        if(els.length) {
-                            const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index];
-                            if(pt.clipId) { UI.playClip(pt.clipId); }
-                        }
-                    }
+                const commonOpts = { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } }, 
+                    plugins: { legend: { display: false } }, 
+                    onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } 
                 };
+
                 new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [ { label: 'Pass', data: passShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: passShots.map(s=>s.result==='Incomplete'?'#ef4444':'#10b981'), pointStyle: 'circle', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [ { label: 'Run', data: runShots.map(s=>({x:s.endX, y:s.endY, ...s})), backgroundColor: '#fbbf24', pointStyle: 'rectRot', radius: 5 } ]}, options: commonOpts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
@@ -2272,6 +2319,7 @@
                     UI.setEditVal('down', s.down || 1);
                     UI.setEditVal('hash', s.hash || 'M');
                     document.getElementById('edit-dist').value = s.distance_val || 10;
+                    document.getElementById('edit-air').value = s.air_yards || "";
                     
                     const isMirrored = s.mirror === true || s.mirror === "true";
                     document.getElementById('edit-mirror').value = isMirrored;
@@ -2306,15 +2354,23 @@
                 });
             },
 
+            // [FIX: UPDATED SAVE LOGIC - NOW SAVES AIR YARDS]
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
+                
+                // 1. Grab all values from the form
                 const down = Number(document.getElementById('edit-down').value) || 1;
                 const hash = document.getElementById('edit-hash').value || 'M';
                 const dist = Number(document.getElementById('edit-dist').value) || 10;
+                
+                // [NEW] Grab Air Yards (Default to 0 if empty)
+                const air = Number(document.getElementById('edit-air').value) || 0;
+                
                 const side = document.getElementById('edit-side').value; 
                 const yard = Number(document.getElementById('edit-yard').value) || 20;
                 const mirror = document.getElementById('edit-mirror').value;
 
+                // 2. Calculate Logic (Zone, Distance Type)
                 let zone = "Open";
                 if (side === "Opp" && yard <= 20) zone = "Red";
                 if (side === "Own" && yard <= 15) zone = "Backed";
@@ -2323,6 +2379,7 @@
                 if (dist <= 3) distType = "short";
                 if (dist >= 8) distType = "long";
 
+                // 3. Find Clip in Memory
                 const clips = Store.get('clips') || [];
                 const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
 
@@ -2330,13 +2387,23 @@
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
+                    // 4. Construct Data Object (Now includes air_yards)
                     const newSituation = {
-                        down, hash, distance: distType, distance_val: dist, zone, yard_line: `${side} ${yard}`, mirror
+                        down, 
+                        hash, 
+                        distance: distType, 
+                        distance_val: dist, 
+                        air_yards: air, // <--- SAVING IT HERE
+                        zone, 
+                        yard_line: `${side} ${yard}`, 
+                        mirror
                     };
 
+                    // 5. Update Local Store
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
                     
+                    // 6. Update Server (Persistence)
                     try {
                         const token = await window.Clerk.session.getToken();
                         await fetch('/api/update-clip-data', {
@@ -2352,6 +2419,8 @@
                             })
                         });
                     } catch(e) { console.error("DB Save failed", e); }
+
+                    // 7. Refresh & Close
                     UI.refreshStats(); 
                     UI.toggleContextPanel(false); 
                 }
