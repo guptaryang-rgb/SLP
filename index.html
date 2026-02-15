@@ -1320,33 +1320,29 @@
         </div>
     </div>
 
-    <div id="analysis-overlay">
-        <div class="overlay-header">
+    <div id="analysis-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
+
+        <div class="overlay-header" style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
             <div style="display:flex; gap:12px; align-items:center;">
                 <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
                 <span class="badge" style="background:var(--accent); color:black;">VCM</span>
             </div>
             <div style="display:flex; gap:12px;">
-                <button class="tool-btn" onclick="UI.toggleContextPanel(true)">
-                    📝 Edit Situation
-                </button>
+                <button class="tool-btn" onclick="UI.toggleContextPanel(true)">📝 Edit Situation</button>
                 <button class="tool-btn" onclick="UI.closeOverlay()">✕ Close</button>
             </div>
         </div>
 
-        <div id="workspace-split" style="display:flex; flex:1; overflow:hidden; width:100%; position:relative;">
+        <div id="workspace-split" style="display:flex; width:100%; min-height:75vh; border-bottom:1px solid var(--border); position:relative;">
             
-            <div id="popup-video-container" style="flex:1; position:relative; background:#050505; display:flex; flex-direction:column; transition:0.3s ease;">
-                <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
+                <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
                     <video id="ghost-video" playsinline webkit-playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
-                    <video id="main-video" playsinline webkit-playsinline style="max-height:100%; max-width:100%; object-fit:contain; display:block;"></video>
+                    <video id="main-video" playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; display:block;"></video>
                     <canvas id="draw-canvas" style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
                 </div>
+
                 <div class="video-controls">
-                    <div style="display:flex; flex-direction:column; width:60px; margin-right:12px;">
-                        <label style="font-size:0.5rem; color:#888; text-transform:uppercase;">Ghost</label>
-                        <input type="range" min="0" max="1" step="0.1" value="0" style="width:100%; accent-color:var(--accent);" oninput="document.getElementById('ghost-video').style.opacity = this.value">
-                    </div>
                     <button class="v-btn" id="play-pause-btn">⏯</button>
                     <div class="scrubber-container">
                         <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
@@ -1364,7 +1360,7 @@
                 <input type="hidden" id="edit-clip-id">
                 
                 <div style="margin-bottom:16px;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DOWN</label>
+                    <label style="color:#888; font-size:0.7rem; font-weight:700;">DOWN</label>
                     <div style="display:flex; gap:8px; margin-top:8px;">
                         <button class="sit-btn" onclick="UI.setEditVal('down', 1)">1st</button>
                         <button class="sit-btn" onclick="UI.setEditVal('down', 2)">2nd</button>
@@ -1375,14 +1371,14 @@
                 </div>
 
                 <div style="margin-bottom:16px;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">DISTANCE</label>
+                    <label style="color:#888; font-size:0.7rem; font-weight:700;">DISTANCE</label>
                     <input type="number" id="edit-dist" class="input-box" style="margin-top:8px; width:100%;" placeholder="10">
                 </div>
 
                 <div style="margin-bottom:20px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">BALL ON</label>
-                        <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px;">HASH</label>
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">BALL ON</label>
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">HASH</label>
                     </div>
                     <div style="display:flex; gap:12px;">
                         <div style="display:flex; gap:4px; flex:1;">
@@ -1402,12 +1398,10 @@
                 </div>
 
                 <div style="margin-bottom:24px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid #222;">
-                    <label style="color:#888; font-size:0.7rem; font-weight:700; letter-spacing:1px; display:block; margin-bottom:12px;">PLAY DIRECTION</label>
+                    <label style="color:#888; font-size:0.7rem; font-weight:700; display:block; margin-bottom:12px;">PLAY DIRECTION</label>
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <span style="color:#ccc; font-size:0.8rem;">Wrong Side?</span>
-                        <button id="btn-mirror" class="tool-btn" onclick="UI.toggleMirror()" style="border:1px solid var(--accent); color:var(--accent);">
-                            ⇄ Flip Play
-                        </button>
+                        <button id="btn-mirror" class="tool-btn" onclick="UI.toggleMirror()" style="border:1px solid var(--accent); color:var(--accent);">⇄ Flip Play</button>
                     </div>
                     <input type="hidden" id="edit-mirror" value="false">
                 </div>
@@ -1417,12 +1411,12 @@
                     <button class="tool-btn" style="width:100%; margin-top:12px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
                 </div>
             </div>
+        </div>
 
-        </div> 
-        <div id="popup-report-container">
+        <div id="popup-report-container" style="width:100%; padding:40px 20px; display:flex; flex-direction:column; align-items:center; background:#050505;">
             <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
                 <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
-                <div id="overlay-chat-history" style="max-height:100px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
                 <div style="display:flex; gap:8px;">
                     <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
                     <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
@@ -2260,17 +2254,19 @@
                 btn.innerHTML = !isMirrored ? '⇄ Flipped' : '⇄ Flip Play';
             },
 
-            // [NEW] TOGGLE PANEL
+            // [FIX: SIMPLIFIED TOGGLE - KEEPS REPORT VISIBLE]
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
-                const report = document.getElementById('popup-report-container'); 
+                
                 if (show) {
+                    // 1. Get Active Clip
                     const targetId = UI.overlayClipId;
                     if (!targetId) { alert("No clip active."); return; }
                     const clips = Store.get('clips') || [];
                     const clip = clips.find(c => (c._id || c.id) === targetId);
                     if (!clip) return;
 
+                    // 2. Load Data (Population Logic)
                     document.getElementById('edit-clip-id').value = targetId;
                     const s = clip.fullData?.data?.situation || {};
                     UI.setEditVal('down', s.down || 1);
@@ -2289,11 +2285,13 @@
                         document.getElementById('edit-side').value = parts[0] || "Own";
                         document.getElementById('edit-yard').value = parts[1] || 25;
                     }
+
+                    // 3. Show Panel (Video automatically resizes width to fit, height stays 75vh)
                     panel.style.display = 'flex';
-                    if(report) report.style.display = 'none'; 
+                    
                 } else {
+                    // Close Panel
                     panel.style.display = 'none';
-                    if(report) report.style.display = 'flex'; 
                 }
             },
 
