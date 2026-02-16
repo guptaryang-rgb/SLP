@@ -1576,6 +1576,59 @@
             <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
         </div>
 
+<div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="max-width:1000px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
+            
+            <div style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:300px; font-weight:700; background:#111;">
+                <div style="display:flex; gap:12px;">
+                    <button class="tool-btn" onclick="Playbook.clearCanvas()">Clear</button>
+                    <button class="cta-btn" style="margin:0; padding:10px 24px;" onclick="Playbook.savePlay()">Save to Library</button>
+                    <button class="tool-btn" style="border:none;" onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
+                </div>
+            </div>
+
+            <div style="flex:1; display:flex; position:relative;">
+                <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
+                    <div class="tool-icon active" style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">✏️</div>
+                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
+                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">❌</div>
+                </div>
+
+                <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b;">
+                    <canvas id="designer-canvas" style="display:block;"></canvas>
+                    <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b; display:flex;">
+    
+    <canvas id="designer-canvas" style="display:block; flex:1;"></canvas>
+
+    <div style="width:300px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; position:relative; z-index:20;">
+        <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border);">
+            COACH AI : CHALK TALK
+        </div>
+        <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:12px; font-size:0.85rem; display:flex; flex-direction:column; gap:10px;">
+            <div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">
+                Linking to Analysis intel...
+            </div>
+        </div>
+        <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px;">
+            <input id="designer-chat-input" type="text" placeholder="Ask about this play..." style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:8px; border-radius:6px; font-size:0.8rem;">
+            <button class="tool-btn" style="padding:8px;" onclick="Playbook.handleChalkTalk()">Send</button>
+        </div>
+    </div>
+    
+    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
+        Draw routes. AI will auto-tag geometry.
+    </div>
+</div>
+                    
+                    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none;">
+                        Draw routes. AI will auto-tag geometry.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <script>
             /**
              * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
@@ -2102,39 +2155,43 @@
 
             switchTab: (tab) => {
                 UI.currentMode = tab;
-                // 1. Update Buttons
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
                 
-                // 2. Hide All Views first
-                document.querySelectorAll('.view').forEach(v => {
-                    v.classList.remove('active-view');
-                    v.style.opacity = 0;
-                });
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
 
-                // 3. Show Target View
-                let targetView = 'landing-view';
-                if (tab === 'self' || tab === 'team') targetView = 'war-room-view';
-                if (tab === 'playbook') targetView = 'playbook-view';
+                let targetView = (tab === 'self' || tab === 'team') ? 'war-room-view' : 
+                                 (tab === 'playbook') ? 'playbook-view' : 'landing-view';
 
                 const viewEl = document.getElementById(targetView);
                 viewEl.classList.add('active-view');
-                
-                // Fade in animation
                 setTimeout(() => viewEl.style.opacity = 1, 50);
 
-                // 4. Handle Specific Logic
                 if (tab !== 'about') {
-                    // Check Auth for restricted tabs
-                    if (!App.enforceAuth()) return;
+                    // Force login if trying to access analysis or playbook
+                    if (window.Clerk && !window.Clerk.user) {
+                        document.getElementById('auth-modal').style.display = 'flex';
+                        return;
+                    }
 
-                    // Show Position Select only for Self Analysis
                     const posSelect = document.getElementById('pos-select');
                     if(posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
 
-                    // Load Session List if in War Room
                     if (targetView === 'war-room-view') {
-                        if (UI.activeSessionId) UI.selectSession(UI.activeSessionId);
-                        else UI.renderSessionList();
+                        const sessions = Store.get('sessions') || [];
+                        // [THE FIX] Check if the current session matches the tab type
+                        const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                        
+                        if (!currentSess || currentSess.type !== tab) {
+                            // Clear view if the session belongs to a different tab
+                            UI.activeSessionId = null;
+                            document.getElementById('chat-feed').innerHTML = '';
+                            // Find the most recent session for THIS tab
+                            const firstValid = sessions.find(s => s.type === tab);
+                            if (firstValid) UI.selectSession(firstValid.sessionId || firstValid.id);
+                            else UI.renderSessionList();
+                        } else {
+                            UI.renderSessionList();
+                        }
                     }
                 }
             },
@@ -2655,7 +2712,244 @@
                 </div>`;
             }
         };
+/**
+         * 5. PLAYBOOK ENGINE (The Architect)
+         */
+        const Playbook = {
+            canvas: null,
+            ctx: null,
+            elements: [], // Stores players {x, y, type}
+            isDragging: false,
+            dragTarget: null,
 
+            init: () => {
+                Playbook.renderGrid(); // Load library on startup
+            },
+
+            // 1. OPEN & SETUP
+            openDesigner: (playId = null) => {
+                Playbook.activePlayId = playId; // The "Bridge" for the AI
+                const modal = document.getElementById('designer-modal');
+                modal.style.display = 'flex';
+                
+                // Clear the chat sidebar when opening a play
+                const chatHistory = document.getElementById('designer-chat-history');
+                if(chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
+
+                // Wait for layout to settle (100ms) before drawing
+                setTimeout(() => {
+                    const container = document.getElementById('designer-container');
+                    Playbook.canvas = document.getElementById('designer-canvas');
+                    Playbook.canvas.width = container.clientWidth;
+                    Playbook.canvas.height = container.clientHeight;
+                    Playbook.ctx = Playbook.canvas.getContext('2d');
+
+                    // Bind interaction events
+                    Playbook.canvas.onmousedown = Playbook.handleStart;
+                    Playbook.canvas.onmousemove = Playbook.handleMove;
+                    Playbook.canvas.onmouseup = Playbook.handleEnd;
+
+                    const plays = Store.get('playbook') || [];
+                    const savedPlay = plays.find(p => p.id === playId);
+
+                    if (savedPlay) {
+                        // LOAD EXISTING PLAY
+                        document.getElementById('play-name').value = savedPlay.title;
+                        Playbook.elements = savedPlay.elements;
+                    } else {
+                        // SETUP NEW PLAY (Standard 11-man Spread)
+                        document.getElementById('play-name').value = "";
+                        Playbook.elements = [];
+                        const w = Playbook.canvas.width;
+                        const h = Playbook.canvas.height;
+                        const c = w / 2; 
+                        const los = h * 0.7; // Line of Scrimmage
+
+                        // O-Line + QB + RB
+                        ['C','G','G','T','T'].forEach((p, i) => Playbook.elements.push({ type:'O', label:p, x: c + (i-2)*35, y: los }));
+                        Playbook.elements.push({ type:'O', label:'Q', x: c, y: los + 40 });
+                        Playbook.elements.push({ type:'O', label:'R', x: c - 50, y: los + 40 });
+                        
+                        // Perimeter Weapons
+                        Playbook.elements.push({ type:'O', label:'X', x: 60, y: los });
+                        Playbook.elements.push({ type:'O', label:'Z', x: w - 60, y: los });
+                        Playbook.elements.push({ type:'O', label:'Y', x: c - 110, y: los });
+                        Playbook.elements.push({ type:'O', label:'H', x: c + 110, y: los });
+                    }
+
+                    Playbook.drawAll();
+                }, 100);
+            },
+
+            clearCanvas: () => {
+                Playbook.openDesigner(); // Just reset positions
+            },
+
+            // 2. CANVAS INTERACTION
+            handleStart: (e) => {
+                const rect = Playbook.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Check hit on players
+                Playbook.dragTarget = Playbook.elements.find(el => {
+                    const dx = el.x - x; const dy = el.y - y;
+                    return Math.sqrt(dx*dx + dy*dy) < 15;
+                });
+
+                if (Playbook.dragTarget) Playbook.isDragging = true;
+            },
+
+            handleMove: (e) => {
+                if (!Playbook.isDragging || !Playbook.dragTarget) return;
+                const rect = Playbook.canvas.getBoundingClientRect();
+                Playbook.dragTarget.x = e.clientX - rect.left;
+                Playbook.dragTarget.y = e.clientY - rect.top;
+                Playbook.drawAll();
+            },
+
+            handleEnd: () => {
+                Playbook.isDragging = false;
+                Playbook.dragTarget = null;
+            },
+
+            // 3. DRAWING
+            drawField: () => {
+                const ctx = Playbook.ctx;
+                const w = Playbook.canvas.width;
+                const h = Playbook.canvas.height;
+                ctx.fillStyle = '#355e3b'; ctx.fillRect(0,0,w,h);
+                // Hash Marks
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(w*0.35, 0); ctx.lineTo(w*0.35, h);
+                ctx.moveTo(w*0.65, 0); ctx.lineTo(w*0.65, h);
+                ctx.stroke();
+            },
+
+            drawAll: () => {
+                Playbook.drawField();
+                const ctx = Playbook.ctx;
+                // Draw Players
+                Playbook.elements.forEach(el => {
+                    ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI*2);
+                    ctx.fillStyle = 'white'; ctx.fill();
+                    ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
+                    
+                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(el.label, el.x, el.y);
+                });
+            },
+
+            savePlay: () => {
+                const name = document.getElementById('play-name').value || "Untitled Concept";
+                // Capture the session ID from whatever tab you were just on
+                const linkedSessionId = UI.activeSessionId; 
+
+                const newPlay = {
+                    id: 'play_' + Date.now(),
+                    title: name,
+                    elements: Playbook.elements,
+                    linkedSessionId: linkedSessionId, // THE BRIDGE
+                    date: new Date().toLocaleDateString()
+                };
+
+                const plays = Store.get('playbook') || [];
+                plays.unshift(newPlay);
+                Store.set('playbook', plays);
+
+                document.getElementById('designer-modal').style.display = 'none';
+                Playbook.renderGrid();
+            },
+
+            // 5. LIBRARY GRID
+            renderGrid: () => {
+                const grid = document.getElementById('playbook-grid');
+                if(!grid) return;
+                const plays = Store.get('playbook') || [];
+                
+                if(plays.length === 0) {
+                    grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
+                    return;
+                }
+
+                grid.innerHTML = plays.map(p => `
+                    <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.id}')">
+                        <div class="scout-header">
+                            <div>
+                                <div class="play-title">${p.title}</div>
+                                <div style="font-size:0.7rem; color:#666;">${p.date}</div>
+                            </div>
+                            ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
+                        </div>
+                        <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
+                            ${p.elements.map(el => `<div style="position:absolute; left:${el.x/10}%; top:${el.y/10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            },
+            // [NEW] Retrieves the chat history from the session linked to this play
+            getLinkedContext: (playId) => {
+                const plays = Store.get('playbook') || [];
+                const play = plays.find(p => p.id === playId);
+                
+                if (play && play.linkedSessionId) {
+                    const sessions = Store.get('sessions') || [];
+                    const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
+                    
+                    return contextSession ? contextSession.history : null;
+                }
+                return null;
+            },
+
+            // [NEW] Prepares a prompt for the AI combining the play and the session intel
+            getAIInsight: async (playId) => {
+                const plays = Store.get('playbook') || [];
+                const play = plays.find(p => p.id === playId);
+                
+                if (!play || !play.linkedSessionId) return "No linked session found.";
+
+                const intel = Playbook.getLinkedContext(playId);
+                const sessions = Store.get('sessions') || [];
+                const sessionData = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
+
+                const prompt = `Coach, analyze this play concept: "${play.title}". 
+                                Use the intel from our film session "${sessionData.title}": 
+                                ${JSON.stringify(intel)}`;
+                
+                console.log("AI Context Bridge Active:", prompt);
+                return prompt;
+            }, // <--- Comma here to separate functions
+
+            handleChalkTalk: async () => {
+                const input = document.getElementById('designer-chat-input');
+                const history = document.getElementById('designer-chat-history');
+                const msg = input.value;
+                if(!msg) return;
+
+                // 1. Clear hint and show user message
+                if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; max-width:90%; font-size:0.85rem; margin-bottom:8px;">${msg}</div>`;
+                input.value = '';
+
+                // 2. Fetch the "Bridge" Context
+                const playbookContext = await Playbook.getAIInsight(Playbook.activePlayId);
+                
+                history.innerHTML += `<div id="chalk-loading" style="color:var(--accent); font-size:0.7rem; margin-top:4px;">Coach is checking the film...</div>`;
+                history.scrollTop = history.scrollHeight;
+
+                // 3. Send to AI
+                const response = await CoachAI.analyze(`${playbookContext} \n User Question: ${msg}`, null);
+                
+                // 4. Render AI response
+                if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                history.innerHTML += `<div style="background:#222; padding:12px; border-radius:8px; border:1px solid var(--border); line-height:1.5; color:#ddd; font-size:0.85rem; margin-bottom:12px;"><strong style="color:var(--accent);">Coach:</strong> ${response.text}</div>`;
+                history.scrollTop = history.scrollHeight;
+            }
+            
+            
+        };
             const App = {
                 init: () => {
                     let attempts = 0;
