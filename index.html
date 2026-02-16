@@ -1246,36 +1246,31 @@
             <div class="hero-wrapper">
                 <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and
-                    team strategy.</p>
+                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
 
                 <div class="onboarding-grid">
                     <div class="step-card">
                         <div class="step-num">01</div>
                         <div class="step-title">Upload</div>
-                        <div class="step-desc">Upload raw MP4 footage directly from your device. Local processing
-                            ensures privacy.</div>
+                        <div class="step-desc">Upload raw MP4 footage directly. Local processing ensures privacy.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">02</div>
                         <div class="step-title">Select Mode</div>
-                        <div class="step-desc">Choose <strong>Self</strong> for biomechanics & grades, or
-                            <strong>Team</strong> for scheme & coverage analysis.
-                        </div>
+                        <div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for scheme.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
                         <div class="step-title">Execute</div>
-                        <div class="step-desc">Use the Telestrator engine to draw over film in real-time with Apple
-                            Pencil support.</div>
+                        <div class="step-desc">Use the Telestrator engine to draw over film in real-time.</div>
                     </div>
                 </div>
 
                 <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
 
                 <div class="legal-footer">
-                    <a href="privacy.html" target="_blank">Privacy Policy</a>
-                    <a href="terms.html" target="_blank">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
                 </div>
             </div>
         </div>
@@ -1292,6 +1287,7 @@
                         <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
                         <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
                         <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
+                        <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster</button>
                     </div>
 
                     <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;"></div>
@@ -1349,6 +1345,8 @@
                 </div>
             </div>
         </div>
+
+    </div>
 
                 <div class="main">
                     <div class="dashboard-header">
@@ -2210,47 +2208,69 @@
                 },
 
                 switchTab: (tab) => {
-                    UI.currentMode = tab;
-                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                UI.currentMode = tab;
+                
+                // 1. Update Navigation Buttons
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                
+                // 2. Hide ALL views first
+                document.querySelectorAll('.view').forEach(v => {
+                    v.classList.remove('active-view');
+                    v.style.opacity = 0; // Prepare for fade-in
+                });
 
-                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+                // 3. Determine Target View
+                let targetViewId = 'landing-view'; // Default to Vision
+                
+                if (tab === 'self' || tab === 'team') {
+                    targetViewId = 'war-room-view';
+                } else if (tab === 'playbook') {
+                    targetViewId = 'playbook-view';
+                }
 
-                    let targetView = (tab === 'self' || tab === 'team') ? 'war-room-view' :
-                        (tab === 'playbook') ? 'playbook-view' : 'landing-view';
-
-                    const viewEl = document.getElementById(targetView);
+                // 4. Show Target View
+                const viewEl = document.getElementById(targetViewId);
+                if (viewEl) {
                     viewEl.classList.add('active-view');
-                    setTimeout(() => viewEl.style.opacity = 1, 50);
+                    setTimeout(() => viewEl.style.opacity = 1, 50); // Fade in
+                }
 
-                    if (tab !== 'about') {
-                        // Force login if trying to access analysis or playbook
-                        if (window.Clerk && !window.Clerk.user) {
-                            document.getElementById('auth-modal').style.display = 'flex';
-                            return;
-                        }
+                // 5. Handle Logic Specific to Tab
+                if (tab !== 'about') {
+                    // Check Auth for restricted tabs
+                    if (window.Clerk && !window.Clerk.user) {
+                        document.getElementById('auth-modal').style.display = 'flex';
+                        return;
+                    }
 
-                        const posSelect = document.getElementById('pos-select');
-                        if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+                    // Toggle Position Select (Only for Self Analysis)
+                    const posSelect = document.getElementById('pos-select');
+                    if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
 
-                        if (targetView === 'war-room-view') {
-                            const sessions = Store.get('sessions') || [];
-                            // [THE FIX] Check if the current session matches the tab type
-                            const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                    // If entering War Room, Refresh Sessions
+                    if (targetViewId === 'war-room-view') {
+                        // Check if current session matches tab type (Self vs Team)
+                        const sessions = Store.get('sessions') || [];
+                        const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
 
-                            if (!currentSess || currentSess.type !== tab) {
-                                // Clear view if the session belongs to a different tab
-                                UI.activeSessionId = null;
-                                document.getElementById('chat-feed').innerHTML = '';
-                                // Find the most recent session for THIS tab
-                                const firstValid = sessions.find(s => s.type === tab);
-                                if (firstValid) UI.selectSession(firstValid.sessionId || firstValid.id);
-                                else UI.renderSessionList();
-                            } else {
-                                UI.renderSessionList();
-                            }
+                        if (!currentSess || currentSess.type !== tab) {
+                            UI.activeSessionId = null; // Clear invalid session
+                            document.getElementById('chat-feed').innerHTML = ''; // Clear chat
+                            // Try to find a valid session for this tab
+                            const lastValid = sessions.find(s => s.type === tab);
+                            if (lastValid) UI.selectSession(lastValid.sessionId || lastValid.id);
+                            else UI.renderSessionList();
+                        } else {
+                            UI.renderSessionList();
                         }
                     }
-                },
+
+                    // If entering Playbook, Load Grid
+                    if (targetViewId === 'playbook-view') {
+                        if(Playbook) Playbook.renderGrid();
+                    }
+                }
+            },
 
                 // [UPDATED] HANDLE RUN/PASS TOGGLE
                 setPlayType: (type) => {
