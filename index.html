@@ -1283,52 +1283,72 @@
         <div id="war-room-view" class="view">
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn"
-                            onclick="App.createNewSession()">+</button></div>
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
-                <div id="playbook-view" class="view">
-                    <div class="app-body">
-                        <div class="sidebar">
-                            <div class="panel-header">Install & Concepts</div>
-                            <div style="padding:16px;">
-                                <div class="session-item active">Pass Concepts</div>
-                                <div class="session-item">Run Concepts</div>
-                                <div class="session-item">Protections</div>
-                                <div class="session-item">Specials</div>
-                            </div>
-                        </div>
+                <div class="main">
+                    <div class="dashboard-header">
+                        <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
+                        <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
+                        <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
+                    </div>
 
-                        <div class="main" style="padding: 24px; overflow-y:auto;">
-                            <div
-                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                                <div>
-                                    <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
-                                    <div style="color:#666;">AI-Linked Concept Library</div>
-                                </div>
-                                <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;">+ New
-                                    Concept</button>
-                            </div>
+                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;"></div>
 
-                            <div id="playbook-grid"
-                                style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+                    <div class="input-bar">
+                        <select id="pos-select" class="pos-select">
+                            <option value="general">Select Focus...</option>
+                            <option value="qb">Quarterback</option>
+                            <option value="wr">Receiver</option>
+                            <option value="rb">Running Back</option>
+                            <option value="db">Defensive Back</option>
+                            <option value="ol">Offensive Line</option>
+                        </select>
 
-                                <div class="scout-card">
-                                    <div class="scout-header">
-                                        <div class="play-title">Mesh (Sample)</div>
-                                        <span style="font-size:0.7rem; color:var(--accent);">🔗 AI Linked</span>
-                                    </div>
-                                    <div
-                                        style="height:120px; background:#355e3b; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5);">
-                                        (Concept Diagram)
-                                    </div>
-                                </div>
+                        <input type="file" id="file-input" hidden accept="video/*">
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
 
-                            </div>
-                        </div>
+                        <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
+                        <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
+
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
                     </div>
                 </div>
+
+                <div class="lib-panel" id="right-panel">
+                    <div class="panel-header">Film Library</div>
+                    <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="playbook-view" class="view">
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="panel-header">Install & Concepts</div>
+                    <div style="padding:16px;">
+                        <div class="session-item active">Pass Concepts</div>
+                        <div class="session-item">Run Concepts</div>
+                        <div class="session-item">Protections</div>
+                        <div class="session-item">Specials</div>
+                    </div>
+                </div>
+
+                <div class="main" style="padding: 24px; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <div>
+                            <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
+                            <div style="color:#666;">AI-Linked Concept Library</div>
+                        </div>
+                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;" onclick="Playbook.openDesigner()">+ New Concept</button>
+                    </div>
+
+                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+                        </div>
+                </div>
+            </div>
+        </div>
 
                 <div class="main">
                     <div class="dashboard-header">
@@ -1620,68 +1640,50 @@
         </div>
 
         <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
-            <div class="modal-content"
-                style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
-
-                <div
-                    style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                    <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)"
-                        style="width:300px; font-weight:700; background:#111;">
-                    <div style="display:flex; gap:12px;">
-                        <button class="tool-btn" onclick="Playbook.clearCanvas()">Clear</button>
-                        <button class="cta-btn" style="margin:0; padding:10px 24px;" onclick="Playbook.savePlay()">Save
-                            to Library</button>
-                        <button class="tool-btn" style="border:none;"
-                            onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
-                    </div>
-                </div>
-
-                <div style="flex:1; display:flex; position:relative; overflow:hidden;">
-
-                    <div
-                        style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
-                        <div class="tool-icon active"
-                            style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">
-                            ✏️</div>
-                        <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
-                        <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">❌</div>
-                    </div>
-
-                    <div id="designer-container"
-                        style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b;">
-                        <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
-
-                        <div
-                            style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
-                            Draw routes. AI will auto-tag geometry.
-                        </div>
-                    </div>
-
-                    <div
-                        style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
-                        <div
-                            style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px;">
-                            COACH AI : CHALK TALK
-                        </div>
-                        <div id="designer-chat-history"
-                            style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
-                            <div id="chalk-talk-hint"
-                                style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
-                                Linking to Analysis intel...
-                            </div>
-                        </div>
-                        <div
-                            style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
-                            <input id="designer-chat-input" type="text" placeholder="Ask about this play..."
-                                style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:10px; border-radius:6px; font-size:0.85rem;">
-                            <button class="tool-btn" style="padding:10px; background:var(--accent); color:black;"
-                                onclick="Playbook.handleChalkTalk()">SEND</button>
-                        </div>
-                    </div>
-
+        <div class="modal-content" style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
+            
+            <div style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:300px; font-weight:700; background:#111;">
+                <div style="display:flex; gap:12px;">
+                    <button class="tool-btn" onclick="Playbook.clearCanvas()">Clear</button>
+                    <button class="cta-btn" style="margin:0; padding:10px 24px;" onclick="Playbook.savePlay()">Save to Library</button>
+                    <button class="tool-btn" style="border:none;" onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
                 </div>
             </div>
+
+            <div style="flex:1; display:flex; position:relative; overflow:hidden;">
+                
+                <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
+                    <div class="tool-icon active" style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">✏️</div>
+                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
+                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">❌</div>
+                </div>
+
+                <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b; display:flex;">
+                    <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
+                    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
+                        Draw routes. AI will auto-tag geometry.
+                    </div>
+                </div>
+
+                <div style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
+                    <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px;">
+                        COACH AI : CHALK TALK
+                    </div>
+                    <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
+                        <div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
+                            Linking to Analysis intel...
+                        </div>
+                    </div>
+                    <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
+                        <input id="designer-chat-input" type="text" placeholder="Ask about this play..." style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:10px; border-radius:6px; font-size:0.85rem;">
+                        <button class="tool-btn" style="padding:10px; background:var(--accent); color:black;" onclick="Playbook.handleChalkTalk()">SEND</button>
+                    </div>
+                </div>
+
+            </div>
         </div>
+    </div>
 
         <script>
             /**
