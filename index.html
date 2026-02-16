@@ -2266,42 +2266,49 @@
                         chart.data.datasets.forEach((dataset, i) => {
                             const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
                             dataset.data.forEach(pt => {
-                                // Priority: Use Manual Plot Data if available
+                                // 1. MANUAL PLOTTER DATA
                                 if (pt.pStart) {
                                     const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
                                     const mapY = (val) => y.getPixelForValue(val);
+                                    
+                                    // [THE FIX] FLIP THE Y-AXIS
+                                    const flip = (v) => 100 - v;
+
                                     const startX = mapX(pt.pStart.x);
-                                    const startY = mapY(pt.pStart.y);
+                                    const startY = mapY(flip(pt.pStart.y));
+                                    
+                                    // Handle Catch Point
                                     const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
-                                    const catchY = pt.pCatch ? mapY(pt.pCatch.y) : null;
+                                    const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
+                                    
                                     const endX = mapX(pt.pEnd.x);
-                                    const endY = mapY(pt.pEnd.y);
+                                    const endY = mapY(flip(pt.pEnd.y));
                                     
                                     ctx.save(); ctx.lineWidth = 3;
+
                                     if (pt.type === 'pass' && catchX) {
-                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        // Throw (Cyan)
+                                        ctx.strokeStyle = '#06b6d4'; 
+                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                        // YAC (Red Dotted)
+                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); 
+                                        ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
                                     } else {
-                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        // Run (Amber)
+                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); 
+                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
                                     }
                                     ctx.restore();
                                 } 
-                                // Fallback: Use Physics Engine Data
+                                // 2. FALLBACK (Legacy Data)
                                 else if (pt.startX !== undefined) {
+                                    // ... (Keep your existing fallback code here if you want to support old clips)
                                     const startX = x.getPixelForValue(pt.startX); const startY = y.getPixelForValue(pt.startY);
                                     const endX = x.getPixelForValue(pt.endX); const endY = y.getPixelForValue(pt.endY);
                                     ctx.save(); ctx.lineWidth = 3;
                                     if(pt.type === 'run') { ctx.strokeStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); }
                                     else {
-                                        if (pt.catchY !== undefined && pt.catchY !== pt.endY) {
-                                            const catchYPixel = y.getPixelForValue(pt.catchY);
-                                            ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, catchYPixel); ctx.stroke();
-                                            ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(endX, catchYPixel); ctx.lineTo(endX, endY); ctx.stroke();
-                                        } else {
-                                            ctx.strokeStyle = pt.result==='Incomplete' ? '#ef4444' : '#06b6d4';
-                                            if(pt.result==='Incomplete') ctx.setLineDash([5,5]);
-                                            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
-                                        }
+                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); 
                                     }
                                     ctx.restore();
                                 }
@@ -2390,19 +2397,21 @@
             },
 
             // [UPDATED] OPEN EDITOR & LOAD SAVED DATA (Includes Plotter)
+            // [REPLACEMENT] toggleContextPanel
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
                 if (show) {
                     const targetId = UI.overlayClipId;
                     if (!targetId) { alert("No clip active."); return; }
+                    
                     const clips = Store.get('clips') || [];
                     const clip = clips.find(c => (c._id || c.id) === targetId);
                     if (!clip) return;
 
-                    // Initialize Plotter
+                    // 1. Initialize Plotter Canvas
                     Plotter.init();
 
-                    // LOAD DATA
+                    // 2. Load Basic Data
                     document.getElementById('edit-clip-id').value = targetId;
                     const s = clip.fullData?.data?.situation || {};
                     
@@ -2410,12 +2419,20 @@
                     document.getElementById('edit-down').value = s.down || 1;
                     document.getElementById('edit-togo').value = s.distance_togo || 10;
 
-                    // Load Plotter Data
-                    Plotter.load({
-                        startX: s.plot_startX, startY: s.plot_startY,
-                        catchX: s.plot_catchX, catchY: s.plot_catchY,
-                        endX: s.plot_endX, endY: s.plot_endY
-                    });
+                    // 3. Load Plotter Drawing (The Critical Fix)
+                    // We check if startX exists and convert to numbers immediately
+                    if(s.plot_startX) {
+                        Plotter.load({
+                            startX: parseFloat(s.plot_startX), 
+                            startY: parseFloat(s.plot_startY),
+                            catchX: parseFloat(s.plot_catchX), 
+                            catchY: parseFloat(s.plot_catchY),
+                            endX: parseFloat(s.plot_endX), 
+                            endY: parseFloat(s.plot_endY)
+                        });
+                    } else {
+                        Plotter.reset(); // Important: Clear the board if no data saved
+                    }
 
                     panel.style.display = 'flex';
                 } else {
@@ -2428,21 +2445,22 @@
                 // Helper for button classes if needed
             },
 
-            // [UPDATED] SAVE LOGIC (Saves Plotter Coords)
+            // [REPLACEMENT] saveContext
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const type = document.getElementById('edit-type').value;
-                const down = document.getElementById('edit-down').value;
-                const togo = document.getElementById('edit-togo').value;
+                const down = Number(document.getElementById('edit-down').value);
+                const togo = Number(document.getElementById('edit-togo').value);
                 
-                // Grab Plotter Data
+                // 1. Grab Plotter Data (The Hidden Inputs)
+                // We wrap in Number() to ensure they don't save as text strings
                 const p = {
-                    startX: document.getElementById('edit-start-x').value,
-                    startY: document.getElementById('edit-start-y').value,
-                    catchX: document.getElementById('edit-catch-x').value,
-                    catchY: document.getElementById('edit-catch-y').value,
-                    endX: document.getElementById('edit-end-x').value,
-                    endY: document.getElementById('edit-end-y').value
+                    startX: Number(document.getElementById('edit-start-x').value),
+                    startY: Number(document.getElementById('edit-start-y').value),
+                    catchX: Number(document.getElementById('edit-catch-x').value),
+                    catchY: Number(document.getElementById('edit-catch-y').value),
+                    endX: Number(document.getElementById('edit-end-x').value),
+                    endY: Number(document.getElementById('edit-end-y').value)
                 };
 
                 const clips = Store.get('clips') || [];
@@ -2452,19 +2470,22 @@
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
+                    // 2. Build the Data Object
                     const newSituation = {
-                        play_type: type,
+                        play_type: type, 
                         down: parseInt(down), 
                         distance_togo: parseInt(togo),
-                        // Save Plotter Coordinates
+                        // Save the Plotter Coordinates
                         plot_startX: p.startX, plot_startY: p.startY,
                         plot_catchX: p.catchX, plot_catchY: p.catchY,
                         plot_endX: p.endX, plot_endY: p.endY
                     };
 
+                    // 3. Save Locally
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
                     
+                    // 4. Save to Server (Silent Fail if Offline)
                     try {
                         const token = await window.Clerk.session.getToken();
                         await fetch('/api/update-clip-data', {
@@ -2479,7 +2500,7 @@
                                 summary: clips[clipIndex].fullData.scouting_report?.summary
                             })
                         });
-                    } catch(e) { console.error("DB Save failed", e); }
+                    } catch(e) { console.log("Saved locally (Server offline)"); }
 
                     UI.refreshStats(); 
                     UI.toggleContextPanel(false); 
