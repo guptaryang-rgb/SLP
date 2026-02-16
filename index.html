@@ -1384,23 +1384,14 @@
 
                 <div style="margin-bottom:16px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY</label>
+                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full Field)</label>
                         <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺ Reset</button>
                     </div>
                     
-                    <div style="position:relative; width:100%; height:300px; background:#355e3b; border:2px solid #444; border-radius:4px; cursor:crosshair; overflow:hidden;" id="plotter-container">
-                        <div style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; opacity:0.3;">
-                            <div style="border-top:1px solid white; height:20%; width:100%;"></div>
-                            <div style="border-top:1px solid white; height:20%; width:100%;"></div>
-                            <div style="border-top:1px solid white; height:20%; width:100%;"></div>
-                            <div style="border-top:1px solid white; height:20%; width:100%;"></div>
-                            <div style="position:absolute; top:0; left:35%; width:1px; height:100%; border-left:1px dashed rgba(255,255,255,0.5);"></div>
-                            <div style="position:absolute; top:0; right:35%; width:1px; height:100%; border-right:1px dashed rgba(255,255,255,0.5);"></div>
-                        </div>
+                    <div id="plotter-container" style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
+                        <canvas id="plotter-canvas" style="display:block; width:100%; height:100%;"></canvas>
                         
-                        <canvas id="plotter-canvas" width="300" height="300" style="position:absolute; top:0; left:0;"></canvas>
-                        
-                        <div id="plotter-hint" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.75rem; background:rgba(0,0,0,0.5); padding:4px; pointer-events:none;">
+                        <div id="plotter-hint" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">
                             Tap to set SNAP location
                         </div>
                     </div>
@@ -1877,60 +1868,72 @@
 
 
             // [NEW] MINI-MAP LOGIC (The Play Plotter)
+        // [FIXED] PLAY PLOTTER ENGINE (Draws Field & Handling Clicks)
         const Plotter = {
-            step: 0, // 0: Snap, 1: Catch, 2: End
+            step: 0, 
             coords: { start: null, catch: null, end: null },
             ctx: null,
             canvas: null,
 
+            // Called when Panel Opens
             init: () => {
+                const container = document.getElementById('plotter-container');
                 Plotter.canvas = document.getElementById('plotter-canvas');
-                if(!Plotter.canvas) return;
-                Plotter.ctx = Plotter.canvas.getContext('2d');
-                
-                // Fix Resolution
-                const rect = document.getElementById('plotter-container').getBoundingClientRect();
-                Plotter.canvas.width = rect.width;
-                Plotter.canvas.height = rect.height;
+                if(!Plotter.canvas || !container) return;
 
+                // 1. Force Canvas Size to Match Container Resolution
+                Plotter.canvas.width = container.clientWidth;
+                Plotter.canvas.height = container.clientHeight;
+                
+                Plotter.ctx = Plotter.canvas.getContext('2d');
+
+                // 2. Add Click Listener
                 Plotter.canvas.onclick = (e) => {
                     const rect = Plotter.canvas.getBoundingClientRect();
+                    // Get X/Y relative to the canvas
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
                     Plotter.handleClick(x, y);
                 };
+
+                // 3. Draw initial empty field
+                Plotter.draw();
             },
 
             reset: () => {
                 Plotter.step = 0;
                 Plotter.coords = { start: null, catch: null, end: null };
-                Plotter.draw();
                 const hint = document.getElementById('plotter-hint');
                 if(hint) hint.innerText = "Tap to set SNAP location";
+                Plotter.draw();
                 Plotter.updateInputs();
             },
 
             load: (data) => {
-                Plotter.reset();
-                if (data.startX !== undefined && data.startX !== null) {
-                    const w = Plotter.canvas.width;
-                    const h = Plotter.canvas.height;
-                    
-                    // Normalize back from 0-100 scale to canvas pixels
-                    Plotter.coords.start = { x: (data.startX/100)*w, y: (data.startY/100)*h };
-                    if(data.catchX) Plotter.coords.catch = { x: (data.catchX/100)*w, y: (data.catchY/100)*h };
-                    if(data.endX) Plotter.coords.end = { x: (data.endX/100)*w, y: (data.endY/100)*h };
-                    
-                    Plotter.step = 3; // Finished state
-                    Plotter.draw();
-                    const hint = document.getElementById('plotter-hint');
-                    if(hint) hint.innerText = "Play Plotted. Reset to redraw.";
-                    Plotter.updateInputs();
-                }
+                Plotter.reset(); // Clear first
+                // Wait 50ms for the panel to slide in so dimensions are correct
+                setTimeout(() => {
+                    Plotter.init(); // Re-measure canvas
+                    if (data.startX !== undefined && data.startX !== null && data.startX !== "") {
+                        const w = Plotter.canvas.width;
+                        const h = Plotter.canvas.height;
+                        
+                        // Convert saved 0-100 coords back to pixels
+                        Plotter.coords.start = { x: (data.startX/100)*w, y: (data.startY/100)*h };
+                        if(data.catchX) Plotter.coords.catch = { x: (data.catchX/100)*w, y: (data.catchY/100)*h };
+                        if(data.endX) Plotter.coords.end = { x: (data.endX/100)*w, y: (data.endY/100)*h };
+                        
+                        Plotter.step = 3;
+                        const hint = document.getElementById('plotter-hint');
+                        if(hint) hint.innerText = "Play Loaded. Reset to redraw.";
+                        Plotter.draw();
+                    }
+                }, 100);
             },
 
             handleClick: (x, y) => {
                 const hint = document.getElementById('plotter-hint');
+                
                 if (Plotter.step === 0) {
                     Plotter.coords.start = { x, y };
                     Plotter.step = 1;
@@ -1948,32 +1951,75 @@
                 Plotter.updateInputs();
             },
 
+            // THE VISUAL RENDERER
             draw: () => {
                 const ctx = Plotter.ctx;
+                const w = Plotter.canvas.width;
+                const h = Plotter.canvas.height;
                 if(!ctx) return;
-                ctx.clearRect(0, 0, Plotter.canvas.width, Plotter.canvas.height);
-                const c = Plotter.coords;
 
-                // 1. Snap (Blue Dot)
-                if (c.start) {
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI*2); ctx.fill();
+                // A. DRAW GRASS
+                ctx.fillStyle = '#355e3b';
+                ctx.fillRect(0, 0, w, h);
+
+                // B. DRAW YARD LINES (Every 10%)
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.textAlign = 'center';
+                ctx.font = '10px monospace';
+                ctx.lineWidth = 1;
+
+                // Draw 10 lines (0 to 100)
+                for (let i = 1; i < 10; i++) {
+                    const yPos = (h / 10) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(0, yPos);
+                    ctx.lineTo(w, yPos);
+                    ctx.stroke();
+                    
+                    // Add Numbers (10, 20, 30...)
+                    // We assume top is 0, bottom is 100.
+                    // Or 50 is middle. Let's do 10-50-10 format.
+                    let num = i * 10;
+                    if (num > 50) num = 100 - num;
+                    
+                    // Draw numbers near hashes
+                    ctx.fillText(num, w * 0.15, yPos - 2);
+                    ctx.fillText(num, w * 0.85, yPos - 2);
                 }
 
-                // 2. Air Path (Cyan Line)
+                // C. DRAW HASHES
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
+                ctx.stroke();
+
+                // D. DRAW THE PLAY (Vectors)
+                const c = Plotter.coords;
+
+                // 1. SNAP (Blue Dot)
+                if (c.start) {
+                    ctx.shadowBlur = 5; ctx.shadowColor = "black";
+                    ctx.fillStyle = '#38bdf8'; // Blue
+                    ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI*2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // 2. THROW (Cyan Line)
                 if (c.start && c.catch) {
                     ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
                     ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
-                    // Catch Point
+                    // Catch Point (White Dot)
                     ctx.fillStyle = 'white';
                     ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI*2); ctx.fill();
                 }
 
-                // 3. YAC Path (Orange Line)
+                // 3. YAC (Orange Line)
                 if (c.catch && c.end) {
                     ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
                     ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
-                    // End Point
+                    // End Point (Square)
                     ctx.fillStyle = '#f59e0b';
                     ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
                 }
@@ -1981,10 +2027,10 @@
 
             updateInputs: () => {
                 const c = Plotter.coords;
-                const h = Plotter.canvas.height;
                 const w = Plotter.canvas.width;
+                const h = Plotter.canvas.height;
 
-                // Save normalized (0-100) coordinates
+                // Save Normalized (0-100) Data
                 if (c.start) {
                     document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
                     document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
@@ -1998,14 +2044,16 @@
                     document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
                 }
 
-                // Calculate Visual Yards
+                // Visual Calculation (Pixels -> Yards)
                 if (c.start && c.end) {
-                    const pxToYards = 0.15; // Calibration factor
-                    const totalDist = Math.abs(c.start.y - c.end.y) * pxToYards;
+                    // Approx: Canvas Height = 100 yards
+                    const yardsPerPx = 100 / h; 
+                    
+                    const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
                     document.getElementById('disp-gain').innerText = Math.round(totalDist);
                     
                     if (c.catch) {
-                        const airDist = Math.abs(c.start.y - c.catch.y) * pxToYards;
+                        const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
                         document.getElementById('disp-air').innerText = Math.round(airDist);
                     }
                 }
