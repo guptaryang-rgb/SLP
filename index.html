@@ -2189,7 +2189,7 @@
                 setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
-            // [FIXED] CHART ENGINE (With Y-Axis Flip)
+            // [FIXED] CHART ENGINE (Manual Dots + Flipped Axis)
             refreshStats: () => {
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
@@ -2201,11 +2201,16 @@
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                        // Draw Field Green
                         ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height); 
+                        
+                        // Draw Endzones
                         const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
                         ctx.fillStyle = 'rgba(0,0,0,0.2)';
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
                         ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
+                        
+                        // Draw Lines
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                         ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
                         for (let i = 0; i <= 100; i+=10) { 
@@ -2228,11 +2233,10 @@
                             const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
                             dataset.data.forEach(pt => {
                                 if (pt.pStart) {
+                                    // 1. Map Coordinates
                                     const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
                                     const mapY = (val) => y.getPixelForValue(val);
-                                    
-                                    // [THE FIX] FLIP THE Y-AXIS (100 - Y)
-                                    const flip = (v) => 100 - v;
+                                    const flip = (v) => 100 - v; // Fix Upside Down
 
                                     const startX = mapX(pt.pStart.x);
                                     const startY = mapY(flip(pt.pStart.y));
@@ -2241,13 +2245,33 @@
                                     const endX = mapX(pt.pEnd.x);
                                     const endY = mapY(flip(pt.pEnd.y));
                                     
-                                    ctx.save(); ctx.lineWidth = 3;
+                                    ctx.save(); 
+                                    
+                                    // 2. Draw Connection Lines
+                                    ctx.lineWidth = 3;
                                     if (pt.type === 'pass' && catchX) {
-                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        ctx.strokeStyle = '#06b6d4'; // Cyan Throw
+                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                        ctx.strokeStyle = '#ef4444'; // Red YAC
+                                        ctx.setLineDash([4, 4]); 
+                                        ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
                                     } else {
-                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        ctx.strokeStyle = '#f59e0b'; // Amber Run
+                                        ctx.setLineDash([]); 
+                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
                                     }
+
+                                    // 3. Draw Dots (The Fix: We draw them manually now)
+                                    ctx.setLineDash([]);
+                                    
+                                    // Start Dot (Blue)
+                                    ctx.fillStyle = '#38bdf8'; 
+                                    ctx.beginPath(); ctx.arc(startX, startY, 4, 0, Math.PI*2); ctx.fill();
+
+                                    // End Dot (Square)
+                                    ctx.fillStyle = pt.type === 'pass' ? '#ef4444' : '#f59e0b';
+                                    ctx.beginPath(); ctx.rect(endX - 3, endY - 3, 6, 6); ctx.fill();
+
                                     ctx.restore();
                                 } 
                             });
@@ -2293,9 +2317,11 @@
                             pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
                             clipId: c._id || c.id
                         };
-                        // For tooltip, we must flip Y manually so it displays correctly on hover
-                        const displayX = (shot.pEnd.x/100) * 53.3; 
-                        const displayY = 100 - shot.pEnd.y; 
+                        
+                        // Fake coordinates for the dataset just to enable tooltips
+                        // We use the START point now so the "invisible" dot is at the QB
+                        const displayX = (shot.pStart.x/100) * 53.3; 
+                        const displayY = 100 - shot.pStart.y; 
 
                         if(shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
                         else passShots.push({ x: displayX, y: displayY, ...shot });
@@ -2321,9 +2347,12 @@
                 const table = document.getElementById('efficiency-table');
                 table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
 
+                // [FIX] We set radius: 0 to hide the Chart's default dot. 
+                // We draw our own dots in vectorPlugin so they are guaranteed to match the lines.
                 const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
             // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
