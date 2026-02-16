@@ -2189,7 +2189,7 @@
                 setTimeout(() => { UI.refreshStats(); }, 50);
             },
 
-            // [FIX: MASTER ANALYTICS ENGINE - ALL CHARTS + PHYSICS + PLOTTER]
+            // [FIXED] CHART ENGINE (With Y-Axis Flip)
             refreshStats: () => {
                 const getSeededRandom = (seedStr) => {
                     let h = 0x811c9dc5;
@@ -2201,7 +2201,7 @@
                     id: 'footballField',
                     beforeDraw: (chart) => {
                         const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height); 
                         const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
                         ctx.fillStyle = 'rgba(0,0,0,0.2)';
                         ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
@@ -2227,60 +2227,36 @@
                         chart.data.datasets.forEach((dataset, i) => {
                             const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
                             dataset.data.forEach(pt => {
-                                // 1. MANUAL PLOTTER DATA
                                 if (pt.pStart) {
                                     const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
                                     const mapY = (val) => y.getPixelForValue(val);
                                     
-                                    // [THE FIX] FLIP THE Y-AXIS
+                                    // [THE FIX] FLIP THE Y-AXIS (100 - Y)
                                     const flip = (v) => 100 - v;
 
                                     const startX = mapX(pt.pStart.x);
                                     const startY = mapY(flip(pt.pStart.y));
-                                    
-                                    // Handle Catch Point
                                     const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
                                     const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
-                                    
                                     const endX = mapX(pt.pEnd.x);
                                     const endY = mapY(flip(pt.pEnd.y));
                                     
                                     ctx.save(); ctx.lineWidth = 3;
-
                                     if (pt.type === 'pass' && catchX) {
-                                        // Throw (Cyan)
-                                        ctx.strokeStyle = '#06b6d4'; 
-                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                        // YAC (Red Dotted)
-                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); 
-                                        ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
                                     } else {
-                                        // Run (Amber)
-                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); 
-                                        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
                                     }
                                     ctx.restore();
                                 } 
-                                // 2. FALLBACK (Legacy Data)
-                                else if (pt.startX !== undefined) {
-                                    // ... (Keep your existing fallback code here if you want to support old clips)
-                                    const startX = x.getPixelForValue(pt.startX); const startY = y.getPixelForValue(pt.startY);
-                                    const endX = x.getPixelForValue(pt.endX); const endY = y.getPixelForValue(pt.endY);
-                                    ctx.save(); ctx.lineWidth = 3;
-                                    if(pt.type === 'run') { ctx.strokeStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); }
-                                    else {
-                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); 
-                                    }
-                                    ctx.restore();
-                                }
                             });
                         });
                     }
                 };
 
                 const allClips = Store.get('clips') || [];
-                // [FIX] Ensure we are filtering correctly
-                const clips = allClips.filter(c => c.fullData?.data?.situation);
+                const clips = allClips.filter(c => c.fullData?.data?.situation); 
                 
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
                     const el = document.getElementById(id); if(Chart.getChart(el)) Chart.getChart(el).destroy();
@@ -2288,54 +2264,44 @@
 
                 if (clips.length === 0) return;
 
-                // [FIXED] Aggregation Logic
                 const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
                 const passShots = [], runShots = [];
 
                 clips.forEach(c => {
                     const d = c.fullData;
                     const sit = d.data.situation || {};
-                    const rng = getSeededRandom(c._id || c.id);
-                    
                     const off = d.data.o_formation || c.formation || "Unknown";
                     const def = d.data.d_formation || "Unknown";
                     const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
 
                     offForms[off] = (offForms[off] || 0) + 1;
                     defForms[def] = (defForms[def] || 0) + 1;
-                    
                     if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
                     matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
+                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
                     
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; 
-                    coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
-
                     let concept = d.tactical_breakdown?.concept || "Unknown";
                     if(concept.length > 15) concept = concept.substring(0, 15) + "..";
                     concepts[concept] = (concepts[concept] || 0) + 1;
 
-                    // Plotting Data (Prefer Manual)
                     if (sit.plot_startX) {
                         const shot = {
                             type: sit.play_type || 'pass',
+                            // Pass RAW data. vectorPlugin handles the flip.
                             pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
                             pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
                             pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
                             clipId: c._id || c.id
                         };
-                        const displayX = (parseFloat(sit.plot_endX)/100) * 53.3; 
-                        const displayY = parseFloat(sit.plot_endY);
+                        // For tooltip, we must flip Y manually so it displays correctly on hover
+                        const displayX = (shot.pEnd.x/100) * 53.3; 
+                        const displayY = 100 - shot.pEnd.y; 
+
                         if(shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
                         else passShots.push({ x: displayX, y: displayY, ...shot });
-                    } else {
-                        // Fallback to Physics Logic if no manual plot
-                        // ... (reusing physics logic from before if needed, but for brevity, assuming new clips use Plotter) ...
-                        // If you want physics fallback, insert previous physics calc here.
                     }
                 });
 
-                // Render Charts
                 const renderBar = (id, data, color) => {
                     const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
                     new Chart(document.getElementById(id), { 
@@ -2352,13 +2318,15 @@
                 const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
                 new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
 
+                const table = document.getElementById('efficiency-table');
+                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
                 const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
                 new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
-            // [UPDATED] OPEN EDITOR & LOAD SAVED DATA (Includes Plotter)
-            // [REPLACEMENT] toggleContextPanel
+            // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
                 if (show) {
@@ -2372,7 +2340,6 @@
                     // 1. Initialize Plotter Canvas
                     Plotter.init();
 
-                    // 2. Load Basic Data
                     document.getElementById('edit-clip-id').value = targetId;
                     const s = clip.fullData?.data?.situation || {};
                     
@@ -2380,9 +2347,9 @@
                     document.getElementById('edit-down').value = s.down || 1;
                     document.getElementById('edit-togo').value = s.distance_togo || 10;
 
-                    // 3. Load Plotter Drawing (The Critical Fix)
-                    // We check if startX exists and convert to numbers immediately
-                    if(s.plot_startX) {
+                    // 2. Load Plotter Drawing
+                    // We check if data exists and is valid number
+                    if(s.plot_startX !== undefined && s.plot_startX !== null) {
                         Plotter.load({
                             startX: parseFloat(s.plot_startX), 
                             startY: parseFloat(s.plot_startY),
@@ -2392,7 +2359,7 @@
                             endY: parseFloat(s.plot_endY)
                         });
                     } else {
-                        Plotter.reset(); // Important: Clear the board if no data saved
+                        Plotter.reset(); // Clear if no data
                     }
 
                     panel.style.display = 'flex';
@@ -2406,24 +2373,22 @@
                 // Helper for button classes if needed
             },
 
-            // [REPLACEMENT] saveContext
-           // [REPLACEMENT] saveContext
+            // [FIXED] SAVE CONTEXT (Ensures Numbers & Coordinates)
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const type = document.getElementById('edit-type').value;
-                const down = Number(document.getElementById('edit-down').value) || 1;
-                const togo = Number(document.getElementById('edit-togo').value) || 10;
+                const down = Number(document.getElementById('edit-down').value);
+                const togo = Number(document.getElementById('edit-togo').value);
                 
-                // SAFELY GRAB NUMBERS (Fallback to 0 if empty)
-                const getVal = (id) => Number(document.getElementById(id).value) || 0;
-
+                // 1. Grab Plotter Data Safely
+                // We use Number() to fix the "string" issue
                 const p = {
-                    startX: getVal('edit-start-x'),
-                    startY: getVal('edit-start-y'),
-                    catchX: getVal('edit-catch-x'),
-                    catchY: getVal('edit-catch-y'),
-                    endX: getVal('edit-end-x'),
-                    endY: getVal('edit-end-y')
+                    startX: Number(document.getElementById('edit-start-x').value),
+                    startY: Number(document.getElementById('edit-start-y').value),
+                    catchX: Number(document.getElementById('edit-catch-x').value),
+                    catchY: Number(document.getElementById('edit-catch-y').value),
+                    endX: Number(document.getElementById('edit-end-x').value),
+                    endY: Number(document.getElementById('edit-end-y').value)
                 };
 
                 const clips = Store.get('clips') || [];
@@ -2435,17 +2400,19 @@
 
                     const newSituation = {
                         play_type: type, 
-                        down: down, 
-                        distance_togo: togo,
+                        down: parseInt(down) || 1, 
+                        distance_togo: parseInt(togo) || 10,
+                        // Save the Plotter Coordinates
                         plot_startX: p.startX, plot_startY: p.startY,
                         plot_catchX: p.catchX, plot_catchY: p.catchY,
                         plot_endX: p.endX, plot_endY: p.endY
                     };
 
+                    // 2. Save Locally Immediately
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
                     
-                    // Try Server Save
+                    // 3. Try Saving to Server (Ignore errors if offline)
                     try {
                         const token = await window.Clerk.session.getToken();
                         await fetch('/api/update-clip-data', {
@@ -2454,8 +2421,6 @@
                             body: JSON.stringify({
                                 clipId: id,
                                 title: clips[clipIndex].title, 
-                                o_formation: clips[clipIndex].o_formation,
-                                d_formation: clips[clipIndex].d_formation,
                                 situation: newSituation,
                                 summary: clips[clipIndex].fullData.scouting_report?.summary
                             })
