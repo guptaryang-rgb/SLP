@@ -1620,51 +1620,68 @@
         </div>
 
         <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div class="modal-content" style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
-            
-            <div style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-                <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:300px; font-weight:700; background:#111;">
-                <div style="display:flex; gap:12px;">
-                    <button class="tool-btn" onclick="Playbook.clearCanvas()">Clear</button>
-                    <button class="cta-btn" style="margin:0; padding:10px 24px;" onclick="Playbook.savePlay()">Save to Library</button>
-                    <button class="tool-btn" style="border:none;" onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
-                </div>
-            </div>
+            <div class="modal-content"
+                style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
 
-            <div style="flex:1; display:flex; position:relative; overflow:hidden;">
-                
-                <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
-                    <div class="tool-icon active" style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">✏️</div>
-                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
-                    <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">❌</div>
-                </div>
-
-                <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b; display:flex;">
-                    <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
-                    
-                    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
-                        Draw routes. AI will auto-tag geometry.
+                <div
+                    style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)"
+                        style="width:300px; font-weight:700; background:#111;">
+                    <div style="display:flex; gap:12px;">
+                        <button class="tool-btn" onclick="Playbook.clearCanvas()">Clear</button>
+                        <button class="cta-btn" style="margin:0; padding:10px 24px;" onclick="Playbook.savePlay()">Save
+                            to Library</button>
+                        <button class="tool-btn" style="border:none;"
+                            onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
                     </div>
                 </div>
 
-                <div style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
-                    <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px;">
-                        COACH AI : CHALK TALK
+                <div style="flex:1; display:flex; position:relative; overflow:hidden;">
+
+                    <div
+                        style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
+                        <div class="tool-icon active"
+                            style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">
+                            ✏️</div>
+                        <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
+                        <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">❌</div>
                     </div>
-                    <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
-                        <div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
-                            Linking to Analysis intel...
+
+                    <div id="designer-container"
+                        style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b;">
+                        <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
+
+                        <div
+                            style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
+                            Draw routes. AI will auto-tag geometry.
                         </div>
                     </div>
-                    <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
-                        <input id="designer-chat-input" type="text" placeholder="Ask about this play..." style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:10px; border-radius:6px; font-size:0.85rem;">
-                        <button class="tool-btn" style="padding:10px; background:var(--accent); color:black;" onclick="Playbook.handleChalkTalk()">SEND</button>
-                    </div>
-                </div>
 
+                    <div
+                        style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
+                        <div
+                            style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px;">
+                            COACH AI : CHALK TALK
+                        </div>
+                        <div id="designer-chat-history"
+                            style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
+                            <div id="chalk-talk-hint"
+                                style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
+                                Linking to Analysis intel...
+                            </div>
+                        </div>
+                        <div
+                            style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
+                            <input id="designer-chat-input" type="text" placeholder="Ask about this play..."
+                                style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:10px; border-radius:6px; font-size:0.85rem;">
+                            <button class="tool-btn" style="padding:10px; background:var(--accent); color:black;"
+                                onclick="Playbook.handleChalkTalk()">SEND</button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
-    </div>
 
         <script>
             /**
@@ -2900,20 +2917,20 @@
                     Playbook.renderGrid();
                 },
 
-               
 
-            // 5. LIBRARY GRID
-            renderGrid: () => {
-                const grid = document.getElementById('playbook-grid');
-                if(!grid) return;
-                const plays = Store.get('playbook') || [];
-                
-                if(plays.length === 0) {
-                    grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
-                    return;
-                }
 
-                grid.innerHTML = plays.map(p => `
+                // 5. LIBRARY GRID
+                renderGrid: () => {
+                    const grid = document.getElementById('playbook-grid');
+                    if (!grid) return;
+                    const plays = Store.get('playbook') || [];
+
+                    if (plays.length === 0) {
+                        grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
+                        return;
+                    }
+
+                    grid.innerHTML = plays.map(p => `
                     <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.id}')">
                         <div class="scout-header">
                             <div>
@@ -2923,50 +2940,50 @@
                             ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
                         </div>
                         <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
-                            ${p.elements.map(el => `<div style="position:absolute; left:${el.x/10}%; top:${el.y/10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
+                            ${p.elements.map(el => `<div style="position:absolute; left:${el.x / 10}%; top:${el.y / 10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
                         </div>
                     </div>
                 `).join('');
-            },
+                },
 
-            getLinkedContext: (playId) => {
-                const plays = Store.get('playbook') || [];
-                const play = plays.find(p => p.id === playId);
-                if (play && play.linkedSessionId) {
+                getLinkedContext: (playId) => {
+                    const plays = Store.get('playbook') || [];
+                    const play = plays.find(p => p.id === playId);
+                    if (play && play.linkedSessionId) {
+                        const sessions = Store.get('sessions') || [];
+                        const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
+                        return contextSession ? contextSession.history : null;
+                    }
+                    return null;
+                },
+
+                getAIInsight: async (playId) => {
+                    const plays = Store.get('playbook') || [];
+                    const play = plays.find(p => p.id === playId);
+                    if (!play || !play.linkedSessionId) return "No linked session found.";
+                    const intel = Playbook.getLinkedContext(playId);
                     const sessions = Store.get('sessions') || [];
-                    const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-                    return contextSession ? contextSession.history : null;
+                    const sessionData = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
+                    return `Coach, analyze this play concept: "${play.title}". Use the intel from our film session "${sessionData.title}": ${JSON.stringify(intel)}`;
+                },
+
+                handleChalkTalk: async () => {
+                    const input = document.getElementById('designer-chat-input');
+                    const history = document.getElementById('designer-chat-history');
+                    const msg = input.value;
+                    if (!msg) return;
+                    if (document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
+                    history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:500;">${msg}</div>`;
+                    input.value = '';
+                    const playbookContext = await Playbook.getAIInsight(Playbook.activePlayId);
+                    history.innerHTML += `<div id="chalk-loading" style="color:var(--accent); font-size:0.7rem; margin-top:4px;">Checking game film context...</div>`;
+                    history.scrollTop = history.scrollHeight;
+                    const response = await CoachAI.analyze(`${playbookContext} \n User Question: ${msg}`, null);
+                    if (document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                    history.innerHTML += `<div style="background:#111; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#ddd; font-size:0.85rem; margin-bottom:12px;"><strong style="color:var(--accent);">Coach AI:</strong> ${response.text}</div>`;
+                    history.scrollTop = history.scrollHeight;
                 }
-                return null;
-            },
-
-            getAIInsight: async (playId) => {
-                const plays = Store.get('playbook') || [];
-                const play = plays.find(p => p.id === playId);
-                if (!play || !play.linkedSessionId) return "No linked session found.";
-                const intel = Playbook.getLinkedContext(playId);
-                const sessions = Store.get('sessions') || [];
-                const sessionData = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-                return `Coach, analyze this play concept: "${play.title}". Use the intel from our film session "${sessionData.title}": ${JSON.stringify(intel)}`;
-            },
-
-            handleChalkTalk: async () => {
-                const input = document.getElementById('designer-chat-input');
-                const history = document.getElementById('designer-chat-history');
-                const msg = input.value;
-                if(!msg) return;
-                if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
-                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:500;">${msg}</div>`;
-                input.value = '';
-                const playbookContext = await Playbook.getAIInsight(Playbook.activePlayId);
-                history.innerHTML += `<div id="chalk-loading" style="color:var(--accent); font-size:0.7rem; margin-top:4px;">Checking game film context...</div>`;
-                history.scrollTop = history.scrollHeight;
-                const response = await CoachAI.analyze(`${playbookContext} \n User Question: ${msg}`, null);
-                if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
-                history.innerHTML += `<div style="background:#111; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#ddd; font-size:0.85rem; margin-bottom:12px;"><strong style="color:var(--accent);">Coach AI:</strong> ${response.text}</div>`;
-                history.scrollTop = history.scrollHeight;
-            }
-        };
+            };
             const App = {
                 init: () => {
                     let attempts = 0;
