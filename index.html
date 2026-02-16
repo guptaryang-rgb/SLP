@@ -1246,8 +1246,7 @@
             <div class="hero-wrapper">
                 <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and
-                    team strategy.</p>
+                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
 
                 <div class="onboarding-grid">
                     <div class="step-card">
@@ -1258,8 +1257,7 @@
                     <div class="step-card">
                         <div class="step-num">02</div>
                         <div class="step-title">Select Mode</div>
-                        <div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for
-                            scheme.</div>
+                        <div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for scheme.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
@@ -1280,8 +1278,7 @@
         <div id="war-room-view" class="view">
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn"
-                            onclick="App.createNewSession()">+</button></div>
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
@@ -1293,9 +1290,7 @@
                         <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster</button>
                     </div>
 
-                    <div id="chat-feed"
-                        style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
-                    </div>
+                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;"></div>
 
                     <div class="input-bar">
                         <select id="pos-select" class="pos-select">
@@ -1308,14 +1303,12 @@
                         </select>
 
                         <input type="file" id="file-input" hidden accept="video/*">
-                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);"
-                            onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
 
                         <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
                         <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
 
-                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library
-                            ☰</button>
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
                     </div>
                 </div>
 
@@ -1344,60 +1337,15 @@
                             <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
                             <div style="color:#666;">AI-Linked Concept Library</div>
                         </div>
-                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;"
-                            onclick="Playbook.openDesigner()">+ New Concept</button>
+                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;" onclick="Playbook.openDesigner()">+ New Concept</button>
                     </div>
 
-                    <div id="playbook-grid"
-                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
-                    </div>
+                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+                        </div>
                 </div>
             </div>
         </div>
 
-    </div>
-    
-    <div class="main">
-        <div class="dashboard-header">
-            <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
-            <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
-            <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
-            <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster /
-                Tendency</button>
-        </div>
-
-        <div id="chat-feed"
-            style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
-        </div>
-
-        <div class="input-bar">
-            <select id="pos-select" class="pos-select">
-                <option value="general">Select Focus...</option>
-                <option value="qb">Quarterback</option>
-                <option value="wr">Receiver</option>
-                <option value="rb">Running Back</option>
-                <option value="db">Defensive Back</option>
-                <option value="ol">Offensive Line</option>
-            </select>
-
-            <input type="file" id="file-input" hidden accept="video/*">
-            <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);"
-                onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
-
-            <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
-            <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
-
-            <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library
-                ☰</button>
-        </div>
-    </div>
-
-    <div class="lib-panel" id="right-panel">
-        <div class="panel-header">Film Library</div>
-        <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;"></div>
-    </div>
-    </div>
-    </div>
     </div>
 
     <div id="analysis-overlay"
