@@ -2065,14 +2065,14 @@
             activeSessionId: null,
             overlayClipId: null,
 
-            // [HELPER] Standardize Grades
+            // Helper
             gradeToNum: (g) => {
                 if (!g) return 0;
                 const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
                 return m[g.trim()] || 2.0;
             },
 
-            // [INIT] App Startup
+            // 1. Init
             init: async () => {
                 try {
                     const token = await window.Clerk.session.getToken();
@@ -2101,6 +2101,7 @@
                 if(sBtn) sBtn.onclick = UI.handleSend;
             },
 
+            // 2. Tab Switch
             switchTab: (tab) => {
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
@@ -2114,282 +2115,17 @@
                     else UI.renderSessionList();
                 }
             },
-            
-            // [UPDATED] HANDLE RUN/PASS TOGGLE
+
+            // 3. Play Type
             setPlayType: (type) => {
                 document.getElementById('edit-type').value = type;
-                const btnPass = document.getElementById('btn-pass');
-                const btnRun = document.getElementById('btn-run');
-                // The new layout hides 'disp-air-row' instead of 'edit-air'
+                document.getElementById('btn-pass').classList.toggle('selected', type === 'pass');
+                document.getElementById('btn-run').classList.toggle('selected', type === 'run');
                 const airRow = document.getElementById('disp-air-row');
-
-                if (type === 'pass') {
-                    btnPass.classList.add('selected'); btnRun.classList.remove('selected');
-                    if(airRow) airRow.style.visibility = 'visible';
-                } else {
-                    btnRun.classList.add('selected'); btnPass.classList.remove('selected');
-                    if(airRow) airRow.style.visibility = 'hidden';
-                }
+                if(airRow) airRow.style.visibility = (type === 'pass') ? 'visible' : 'hidden';
             },
 
-            renderMessageHTML: (msg) => {
-                const feed = document.getElementById('chat-feed');
-                if (msg.type === 'user') {
-                    feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
-                } else {
-                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
-                }
-            },
-
-            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
-            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
-            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
-            closeOverlay: () => Telestrator.close(),
-
-            selectSession: async (sessId) => {
-                UI.activeSessionId = sessId;
-                const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; 
-                const sessions = Store.get('sessions') || [];
-                const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
-
-                if (currentSession && currentSession.history && currentSession.history.length > 0) {
-                    currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
-                    feed.scrollTop = feed.scrollHeight;
-                } else {
-                    const mode = UI.currentMode;
-                    const icon = mode === 'self' ? '👤' : '🛡️';
-                    feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
-                }
-
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                    const clips = await res.json();
-                    Store.set('clips', clips);
-                } catch (e) { console.error("Clip Load Failed", e); }
-                UI.renderSessionList();
-                UI.renderLibrary();
-            },
-
-            renderSessionList: () => {
-                const list = document.getElementById('session-list');
-                const sessions = Store.get('sessions') || [];
-                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
-                list.innerHTML = modeSessions.map(s => {
-                    const validId = s.sessionId || s.id;
-                    return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
-                }).join('');
-            },
-
-            renderLibrary: () => {
-                const list = document.getElementById('lib-grid');
-                if (!list) return;
-                list.innerHTML = '';
-                const clips = Store.get('clips') || [];
-                const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
-
-                if (sessionClips.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
-                    return;
-                }
-
-                const folders = { 'Inbox': [] };
-                sessionClips.forEach(c => {
-                    const sec = c.section || 'Inbox';
-                    if (!folders[sec]) folders[sec] = [];
-                    folders[sec].push(c);
-                });
-
-                for (const [name, groupClips] of Object.entries(folders)) {
-                    if (groupClips.length === 0) continue;
-                    list.innerHTML += `<div class="folder-header">${name}</div>`;
-                    groupClips.forEach(c => {
-                        list.innerHTML += `
-                        <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
-                            <button class="clip-menu-btn" 
-                                onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">
-                                ⋮
-                            </button>
-                            <div class="clip-thumb-mini" style="background:#000;">
-                                ${c.thumbnailUrl ? `<img src="${c.thumbnailUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">` : '▶'}
-                            </div>
-                            <div class="clip-info">
-                                <div style="font-weight:700; font-size:0.85rem; color:#e4e4e7;">${c.title}</div>
-                                <div style="font-size:0.75rem; color:#888;">${c.formation || 'Unknown'}</div>
-                            </div>
-                        </div>`;
-                    });
-                }
-            },
-
-            showTeamStats: () => {
-                document.getElementById('stats-modal').style.display = 'flex';
-                setTimeout(() => { UI.refreshStats(); }, 50);
-            },
-
-            // [FIX: MASTER ANALYTICS ENGINE - ALL CHARTS + PHYSICS + PLOTTER]
-            refreshStats: () => {
-                const getSeededRandom = (seedStr) => {
-                    let h = 0x811c9dc5;
-                    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-                    return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
-                };
-
-                const footballFieldPlugin = {
-                    id: 'footballField',
-                    beforeDraw: (chart) => {
-                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
-                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
-                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
-                        for (let i = 0; i <= 100; i+=10) { 
-                            const Y = y.getPixelForValue(i);
-                            ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                            ctx.lineWidth = (i===0||i===100||i===50)?2:1; ctx.stroke();
-                            if(i>0&&i<100) { 
-                                const num = i<=50?i:100-i; 
-                                ctx.fillText(num, x.getPixelForValue(6), Y+4); ctx.fillText(num, x.getPixelForValue(47.3), Y+4); 
-                            }
-                        }
-                    }
-                };
-
-                const vectorPlugin = {
-                    id: 'vectorLines',
-                    beforeDatasetsDraw(chart) {
-                        const { ctx, scales: { x, y } } = chart;
-                        chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
-                            dataset.data.forEach(pt => {
-                                // Priority: Use Manual Plot Data if available
-                                if (pt.pStart) {
-                                    const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
-                                    const mapY = (val) => y.getPixelForValue(val);
-                                    const startX = mapX(pt.pStart.x);
-                                    const startY = mapY(pt.pStart.y);
-                                    const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
-                                    const catchY = pt.pCatch ? mapY(pt.pCatch.y) : null;
-                                    const endX = mapX(pt.pEnd.x);
-                                    const endY = mapY(pt.pEnd.y);
-                                    
-                                    ctx.save(); ctx.lineWidth = 3;
-                                    if (pt.type === 'pass' && catchX) {
-                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
-                                    } else {
-                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
-                                    }
-                                    ctx.restore();
-                                } 
-                                // Fallback: Use Physics Engine Data
-                                else if (pt.startX !== undefined) {
-                                    const startX = x.getPixelForValue(pt.startX); const startY = y.getPixelForValue(pt.startY);
-                                    const endX = x.getPixelForValue(pt.endX); const endY = y.getPixelForValue(pt.endY);
-                                    ctx.save(); ctx.lineWidth = 3;
-                                    if(pt.type === 'run') { ctx.strokeStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke(); }
-                                    else {
-                                        if (pt.catchY !== undefined && pt.catchY !== pt.endY) {
-                                            const catchYPixel = y.getPixelForValue(pt.catchY);
-                                            ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, catchYPixel); ctx.stroke();
-                                            ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(endX, catchYPixel); ctx.lineTo(endX, endY); ctx.stroke();
-                                        } else {
-                                            ctx.strokeStyle = pt.result==='Incomplete' ? '#ef4444' : '#06b6d4';
-                                            if(pt.result==='Incomplete') ctx.setLineDash([5,5]);
-                                            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
-                                        }
-                                    }
-                                    ctx.restore();
-                                }
-                            });
-                        });
-                    }
-                };
-
-                const allClips = Store.get('clips') || [];
-                // [FIX] Ensure we are filtering correctly
-                const clips = allClips.filter(c => c.fullData?.data?.situation);
-                
-                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
-                    const el = document.getElementById(id); if(Chart.getChart(el)) Chart.getChart(el).destroy();
-                });
-
-                if (clips.length === 0) return;
-
-                // [FIXED] Aggregation Logic
-                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const drillDownMap = { coverage: {}, formation: {}, concept: {} };
-                const passShots = [], runShots = [];
-
-                clips.forEach(c => {
-                    const d = c.fullData;
-                    const sit = d.data.situation || {};
-                    const rng = getSeededRandom(c._id || c.id);
-                    
-                    const off = d.data.o_formation || c.formation || "Unknown";
-                    const def = d.data.d_formation || "Unknown";
-                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
-
-                    offForms[off] = (offForms[off] || 0) + 1;
-                    defForms[def] = (defForms[def] || 0) + 1;
-                    
-                    if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
-                    
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; 
-                    coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
-
-                    let concept = d.tactical_breakdown?.concept || "Unknown";
-                    if(concept.length > 15) concept = concept.substring(0, 15) + "..";
-                    concepts[concept] = (concepts[concept] || 0) + 1;
-
-                    // Plotting Data (Prefer Manual)
-                    if (sit.plot_startX) {
-                        const shot = {
-                            type: sit.play_type || 'pass',
-                            pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
-                            pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
-                            pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
-                            clipId: c._id || c.id
-                        };
-                        const displayX = (parseFloat(sit.plot_endX)/100) * 53.3; 
-                        const displayY = parseFloat(sit.plot_endY);
-                        if(shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
-                        else passShots.push({ x: displayX, y: displayY, ...shot });
-                    } else {
-                        // Fallback to Physics Logic if no manual plot
-                        // ... (reusing physics logic from before if needed, but for brevity, assuming new clips use Plotter) ...
-                        // If you want physics fallback, insert previous physics calc here.
-                    }
-                });
-
-                // Render Charts
-                const renderBar = (id, data, color) => {
-                    const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { 
-                        type: 'bar', indexAxis: 'y', 
-                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } 
-                    });
-                };
-                renderBar('chart-off-form', offForms, '#38bdf8');
-                renderBar('chart-def-form', defForms, '#ef4444');
-                renderBar('chart-conflict', concepts, '#8b5cf6');
-
-                const covL = Object.keys(coverSuccess);
-                const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
-                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
-
-                const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-            },
-
-            // [UPDATED] OPEN EDITOR & LOAD SAVED DATA (Includes Plotter)
+            // 4. Open Editor (LOAD)
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
                 if (show) {
@@ -2399,10 +2135,10 @@
                     const clip = clips.find(c => (c._id || c.id) === targetId);
                     if (!clip) return;
 
-                    // Initialize Plotter
+                    // Initialize
                     Plotter.init();
 
-                    // LOAD DATA
+                    // Load Data
                     document.getElementById('edit-clip-id').value = targetId;
                     const s = clip.fullData?.data?.situation || {};
                     
@@ -2410,11 +2146,11 @@
                     document.getElementById('edit-down').value = s.down || 1;
                     document.getElementById('edit-togo').value = s.distance_togo || 10;
 
-                    // Load Plotter Data
+                    // Load Plotter (Ensure Numbers)
                     Plotter.load({
-                        startX: s.plot_startX, startY: s.plot_startY,
-                        catchX: s.plot_catchX, catchY: s.plot_catchY,
-                        endX: s.plot_endX, endY: s.plot_endY
+                        startX: parseFloat(s.plot_startX), startY: parseFloat(s.plot_startY),
+                        catchX: parseFloat(s.plot_catchX), catchY: parseFloat(s.plot_catchY),
+                        endX: parseFloat(s.plot_endX), endY: parseFloat(s.plot_endY)
                     });
 
                     panel.style.display = 'flex';
@@ -2425,24 +2161,23 @@
 
             setEditVal: (field, val) => {
                 document.getElementById(`edit-${field}`).value = val;
-                // Helper for button classes if needed
             },
 
-            // [UPDATED] SAVE LOGIC (Saves Plotter Coords)
+            // 5. Save Data (FIXED PERSISTENCE)
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const type = document.getElementById('edit-type').value;
-                const down = document.getElementById('edit-down').value;
-                const togo = document.getElementById('edit-togo').value;
+                const down = Number(document.getElementById('edit-down').value);
+                const togo = Number(document.getElementById('edit-togo').value);
                 
-                // Grab Plotter Data
+                // Grab & Convert Plotter Data to Numbers
                 const p = {
-                    startX: document.getElementById('edit-start-x').value,
-                    startY: document.getElementById('edit-start-y').value,
-                    catchX: document.getElementById('edit-catch-x').value,
-                    catchY: document.getElementById('edit-catch-y').value,
-                    endX: document.getElementById('edit-end-x').value,
-                    endY: document.getElementById('edit-end-y').value
+                    startX: Number(document.getElementById('edit-start-x').value),
+                    startY: Number(document.getElementById('edit-start-y').value),
+                    catchX: Number(document.getElementById('edit-catch-x').value),
+                    catchY: Number(document.getElementById('edit-catch-y').value),
+                    endX: Number(document.getElementById('edit-end-x').value),
+                    endY: Number(document.getElementById('edit-end-y').value)
                 };
 
                 const clips = Store.get('clips') || [];
@@ -2454,9 +2189,9 @@
 
                     const newSituation = {
                         play_type: type,
-                        down: parseInt(down), 
-                        distance_togo: parseInt(togo),
-                        // Save Plotter Coordinates
+                        down, 
+                        distance_togo: togo,
+                        // Save Plotter Coordinates as Numbers
                         plot_startX: p.startX, plot_startY: p.startY,
                         plot_catchX: p.catchX, plot_catchY: p.catchY,
                         plot_endX: p.endX, plot_endY: p.endY
@@ -2486,34 +2221,150 @@
                 }
             },
 
-            // Standard functions kept same
-            openContextEditor: () => { UI.toggleContextPanel(true); },
-            toggleMirror: () => { /* Deprecated by Plotter, but kept for safe API */ },
-            playClip: (id) => {
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === id);
-                if (!clip) return;
-                UI.overlayClipId = clip._id || clip.id;
-                
-                const reportContainer = document.getElementById('report-injection-site');
-                if (reportContainer) {
-                    if (clip.fullData) {
-                        const scoutData = {
-                            id: clip._id, title: clip.title, formation: clip.formation,
-                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
-                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
-                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
-                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
-                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
-                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
-                        };
-                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
-                    } else {
-                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+            // 6. MASTER ANALYTICS ENGINE (Charts)
+            // [FIXED] INVERSION LOGIC ADDED HERE
+            refreshStats: () => {
+                const getSeededRandom = (seedStr) => {
+                    let h = 0x811c9dc5;
+                    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+                    return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
+                };
+
+                const footballFieldPlugin = {
+                    id: 'footballField',
+                    beforeDraw: (chart) => {
+                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height); 
+                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
+                        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
+                        for (let i = 0; i <= 100; i+=10) { 
+                            const Y = y.getPixelForValue(i);
+                            ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
+                            ctx.lineWidth = (i===0||i===100||i===50)?2:1; ctx.stroke();
+                            if(i>0&&i<100) { 
+                                const num = i<=50?i:100-i; 
+                                ctx.fillText(num, x.getPixelForValue(6), Y+4); ctx.fillText(num, x.getPixelForValue(47.3), Y+4); 
+                            }
+                        }
                     }
-                }
-                Telestrator.init(clip.videoUrl);
+                };
+
+                const vectorPlugin = {
+                    id: 'vectorLines',
+                    beforeDatasetsDraw(chart) {
+                        const { ctx, scales: { x, y } } = chart;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+                            dataset.data.forEach(pt => {
+                                if (pt.pStart) {
+                                    // Scale 0-100 coordinates to Chart Pixels
+                                    const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
+                                    const mapY = (val) => y.getPixelForValue(val);
+
+                                    // [FIX] INVERT Y: Canvas Top(0) = Chart Top(100)
+                                    // Plotter saves Y=0 as Top. Charts usually plot Y=0 at Bottom.
+                                    // We need to flip: ActualY = 100 - SavedY
+                                    const flip = (v) => 100 - v;
+
+                                    const startX = mapX(pt.pStart.x);
+                                    const startY = mapY(flip(pt.pStart.y));
+                                    const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
+                                    const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
+                                    const endX = mapX(pt.pEnd.x);
+                                    const endY = mapY(flip(pt.pEnd.y));
+                                    
+                                    ctx.save(); ctx.lineWidth = 3;
+                                    if (pt.type === 'pass' && catchX) {
+                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                    } else {
+                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                    }
+                                    ctx.restore();
+                                } 
+                            });
+                        });
+                    }
+                };
+
+                const allClips = Store.get('clips') || [];
+                const clips = allClips.filter(c => c.fullData?.data?.situation); 
+                
+                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
+                    const el = document.getElementById(id); if(Chart.getChart(el)) Chart.getChart(el).destroy();
+                });
+
+                if (clips.length === 0) return;
+
+                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
+                const passShots = [], runShots = [];
+
+                clips.forEach(c => {
+                    const d = c.fullData;
+                    const sit = d.data.situation || {};
+                    
+                    const off = d.data.o_formation || c.formation || "Unknown";
+                    const def = d.data.d_formation || "Unknown";
+                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
+
+                    offForms[off] = (offForms[off] || 0) + 1;
+                    defForms[def] = (defForms[def] || 0) + 1;
+                    if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
+                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
+                    
+                    let concept = d.tactical_breakdown?.concept || "Unknown";
+                    if(concept.length > 15) concept = concept.substring(0, 15) + "..";
+                    concepts[concept] = (concepts[concept] || 0) + 1;
+
+                    // Plotting Data (Manual Only)
+                    if (sit.plot_startX) {
+                        const shot = {
+                            type: sit.play_type || 'pass',
+                            // We pass the RAW saved values. The vectorPlugin handles the flip.
+                            pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
+                            pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
+                            pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
+                            clipId: c._id || c.id
+                        };
+                        // For tooltip points, we do the flip here for X/Y
+                        const displayX = (shot.pEnd.x/100) * 53.3; 
+                        const displayY = 100 - shot.pEnd.y; // Flip Y for tooltip
+
+                        if(shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
+                        else passShots.push({ x: displayX, y: displayY, ...shot });
+                    }
+                });
+
+                const renderBar = (id, data, color) => {
+                    const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
+                    new Chart(document.getElementById(id), { 
+                        type: 'bar', indexAxis: 'y', 
+                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } 
+                    });
+                };
+                renderBar('chart-off-form', offForms, '#38bdf8');
+                renderBar('chart-def-form', defForms, '#ef4444');
+                renderBar('chart-conflict', concepts, '#8b5cf6');
+
+                const covL = Object.keys(coverSuccess);
+                const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
+                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
+
+                const table = document.getElementById('efficiency-table');
+                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+                const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 4 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
+
+            // Handlers (Chat/Video)
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
@@ -2549,24 +2400,13 @@
                 const input = document.getElementById('user-input');
                 const fileInput = document.getElementById('file-input');
                 const feed = document.getElementById('chat-feed');
-                
                 if (!input.value && !fileInput.files.length) return;
-                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
+                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session first!"); return; }
                 if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
-                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                const sessions = Store.get('sessions');
-                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx > -1) {
-                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
-                    sessions[sessIdx].history.push({ role: 'user', text: userText });
-                    Store.set('sessions', sessions);
-                }
-
+                const userText = input.value || "Analyzed footage.";
                 UI.renderMessageHTML({ type: 'user', content: userText });
-                input.value = '';
-                const file = fileInput.files[0];
-                fileInput.value = '';
+                input.value = ''; fileInput.value = '';
                 document.getElementById('file-btn').innerHTML = '📎 Upload Film';
                 document.getElementById('file-btn').style.background = '#222';
                 document.getElementById('file-btn').style.color = '#ccc';
@@ -2575,7 +2415,7 @@
                 feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
                 feed.scrollTop = feed.scrollHeight;
 
-                const res = await CoachAI.analyze(userText, file);
+                const res = await CoachAI.analyze(userText, file); 
                 document.getElementById(loadId).remove();
 
                 let aiContent = res.text;
@@ -2583,16 +2423,37 @@
                     UI.renderLibrary();
                     aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
                 }
-
-                const sessions2 = Store.get('sessions');
-                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx2 > -1) {
-                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
-                    Store.set('sessions', sessions2);
-                }
-
                 feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
                 feed.scrollTop = feed.scrollHeight;
+            },
+            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+            closeOverlay: () => Telestrator.close(),
+            playClip: (id) => {
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === id);
+                if (!clip) return;
+                UI.overlayClipId = clip._id || clip.id;
+                
+                const reportContainer = document.getElementById('report-injection-site');
+                if (reportContainer) {
+                    if (clip.fullData) {
+                        const scoutData = {
+                            id: clip._id, title: clip.title, formation: clip.formation,
+                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                        };
+                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                    } else {
+                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+                    }
+                }
+                Telestrator.init(clip.videoUrl);
             },
             buildScoutCardHTML: (data, isChatPreview = false) => {
                 const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
