@@ -1224,6 +1224,7 @@
             <div class="nav-tab active" data-tab="about">Vision</div>
             <div class="nav-tab" data-tab="self">Self Analysis</div>
             <div class="nav-tab" data-tab="team">Team Analysis</div>
+            <div class="nav-tab" data-tab="playbook">Playbook</div>
         </div>
         <div id="user-button"></div>
     </div>
@@ -1276,11 +1277,48 @@
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
+                <div id="playbook-view" class="view">
+            <div class="app-body">
+                <div class="sidebar">
+                    <div class="panel-header">Install & Concepts</div>
+                    <div style="padding:16px;">
+                        <div class="session-item active">Pass Concepts</div>
+                        <div class="session-item">Run Concepts</div>
+                        <div class="session-item">Protections</div>
+                        <div class="session-item">Specials</div>
+                    </div>
+                </div>
+
+                <div class="main" style="padding: 24px; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <div>
+                            <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
+                            <div style="color:#666;">AI-Linked Concept Library</div>
+                        </div>
+                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;">+ New Concept</button>
+                    </div>
+
+                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+                        
+                        <div class="scout-card">
+                            <div class="scout-header">
+                                <div class="play-title">Mesh (Sample)</div>
+                                <span style="font-size:0.7rem; color:var(--accent);">🔗 AI Linked</span>
+                            </div>
+                            <div style="height:120px; background:#355e3b; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5);">
+                                (Concept Diagram)
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
                 <div class="main">
                     <div class="dashboard-header">
                         <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
                         <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
-                        <button class="dash-btn" onclick="alert('Upload Playbook Feature')">📖 Playbook</button>
                         <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
                         <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster /
                             Tendency</button>
@@ -2064,15 +2102,40 @@
 
             switchTab: (tab) => {
                 UI.currentMode = tab;
+                // 1. Update Buttons
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-                document.getElementById('landing-view').classList.toggle('active-view', tab === 'about');
-                const warView = document.getElementById('war-room-view');
-                warView.classList.toggle('active-view', tab !== 'about');
+                
+                // 2. Hide All Views first
+                document.querySelectorAll('.view').forEach(v => {
+                    v.classList.remove('active-view');
+                    v.style.opacity = 0;
+                });
+
+                // 3. Show Target View
+                let targetView = 'landing-view';
+                if (tab === 'self' || tab === 'team') targetView = 'war-room-view';
+                if (tab === 'playbook') targetView = 'playbook-view';
+
+                const viewEl = document.getElementById(targetView);
+                viewEl.classList.add('active-view');
+                
+                // Fade in animation
+                setTimeout(() => viewEl.style.opacity = 1, 50);
+
+                // 4. Handle Specific Logic
                 if (tab !== 'about') {
-                    setTimeout(() => warView.style.opacity = 1, 50);
-                    document.getElementById('pos-select').style.display = (tab === 'self') ? 'block' : 'none';
-                    if (UI.activeSessionId) UI.selectSession(UI.activeSessionId);
-                    else UI.renderSessionList();
+                    // Check Auth for restricted tabs
+                    if (!App.enforceAuth()) return;
+
+                    // Show Position Select only for Self Analysis
+                    const posSelect = document.getElementById('pos-select');
+                    if(posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+
+                    // Load Session List if in War Room
+                    if (targetView === 'war-room-view') {
+                        if (UI.activeSessionId) UI.selectSession(UI.activeSessionId);
+                        else UI.renderSessionList();
+                    }
                 }
             },
             
@@ -2345,7 +2408,7 @@
                 new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
-            
+
             // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
