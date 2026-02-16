@@ -1867,37 +1867,36 @@
             };
 
 
-            // [NEW] MINI-MAP LOGIC (The Play Plotter)
-        // [FIXED] PLAY PLOTTER ENGINE (Draws Field & Handling Clicks)
         const Plotter = {
             step: 0, 
             coords: { start: null, catch: null, end: null },
             ctx: null,
             canvas: null,
 
-            // Called when Panel Opens
             init: () => {
                 const container = document.getElementById('plotter-container');
                 Plotter.canvas = document.getElementById('plotter-canvas');
                 if(!Plotter.canvas || !container) return;
 
-                // 1. Force Canvas Size to Match Container Resolution
-                Plotter.canvas.width = container.clientWidth;
-                Plotter.canvas.height = container.clientHeight;
-                
-                Plotter.ctx = Plotter.canvas.getContext('2d');
+                // FORCE RESIZE
+                const resize = () => {
+                    Plotter.canvas.width = container.clientWidth;
+                    Plotter.canvas.height = container.clientHeight;
+                    Plotter.ctx = Plotter.canvas.getContext('2d');
+                    Plotter.draw();
+                };
 
-                // 2. Add Click Listener
+                // Resize immediately, and again after transition (300ms)
+                resize();
+                setTimeout(resize, 50);
+                setTimeout(resize, 350); 
+
                 Plotter.canvas.onclick = (e) => {
                     const rect = Plotter.canvas.getBoundingClientRect();
-                    // Get X/Y relative to the canvas
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
                     Plotter.handleClick(x, y);
                 };
-
-                // 3. Draw initial empty field
-                Plotter.draw();
             },
 
             reset: () => {
@@ -1910,15 +1909,14 @@
             },
 
             load: (data) => {
-                Plotter.reset(); // Clear first
-                // Wait 50ms for the panel to slide in so dimensions are correct
+                Plotter.reset();
+                // Wait for layout to settle before drawing points
                 setTimeout(() => {
-                    Plotter.init(); // Re-measure canvas
-                    if (data.startX !== undefined && data.startX !== null && data.startX !== "") {
-                        const w = Plotter.canvas.width;
-                        const h = Plotter.canvas.height;
-                        
-                        // Convert saved 0-100 coords back to pixels
+                    const w = Plotter.canvas.width;
+                    const h = Plotter.canvas.height;
+                    
+                    // Only load if valid numbers exist
+                    if (data.startX && !isNaN(data.startX) && w > 0) {
                         Plotter.coords.start = { x: (data.startX/100)*w, y: (data.startY/100)*h };
                         if(data.catchX) Plotter.coords.catch = { x: (data.catchX/100)*w, y: (data.catchY/100)*h };
                         if(data.endX) Plotter.coords.end = { x: (data.endX/100)*w, y: (data.endY/100)*h };
@@ -1928,100 +1926,67 @@
                         if(hint) hint.innerText = "Play Loaded. Reset to redraw.";
                         Plotter.draw();
                     }
-                }, 100);
+                }, 400); // Wait longer than the slide-in animation
             },
 
             handleClick: (x, y) => {
                 const hint = document.getElementById('plotter-hint');
-                
                 if (Plotter.step === 0) {
-                    Plotter.coords.start = { x, y };
-                    Plotter.step = 1;
+                    Plotter.coords.start = { x, y }; Plotter.step = 1;
                     if(hint) hint.innerText = "Where was the CATCH / MOVE?";
                 } else if (Plotter.step === 1) {
-                    Plotter.coords.catch = { x, y };
-                    Plotter.step = 2;
+                    Plotter.coords.catch = { x, y }; Plotter.step = 2;
                     if(hint) hint.innerText = "Where did the play END?";
                 } else if (Plotter.step === 2) {
-                    Plotter.coords.end = { x, y };
-                    Plotter.step = 3;
+                    Plotter.coords.end = { x, y }; Plotter.step = 3;
                     if(hint) hint.innerText = "Done! Click Save.";
                 }
                 Plotter.draw();
                 Plotter.updateInputs();
             },
 
-            // THE VISUAL RENDERER
             draw: () => {
                 const ctx = Plotter.ctx;
                 const w = Plotter.canvas.width;
                 const h = Plotter.canvas.height;
-                if(!ctx) return;
+                if(!ctx || w === 0) return;
 
-                // A. DRAW GRASS
-                ctx.fillStyle = '#355e3b';
-                ctx.fillRect(0, 0, w, h);
-
-                // B. DRAW YARD LINES (Every 10%)
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                // Grass
+                ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                
+                // Yard Lines (White)
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; 
                 ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.textAlign = 'center';
-                ctx.font = '10px monospace';
-                ctx.lineWidth = 1;
+                ctx.textAlign = 'center'; ctx.font = '10px monospace'; ctx.lineWidth = 1;
 
-                // Draw 10 lines (0 to 100)
                 for (let i = 1; i < 10; i++) {
                     const yPos = (h / 10) * i;
-                    ctx.beginPath();
-                    ctx.moveTo(0, yPos);
-                    ctx.lineTo(w, yPos);
-                    ctx.stroke();
-                    
-                    // Add Numbers (10, 20, 30...)
-                    // We assume top is 0, bottom is 100.
-                    // Or 50 is middle. Let's do 10-50-10 format.
-                    let num = i * 10;
-                    if (num > 50) num = 100 - num;
-                    
-                    // Draw numbers near hashes
-                    ctx.fillText(num, w * 0.15, yPos - 2);
-                    ctx.fillText(num, w * 0.85, yPos - 2);
+                    ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
+                    let num = i * 10; if (num > 50) num = 100 - num;
+                    ctx.fillText(num, w * 0.15, yPos - 2); ctx.fillText(num, w * 0.85, yPos - 2);
                 }
 
-                // C. DRAW HASHES
+                // Hashes
                 ctx.strokeStyle = 'rgba(255,255,255,0.2)';
                 ctx.beginPath();
                 ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
                 ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
                 ctx.stroke();
 
-                // D. DRAW THE PLAY (Vectors)
+                // Vectors
                 const c = Plotter.coords;
-
-                // 1. SNAP (Blue Dot)
                 if (c.start) {
-                    ctx.shadowBlur = 5; ctx.shadowColor = "black";
-                    ctx.fillStyle = '#38bdf8'; // Blue
-                    ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI*2); ctx.fill();
-                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI*2); ctx.fill();
                 }
-
-                // 2. THROW (Cyan Line)
                 if (c.start && c.catch) {
                     ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
                     ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
-                    // Catch Point (White Dot)
-                    ctx.fillStyle = 'white';
-                    ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI*2); ctx.fill();
                 }
-
-                // 3. YAC (Orange Line)
                 if (c.catch && c.end) {
                     ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
                     ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
-                    // End Point (Square)
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
+                    ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
                 }
             },
 
@@ -2029,8 +1994,8 @@
                 const c = Plotter.coords;
                 const w = Plotter.canvas.width;
                 const h = Plotter.canvas.height;
+                if(w === 0) return;
 
-                // Save Normalized (0-100) Data
                 if (c.start) {
                     document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
                     document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
@@ -2043,15 +2008,12 @@
                     document.getElementById('edit-end-x').value = (c.end.x / w) * 100;
                     document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
                 }
-
-                // Visual Calculation (Pixels -> Yards)
+                
+                // Live Gain Update
                 if (c.start && c.end) {
-                    // Approx: Canvas Height = 100 yards
                     const yardsPerPx = 100 / h; 
-                    
                     const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
                     document.getElementById('disp-gain').innerText = Math.round(totalDist);
-                    
                     if (c.catch) {
                         const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
                         document.getElementById('disp-air').innerText = Math.round(airDist);
@@ -2059,7 +2021,6 @@
                 }
             }
         };
-
         const UI = {
             currentMode: 'about',
             activeSessionId: null,
@@ -2446,21 +2407,23 @@
             },
 
             // [REPLACEMENT] saveContext
+           // [REPLACEMENT] saveContext
             saveContext: async () => {
                 const id = document.getElementById('edit-clip-id').value;
                 const type = document.getElementById('edit-type').value;
-                const down = Number(document.getElementById('edit-down').value);
-                const togo = Number(document.getElementById('edit-togo').value);
+                const down = Number(document.getElementById('edit-down').value) || 1;
+                const togo = Number(document.getElementById('edit-togo').value) || 10;
                 
-                // 1. Grab Plotter Data (The Hidden Inputs)
-                // We wrap in Number() to ensure they don't save as text strings
+                // SAFELY GRAB NUMBERS (Fallback to 0 if empty)
+                const getVal = (id) => Number(document.getElementById(id).value) || 0;
+
                 const p = {
-                    startX: Number(document.getElementById('edit-start-x').value),
-                    startY: Number(document.getElementById('edit-start-y').value),
-                    catchX: Number(document.getElementById('edit-catch-x').value),
-                    catchY: Number(document.getElementById('edit-catch-y').value),
-                    endX: Number(document.getElementById('edit-end-x').value),
-                    endY: Number(document.getElementById('edit-end-y').value)
+                    startX: getVal('edit-start-x'),
+                    startY: getVal('edit-start-y'),
+                    catchX: getVal('edit-catch-x'),
+                    catchY: getVal('edit-catch-y'),
+                    endX: getVal('edit-end-x'),
+                    endY: getVal('edit-end-y')
                 };
 
                 const clips = Store.get('clips') || [];
@@ -2470,22 +2433,19 @@
                     if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
                     if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
 
-                    // 2. Build the Data Object
                     const newSituation = {
                         play_type: type, 
-                        down: parseInt(down), 
-                        distance_togo: parseInt(togo),
-                        // Save the Plotter Coordinates
+                        down: down, 
+                        distance_togo: togo,
                         plot_startX: p.startX, plot_startY: p.startY,
                         plot_catchX: p.catchX, plot_catchY: p.catchY,
                         plot_endX: p.endX, plot_endY: p.endY
                     };
 
-                    // 3. Save Locally
                     clips[clipIndex].fullData.data.situation = newSituation;
                     Store.set('clips', clips);
                     
-                    // 4. Save to Server (Silent Fail if Offline)
+                    // Try Server Save
                     try {
                         const token = await window.Clerk.session.getToken();
                         await fetch('/api/update-clip-data', {
@@ -2500,7 +2460,7 @@
                                 summary: clips[clipIndex].fullData.scouting_report?.summary
                             })
                         });
-                    } catch(e) { console.log("Saved locally (Server offline)"); }
+                    } catch(e) { console.log("Saved locally"); }
 
                     UI.refreshStats(); 
                     UI.toggleContextPanel(false); 
