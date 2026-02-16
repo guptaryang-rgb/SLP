@@ -1225,7 +1225,8 @@
             <div class="nav-tab" data-tab="self">Self Analysis</div>
             <div class="nav-tab" data-tab="team">Team Analysis</div>
         </div>
-        <div id="user-button"></div>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <div id="sign-in-btn"></div>  <div id="user-button"></div>  </div>
     </div>
 
     <div class="view-container">
@@ -1534,9 +1535,9 @@
             </div>
         </div>
 
-        <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
-            <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
-        </div>
+        <div id="auth-modal" class="modal" style="display: none; z-index:9999;">
+        <div id="sign-in-modal-mount" style="background: white; padding: 20px; border-radius: 12px;"></div>
+    </div>
 
         <script>
         /**
@@ -2287,52 +2288,57 @@
 
         const App = {
             init: () => {
-                let attempts = 0;
-                Store.init(); // Initialize Local Storage immediately
+                Store.init(); // Load local storage
 
-                const checkAuth = setInterval(() => {
-                    attempts++;
-                    if (window.Clerk) {
-                        clearInterval(checkAuth);
-                        Clerk.load()
-                            .then(() => {
-                                // LISTEN for Sign Out events to force reload/login
-                                Clerk.addListener((payload) => {
-                                    if (!payload.user) {
-                                        window.location.reload(); 
-                                    }
+                if (window.Clerk) {
+                    Clerk.load()
+                        .then(() => {
+                            if (!Clerk.user) {
+                                // CASE 1: LOGGED OUT
+                                // Mount a small "Sign In" button in the navbar
+                                const navBtn = document.getElementById('sign-in-btn');
+                                Clerk.mountSignIn(navBtn, { 
+                                    appearance: { elements: { rootBox: { width: '100px', height: '32px' } } } 
                                 });
-
-                                if (!Clerk.user) {
-                                    document.getElementById('auth-modal').style.display = 'flex'; // FORCE SHOW MODAL
-                                    Clerk.mountSignIn(document.getElementById('sign-in'));
-                                } else {
-                                    document.getElementById('auth-modal').style.display = 'none';
-                                    Clerk.mountUserButton(document.getElementById('user-button'));
-                                    UI.init();
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Clerk Auth Failed:", err);
-                                // Fallback: Allow offline use if Auth fails completely
-                                document.getElementById('auth-modal').style.display = 'none';
+                                // Remove the profile button if it exists
+                                document.getElementById('user-button').innerHTML = '';
+                            } else {
+                                // CASE 2: LOGGED IN
+                                // Mount the User Profile button
+                                document.getElementById('sign-in-btn').innerHTML = ''; // Clear sign in btn
+                                Clerk.mountUserButton(document.getElementById('user-button'));
+                                
+                                // Initialize App
                                 UI.init();
-                            });
-                    } else if (attempts > 10) {
-                        clearInterval(checkAuth);
-                        console.warn("Clerk timeout - forcing init offline");
-                        document.getElementById('auth-modal').style.display = 'none';
-                        UI.init();
-                    }
-                }, 300);
+                            }
+                        })
+                        .catch(err => console.error("Auth Error:", err));
+                }
             },
+
+            // Call this when user tries to do something restricted
+            enforceAuth: () => {
+                if (Clerk && Clerk.user) return true; // Logged in, proceed
+                
+                // Not logged in? Show the modal
+                const modal = document.getElementById('auth-modal');
+                const mountPoint = document.getElementById('sign-in-modal-mount');
+                
+                modal.style.display = 'flex';
+                // Mount the full login form inside the modal
+                Clerk.mountSignIn(mountPoint); 
+                
+                return false; // Stop the action
+            },
+
             createNewSession: async () => {
+                if (!App.enforceAuth()) return; // Lock this feature
+
                 const title = prompt("New Session Name:");
                 if (title) {
                     try {
                         let newSession;
                         try {
-                            // Try Server First
                             const token = await window.Clerk.session.getToken();
                             const res = await fetch('/api/create-session', {
                                 method: 'POST',
@@ -2342,23 +2348,25 @@
                             if (!res.ok) throw new Error("Server failed");
                             newSession = await res.json();
                         } catch (serverErr) {
-                            // Offline Fallback
-                            newSession = {
-                                sessionId: 'local_' + Date.now(),
-                                title: title,
-                                type: UI.currentMode,
-                                date: new Date().toISOString()
-                            };
+                            newSession = { sessionId: 'local_' + Date.now(), title: title, type: UI.currentMode, date: new Date().toISOString() };
                         }
-
                         const sessions = Store.get('sessions') || [];
                         sessions.unshift(newSession);
                         Store.set('sessions', sessions);
                         await UI.selectSession(newSession.sessionId || newSession.id);
-
                     } catch (e) { console.error(e); }
                 }
             }
+        };
+
+        // --- UPDATE UI ACTIONS TO CHECK AUTH ---
+        // We override the switchTab function to lock the "War Room"
+        const originalSwitchTab = UI.switchTab;
+        UI.switchTab = (tab) => {
+            if (tab !== 'about') {
+                if (!App.enforceAuth()) return; // Stop if not logged in
+            }
+            originalSwitchTab(tab);
         };
 
         window.onload = App.init;
