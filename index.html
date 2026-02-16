@@ -1128,12 +1128,13 @@
             width: 60px;
         }
 
-       /* --- 1. FIELD VISION GRAPHICS (Clean Background) --- */
+        /* --- 1. FIELD VISION GRAPHICS (Clean Background) --- */
         .football-field {
             width: 100%;
             height: 100%;
             position: relative;
-            background: #1a1a1a; /* Dark grey to allow charts to shine */
+            background: #1a1a1a;
+            /* Dark grey to allow charts to shine */
             border: 1px solid #333;
             border-radius: 4px;
             overflow: hidden;
@@ -1141,14 +1142,17 @@
 
         /* [FIX: STABLE OVERLAY CSS] */
         #edit-context-modal {
-            display: none; 
-            position: absolute; /* Changed from fixed to absolute to sit inside overlay */
+            display: none;
+            position: absolute;
+            /* Changed from fixed to absolute to sit inside overlay */
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85); /* Slightly transparent */
-            z-index: 999999 !important; /* High, but safe */
+            background: rgba(0, 0, 0, 0.85);
+            /* Slightly transparent */
+            z-index: 999999 !important;
+            /* High, but safe */
             align-items: center;
             justify-content: center;
         }
@@ -1156,7 +1160,7 @@
         #edit-context-modal .modal-content {
             background: #111;
             border: 2px solid var(--accent);
-            box-shadow: 0 0 50px rgba(0,0,0,1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
             padding: 24px;
             border-radius: 12px;
             width: 100%;
@@ -1207,8 +1211,15 @@
         }
 
         @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -1278,42 +1289,46 @@
                 </div>
 
                 <div id="playbook-view" class="view">
-            <div class="app-body">
-                <div class="sidebar">
-                    <div class="panel-header">Install & Concepts</div>
-                    <div style="padding:16px;">
-                        <div class="session-item active">Pass Concepts</div>
-                        <div class="session-item">Run Concepts</div>
-                        <div class="session-item">Protections</div>
-                        <div class="session-item">Specials</div>
-                    </div>
-                </div>
-
-                <div class="main" style="padding: 24px; overflow-y:auto;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                        <div>
-                            <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
-                            <div style="color:#666;">AI-Linked Concept Library</div>
-                        </div>
-                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;">+ New Concept</button>
-                    </div>
-
-                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
-                        
-                        <div class="scout-card">
-                            <div class="scout-header">
-                                <div class="play-title">Mesh (Sample)</div>
-                                <span style="font-size:0.7rem; color:var(--accent);">🔗 AI Linked</span>
-                            </div>
-                            <div style="height:120px; background:#355e3b; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5);">
-                                (Concept Diagram)
+                    <div class="app-body">
+                        <div class="sidebar">
+                            <div class="panel-header">Install & Concepts</div>
+                            <div style="padding:16px;">
+                                <div class="session-item active">Pass Concepts</div>
+                                <div class="session-item">Run Concepts</div>
+                                <div class="session-item">Protections</div>
+                                <div class="session-item">Specials</div>
                             </div>
                         </div>
 
+                        <div class="main" style="padding: 24px; overflow-y:auto;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                                <div>
+                                    <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
+                                    <div style="color:#666;">AI-Linked Concept Library</div>
+                                </div>
+                                <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;">+ New
+                                    Concept</button>
+                            </div>
+
+                            <div id="playbook-grid"
+                                style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+
+                                <div class="scout-card">
+                                    <div class="scout-header">
+                                        <div class="play-title">Mesh (Sample)</div>
+                                        <span style="font-size:0.7rem; color:var(--accent);">🔗 AI Linked</span>
+                                    </div>
+                                    <div
+                                        style="height:120px; background:#355e3b; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.5);">
+                                        (Concept Diagram)
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
                 <div class="main">
                     <div class="dashboard-header">
@@ -1358,9 +1373,11 @@
         </div>
     </div>
 
-    <div id="analysis-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
+    <div id="analysis-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
 
-        <div class="overlay-header" style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
+        <div class="overlay-header"
+            style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
             <div style="display:flex; gap:12px; align-items:center;">
                 <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
                 <span class="badge" style="background:var(--accent); color:black;">VCM</span>
@@ -1371,20 +1388,28 @@
             </div>
         </div>
 
-        <div id="workspace-split" style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
-            
-            <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
-                <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
-                    <video id="ghost-video" playsinline webkit-playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
-                    <video id="main-video" playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; display:block;"></video>
-                    <canvas id="draw-canvas" style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
+        <div id="workspace-split"
+            style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
+
+            <div id="popup-video-container"
+                style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
+                <div id="telestrator-view"
+                    style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
+                    <video id="ghost-video" playsinline webkit-playsinline muted
+                        style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
+                    <video id="main-video" playsinline webkit-playsinline
+                        style="width:100%; height:100%; object-fit:contain; display:block;"></video>
+                    <canvas id="draw-canvas"
+                        style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
                 </div>
 
                 <div class="video-controls">
                     <button class="v-btn" id="play-pause-btn">⏯</button>
                     <div class="scrubber-container">
                         <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                        <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+                        <div id="video-time"
+                            style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00
+                        </div>
                     </div>
                     <div class="tele-tools">
                         <button id="draw-btn" class="tool-btn">✏️ Draw</button>
@@ -1393,14 +1418,19 @@
                 </div>
             </div>
 
-            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
-                
-                <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Edit Play</h3>
+            <div id="context-side-panel"
+                style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
+
+                <h3
+                    style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">
+                    Edit Play</h3>
                 <input type="hidden" id="edit-clip-id">
 
                 <div style="margin-bottom:16px; background:#1a1a1a; padding:4px; border-radius:8px; display:flex;">
-                    <button id="btn-pass" class="sit-btn selected" onclick="UI.setPlayType('pass')" style="border:none; border-radius:6px;">PASS</button>
-                    <button id="btn-run" class="sit-btn" onclick="UI.setPlayType('run')" style="border:none; border-radius:6px;">RUN</button>
+                    <button id="btn-pass" class="sit-btn selected" onclick="UI.setPlayType('pass')"
+                        style="border:none; border-radius:6px;">PASS</button>
+                    <button id="btn-run" class="sit-btn" onclick="UI.setPlayType('run')"
+                        style="border:none; border-radius:6px;">RUN</button>
                 </div>
                 <input type="hidden" id="edit-type" value="pass">
 
@@ -1416,20 +1446,25 @@
                     </div>
                     <div style="flex:1;">
                         <label style="color:#888; font-size:0.7rem; font-weight:700;">TO GO</label>
-                        <input type="number" id="edit-togo" class="input-box" style="margin-top:4px; width:100%;" placeholder="10">
+                        <input type="number" id="edit-togo" class="input-box" style="margin-top:4px; width:100%;"
+                            placeholder="10">
                     </div>
                 </div>
 
                 <div style="margin-bottom:16px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full Field)</label>
-                        <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺ Reset</button>
+                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full
+                            Field)</label>
+                        <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺
+                            Reset</button>
                     </div>
-                    
-                    <div id="plotter-container" style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
+
+                    <div id="plotter-container"
+                        style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
                         <canvas id="plotter-canvas" style="display:block; width:100%; height:100%;"></canvas>
-                        
-                        <div id="plotter-hint" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">
+
+                        <div id="plotter-hint"
+                            style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">
                             Tap to set SNAP location
                         </div>
                     </div>
@@ -1442,24 +1477,32 @@
                 <input type="hidden" id="edit-end-x">
                 <input type="hidden" id="edit-end-y">
 
-                <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.8rem; color:#aaa;">
+                <div
+                    style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.8rem; color:#aaa;">
                     <span>Gain: <b id="disp-gain" style="color:white;">0</b> yds</span>
                     <span id="disp-air-row">Air: <b id="disp-air" style="color:#38bdf8;">0</b> yds</span>
                 </div>
 
                 <div style="margin-top:auto;">
                     <button class="cta-btn" style="width:100%;" onclick="UI.saveContext()">Save Situation</button>
-                    <button class="tool-btn" style="width:100%; margin-top:10px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
+                    <button class="tool-btn" style="width:100%; margin-top:10px; justify-content:center; border:none;"
+                        onclick="UI.toggleContextPanel(false)">Cancel</button>
                 </div>
             </div>
         </div>
 
-        <div id="popup-report-container" style="width:100%; padding:40px 20px; display:flex; flex-direction:column; align-items:center; background:#050505;">
-            <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
-                <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="popup-report-container"
+            style="width:100%; padding:40px 20px; display:flex; flex-direction:column; align-items:center; background:#050505;">
+            <div
+                style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI
+                    (LIVE)</div>
+                <div id="overlay-chat-history"
+                    style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
+                </div>
                 <div style="display:flex; gap:8px;">
-                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
+                        style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
                     <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
                 </div>
             </div>
@@ -1576,8 +1619,8 @@
             <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
         </div>
 
-<div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div class="modal-content" style="max-width:1000px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
+        <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
             
             <div style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:300px; font-weight:700; background:#111;">
@@ -1588,7 +1631,8 @@
                 </div>
             </div>
 
-            <div style="flex:1; display:flex; position:relative;">
+            <div style="flex:1; display:flex; position:relative; overflow:hidden;">
+                
                 <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
                     <div class="tool-icon active" style="cursor:pointer; padding:8px; border-radius:4px; background:rgba(255,255,255,0.1); font-size:1.2rem;">✏️</div>
                     <div class="tool-icon" style="cursor:pointer; opacity:0.5; font-size:1.2rem;">⭕</div>
@@ -1596,35 +1640,28 @@
                 </div>
 
                 <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b;">
-                    <canvas id="designer-canvas" style="display:block;"></canvas>
-                    <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:crosshair; background:#355e3b; display:flex;">
-    
-    <canvas id="designer-canvas" style="display:block; flex:1;"></canvas>
-
-    <div style="width:300px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; position:relative; z-index:20;">
-        <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border);">
-            COACH AI : CHALK TALK
-        </div>
-        <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:12px; font-size:0.85rem; display:flex; flex-direction:column; gap:10px;">
-            <div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">
-                Linking to Analysis intel...
-            </div>
-        </div>
-        <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px;">
-            <input id="designer-chat-input" type="text" placeholder="Ask about this play..." style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:8px; border-radius:6px; font-size:0.8rem;">
-            <button class="tool-btn" style="padding:8px;" onclick="Playbook.handleChalkTalk()">Send</button>
-        </div>
-    </div>
-    
-    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
-        Draw routes. AI will auto-tag geometry.
-    </div>
-</div>
+                    <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
                     
-                    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none;">
+                    <div style="position:absolute; bottom:16px; left:16px; background:rgba(0,0,0,0.7); padding:8px 12px; border-radius:6px; color:#aaa; font-size:0.8rem; pointer-events:none; z-index:15;">
                         Draw routes. AI will auto-tag geometry.
                     </div>
                 </div>
+
+                <div style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
+                    <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px;">
+                        COACH AI : CHALK TALK
+                    </div>
+                    <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
+                        <div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
+                            Linking to Analysis intel...
+                        </div>
+                    </div>
+                    <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
+                        <input id="designer-chat-input" type="text" placeholder="Ask about this play..." style="flex:1; background:#1a1a1a; border:1px solid var(--border); color:white; padding:10px; border-radius:6px; font-size:0.85rem;">
+                        <button class="tool-btn" style="padding:10px; background:var(--accent); color:black;" onclick="Playbook.handleChalkTalk()">SEND</button>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1958,349 +1995,349 @@
             };
 
 
-        const Plotter = {
-            step: 0, 
-            coords: { start: null, catch: null, end: null },
-            ctx: null,
-            canvas: null,
+            const Plotter = {
+                step: 0,
+                coords: { start: null, catch: null, end: null },
+                ctx: null,
+                canvas: null,
 
-            init: () => {
-                const container = document.getElementById('plotter-container');
-                Plotter.canvas = document.getElementById('plotter-canvas');
-                if(!Plotter.canvas || !container) return;
+                init: () => {
+                    const container = document.getElementById('plotter-container');
+                    Plotter.canvas = document.getElementById('plotter-canvas');
+                    if (!Plotter.canvas || !container) return;
 
-                // FORCE RESIZE
-                const resize = () => {
-                    Plotter.canvas.width = container.clientWidth;
-                    Plotter.canvas.height = container.clientHeight;
-                    Plotter.ctx = Plotter.canvas.getContext('2d');
+                    // FORCE RESIZE
+                    const resize = () => {
+                        Plotter.canvas.width = container.clientWidth;
+                        Plotter.canvas.height = container.clientHeight;
+                        Plotter.ctx = Plotter.canvas.getContext('2d');
+                        Plotter.draw();
+                    };
+
+                    // Resize immediately, and again after transition (300ms)
+                    resize();
+                    setTimeout(resize, 50);
+                    setTimeout(resize, 350);
+
+                    Plotter.canvas.onclick = (e) => {
+                        const rect = Plotter.canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        Plotter.handleClick(x, y);
+                    };
+                },
+
+                reset: () => {
+                    Plotter.step = 0;
+                    Plotter.coords = { start: null, catch: null, end: null };
+                    const hint = document.getElementById('plotter-hint');
+                    if (hint) hint.innerText = "Tap to set SNAP location";
                     Plotter.draw();
-                };
+                    Plotter.updateInputs();
+                },
 
-                // Resize immediately, and again after transition (300ms)
-                resize();
-                setTimeout(resize, 50);
-                setTimeout(resize, 350); 
+                load: (data) => {
+                    Plotter.reset();
+                    // Wait for layout to settle before drawing points
+                    setTimeout(() => {
+                        const w = Plotter.canvas.width;
+                        const h = Plotter.canvas.height;
 
-                Plotter.canvas.onclick = (e) => {
-                    const rect = Plotter.canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    Plotter.handleClick(x, y);
-                };
-            },
+                        // Only load if valid numbers exist
+                        if (data.startX && !isNaN(data.startX) && w > 0) {
+                            Plotter.coords.start = { x: (data.startX / 100) * w, y: (data.startY / 100) * h };
+                            if (data.catchX) Plotter.coords.catch = { x: (data.catchX / 100) * w, y: (data.catchY / 100) * h };
+                            if (data.endX) Plotter.coords.end = { x: (data.endX / 100) * w, y: (data.endY / 100) * h };
 
-            reset: () => {
-                Plotter.step = 0;
-                Plotter.coords = { start: null, catch: null, end: null };
-                const hint = document.getElementById('plotter-hint');
-                if(hint) hint.innerText = "Tap to set SNAP location";
-                Plotter.draw();
-                Plotter.updateInputs();
-            },
+                            Plotter.step = 3;
+                            const hint = document.getElementById('plotter-hint');
+                            if (hint) hint.innerText = "Play Loaded. Reset to redraw.";
+                            Plotter.draw();
+                        }
+                    }, 400); // Wait longer than the slide-in animation
+                },
 
-            load: (data) => {
-                Plotter.reset();
-                // Wait for layout to settle before drawing points
-                setTimeout(() => {
+                handleClick: (x, y) => {
+                    const hint = document.getElementById('plotter-hint');
+                    if (Plotter.step === 0) {
+                        Plotter.coords.start = { x, y }; Plotter.step = 1;
+                        if (hint) hint.innerText = "Where was the CATCH / MOVE?";
+                    } else if (Plotter.step === 1) {
+                        Plotter.coords.catch = { x, y }; Plotter.step = 2;
+                        if (hint) hint.innerText = "Where did the play END?";
+                    } else if (Plotter.step === 2) {
+                        Plotter.coords.end = { x, y }; Plotter.step = 3;
+                        if (hint) hint.innerText = "Done! Click Save.";
+                    }
+                    Plotter.draw();
+                    Plotter.updateInputs();
+                },
+
+                draw: () => {
+                    const ctx = Plotter.ctx;
                     const w = Plotter.canvas.width;
                     const h = Plotter.canvas.height;
-                    
-                    // Only load if valid numbers exist
-                    if (data.startX && !isNaN(data.startX) && w > 0) {
-                        Plotter.coords.start = { x: (data.startX/100)*w, y: (data.startY/100)*h };
-                        if(data.catchX) Plotter.coords.catch = { x: (data.catchX/100)*w, y: (data.catchY/100)*h };
-                        if(data.endX) Plotter.coords.end = { x: (data.endX/100)*w, y: (data.endY/100)*h };
-                        
-                        Plotter.step = 3;
-                        const hint = document.getElementById('plotter-hint');
-                        if(hint) hint.innerText = "Play Loaded. Reset to redraw.";
-                        Plotter.draw();
+                    if (!ctx || w === 0) return;
+
+                    // Grass
+                    ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+
+                    // Yard Lines (White)
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctx.textAlign = 'center'; ctx.font = '10px monospace'; ctx.lineWidth = 1;
+
+                    for (let i = 1; i < 10; i++) {
+                        const yPos = (h / 10) * i;
+                        ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
+                        let num = i * 10; if (num > 50) num = 100 - num;
+                        ctx.fillText(num, w * 0.15, yPos - 2); ctx.fillText(num, w * 0.85, yPos - 2);
                     }
-                }, 400); // Wait longer than the slide-in animation
-            },
 
-            handleClick: (x, y) => {
-                const hint = document.getElementById('plotter-hint');
-                if (Plotter.step === 0) {
-                    Plotter.coords.start = { x, y }; Plotter.step = 1;
-                    if(hint) hint.innerText = "Where was the CATCH / MOVE?";
-                } else if (Plotter.step === 1) {
-                    Plotter.coords.catch = { x, y }; Plotter.step = 2;
-                    if(hint) hint.innerText = "Where did the play END?";
-                } else if (Plotter.step === 2) {
-                    Plotter.coords.end = { x, y }; Plotter.step = 3;
-                    if(hint) hint.innerText = "Done! Click Save.";
-                }
-                Plotter.draw();
-                Plotter.updateInputs();
-            },
+                    // Hashes
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    ctx.beginPath();
+                    ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                    ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
+                    ctx.stroke();
 
-            draw: () => {
-                const ctx = Plotter.ctx;
-                const w = Plotter.canvas.width;
-                const h = Plotter.canvas.height;
-                if(!ctx || w === 0) return;
+                    // Vectors
+                    const c = Plotter.coords;
+                    if (c.start) {
+                        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI * 2); ctx.fill();
+                    }
+                    if (c.start && c.catch) {
+                        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
+                        ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
+                        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI * 2); ctx.fill();
+                    }
+                    if (c.catch && c.end) {
+                        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
+                        ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
+                        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
+                    }
+                },
 
-                // Grass
-                ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
-                
-                // Yard Lines (White)
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; 
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.textAlign = 'center'; ctx.font = '10px monospace'; ctx.lineWidth = 1;
+                updateInputs: () => {
+                    const c = Plotter.coords;
+                    const w = Plotter.canvas.width;
+                    const h = Plotter.canvas.height;
+                    if (w === 0) return;
 
-                for (let i = 1; i < 10; i++) {
-                    const yPos = (h / 10) * i;
-                    ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
-                    let num = i * 10; if (num > 50) num = 100 - num;
-                    ctx.fillText(num, w * 0.15, yPos - 2); ctx.fillText(num, w * 0.85, yPos - 2);
-                }
-
-                // Hashes
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.beginPath();
-                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
-                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
-                ctx.stroke();
-
-                // Vectors
-                const c = Plotter.coords;
-                if (c.start) {
-                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI*2); ctx.fill();
-                }
-                if (c.start && c.catch) {
-                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
-                    ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
-                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI*2); ctx.fill();
-                }
-                if (c.catch && c.end) {
-                    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
-                    ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
-                    ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
-                }
-            },
-
-            updateInputs: () => {
-                const c = Plotter.coords;
-                const w = Plotter.canvas.width;
-                const h = Plotter.canvas.height;
-                if(w === 0) return;
-
-                if (c.start) {
-                    document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
-                    document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
-                }
-                if (c.catch) {
-                    document.getElementById('edit-catch-x').value = (c.catch.x / w) * 100;
-                    document.getElementById('edit-catch-y').value = (c.catch.y / h) * 100;
-                }
-                if (c.end) {
-                    document.getElementById('edit-end-x').value = (c.end.x / w) * 100;
-                    document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
-                }
-                
-                // Live Gain Update
-                if (c.start && c.end) {
-                    const yardsPerPx = 100 / h; 
-                    const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
-                    document.getElementById('disp-gain').innerText = Math.round(totalDist);
+                    if (c.start) {
+                        document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
+                        document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
+                    }
                     if (c.catch) {
-                        const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
-                        document.getElementById('disp-air').innerText = Math.round(airDist);
+                        document.getElementById('edit-catch-x').value = (c.catch.x / w) * 100;
+                        document.getElementById('edit-catch-y').value = (c.catch.y / h) * 100;
+                    }
+                    if (c.end) {
+                        document.getElementById('edit-end-x').value = (c.end.x / w) * 100;
+                        document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
+                    }
+
+                    // Live Gain Update
+                    if (c.start && c.end) {
+                        const yardsPerPx = 100 / h;
+                        const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
+                        document.getElementById('disp-gain').innerText = Math.round(totalDist);
+                        if (c.catch) {
+                            const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
+                            document.getElementById('disp-air').innerText = Math.round(airDist);
+                        }
                     }
                 }
-            }
-        };
-        const UI = {
-            currentMode: 'about',
-            activeSessionId: null,
-            overlayClipId: null,
+            };
+            const UI = {
+                currentMode: 'about',
+                activeSessionId: null,
+                overlayClipId: null,
 
-            // [HELPER] Standardize Grades
-            gradeToNum: (g) => {
-                if (!g) return 0;
-                const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
-                return m[g.trim()] || 2.0;
-            },
+                // [HELPER] Standardize Grades
+                gradeToNum: (g) => {
+                    if (!g) return 0;
+                    const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
+                    return m[g.trim()] || 2.0;
+                },
 
-            // [INIT] App Startup
-            init: async () => {
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                    const sessions = await res.json();
-                    Store.set('sessions', sessions);
-                    if (sessions.length > 0 && !UI.activeSessionId) {
-                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
-                        if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                // [INIT] App Startup
+                init: async () => {
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                        const sessions = await res.json();
+                        Store.set('sessions', sessions);
+                        if (sessions.length > 0 && !UI.activeSessionId) {
+                            const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                            if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                        }
+                    } catch (e) { console.error("Session Load Failed", e); }
+
+                    document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
+
+                    const fInput = document.getElementById('file-input');
+                    if (fInput) fInput.onchange = (e) => {
+                        if (e.target.files[0]) {
+                            const btn = document.getElementById('file-btn');
+                            btn.style.background = 'var(--success)';
+                            btn.style.color = 'black';
+                            btn.innerHTML = '✅ Ready';
+                        }
+                    };
+
+                    const sBtn = document.getElementById('send-btn');
+                    if (sBtn) sBtn.onclick = UI.handleSend;
+                },
+
+                switchTab: (tab) => {
+                    UI.currentMode = tab;
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+
+                    let targetView = (tab === 'self' || tab === 'team') ? 'war-room-view' :
+                        (tab === 'playbook') ? 'playbook-view' : 'landing-view';
+
+                    const viewEl = document.getElementById(targetView);
+                    viewEl.classList.add('active-view');
+                    setTimeout(() => viewEl.style.opacity = 1, 50);
+
+                    if (tab !== 'about') {
+                        // Force login if trying to access analysis or playbook
+                        if (window.Clerk && !window.Clerk.user) {
+                            document.getElementById('auth-modal').style.display = 'flex';
+                            return;
+                        }
+
+                        const posSelect = document.getElementById('pos-select');
+                        if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+
+                        if (targetView === 'war-room-view') {
+                            const sessions = Store.get('sessions') || [];
+                            // [THE FIX] Check if the current session matches the tab type
+                            const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+
+                            if (!currentSess || currentSess.type !== tab) {
+                                // Clear view if the session belongs to a different tab
+                                UI.activeSessionId = null;
+                                document.getElementById('chat-feed').innerHTML = '';
+                                // Find the most recent session for THIS tab
+                                const firstValid = sessions.find(s => s.type === tab);
+                                if (firstValid) UI.selectSession(firstValid.sessionId || firstValid.id);
+                                else UI.renderSessionList();
+                            } else {
+                                UI.renderSessionList();
+                            }
+                        }
                     }
-                } catch (e) { console.error("Session Load Failed", e); }
+                },
 
-                document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
-                
-                const fInput = document.getElementById('file-input');
-                if(fInput) fInput.onchange = (e) => {
-                    if (e.target.files[0]) {
-                        const btn = document.getElementById('file-btn');
-                        btn.style.background = 'var(--success)';
-                        btn.style.color = 'black';
-                        btn.innerHTML = '✅ Ready';
+                // [UPDATED] HANDLE RUN/PASS TOGGLE
+                setPlayType: (type) => {
+                    document.getElementById('edit-type').value = type;
+                    const btnPass = document.getElementById('btn-pass');
+                    const btnRun = document.getElementById('btn-run');
+                    // The new layout hides 'disp-air-row' instead of 'edit-air'
+                    const airRow = document.getElementById('disp-air-row');
+
+                    if (type === 'pass') {
+                        btnPass.classList.add('selected'); btnRun.classList.remove('selected');
+                        if (airRow) airRow.style.visibility = 'visible';
+                    } else {
+                        btnRun.classList.add('selected'); btnPass.classList.remove('selected');
+                        if (airRow) airRow.style.visibility = 'hidden';
                     }
-                };
-                
-                const sBtn = document.getElementById('send-btn');
-                if(sBtn) sBtn.onclick = UI.handleSend;
-            },
+                },
 
-            switchTab: (tab) => {
-                UI.currentMode = tab;
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-                
-                document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+                renderMessageHTML: (msg) => {
+                    const feed = document.getElementById('chat-feed');
+                    if (msg.type === 'user') {
+                        feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
+                    } else {
+                        feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
+                    }
+                },
 
-                let targetView = (tab === 'self' || tab === 'team') ? 'war-room-view' : 
-                                 (tab === 'playbook') ? 'playbook-view' : 'landing-view';
+                toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+                toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+                toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+                closeOverlay: () => Telestrator.close(),
 
-                const viewEl = document.getElementById(targetView);
-                viewEl.classList.add('active-view');
-                setTimeout(() => viewEl.style.opacity = 1, 50);
+                // [FIXED] SELECT SESSION (Prevents Data Wiping)
+                selectSession: async (sessId) => {
+                    UI.activeSessionId = sessId;
+                    const feed = document.getElementById('chat-feed');
+                    feed.innerHTML = '';
+                    const sessions = Store.get('sessions') || [];
+                    const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
 
-                if (tab !== 'about') {
-                    // Force login if trying to access analysis or playbook
-                    if (window.Clerk && !window.Clerk.user) {
-                        document.getElementById('auth-modal').style.display = 'flex';
+                    // 1. Render Chat History
+                    if (currentSession && currentSession.history && currentSession.history.length > 0) {
+                        currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
+                        feed.scrollTop = feed.scrollHeight;
+                    } else {
+                        const mode = UI.currentMode;
+                        const icon = mode === 'self' ? '👤' : '🛡️';
+                        feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
+                    }
+
+                    // 2. Load Clips (Safety Check)
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+
+                        if (res.ok) {
+                            const serverClips = await res.json();
+                            // ONLY overwrite if server actually has data. Otherwise keep local.
+                            if (serverClips && serverClips.length > 0) {
+                                Store.set('clips', serverClips);
+                            } else {
+                                console.log("Server returned no clips. Keeping local data.");
+                            }
+                        }
+                    } catch (e) {
+                        console.log("Offline Mode: Loaded clips from Local Storage");
+                    }
+
+                    UI.renderSessionList();
+                    UI.renderLibrary();
+                },
+
+                renderSessionList: () => {
+                    const list = document.getElementById('session-list');
+                    const sessions = Store.get('sessions') || [];
+                    const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                    list.innerHTML = modeSessions.map(s => {
+                        const validId = s.sessionId || s.id;
+                        return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
+                    }).join('');
+                },
+
+                renderLibrary: () => {
+                    const list = document.getElementById('lib-grid');
+                    if (!list) return;
+                    list.innerHTML = '';
+                    const clips = Store.get('clips') || [];
+                    const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
+
+                    if (sessionClips.length === 0) {
+                        list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
                         return;
                     }
 
-                    const posSelect = document.getElementById('pos-select');
-                    if(posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+                    const folders = { 'Inbox': [] };
+                    sessionClips.forEach(c => {
+                        const sec = c.section || 'Inbox';
+                        if (!folders[sec]) folders[sec] = [];
+                        folders[sec].push(c);
+                    });
 
-                    if (targetView === 'war-room-view') {
-                        const sessions = Store.get('sessions') || [];
-                        // [THE FIX] Check if the current session matches the tab type
-                        const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
-                        
-                        if (!currentSess || currentSess.type !== tab) {
-                            // Clear view if the session belongs to a different tab
-                            UI.activeSessionId = null;
-                            document.getElementById('chat-feed').innerHTML = '';
-                            // Find the most recent session for THIS tab
-                            const firstValid = sessions.find(s => s.type === tab);
-                            if (firstValid) UI.selectSession(firstValid.sessionId || firstValid.id);
-                            else UI.renderSessionList();
-                        } else {
-                            UI.renderSessionList();
-                        }
-                    }
-                }
-            },
-            
-            // [UPDATED] HANDLE RUN/PASS TOGGLE
-            setPlayType: (type) => {
-                document.getElementById('edit-type').value = type;
-                const btnPass = document.getElementById('btn-pass');
-                const btnRun = document.getElementById('btn-run');
-                // The new layout hides 'disp-air-row' instead of 'edit-air'
-                const airRow = document.getElementById('disp-air-row');
-
-                if (type === 'pass') {
-                    btnPass.classList.add('selected'); btnRun.classList.remove('selected');
-                    if(airRow) airRow.style.visibility = 'visible';
-                } else {
-                    btnRun.classList.add('selected'); btnPass.classList.remove('selected');
-                    if(airRow) airRow.style.visibility = 'hidden';
-                }
-            },
-
-            renderMessageHTML: (msg) => {
-                const feed = document.getElementById('chat-feed');
-                if (msg.type === 'user') {
-                    feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
-                } else {
-                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
-                }
-            },
-
-            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
-            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
-            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
-            closeOverlay: () => Telestrator.close(),
-
-            // [FIXED] SELECT SESSION (Prevents Data Wiping)
-            selectSession: async (sessId) => {
-                UI.activeSessionId = sessId;
-                const feed = document.getElementById('chat-feed');
-                feed.innerHTML = ''; 
-                const sessions = Store.get('sessions') || [];
-                const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
-
-                // 1. Render Chat History
-                if (currentSession && currentSession.history && currentSession.history.length > 0) {
-                    currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
-                    feed.scrollTop = feed.scrollHeight;
-                } else {
-                    const mode = UI.currentMode;
-                    const icon = mode === 'self' ? '👤' : '🛡️';
-                    feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
-                }
-
-                // 2. Load Clips (Safety Check)
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                    
-                    if (res.ok) {
-                        const serverClips = await res.json();
-                        // ONLY overwrite if server actually has data. Otherwise keep local.
-                        if (serverClips && serverClips.length > 0) {
-                            Store.set('clips', serverClips);
-                        } else {
-                            console.log("Server returned no clips. Keeping local data.");
-                        }
-                    }
-                } catch (e) { 
-                    console.log("Offline Mode: Loaded clips from Local Storage"); 
-                }
-
-                UI.renderSessionList();
-                UI.renderLibrary();
-            },
-            
-            renderSessionList: () => {
-                const list = document.getElementById('session-list');
-                const sessions = Store.get('sessions') || [];
-                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
-                list.innerHTML = modeSessions.map(s => {
-                    const validId = s.sessionId || s.id;
-                    return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
-                }).join('');
-            },
-
-            renderLibrary: () => {
-                const list = document.getElementById('lib-grid');
-                if (!list) return;
-                list.innerHTML = '';
-                const clips = Store.get('clips') || [];
-                const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
-
-                if (sessionClips.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
-                    return;
-                }
-
-                const folders = { 'Inbox': [] };
-                sessionClips.forEach(c => {
-                    const sec = c.section || 'Inbox';
-                    if (!folders[sec]) folders[sec] = [];
-                    folders[sec].push(c);
-                });
-
-                for (const [name, groupClips] of Object.entries(folders)) {
-                    if (groupClips.length === 0) continue;
-                    list.innerHTML += `<div class="folder-header">${name}</div>`;
-                    groupClips.forEach(c => {
-                        list.innerHTML += `
+                    for (const [name, groupClips] of Object.entries(folders)) {
+                        if (groupClips.length === 0) continue;
+                        list.innerHTML += `<div class="folder-header">${name}</div>`;
+                        groupClips.forEach(c => {
+                            list.innerHTML += `
                         <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
                             <button class="clip-menu-btn" 
                                 onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">
@@ -2314,376 +2351,376 @@
                                 <div style="font-size:0.75rem; color:#888;">${c.formation || 'Unknown'}</div>
                             </div>
                         </div>`;
-                    });
-                }
-            },
-
-            showTeamStats: () => {
-                document.getElementById('stats-modal').style.display = 'flex';
-                setTimeout(() => { UI.refreshStats(); }, 50);
-            },
-
-            // [FIXED] CHART ENGINE (Robust Data Checks)
-            refreshStats: () => {
-                const getSeededRandom = (seedStr) => {
-                    let h = 0x811c9dc5;
-                    for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-                    return function() { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
-                };
-
-                const footballFieldPlugin = {
-                    id: 'footballField',
-                    beforeDraw: (chart) => {
-                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height); 
-                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
-                        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
-                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
-                        for (let i = 0; i <= 100; i+=10) { 
-                            const Y = y.getPixelForValue(i);
-                            ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                            ctx.lineWidth = (i===0||i===100||i===50)?2:1; ctx.stroke();
-                            if(i>0&&i<100) { 
-                                const num = i<=50?i:100-i; 
-                                ctx.fillText(num, x.getPixelForValue(6), Y+4); ctx.fillText(num, x.getPixelForValue(47.3), Y+4); 
-                            }
-                        }
-                    }
-                };
-
-                const vectorPlugin = {
-                    id: 'vectorLines',
-                    beforeDatasetsDraw(chart) {
-                        const { ctx, scales: { x, y } } = chart;
-                        chart.data.datasets.forEach((dataset, i) => {
-                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
-                            dataset.data.forEach(pt => {
-                                if (pt.pStart) {
-                                    const mapX = (val) => x.getPixelForValue((val/100) * 53.3);
-                                    const mapY = (val) => y.getPixelForValue(val);
-                                    const flip = (v) => 100 - v; // INVERT Y
-
-                                    const startX = mapX(pt.pStart.x);
-                                    const startY = mapY(flip(pt.pStart.y));
-                                    const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
-                                    const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
-                                    const endX = mapX(pt.pEnd.x);
-                                    const endY = mapY(flip(pt.pEnd.y));
-                                    
-                                    ctx.save(); ctx.lineWidth = 3;
-                                    if (pt.type === 'pass' && catchX) {
-                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
-                                    } else {
-                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
-                                    }
-                                    
-                                    // Manual Dots
-                                    ctx.setLineDash([]);
-                                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(startX, startY, 4, 0, Math.PI*2); ctx.fill();
-                                    ctx.fillStyle = pt.type === 'pass' ? '#ef4444' : '#f59e0b'; ctx.beginPath(); ctx.rect(endX - 3, endY - 3, 6, 6); ctx.fill();
-                                    
-                                    ctx.restore();
-                                } 
-                            });
                         });
                     }
-                };
+                },
 
-                const allClips = Store.get('clips') || [];
-                const clips = allClips.filter(c => c.fullData?.data?.situation); 
-                
-                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
-                    const el = document.getElementById(id); if(Chart.getChart(el)) Chart.getChart(el).destroy();
-                });
+                showTeamStats: () => {
+                    document.getElementById('stats-modal').style.display = 'flex';
+                    setTimeout(() => { UI.refreshStats(); }, 50);
+                },
 
-                if (clips.length === 0) return;
-
-                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                const passShots = [], runShots = [];
-
-                clips.forEach(c => {
-                    const d = c.fullData;
-                    const sit = d.data.situation || {};
-                    const off = d.data.o_formation || c.formation || "Unknown";
-                    const def = d.data.d_formation || "Unknown";
-                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
-
-                    offForms[off] = (offForms[off] || 0) + 1;
-                    defForms[def] = (defForms[def] || 0) + 1;
-                    if(!matrix[off]) matrix[off] = {}; if(!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                    matrix[off][def].p++; if(isSuccess) matrix[off][def].s++;
-                    if(!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if(isSuccess) coverSuccess[def].s++;
-                    
-                    let concept = d.tactical_breakdown?.concept || "Unknown";
-                    if(concept.length > 15) concept = concept.substring(0, 15) + "..";
-                    concepts[concept] = (concepts[concept] || 0) + 1;
-
-                    // [FIX] Validates against undefined/null, but allows 0
-                    if (sit.plot_startX !== undefined && sit.plot_startX !== null) {
-                        const shot = {
-                            type: sit.play_type || 'pass',
-                            // Pass RAW data. vectorPlugin handles the flip.
-                            pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
-                            pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
-                            pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
-                            clipId: c._id || c.id
-                        };
-                        const displayX = (shot.pEnd.x/100) * 53.3; 
-                        const displayY = 100 - shot.pEnd.y; 
-
-                        if(shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
-                        else passShots.push({ x: displayX, y: displayY, ...shot });
-                    }
-                });
-
-                const renderBar = (id, data, color) => {
-                    const labels = Object.keys(data).sort((a,b)=>data[b]-data[a]);
-                    new Chart(document.getElementById(id), { 
-                        type: 'bar', indexAxis: 'y', 
-                        data: { labels, datasets: [{ data: labels.map(k=>data[k]), backgroundColor: color, borderRadius: 4 }] }, 
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } } 
-                    });
-                };
-                renderBar('chart-off-form', offForms, '#38bdf8');
-                renderBar('chart-def-form', defForms, '#ef4444');
-                renderBar('chart-conflict', concepts, '#8b5cf6');
-
-                const covL = Object.keys(coverSuccess);
-                const covD = covL.map(k => Math.round((coverSuccess[k].s/coverSuccess[k].p)*100));
-                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v=>v>50?'#10b981':'#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
-
-                const table = document.getElementById('efficiency-table');
-                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if(!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s/c.p)*100); const col = p>50?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p>50?'#34d399':'#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
-
-                // [FIX] radius: 0 hides default dots
-                const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min:0, max:53.3 }, y: { display: false, min:-10, max:110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if(els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if(pt.clipId) { UI.playClip(pt.clipId); } } } };
-                
-                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-            },
-
-            // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
-            toggleContextPanel: (show) => {
-                const panel = document.getElementById('context-side-panel');
-                if (show) {
-                    const targetId = UI.overlayClipId;
-                    if (!targetId) { alert("No clip active."); return; }
-                    
-                    const clips = Store.get('clips') || [];
-                    const clip = clips.find(c => (c._id || c.id) === targetId);
-                    if (!clip) return;
-
-                    // 1. Initialize Plotter Canvas
-                    Plotter.init();
-
-                    document.getElementById('edit-clip-id').value = targetId;
-                    const s = clip.fullData?.data?.situation || {};
-                    
-                    UI.setPlayType(s.play_type || 'pass');
-                    document.getElementById('edit-down').value = s.down || 1;
-                    document.getElementById('edit-togo').value = s.distance_togo || 10;
-
-                    // 2. Load Plotter Drawing
-                    // We check if data exists and is valid number
-                    if(s.plot_startX !== undefined && s.plot_startX !== null) {
-                        Plotter.load({
-                            startX: parseFloat(s.plot_startX), 
-                            startY: parseFloat(s.plot_startY),
-                            catchX: parseFloat(s.plot_catchX), 
-                            catchY: parseFloat(s.plot_catchY),
-                            endX: parseFloat(s.plot_endX), 
-                            endY: parseFloat(s.plot_endY)
-                        });
-                    } else {
-                        Plotter.reset(); // Clear if no data
-                    }
-
-                    panel.style.display = 'flex';
-                } else {
-                    panel.style.display = 'none';
-                }
-            },
-
-            setEditVal: (field, val) => {
-                document.getElementById(`edit-${field}`).value = val;
-                // Helper for button classes if needed
-            },
-
-            // [FIXED] SAVE CONTEXT (Ensures Numbers & Coordinates)
-            saveContext: async () => {
-                const id = document.getElementById('edit-clip-id').value;
-                const type = document.getElementById('edit-type').value;
-                const down = Number(document.getElementById('edit-down').value);
-                const togo = Number(document.getElementById('edit-togo').value);
-                
-                // 1. Grab Plotter Data Safely
-                // We use Number() to fix the "string" issue
-                const p = {
-                    startX: Number(document.getElementById('edit-start-x').value),
-                    startY: Number(document.getElementById('edit-start-y').value),
-                    catchX: Number(document.getElementById('edit-catch-x').value),
-                    catchY: Number(document.getElementById('edit-catch-y').value),
-                    endX: Number(document.getElementById('edit-end-x').value),
-                    endY: Number(document.getElementById('edit-end-y').value)
-                };
-
-                const clips = Store.get('clips') || [];
-                const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
-
-                if (clipIndex > -1) {
-                    if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
-                    if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
-
-                    const newSituation = {
-                        play_type: type, 
-                        down: parseInt(down) || 1, 
-                        distance_togo: parseInt(togo) || 10,
-                        // Save the Plotter Coordinates
-                        plot_startX: p.startX, plot_startY: p.startY,
-                        plot_catchX: p.catchX, plot_catchY: p.catchY,
-                        plot_endX: p.endX, plot_endY: p.endY
+                // [FIXED] CHART ENGINE (Robust Data Checks)
+                refreshStats: () => {
+                    const getSeededRandom = (seedStr) => {
+                        let h = 0x811c9dc5;
+                        for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+                        return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
                     };
 
-                    // 2. Save Locally Immediately
-                    clips[clipIndex].fullData.data.situation = newSituation;
-                    Store.set('clips', clips);
-                    
-                    // 3. Try Saving to Server (Ignore errors if offline)
+                    const footballFieldPlugin = {
+                        id: 'footballField',
+                        beforeDraw: (chart) => {
+                            const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                            ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
+                            const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
+                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                            ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                            ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
+                            for (let i = 0; i <= 100; i += 10) {
+                                const Y = y.getPixelForValue(i);
+                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
+                                ctx.lineWidth = (i === 0 || i === 100 || i === 50) ? 2 : 1; ctx.stroke();
+                                if (i > 0 && i < 100) {
+                                    const num = i <= 50 ? i : 100 - i;
+                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4); ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
+                                }
+                            }
+                        }
+                    };
+
+                    const vectorPlugin = {
+                        id: 'vectorLines',
+                        beforeDatasetsDraw(chart) {
+                            const { ctx, scales: { x, y } } = chart;
+                            chart.data.datasets.forEach((dataset, i) => {
+                                const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+                                dataset.data.forEach(pt => {
+                                    if (pt.pStart) {
+                                        const mapX = (val) => x.getPixelForValue((val / 100) * 53.3);
+                                        const mapY = (val) => y.getPixelForValue(val);
+                                        const flip = (v) => 100 - v; // INVERT Y
+
+                                        const startX = mapX(pt.pStart.x);
+                                        const startY = mapY(flip(pt.pStart.y));
+                                        const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
+                                        const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
+                                        const endX = mapX(pt.pEnd.x);
+                                        const endY = mapY(flip(pt.pEnd.y));
+
+                                        ctx.save(); ctx.lineWidth = 3;
+                                        if (pt.type === 'pass' && catchX) {
+                                            ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                            ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        } else {
+                                            ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+                                        }
+
+                                        // Manual Dots
+                                        ctx.setLineDash([]);
+                                        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(startX, startY, 4, 0, Math.PI * 2); ctx.fill();
+                                        ctx.fillStyle = pt.type === 'pass' ? '#ef4444' : '#f59e0b'; ctx.beginPath(); ctx.rect(endX - 3, endY - 3, 6, 6); ctx.fill();
+
+                                        ctx.restore();
+                                    }
+                                });
+                            });
+                        }
+                    };
+
+                    const allClips = Store.get('clips') || [];
+                    const clips = allClips.filter(c => c.fullData?.data?.situation);
+
+                    ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
+                        const el = document.getElementById(id); if (Chart.getChart(el)) Chart.getChart(el).destroy();
+                    });
+
+                    if (clips.length === 0) return;
+
+                    const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
+                    const passShots = [], runShots = [];
+
+                    clips.forEach(c => {
+                        const d = c.fullData;
+                        const sit = d.data.situation || {};
+                        const off = d.data.o_formation || c.formation || "Unknown";
+                        const def = d.data.d_formation || "Unknown";
+                        const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
+
+                        offForms[off] = (offForms[off] || 0) + 1;
+                        defForms[def] = (defForms[def] || 0) + 1;
+                        if (!matrix[off]) matrix[off] = {}; if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                        matrix[off][def].p++; if (isSuccess) matrix[off][def].s++;
+                        if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if (isSuccess) coverSuccess[def].s++;
+
+                        let concept = d.tactical_breakdown?.concept || "Unknown";
+                        if (concept.length > 15) concept = concept.substring(0, 15) + "..";
+                        concepts[concept] = (concepts[concept] || 0) + 1;
+
+                        // [FIX] Validates against undefined/null, but allows 0
+                        if (sit.plot_startX !== undefined && sit.plot_startX !== null) {
+                            const shot = {
+                                type: sit.play_type || 'pass',
+                                // Pass RAW data. vectorPlugin handles the flip.
+                                pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
+                                pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
+                                pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
+                                clipId: c._id || c.id
+                            };
+                            const displayX = (shot.pEnd.x / 100) * 53.3;
+                            const displayY = 100 - shot.pEnd.y;
+
+                            if (shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
+                            else passShots.push({ x: displayX, y: displayY, ...shot });
+                        }
+                    });
+
+                    const renderBar = (id, data, color) => {
+                        const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
+                        new Chart(document.getElementById(id), {
+                            type: 'bar', indexAxis: 'y',
+                            data: { labels, datasets: [{ data: labels.map(k => data[k]), backgroundColor: color, borderRadius: 4 }] },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } }
+                        });
+                    };
+                    renderBar('chart-off-form', offForms, '#38bdf8');
+                    renderBar('chart-def-form', defForms, '#ef4444');
+                    renderBar('chart-conflict', concepts, '#8b5cf6');
+
+                    const covL = Object.keys(coverSuccess);
+                    const covD = covL.map(k => Math.round((coverSuccess[k].s / coverSuccess[k].p) * 100));
+                    new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v => v > 50 ? '#10b981' : '#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
+
+                    const table = document.getElementById('efficiency-table');
+                    table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if (!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s / c.p) * 100); const col = p > 50 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p > 50 ? '#34d399' : '#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+                    // [FIX] radius: 0 hides default dots
+                    const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if (els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if (pt.clipId) { UI.playClip(pt.clipId); } } } };
+
+                    new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                    new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                },
+
+                // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
+                toggleContextPanel: (show) => {
+                    const panel = document.getElementById('context-side-panel');
+                    if (show) {
+                        const targetId = UI.overlayClipId;
+                        if (!targetId) { alert("No clip active."); return; }
+
+                        const clips = Store.get('clips') || [];
+                        const clip = clips.find(c => (c._id || c.id) === targetId);
+                        if (!clip) return;
+
+                        // 1. Initialize Plotter Canvas
+                        Plotter.init();
+
+                        document.getElementById('edit-clip-id').value = targetId;
+                        const s = clip.fullData?.data?.situation || {};
+
+                        UI.setPlayType(s.play_type || 'pass');
+                        document.getElementById('edit-down').value = s.down || 1;
+                        document.getElementById('edit-togo').value = s.distance_togo || 10;
+
+                        // 2. Load Plotter Drawing
+                        // We check if data exists and is valid number
+                        if (s.plot_startX !== undefined && s.plot_startX !== null) {
+                            Plotter.load({
+                                startX: parseFloat(s.plot_startX),
+                                startY: parseFloat(s.plot_startY),
+                                catchX: parseFloat(s.plot_catchX),
+                                catchY: parseFloat(s.plot_catchY),
+                                endX: parseFloat(s.plot_endX),
+                                endY: parseFloat(s.plot_endY)
+                            });
+                        } else {
+                            Plotter.reset(); // Clear if no data
+                        }
+
+                        panel.style.display = 'flex';
+                    } else {
+                        panel.style.display = 'none';
+                    }
+                },
+
+                setEditVal: (field, val) => {
+                    document.getElementById(`edit-${field}`).value = val;
+                    // Helper for button classes if needed
+                },
+
+                // [FIXED] SAVE CONTEXT (Ensures Numbers & Coordinates)
+                saveContext: async () => {
+                    const id = document.getElementById('edit-clip-id').value;
+                    const type = document.getElementById('edit-type').value;
+                    const down = Number(document.getElementById('edit-down').value);
+                    const togo = Number(document.getElementById('edit-togo').value);
+
+                    // 1. Grab Plotter Data Safely
+                    // We use Number() to fix the "string" issue
+                    const p = {
+                        startX: Number(document.getElementById('edit-start-x').value),
+                        startY: Number(document.getElementById('edit-start-y').value),
+                        catchX: Number(document.getElementById('edit-catch-x').value),
+                        catchY: Number(document.getElementById('edit-catch-y').value),
+                        endX: Number(document.getElementById('edit-end-x').value),
+                        endY: Number(document.getElementById('edit-end-y').value)
+                    };
+
+                    const clips = Store.get('clips') || [];
+                    const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+
+                    if (clipIndex > -1) {
+                        if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
+                        if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+
+                        const newSituation = {
+                            play_type: type,
+                            down: parseInt(down) || 1,
+                            distance_togo: parseInt(togo) || 10,
+                            // Save the Plotter Coordinates
+                            plot_startX: p.startX, plot_startY: p.startY,
+                            plot_catchX: p.catchX, plot_catchY: p.catchY,
+                            plot_endX: p.endX, plot_endY: p.endY
+                        };
+
+                        // 2. Save Locally Immediately
+                        clips[clipIndex].fullData.data.situation = newSituation;
+                        Store.set('clips', clips);
+
+                        // 3. Try Saving to Server (Ignore errors if offline)
+                        try {
+                            const token = await window.Clerk.session.getToken();
+                            await fetch('/api/update-clip-data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    clipId: id,
+                                    title: clips[clipIndex].title,
+                                    situation: newSituation,
+                                    summary: clips[clipIndex].fullData.scouting_report?.summary
+                                })
+                            });
+                        } catch (e) { console.log("Saved locally"); }
+
+                        UI.refreshStats();
+                        UI.toggleContextPanel(false);
+                    }
+                },
+
+                // Standard functions kept same
+                openContextEditor: () => { UI.toggleContextPanel(true); },
+                toggleMirror: () => { /* Deprecated by Plotter, but kept for safe API */ },
+                playClip: (id) => {
+                    const clips = Store.get('clips') || [];
+                    const clip = clips.find(c => (c._id || c.id) === id);
+                    if (!clip) return;
+                    UI.overlayClipId = clip._id || clip.id;
+
+                    const reportContainer = document.getElementById('report-injection-site');
+                    if (reportContainer) {
+                        if (clip.fullData) {
+                            const scoutData = {
+                                id: clip._id, title: clip.title, formation: clip.formation,
+                                grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                                iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                                tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                                effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                                summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                                fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                            };
+                            reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                        } else {
+                            reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+                        }
+                    }
+                    Telestrator.init(clip.videoUrl);
+                },
+                handleOverlayChat: async () => {
+                    const input = document.getElementById('overlay-chat-input');
+                    const history = document.getElementById('overlay-chat-history');
+                    const txt = input.value;
+                    if (!txt || !UI.overlayClipId) return;
+                    history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
+                    input.value = ''; history.scrollTop = history.scrollHeight;
+
+                    const loadingId = 'thinking_' + Date.now();
+                    history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
+                    history.scrollTop = history.scrollHeight;
+
                     try {
                         const token = await window.Clerk.session.getToken();
-                        await fetch('/api/update-clip-data', {
+                        const res = await fetch('/api/clip-chat', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({
-                                clipId: id,
-                                title: clips[clipIndex].title, 
-                                situation: newSituation,
-                                summary: clips[clipIndex].fullData.scouting_report?.summary
-                            })
+                            body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
                         });
-                    } catch(e) { console.log("Saved locally"); }
-
-                    UI.refreshStats(); 
-                    UI.toggleContextPanel(false); 
-                }
-            },
-
-            // Standard functions kept same
-            openContextEditor: () => { UI.toggleContextPanel(true); },
-            toggleMirror: () => { /* Deprecated by Plotter, but kept for safe API */ },
-            playClip: (id) => {
-                const clips = Store.get('clips') || [];
-                const clip = clips.find(c => (c._id || c.id) === id);
-                if (!clip) return;
-                UI.overlayClipId = clip._id || clip.id;
-                
-                const reportContainer = document.getElementById('report-injection-site');
-                if (reportContainer) {
-                    if (clip.fullData) {
-                        const scoutData = {
-                            id: clip._id, title: clip.title, formation: clip.formation,
-                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
-                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
-                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
-                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
-                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
-                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
-                        };
-                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
-                    } else {
-                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
+                        const data = await res.json();
+                        const loader = document.getElementById(loadingId);
+                        if (loader) loader.remove();
+                        if (!res.ok) throw new Error(data.error || "Server Error");
+                        const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
+                    } catch (e) {
+                        const loader = document.getElementById(loadingId); if (loader) loader.remove();
+                        history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                     }
-                }
-                Telestrator.init(clip.videoUrl);
-            },
-            handleOverlayChat: async () => {
-                const input = document.getElementById('overlay-chat-input');
-                const history = document.getElementById('overlay-chat-history');
-                const txt = input.value;
-                if (!txt || !UI.overlayClipId) return;
-                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
-                input.value = ''; history.scrollTop = history.scrollHeight;
-                
-                const loadingId = 'thinking_' + Date.now();
-                history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
-                history.scrollTop = history.scrollHeight;
+                    history.scrollTop = history.scrollHeight;
+                },
+                handleSend: async () => {
+                    const input = document.getElementById('user-input');
+                    const fileInput = document.getElementById('file-input');
+                    const feed = document.getElementById('chat-feed');
 
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/clip-chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
-                    });
-                    const data = await res.json();
-                    const loader = document.getElementById(loadingId);
-                    if (loader) loader.remove();
-                    if (!res.ok) throw new Error(data.error || "Server Error");
-                    const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
-                } catch (e) {
-                    const loader = document.getElementById(loadingId); if (loader) loader.remove();
-                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
-                }
-                history.scrollTop = history.scrollHeight;
-            },
-            handleSend: async () => {
-                const input = document.getElementById('user-input');
-                const fileInput = document.getElementById('file-input');
-                const feed = document.getElementById('chat-feed');
-                
-                if (!input.value && !fileInput.files.length) return;
-                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
-                if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+                    if (!input.value && !fileInput.files.length) return;
+                    if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
+                    if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
-                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                const sessions = Store.get('sessions');
-                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx > -1) {
-                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
-                    sessions[sessIdx].history.push({ role: 'user', text: userText });
-                    Store.set('sessions', sessions);
-                }
+                    const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
+                    const sessions = Store.get('sessions');
+                    const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                    if (sessIdx > -1) {
+                        if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                        sessions[sessIdx].history.push({ role: 'user', text: userText });
+                        Store.set('sessions', sessions);
+                    }
 
-                UI.renderMessageHTML({ type: 'user', content: userText });
-                input.value = '';
-                const file = fileInput.files[0];
-                fileInput.value = '';
-                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
-                document.getElementById('file-btn').style.background = '#222';
-                document.getElementById('file-btn').style.color = '#ccc';
+                    UI.renderMessageHTML({ type: 'user', content: userText });
+                    input.value = '';
+                    const file = fileInput.files[0];
+                    fileInput.value = '';
+                    document.getElementById('file-btn').innerHTML = '📎 Upload Film';
+                    document.getElementById('file-btn').style.background = '#222';
+                    document.getElementById('file-btn').style.color = '#ccc';
 
-                const loadId = 'load_' + Date.now();
-                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
-                feed.scrollTop = feed.scrollHeight;
+                    const loadId = 'load_' + Date.now();
+                    feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
+                    feed.scrollTop = feed.scrollHeight;
 
-                const res = await CoachAI.analyze(userText, file);
-                document.getElementById(loadId).remove();
+                    const res = await CoachAI.analyze(userText, file);
+                    document.getElementById(loadId).remove();
 
-                let aiContent = res.text;
-                if (res.type === 'card') {
-                    UI.renderLibrary();
-                    aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
-                }
+                    let aiContent = res.text;
+                    if (res.type === 'card') {
+                        UI.renderLibrary();
+                        aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
+                    }
 
-                const sessions2 = Store.get('sessions');
-                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx2 > -1) {
-                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
-                    Store.set('sessions', sessions2);
-                }
+                    const sessions2 = Store.get('sessions');
+                    const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                    if (sessIdx2 > -1) {
+                        sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
+                        Store.set('sessions', sessions2);
+                    }
 
-                feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
-                feed.scrollTop = feed.scrollHeight;
-            },
-            buildScoutCardHTML: (data, isChatPreview = false) => {
-                const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
-                const cursor = isChatPreview ? 'cursor:pointer;' : '';
-                return `
+                    feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
+                    feed.scrollTop = feed.scrollHeight;
+                },
+                buildScoutCardHTML: (data, isChatPreview = false) => {
+                    const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
+                    const cursor = isChatPreview ? 'cursor:pointer;' : '';
+                    return `
                 <div class="scout-card" style="${cursor}" ${onclick}>
                     <div class="scout-header">
                         <div>
@@ -2710,158 +2747,160 @@
                         </div>
                     </div>
                 </div>`;
-            }
-        };
-/**
-         * 5. PLAYBOOK ENGINE (The Architect)
-         */
-        const Playbook = {
-            canvas: null,
-            ctx: null,
-            elements: [], // Stores players {x, y, type}
-            isDragging: false,
-            dragTarget: null,
+                }
+            };
+            /**
+                     * 5. PLAYBOOK ENGINE (The Architect)
+                     */
+            const Playbook = {
+                canvas: null,
+                ctx: null,
+                elements: [], // Stores players {x, y, type}
+                isDragging: false,
+                dragTarget: null,
 
-            init: () => {
-                Playbook.renderGrid(); // Load library on startup
-            },
+                init: () => {
+                    Playbook.renderGrid(); // Load library on startup
+                },
 
-            // 1. OPEN & SETUP
-            openDesigner: (playId = null) => {
-                Playbook.activePlayId = playId; // The "Bridge" for the AI
-                const modal = document.getElementById('designer-modal');
-                modal.style.display = 'flex';
-                
-                // Clear the chat sidebar when opening a play
-                const chatHistory = document.getElementById('designer-chat-history');
-                if(chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
+                // 1. OPEN & SETUP
+                openDesigner: (playId = null) => {
+                    Playbook.activePlayId = playId; // The "Bridge" for the AI
+                    const modal = document.getElementById('designer-modal');
+                    modal.style.display = 'flex';
 
-                // Wait for layout to settle (100ms) before drawing
-                setTimeout(() => {
-                    const container = document.getElementById('designer-container');
-                    Playbook.canvas = document.getElementById('designer-canvas');
-                    Playbook.canvas.width = container.clientWidth;
-                    Playbook.canvas.height = container.clientHeight;
-                    Playbook.ctx = Playbook.canvas.getContext('2d');
+                    // Clear the chat sidebar when opening a play
+                    const chatHistory = document.getElementById('designer-chat-history');
+                    if (chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
 
-                    // Bind interaction events
-                    Playbook.canvas.onmousedown = Playbook.handleStart;
-                    Playbook.canvas.onmousemove = Playbook.handleMove;
-                    Playbook.canvas.onmouseup = Playbook.handleEnd;
+                    // Wait for layout to settle (100ms) before drawing
+                    setTimeout(() => {
+                        const container = document.getElementById('designer-container');
+                        Playbook.canvas = document.getElementById('designer-canvas');
+                        Playbook.canvas.width = container.clientWidth;
+                        Playbook.canvas.height = container.clientHeight;
+                        Playbook.ctx = Playbook.canvas.getContext('2d');
+
+                        // Bind interaction events
+                        Playbook.canvas.onmousedown = Playbook.handleStart;
+                        Playbook.canvas.onmousemove = Playbook.handleMove;
+                        Playbook.canvas.onmouseup = Playbook.handleEnd;
+
+                        const plays = Store.get('playbook') || [];
+                        const savedPlay = plays.find(p => p.id === playId);
+
+                        if (savedPlay) {
+                            // LOAD EXISTING PLAY
+                            document.getElementById('play-name').value = savedPlay.title;
+                            Playbook.elements = savedPlay.elements;
+                        } else {
+                            // SETUP NEW PLAY (Standard 11-man Spread)
+                            document.getElementById('play-name').value = "";
+                            Playbook.elements = [];
+                            const w = Playbook.canvas.width;
+                            const h = Playbook.canvas.height;
+                            const c = w / 2;
+                            const los = h * 0.7; // Line of Scrimmage
+
+                            // O-Line + QB + RB
+                            ['C', 'G', 'G', 'T', 'T'].forEach((p, i) => Playbook.elements.push({ type: 'O', label: p, x: c + (i - 2) * 35, y: los }));
+                            Playbook.elements.push({ type: 'O', label: 'Q', x: c, y: los + 40 });
+                            Playbook.elements.push({ type: 'O', label: 'R', x: c - 50, y: los + 40 });
+
+                            // Perimeter Weapons
+                            Playbook.elements.push({ type: 'O', label: 'X', x: 60, y: los });
+                            Playbook.elements.push({ type: 'O', label: 'Z', x: w - 60, y: los });
+                            Playbook.elements.push({ type: 'O', label: 'Y', x: c - 110, y: los });
+                            Playbook.elements.push({ type: 'O', label: 'H', x: c + 110, y: los });
+                        }
+
+                        Playbook.drawAll();
+                    }, 100);
+                },
+
+                clearCanvas: () => {
+                    Playbook.openDesigner(); // Just reset positions
+                },
+
+                // 2. CANVAS INTERACTION
+                handleStart: (e) => {
+                    const rect = Playbook.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    // Check hit on players
+                    Playbook.dragTarget = Playbook.elements.find(el => {
+                        const dx = el.x - x; const dy = el.y - y;
+                        return Math.sqrt(dx * dx + dy * dy) < 15;
+                    });
+
+                    if (Playbook.dragTarget) Playbook.isDragging = true;
+                },
+
+                handleMove: (e) => {
+                    if (!Playbook.isDragging || !Playbook.dragTarget) return;
+                    const rect = Playbook.canvas.getBoundingClientRect();
+                    Playbook.dragTarget.x = e.clientX - rect.left;
+                    Playbook.dragTarget.y = e.clientY - rect.top;
+                    Playbook.drawAll();
+                },
+
+                handleEnd: () => {
+                    Playbook.isDragging = false;
+                    Playbook.dragTarget = null;
+                },
+
+                // 3. DRAWING
+                drawField: () => {
+                    const ctx = Playbook.ctx;
+                    const w = Playbook.canvas.width;
+                    const h = Playbook.canvas.height;
+                    ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                    // Hash Marks
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                    ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
+                    ctx.stroke();
+                },
+
+                drawAll: () => {
+                    Playbook.drawField();
+                    const ctx = Playbook.ctx;
+                    // Draw Players
+                    Playbook.elements.forEach(el => {
+                        ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
+                        ctx.fillStyle = 'white'; ctx.fill();
+                        ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
+
+                        ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(el.label, el.x, el.y);
+                    });
+                },
+
+                savePlay: () => {
+                    const name = document.getElementById('play-name').value || "Untitled Concept";
+                    // Capture the session ID from whatever tab you were just on
+                    const linkedSessionId = UI.activeSessionId;
+
+                    const newPlay = {
+                        id: 'play_' + Date.now(),
+                        title: name,
+                        elements: Playbook.elements,
+                        linkedSessionId: linkedSessionId, // THE BRIDGE
+                        date: new Date().toLocaleDateString()
+                    };
 
                     const plays = Store.get('playbook') || [];
-                    const savedPlay = plays.find(p => p.id === playId);
+                    plays.unshift(newPlay);
+                    Store.set('playbook', plays);
 
-                    if (savedPlay) {
-                        // LOAD EXISTING PLAY
-                        document.getElementById('play-name').value = savedPlay.title;
-                        Playbook.elements = savedPlay.elements;
-                    } else {
-                        // SETUP NEW PLAY (Standard 11-man Spread)
-                        document.getElementById('play-name').value = "";
-                        Playbook.elements = [];
-                        const w = Playbook.canvas.width;
-                        const h = Playbook.canvas.height;
-                        const c = w / 2; 
-                        const los = h * 0.7; // Line of Scrimmage
+                    document.getElementById('designer-modal').style.display = 'none';
+                    Playbook.renderGrid();
+                },
 
-                        // O-Line + QB + RB
-                        ['C','G','G','T','T'].forEach((p, i) => Playbook.elements.push({ type:'O', label:p, x: c + (i-2)*35, y: los }));
-                        Playbook.elements.push({ type:'O', label:'Q', x: c, y: los + 40 });
-                        Playbook.elements.push({ type:'O', label:'R', x: c - 50, y: los + 40 });
-                        
-                        // Perimeter Weapons
-                        Playbook.elements.push({ type:'O', label:'X', x: 60, y: los });
-                        Playbook.elements.push({ type:'O', label:'Z', x: w - 60, y: los });
-                        Playbook.elements.push({ type:'O', label:'Y', x: c - 110, y: los });
-                        Playbook.elements.push({ type:'O', label:'H', x: c + 110, y: los });
-                    }
-
-                    Playbook.drawAll();
-                }, 100);
-            },
-
-            clearCanvas: () => {
-                Playbook.openDesigner(); // Just reset positions
-            },
-
-            // 2. CANVAS INTERACTION
-            handleStart: (e) => {
-                const rect = Playbook.canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                // Check hit on players
-                Playbook.dragTarget = Playbook.elements.find(el => {
-                    const dx = el.x - x; const dy = el.y - y;
-                    return Math.sqrt(dx*dx + dy*dy) < 15;
-                });
-
-                if (Playbook.dragTarget) Playbook.isDragging = true;
-            },
-
-            handleMove: (e) => {
-                if (!Playbook.isDragging || !Playbook.dragTarget) return;
-                const rect = Playbook.canvas.getBoundingClientRect();
-                Playbook.dragTarget.x = e.clientX - rect.left;
-                Playbook.dragTarget.y = e.clientY - rect.top;
-                Playbook.drawAll();
-            },
-
-            handleEnd: () => {
-                Playbook.isDragging = false;
-                Playbook.dragTarget = null;
-            },
-
-            // 3. DRAWING
-            drawField: () => {
-                const ctx = Playbook.ctx;
-                const w = Playbook.canvas.width;
-                const h = Playbook.canvas.height;
-                ctx.fillStyle = '#355e3b'; ctx.fillRect(0,0,w,h);
-                // Hash Marks
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(w*0.35, 0); ctx.lineTo(w*0.35, h);
-                ctx.moveTo(w*0.65, 0); ctx.lineTo(w*0.65, h);
-                ctx.stroke();
-            },
-
-            drawAll: () => {
-                Playbook.drawField();
-                const ctx = Playbook.ctx;
-                // Draw Players
-                Playbook.elements.forEach(el => {
-                    ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI*2);
-                    ctx.fillStyle = 'white'; ctx.fill();
-                    ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
-                    
-                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(el.label, el.x, el.y);
-                });
-            },
-
-            savePlay: () => {
-                const name = document.getElementById('play-name').value || "Untitled Concept";
-                // Capture the session ID from whatever tab you were just on
-                const linkedSessionId = UI.activeSessionId; 
-
-                const newPlay = {
-                    id: 'play_' + Date.now(),
-                    title: name,
-                    elements: Playbook.elements,
-                    linkedSessionId: linkedSessionId, // THE BRIDGE
-                    date: new Date().toLocaleDateString()
-                };
-
-                const plays = Store.get('playbook') || [];
-                plays.unshift(newPlay);
-                Store.set('playbook', plays);
-
-                document.getElementById('designer-modal').style.display = 'none';
-                Playbook.renderGrid();
-            },
+                // ... (rest of your playbook code) ...
 
             // 5. LIBRARY GRID
             renderGrid: () => {
@@ -2889,66 +2928,44 @@
                     </div>
                 `).join('');
             },
-            // [NEW] Retrieves the chat history from the session linked to this play
+
             getLinkedContext: (playId) => {
                 const plays = Store.get('playbook') || [];
                 const play = plays.find(p => p.id === playId);
-                
                 if (play && play.linkedSessionId) {
                     const sessions = Store.get('sessions') || [];
                     const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-                    
                     return contextSession ? contextSession.history : null;
                 }
                 return null;
             },
 
-            // [NEW] Prepares a prompt for the AI combining the play and the session intel
             getAIInsight: async (playId) => {
                 const plays = Store.get('playbook') || [];
                 const play = plays.find(p => p.id === playId);
-                
                 if (!play || !play.linkedSessionId) return "No linked session found.";
-
                 const intel = Playbook.getLinkedContext(playId);
                 const sessions = Store.get('sessions') || [];
                 const sessionData = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-
-                const prompt = `Coach, analyze this play concept: "${play.title}". 
-                                Use the intel from our film session "${sessionData.title}": 
-                                ${JSON.stringify(intel)}`;
-                
-                console.log("AI Context Bridge Active:", prompt);
-                return prompt;
-            }, // <--- Comma here to separate functions
+                return `Coach, analyze this play concept: "${play.title}". Use the intel from our film session "${sessionData.title}": ${JSON.stringify(intel)}`;
+            },
 
             handleChalkTalk: async () => {
                 const input = document.getElementById('designer-chat-input');
                 const history = document.getElementById('designer-chat-history');
                 const msg = input.value;
                 if(!msg) return;
-
-                // 1. Clear hint and show user message
                 if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
-                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; max-width:90%; font-size:0.85rem; margin-bottom:8px;">${msg}</div>`;
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:500;">${msg}</div>`;
                 input.value = '';
-
-                // 2. Fetch the "Bridge" Context
                 const playbookContext = await Playbook.getAIInsight(Playbook.activePlayId);
-                
-                history.innerHTML += `<div id="chalk-loading" style="color:var(--accent); font-size:0.7rem; margin-top:4px;">Coach is checking the film...</div>`;
+                history.innerHTML += `<div id="chalk-loading" style="color:var(--accent); font-size:0.7rem; margin-top:4px;">Checking game film context...</div>`;
                 history.scrollTop = history.scrollHeight;
-
-                // 3. Send to AI
                 const response = await CoachAI.analyze(`${playbookContext} \n User Question: ${msg}`, null);
-                
-                // 4. Render AI response
                 if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
-                history.innerHTML += `<div style="background:#222; padding:12px; border-radius:8px; border:1px solid var(--border); line-height:1.5; color:#ddd; font-size:0.85rem; margin-bottom:12px;"><strong style="color:var(--accent);">Coach:</strong> ${response.text}</div>`;
+                history.innerHTML += `<div style="background:#111; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#ddd; font-size:0.85rem; margin-bottom:12px;"><strong style="color:var(--accent);">Coach AI:</strong> ${response.text}</div>`;
                 history.scrollTop = history.scrollHeight;
             }
-            
-            
         };
             const App = {
                 init: () => {
@@ -3015,7 +3032,7 @@
             window.onload = App.init;
 
         </script>
-        
+
 </body>
 
 </html>
