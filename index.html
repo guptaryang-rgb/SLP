@@ -2774,28 +2774,129 @@
             /**
                      * 5. PLAYBOOK ENGINE (The Architect)
                      */
+            /**
+             * 5. PLAYBOOK ENGINE (The Intelligent Design Lab)
+             * Now connected to the Database & AI
+             */
             const Playbook = {
                 canvas: null,
                 ctx: null,
-                elements: [], // Stores players {x, y, type}
+                elements: [], // Stores players {x, y, label, type}
+                activePlayId: null, // The Play ID being edited
                 isDragging: false,
                 dragTarget: null,
 
-                init: () => {
-                    Playbook.renderGrid(); // Load library on startup
+                init: async () => {
+                    // ON LOAD: Fetch plays from the database, not just local storage
+                    await Playbook.loadLibrary();
                 },
 
-                // 1. OPEN & SETUP
+                // --- A. DATA SYNC (The "Cloud" Connection) ---
+
+                loadLibrary: async () => {
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        const res = await fetch('/api/get-plays', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (res.ok) {
+                            const plays = await res.json();
+                            Store.set('playbook', plays); // Update local store with cloud data
+                            Playbook.renderGrid();
+                        }
+                    } catch (e) {
+                        console.log("Offline Mode: Loading local plays only.");
+                        Playbook.renderGrid();
+                    }
+                },
+
+                savePlay: async () => {
+                    const name = document.getElementById('play-name').value || "Untitled Concept";
+                    const linkedSessionId = UI.activeSessionId;
+
+                    // 1. RUN THE TRANSLATOR (Make the AI "See" the formation)
+                    const formationData = Playbook.generateFormationReport();
+
+                    const payload = {
+                        playId: Playbook.activePlayId || 'play_' + Date.now(),
+                        title: name,
+                        elements: Playbook.elements,
+                        linkedSessionId: linkedSessionId,
+                        aiAnalysis: {
+                            formation: formationData.name,
+                            summary: formationData.details
+                        }
+                    };
+
+                    // 2. Optimistic Update (Show it instantly)
+                    const plays = Store.get('playbook') || [];
+                    const existingIdx = plays.findIndex(p => p.playId === payload.playId);
+                    if (existingIdx > -1) plays[existingIdx] = payload;
+                    else plays.unshift(payload);
+                    Store.set('playbook', plays);
+                    Playbook.renderGrid();
+                    document.getElementById('designer-modal').style.display = 'none';
+
+                    // 3. Send to Database
+                    try {
+                        const token = await window.Clerk.session.getToken();
+                        await fetch('/api/save-play', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify(payload)
+                        });
+                        console.log("✅ Play Saved to Cloud");
+                        Playbook.loadLibrary(); // Sync to be sure
+                    } catch (e) {
+                        console.error("Save Failed:", e);
+                        alert("Saved locally, but sync failed.");
+                    }
+                },
+
+                // --- B. THE SMART TRANSLATOR (Spatial Awareness) ---
+                
+                generateFormationReport: () => {
+                    const center = Playbook.elements.find(el => el.label === 'C');
+                    if (!center) return { name: "Unclear", details: "No Center found." };
+
+                    const midLine = center.x;
+                    let left = 0, right = 0, backfield = 0;
+
+                    Playbook.elements.forEach(el => {
+                        if (el.label === 'C' || el.label === 'Q') return;
+                        // Behind the QB/Center?
+                        if (el.y > center.y + 30) backfield++; 
+                        // Left or Right?
+                        else if (el.x < midLine - 20) left++;
+                        else if (el.x > midLine + 20) right++;
+                    });
+
+                    // Basic Logic Engine
+                    let name = "Custom";
+                    if (backfield === 1) name = "Singleback";
+                    if (backfield === 0) name = "Empty";
+                    if (left === 2 && right === 2) name = "2x2 Spread";
+                    if (left === 3 && right === 1) name = "3x1 Trips Left";
+                    if (left === 1 && right === 3) name = "3x1 Trips Right";
+
+                    return { 
+                        name: name, 
+                        details: `${name} (${left}x${right} alignment with ${backfield} back).` 
+                    };
+                },
+
+                // --- C. STANDARD DESIGNER FUNCTIONS (Drawing, Grid, Interaction) ---
+
                 openDesigner: (playId = null) => {
-                    Playbook.activePlayId = playId; // The "Bridge" for the AI
+                    Playbook.activePlayId = playId;
                     const modal = document.getElementById('designer-modal');
                     modal.style.display = 'flex';
 
-                    // Clear the chat sidebar when opening a play
+                    // Clear Chat
                     const chatHistory = document.getElementById('designer-chat-history');
-                    if (chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#888; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
+                    if(chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
 
-                    // Wait for layout to settle (100ms) before drawing
                     setTimeout(() => {
                         const container = document.getElementById('designer-container');
                         Playbook.canvas = document.getElementById('designer-canvas');
@@ -2803,59 +2904,73 @@
                         Playbook.canvas.height = container.clientHeight;
                         Playbook.ctx = Playbook.canvas.getContext('2d');
 
-                        // Bind interaction events
                         Playbook.canvas.onmousedown = Playbook.handleStart;
                         Playbook.canvas.onmousemove = Playbook.handleMove;
                         Playbook.canvas.onmouseup = Playbook.handleEnd;
 
                         const plays = Store.get('playbook') || [];
-                        const savedPlay = plays.find(p => p.id === playId);
+                        // Note: Our DB schema uses "playId", but local might use "id". We check both.
+                        const savedPlay = plays.find(p => (p.playId || p.id) === playId);
 
                         if (savedPlay) {
-                            // LOAD EXISTING PLAY
                             document.getElementById('play-name').value = savedPlay.title;
-                            Playbook.elements = savedPlay.elements;
+                            Playbook.elements = savedPlay.elements || [];
                         } else {
-                            // SETUP NEW PLAY (Standard 11-man Spread)
+                            // Default 11-Man Formation
                             document.getElementById('play-name').value = "";
                             Playbook.elements = [];
                             const w = Playbook.canvas.width;
                             const h = Playbook.canvas.height;
                             const c = w / 2;
-                            const los = h * 0.7; // Line of Scrimmage
-
-                            // O-Line + QB + RB
-                            ['C', 'G', 'G', 'T', 'T'].forEach((p, i) => Playbook.elements.push({ type: 'O', label: p, x: c + (i - 2) * 35, y: los }));
-                            Playbook.elements.push({ type: 'O', label: 'Q', x: c, y: los + 40 });
-                            Playbook.elements.push({ type: 'O', label: 'R', x: c - 50, y: los + 40 });
-
-                            // Perimeter Weapons
-                            Playbook.elements.push({ type: 'O', label: 'X', x: 60, y: los });
-                            Playbook.elements.push({ type: 'O', label: 'Z', x: w - 60, y: los });
-                            Playbook.elements.push({ type: 'O', label: 'Y', x: c - 110, y: los });
-                            Playbook.elements.push({ type: 'O', label: 'H', x: c + 110, y: los });
+                            const los = h * 0.7;
+                            ['C','G','G','T','T'].forEach((p, i) => Playbook.elements.push({ type:'O', label:p, x: c + (i-2)*35, y: los }));
+                            Playbook.elements.push({ type:'O', label:'Q', x: c, y: los + 40 });
+                            Playbook.elements.push({ type:'O', label:'R', x: c - 50, y: los + 40 });
+                            Playbook.elements.push({ type:'O', label:'X', x: 60, y: los });
+                            Playbook.elements.push({ type:'O', label:'Z', x: w - 60, y: los });
+                            Playbook.elements.push({ type:'O', label:'Y', x: c - 110, y: los });
+                            Playbook.elements.push({ type:'O', label:'H', x: c + 110, y: los });
                         }
-
                         Playbook.drawAll();
                     }, 100);
                 },
 
-                clearCanvas: () => {
-                    Playbook.openDesigner(); // Just reset positions
+                renderGrid: () => {
+                    const grid = document.getElementById('playbook-grid');
+                    if(!grid) return;
+                    const plays = Store.get('playbook') || [];
+
+                    if (plays.length === 0) {
+                        grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
+                        return;
+                    }
+
+                    grid.innerHTML = plays.map(p => `
+                        <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.playId || p.id}')">
+                            <div class="scout-header">
+                                <div>
+                                    <div class="play-title">${p.title}</div>
+                                    <div style="font-size:0.7rem; color:#666;">${p.aiAnalysis ? p.aiAnalysis.formation : 'Unknown Formation'}</div>
+                                </div>
+                                ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
+                            </div>
+                            <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
+                                ${p.elements.map(el => `<div style="position:absolute; left:${el.x/10}%; top:${el.y/10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
+                            </div>
+                        </div>
+                    `).join('');
                 },
 
-                // 2. CANVAS INTERACTION
+                clearCanvas: () => Playbook.openDesigner(),
+
                 handleStart: (e) => {
                     const rect = Playbook.canvas.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
-
-                    // Check hit on players
                     Playbook.dragTarget = Playbook.elements.find(el => {
                         const dx = el.x - x; const dy = el.y - y;
-                        return Math.sqrt(dx * dx + dy * dy) < 15;
+                        return Math.sqrt(dx * dx + dy * dy) < 20; // Increased grab radius
                     });
-
                     if (Playbook.dragTarget) Playbook.isDragging = true;
                 },
 
@@ -2867,18 +2982,13 @@
                     Playbook.drawAll();
                 },
 
-                handleEnd: () => {
-                    Playbook.isDragging = false;
-                    Playbook.dragTarget = null;
-                },
+                handleEnd: () => { Playbook.isDragging = false; Playbook.dragTarget = null; },
 
-                // 3. DRAWING
                 drawField: () => {
                     const ctx = Playbook.ctx;
                     const w = Playbook.canvas.width;
                     const h = Playbook.canvas.height;
                     ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
-                    // Hash Marks
                     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
@@ -2889,132 +2999,31 @@
                 drawAll: () => {
                     Playbook.drawField();
                     const ctx = Playbook.ctx;
-                    // Draw Players
                     Playbook.elements.forEach(el => {
                         ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
                         ctx.fillStyle = 'white'; ctx.fill();
                         ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
-
                         ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
                         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText(el.label, el.x, el.y);
                     });
                 },
 
-                savePlay: () => {
-                    const name = document.getElementById('play-name').value || "Untitled Concept";
-                    // Capture the session ID from whatever tab you were just on
-                    const linkedSessionId = UI.activeSessionId;
+                // --- D. CHALK TALK (Context Bridge) ---
 
-                    const newPlay = {
-                        id: 'play_' + Date.now(),
-                        title: name,
-                        elements: Playbook.elements,
-                        linkedSessionId: linkedSessionId, // THE BRIDGE
-                        date: new Date().toLocaleDateString()
-                    };
-
-                    const plays = Store.get('playbook') || [];
-                    plays.unshift(newPlay);
-                    Store.set('playbook', plays);
-
-                    document.getElementById('designer-modal').style.display = 'none';
-                    Playbook.renderGrid();
-                },
-
-
-
-                // 5. LIBRARY GRID
-                renderGrid: () => {
-                    const grid = document.getElementById('playbook-grid');
-                    if (!grid) return;
-                    const plays = Store.get('playbook') || [];
-
-                    if (plays.length === 0) {
-                        grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
-                        return;
-                    }
-
-                    grid.innerHTML = plays.map(p => `
-                    <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.id}')">
-                        <div class="scout-header">
-                            <div>
-                                <div class="play-title">${p.title}</div>
-                                <div style="font-size:0.7rem; color:#666;">${p.date}</div>
-                            </div>
-                            ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
-                        </div>
-                        <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
-                            ${p.elements.map(el => `<div style="position:absolute; left:${el.x / 10}%; top:${el.y / 10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
-                        </div>
-                    </div>
-                `).join('');
-                },
-
-                // --- INTELLIGENT DESIGN LAB MODULES ---
-
-                // 1. THE TRANSLATOR: Converts X/Y Dots into Football Terminology
-                generateFormationReport: () => {
-                    const center = Playbook.elements.find(el => el.label === 'C');
-                    if (!center) return "Formation: Unclear (No Center set)";
-
-                    const los = center.y;
-                    const midLine = center.x;
-
-                    let leftSide = 0;
-                    let rightSide = 0;
-                    let backfield = 0;
-                    let wideReceivers = [];
-
-                    Playbook.elements.forEach(el => {
-                        if (el.label === 'C') return;
-
-                        // Backfield Analysis (Players behind the QB/Center area)
-                        if (el.y > los + 20 && Math.abs(el.x - midLine) < 100) {
-                            backfield++;
-                        }
-                        // Formation Width Analysis
-                        else {
-                            const dist = el.x - midLine;
-                            if (dist < -50) {
-                                leftSide++;
-                                wideReceivers.push(`${el.label} is Wide Left`);
-                            }
-                            if (dist > 50) {
-                                rightSide++;
-                                wideReceivers.push(`${el.label} is Wide Right`);
-                            }
-                        }
-                    });
-
-                    // Infer Formation Name
-                    let formName = "Unknown";
-                    if (backfield === 1) formName = "Shotgun/Singleback";
-                    if (backfield === 0) formName = "Empty";
-                    if (leftSide === 2 && rightSide === 2) formName = "2x2 Spread";
-                    if (leftSide === 3 && rightSide === 1) formName = "3x1 Trips Left";
-                    if (leftSide === 1 && rightSide === 3) formName = "3x1 Trips Right";
-
-                    return `FORMATION DATA: ${formName}. 
-                        Backfield: ${backfield} back(s). 
-                        Alignment: ${leftSide} receivers left, ${rightSide} receivers right.`;
-                },
-
-                // 2. THE INTEL SCRAPER: Fetches "Memory" from the Linked Session
                 getLinkedContext: (playId) => {
                     const plays = Store.get('playbook') || [];
-                    const play = plays.find(p => p.id === playId);
-
+                    const play = plays.find(p => (p.playId || p.id) === playId);
+                    
                     if (play && play.linkedSessionId) {
                         const sessions = Store.get('sessions') || [];
                         const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-
+                        
                         if (!contextSession) return null;
 
-                        // Filter history to last 5 relevant coaching points to save tokens/focus
                         const relevantHistory = contextSession.history
-                            .filter(msg => msg.role === 'model') // Only care what the Coach said
-                            .slice(-5) // Last 5 insights
+                            .filter(msg => msg.role === 'model')
+                            .slice(-5)
                             .map(m => m.text)
                             .join("\n- ");
 
@@ -3026,49 +3035,45 @@
                     return null;
                 },
 
-                // 3. THE BRAIN: Connects User, Drawing, and Memory
                 handleChalkTalk: async () => {
                     const input = document.getElementById('designer-chat-input');
                     const history = document.getElementById('designer-chat-history');
                     const msg = input.value;
-                    if (!msg) return;
+                    if(!msg) return;
 
-                    // A. UI Updates
-                    if (document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
+                    if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
                     history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:600;">${msg}</div>`;
                     input.value = '';
                     history.innerHTML += `<div id="chalk-loading" style="color:#888; font-size:0.75rem; margin-top:4px; font-style:italic;">Scanning formation & checking film notes...</div>`;
                     history.scrollTop = history.scrollHeight;
 
-                    // B. Gather Intelligence
+                    // THE AI PROMPT CONSTRUCTION
                     const formationIntel = Playbook.generateFormationReport();
                     const sessionIntel = Playbook.getLinkedContext(Playbook.activePlayId);
-
-                    let systemContext = `
-                    ROLE: Offensive Quality Control Coach.
-                    TASK: Validate this play design against specific game film intel.
                     
-                    CURRENT DRAWING (The Canvas):
-                    ${formationIntel}
+                    let systemContext = `
+                        ROLE: Offensive Quality Control Coach.
+                        TASK: Validate this play design against specific game film intel.
+                        
+                        CURRENT DRAWING (The Canvas):
+                        Formation: ${formationIntel.name}
+                        Details: ${formationIntel.details}
 
-                    LINKED GAME FILM (The Memory):
-                    Session Name: ${sessionIntel ? sessionIntel.title : "None"}
-                    Key Scouting Notes: 
-                    ${sessionIntel ? sessionIntel.notes : "No prior film analysis linked."}
-                `;
+                        LINKED GAME FILM (The Memory):
+                        Session Name: ${sessionIntel ? sessionIntel.title : "None"}
+                        Key Scouting Notes: 
+                        ${sessionIntel ? sessionIntel.notes : "No prior film analysis linked."}
+                    `;
 
-                    // C. Send to AI
                     try {
                         const response = await CoachAI.analyze(`${systemContext}\n\nUSER QUESTION: ${msg}`, null);
-
-                        // D. Render Answer
-                        if (document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                        if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
                         history.innerHTML += `<div style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#e4e4e7; font-size:0.85rem; margin-bottom:12px;">
-                        <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach AI:</strong> 
-                        ${response.text}
-                    </div>`;
+                            <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach AI:</strong> 
+                            ${response.text}
+                        </div>`;
                     } catch (e) {
-                        if (document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                        if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
                         history.innerHTML += `<div style="color:red; font-size:0.8rem;">Error connecting to Coach AI.</div>`;
                     }
                     history.scrollTop = history.scrollHeight;
@@ -3088,20 +3093,28 @@
                                     } else {
                                         document.getElementById('auth-modal').style.display = 'none';
                                         Clerk.mountUserButton(document.getElementById('user-button'));
+                                        
+                                        // 1. SUCCESS PATH
                                         UI.init();
+                                        Playbook.init(); // <--- ADD HERE
                                     }
                                 })
                                 .catch(err => {
                                     console.error("Clerk Auth Failed:", err);
-                                    // Fallback: Open app anyway so you aren't stuck
                                     document.getElementById('auth-modal').style.display = 'none';
+                                    
+                                    // 2. ERROR PATH
                                     UI.init();
+                                    Playbook.init(); // <--- ADD HERE
                                 });
                         } else if (attempts > 10) {
                             clearInterval(checkAuth);
                             console.warn("Clerk timeout - forcing init");
                             document.getElementById('auth-modal').style.display = 'none';
+                            
+                            // 3. TIMEOUT PATH
                             UI.init();
+                            Playbook.init(); // <--- ADD HERE
                         }
                     }, 300);
                 },
@@ -3119,13 +3132,10 @@
                             if (!res.ok) throw new Error("Server failed to create session");
 
                             const newSession = await res.json();
-
-                            // Update Local Store
                             const sessions = Store.get('sessions') || [];
                             sessions.unshift(newSession);
                             Store.set('sessions', sessions);
 
-                            // Force Selection
                             await UI.selectSession(newSession.sessionId);
 
                         } catch (e) {
