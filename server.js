@@ -296,10 +296,9 @@ app.post("/api/update-clip", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Update failed" }); }
 });
 
-// // 7. Manual Data Override (Edit Button & Situation)
+// 7. Manual Data Override (Edit Button & Situation)
 app.post("/api/update-clip-data", requireAuth, async (req, res) => {
     try {
-        // ADDED: 'situation' to the destructuring
         const { clipId, title, summary, o_formation, d_formation, situation } = req.body;
         const clip = await Clip.findOne({ _id: clipId, owner: req.auth.userId });
         
@@ -331,12 +330,17 @@ app.post("/api/update-clip-data", requireAuth, async (req, res) => {
             if (clip.fullData.scouting_report && summary) {
                 clip.fullData.scouting_report.summary = summary;
             }
+
+            // *** THE CRITICAL FIX ***
+            // This tells MongoDB: "I changed something deep inside this object. Please save it."
+            clip.markModified('fullData'); 
         }
         
         await clip.save();
+        console.log(`✅ Saved Situation for Clip ${clipId}`); // Added logging for verification
         res.json({ success: true });
     } catch (e) { 
-        console.error(e);
+        console.error("❌ Data Update Error:", e);
         res.status(500).json({ error: "Data Update failed" }); 
     }
 });
