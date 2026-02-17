@@ -173,6 +173,24 @@ const Session = mongoose.model("Session", new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 }));
 
+
+// NEW: Schema for Playbook Concepts
+const PlaySchema = new mongoose.Schema({
+    owner: String,              // User ID
+    playId: String,             // Unique ID (e.g., "play_12345")
+    title: String,              // "Mesh Concept"
+    linkedSessionId: String,    // The "Bridge" to film analysis
+    elements: Array,            // The drawing data [{x, y, label, type}]
+    aiAnalysis: {               // The "Brain" storage
+        formation: String,      // "Trips Right"
+        summary: String,        // "High-low read on the Mike LB"
+        keyReads: [String]      // ["Read Corner", "Check Safety"]
+    },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Play = mongoose.model("Play", PlaySchema);
+
 const Clip = mongoose.model("Clip", new mongoose.Schema({
   owner: String, 
   sessionId: String, 
@@ -296,9 +314,10 @@ app.post("/api/update-clip", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Update failed" }); }
 });
 
-// 7. Manual Data Override (Edit Button & Situation)
+// // 7. Manual Data Override (Edit Button & Situation)
 app.post("/api/update-clip-data", requireAuth, async (req, res) => {
     try {
+        // ADDED: 'situation' to the destructuring
         const { clipId, title, summary, o_formation, d_formation, situation } = req.body;
         const clip = await Clip.findOne({ _id: clipId, owner: req.auth.userId });
         
@@ -330,17 +349,12 @@ app.post("/api/update-clip-data", requireAuth, async (req, res) => {
             if (clip.fullData.scouting_report && summary) {
                 clip.fullData.scouting_report.summary = summary;
             }
-
-            // *** THE CRITICAL FIX ***
-            // This tells MongoDB: "I changed something deep inside this object. Please save it."
-            clip.markModified('fullData'); 
         }
         
         await clip.save();
-        console.log(`✅ Saved Situation for Clip ${clipId}`); // Added logging for verification
         res.json({ success: true });
     } catch (e) { 
-        console.error("❌ Data Update Error:", e);
+        console.error(e);
         res.status(500).json({ error: "Data Update failed" }); 
     }
 });
@@ -568,6 +582,43 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     if (tempPath) await fs.unlink(tempPath).catch(console.error);
     res.status(500).json({ error: e.message || "Analysis failed." });
   }
+});
+
+// 11. Save a Play Design
+app.post("/api/save-play", requireAuth, async (req, res) => {
+    try {
+        const { playId, title, elements, linkedSessionId, aiAnalysis } = req.body;
+        
+        // Upsert: If play exists, update it. If not, create it.
+        const play = await Play.findOneAndUpdate(
+            { playId, owner: req.auth.userId },
+            { 
+                title, 
+                elements, 
+                linkedSessionId,
+                aiAnalysis,
+                // If it's a new save, set owner. If updating, keep owner.
+                $setOnInsert: { owner: req.auth.userId } 
+            },
+            { new: true, upsert: true } // "new" returns the updated doc, "upsert" creates if missing
+        );
+
+        res.json({ success: true, play });
+    } catch (e) {
+        console.error("Save Play Error:", e);
+        res.status(500).json({ error: "Failed to save play." });
+    }
+});
+
+// 12. Get All Plays (Library Load)
+app.get("/api/get-plays", requireAuth, async (req, res) => {
+    try {
+        // Fetch all plays belonging to this user, newest first
+        const plays = await Play.find({ owner: req.auth.userId }).sort({ createdAt: -1 });
+        res.json(plays);
+    } catch (e) {
+        res.status(500).json({ error: "Failed to load library." });
+    }
 });
 
 // Start Server
