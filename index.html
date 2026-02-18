@@ -2595,24 +2595,37 @@
          * PLAYBOOK ENGINE V5 (Freehand & Apple Pencil)
          * Features: Curved Routes, Pressure Sensitivity, Smart Eraser, Relative Movement
          */
+        /**
+         * PLAYBOOK ENGINE V6 (Master Fix)
+         * - Fixes Empty Screen (Auto-load 11 Personnel)
+         * - Freehand Drawing (Apple Pencil support)
+         * - 11-Man Defense Support
+         * - Smart Eraser & Specific Clear Buttons
+         */
         const Playbook = {
             canvas: null,
             ctx: null,
-            elements: [],       
-            routes: [], // Structure: { id, ownerId, type, points: [{x,y}], color }
-            defense: [],        
+            // Unified Data
+            elements: [],       // Offense {id, x, y, label, type:'O'}
+            defense: [],        // Defense {id, x, y, label, type:'D'}
+            routes: [],         // Lines {id, ownerId, ownerType, type, points:[{x,y}], color}
             
+            // State
             activePlayId: null,
             isDragging: false,
             isDrawing: false,
             dragTarget: null,
             activeTool: 'move', 
             
-            // For relative movement calculation
+            // For relative movement
             lastDragX: 0,
             lastDragY: 0,
 
-            init: async () => { await Playbook.loadLibrary(); },
+            init: async () => {
+                await Playbook.loadLibrary();
+            },
+
+            // --- A. INITIALIZATION (Fixing the Blank Screen) ---
 
             openDesigner: (playId = null) => {
                 Playbook.activePlayId = playId;
@@ -2620,14 +2633,15 @@
                 
                 // Reset State
                 Playbook.elements = [];
-                Playbook.routes = [];
                 Playbook.defense = [];
+                Playbook.routes = [];
                 Playbook.setTool('move');
 
                 // Clear Chat
                 const history = document.getElementById('designer-chat-history');
                 if(history) history.innerHTML = '<div style="color:#666; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
 
+                // Give the modal 100ms to render, then initialize canvas
                 setTimeout(() => {
                     const container = document.getElementById('designer-container');
                     Playbook.canvas = document.getElementById('designer-canvas');
@@ -2635,25 +2649,27 @@
                     Playbook.canvas.height = container.clientHeight;
                     Playbook.ctx = Playbook.canvas.getContext('2d');
 
-                    // POINTER EVENTS (Critical for Apple Pencil)
-                    Playbook.canvas.style.touchAction = "none"; // Prevents scrolling while drawing
+                    // POINTER EVENTS (Apple Pencil & Mouse)
+                    Playbook.canvas.style.touchAction = "none"; 
                     Playbook.canvas.onpointerdown = Playbook.handleStart;
                     Playbook.canvas.onpointermove = Playbook.handleMove;
                     Playbook.canvas.onpointerup = Playbook.handleEnd;
                     Playbook.canvas.onpointercancel = Playbook.handleEnd;
 
-                    // Load Data
+                    // LOAD DATA
                     const plays = Store.get('playbook') || [];
                     const savedPlay = plays.find(p => (p.playId || p.id) === playId);
 
                     if (savedPlay && savedPlay.elements && savedPlay.elements.length > 0) {
                         document.getElementById('play-name').value = savedPlay.title;
                         Playbook.elements = savedPlay.elements;
-                        Playbook.routes = savedPlay.routes || [];
                         Playbook.defense = savedPlay.defense || [];
+                        Playbook.routes = savedPlay.routes || [];
                     } else {
+                        // *** FORCE LOAD DEFAULT PLAYERS ***
                         Playbook.setPersonnel('11'); 
                     }
+                    
                     Playbook.drawAll();
                     Playbook.updateFormationHUD(); 
                 }, 150);
@@ -2668,51 +2684,85 @@
                         el.style.background = (t === tool) ? 'rgba(255,255,255,0.1)' : 'transparent';
                     }
                 });
-                // Cursor Logic
-                if(tool === 'eraser') Playbook.canvas.style.cursor = 'cell'; // Looks like a target
+                if(tool === 'eraser') Playbook.canvas.style.cursor = 'cell'; 
                 else if(tool === 'move') Playbook.canvas.style.cursor = 'grab';
                 else Playbook.canvas.style.cursor = 'crosshair';
             },
 
+            // --- B. PRESETS (Offense & Defense) ---
+
             setPersonnel: (pers) => {
-                // (Keep your existing personnel logic here - copied for completeness)
-                const w = Playbook.canvas.width; const h = Playbook.canvas.height; const c = w / 2; const los = h * 0.65; 
-                Playbook.elements = []; Playbook.routes = [];
+                const w = Playbook.canvas.width;
+                const h = Playbook.canvas.height;
+                const c = w / 2;
+                const los = h * 0.65; 
+
+                Playbook.elements = [];
+                // OL + QB
                 ['L','G','C','G','T'].forEach((p, i) => Playbook.elements.push({ id: `ol_${i}`, type:'O', label:p, x: c + (i-2)*30, y: los }));
                 Playbook.elements.push({ id:'qb', type:'O', label:'Q', x: c, y: los + 40 });
+
+                // Personnel Groups
                 if (pers === '11') {
                     Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 50, y: los + 40 });
                     Playbook.elements.push({ id:'te', type:'O', label:'Y', x: c + 90, y: los });
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                     Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los });
+                } else if (pers === '10') {
+                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 60, y: los + 10 });
+                    Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
+                    Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
+                    Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los }); 
+                    Playbook.elements.push({ id:'wr4', type:'O', label:'Y', x: c + 100, y: los }); 
+                } else if (pers === '12') {
+                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c, y: los + 80 });
+                    Playbook.elements.push({ id:'te1', type:'O', label:'Y', x: c + 90, y: los });
+                    Playbook.elements.push({ id:'te2', type:'O', label:'U', x: c - 90, y: los });
+                    Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
+                    Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                 }
-                // ... (Add other personnel groups if needed)
                 Playbook.drawAll();
                 Playbook.updateFormationHUD();
             },
 
             toggleDefense: (val) => {
-                // (Keep existing defense logic)
                 Playbook.defense = [];
                 if (val === 'none') { Playbook.drawAll(); return; }
-                const w = Playbook.canvas.width; const h = Playbook.canvas.height; const los = h * 0.65; const c = w / 2;
+
+                const w = Playbook.canvas.width;
+                const h = Playbook.canvas.height;
+                const los = h * 0.65;
+                const c = w / 2;
                 const createD = (lbl, x, y) => ({ id: `def_${Date.now()}_${Math.random()}`, type:'D', label:lbl, x, y });
-                
-                if (val === 'cover3') {
+
+                if (val === 'base43') {
                     Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
-                    Playbook.defense.push(createD('W', c-120, los-60), createD('M', c, los-60), createD('S', c+120, los-60)); 
-                    Playbook.defense.push(createD('CB', 40, los-180), createD('CB', w-40, los-180), createD('FS', c, los-220), createD('SS', c+60, los-60)); 
+                    Playbook.defense.push(createD('W', c-120, los-80), createD('M', c, los-80), createD('S', c+120, los-80));
+                    Playbook.defense.push(createD('C', 40, los-40), createD('C', w-40, los-40));
+                    Playbook.defense.push(createD('FS', c-60, los-200), createD('SS', c+60, los-200));
+                } 
+                else if (val === 'cover3') {
+                    Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
+                    Playbook.defense.push(createD('W', c-120, los-60), createD('M', c, los-60), createD('S', c+120, los-60));
+                    Playbook.defense.push(createD('CB', 40, los-180), createD('CB', w-40, los-180));
+                    Playbook.defense.push(createD('FS', c, los-220), createD('SS', c+60, los-60));
+                }
+                else if (val === 'cover2') {
+                    Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
+                    Playbook.defense.push(createD('W', c-120, los-60), createD('M', c, los-80), createD('S', c+120, los-60));
+                    Playbook.defense.push(createD('CB', 40, los-40), createD('CB', w-40, los-40));
+                    Playbook.defense.push(createD('S', c-80, los-220), createD('S', c+80, los-220));
                 }
                 Playbook.drawAll();
             },
 
-            // --- INTERACTION ENGINE (The Logic Core) ---
+            // --- C. INTERACTION & PHYSICS ---
+
+            snapToGrid: (val) => Math.round(val / 10) * 10,
 
             hitTest: (x, y) => {
-                // Check Offense
                 let target = Playbook.elements.find(el => Math.sqrt((el.x - x)**2 + (el.y - y)**2) < 25);
-                // Check Defense
                 if (!target) {
                     target = Playbook.defense.find(el => Math.sqrt((el.x - x)**2 + (el.y - y)**2) < 25);
                 }
@@ -2720,15 +2770,13 @@
             },
 
             handleStart: (e) => {
-                // Prevent default browser zooming/scrolling
                 e.preventDefault(); 
-                
                 const rect = Playbook.canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
                 if (Playbook.activeTool === 'eraser') {
-                    Playbook.isDrawing = true; // Eraser acts like drawing
+                    Playbook.isDrawing = true;
                     Playbook.eraseAt(x, y);
                     return;
                 }
@@ -2746,13 +2794,12 @@
                     Playbook.isDrawing = true;
                     Playbook.canvas.setPointerCapture(e.pointerId);
                     
-                    // Create a NEW route object immediately
                     const newRoute = {
                         id: 'route_' + Date.now(),
                         ownerId: Playbook.dragTarget.id,
                         ownerType: Playbook.dragTarget.type, // 'O' or 'D'
-                        type: Playbook.activeTool, // 'draw' or 'block'
-                        points: [{x, y}], // Start point
+                        type: Playbook.activeTool,
+                        points: [{x, y}],
                         color: Playbook.activeTool === 'block' ? '#ffffff' : (Playbook.dragTarget.type === 'D' ? '#ef4444' : '#f59e0b')
                     };
                     Playbook.routes.push(newRoute);
@@ -2773,21 +2820,16 @@
                 }
 
                 if (Playbook.activeTool === 'move' && Playbook.isDragging && Playbook.dragTarget) {
-                    // Calculate Delta (Movement difference)
                     const dx = x - Playbook.lastDragX;
                     const dy = y - Playbook.lastDragY;
 
-                    // Move the Player
                     Playbook.dragTarget.x += dx;
                     Playbook.dragTarget.y += dy;
 
-                    // Move THEIR Routes with them (Relative Movement)
+                    // Relative Route Movement
                     Playbook.routes.forEach(r => {
                         if (r.ownerId === Playbook.dragTarget.id) {
-                            r.points.forEach(p => {
-                                p.x += dx;
-                                p.y += dy;
-                            });
+                            r.points.forEach(p => { p.x += dx; p.y += dy; });
                         }
                     });
 
@@ -2796,13 +2838,11 @@
                     Playbook.drawAll();
                 } 
                 else if (Playbook.isDrawing) {
-                    // Add point to the current route (The last one in the array)
                     const currentRoute = Playbook.routes[Playbook.routes.length - 1];
-                    // Smoothing: Only add point if distance > 5px to reduce jaggedness
                     const lastPt = currentRoute.points[currentRoute.points.length - 1];
                     const dist = Math.sqrt((x - lastPt.x)**2 + (y - lastPt.y)**2);
                     
-                    if (dist > 3) {
+                    if (dist > 3) { // Smoothing factor
                         currentRoute.points.push({x, y});
                         Playbook.drawAll();
                     }
@@ -2814,7 +2854,7 @@
                 Playbook.isDragging = false;
                 Playbook.isDrawing = false;
                 Playbook.dragTarget = null;
-                Playbook.canvas.releasePointerCapture(e.pointerId);
+                if(Playbook.canvas) Playbook.canvas.releasePointerCapture(e.pointerId);
                 
                 if (Playbook.activeTool === 'move') {
                     Playbook.canvas.style.cursor = 'grab';
@@ -2822,20 +2862,15 @@
                 }
             },
 
-            // --- ERASER LOGIC ---
             eraseAt: (ex, ey) => {
-                const radius = 15; // Eraser size
-                // Filter OUT routes that are touched by the eraser
+                const radius = 20; 
                 Playbook.routes = Playbook.routes.filter(r => {
-                    // Check every point in the route
-                    const isHit = r.points.some(p => Math.sqrt((p.x - ex)**2 + (p.y - ey)**2) < radius);
-                    return !isHit; // Keep if NOT hit
+                    return !r.points.some(p => Math.sqrt((p.x - ex)**2 + (p.y - ey)**2) < radius);
                 });
                 Playbook.drawAll();
             },
 
             clearRoutes: (type) => {
-                // Clear all routes belonging to 'O' or 'D'
                 Playbook.routes = Playbook.routes.filter(r => r.ownerType !== type);
                 Playbook.drawAll();
             },
@@ -2845,69 +2880,57 @@
                 Playbook.drawAll();
             },
 
-            // --- RENDERING ---
+            // --- D. RENDERING ---
 
             drawField: () => {
                 const ctx = Playbook.ctx;
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
                 ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                // Grid
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+                ctx.beginPath(); for(let i=0; i<w; i+=30) { ctx.moveTo(i,0); ctx.lineTo(i,h); } for(let i=0; i<h; i+=30) { ctx.moveTo(0,i); ctx.lineTo(w,i); } ctx.stroke();
                 // Hashes
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.beginPath();
-                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
-                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
-                ctx.stroke();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h); ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h); ctx.stroke();
                 // LOS
                 const center = Playbook.elements.find(el => el.label === 'C');
-                if(center) {
-                    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; 
-                    ctx.beginPath(); ctx.moveTo(0, center.y); ctx.lineTo(w, center.y); ctx.stroke();
-                }
+                if(center) { ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, center.y); ctx.lineTo(w, center.y); ctx.stroke(); }
             },
 
             drawAll: () => {
                 Playbook.drawField();
                 const ctx = Playbook.ctx;
 
-                // 1. Draw Routes (Curves)
+                // Routes (Curves)
                 Playbook.routes.forEach(r => {
                     if(r.points.length < 2) return;
-                    
                     ctx.beginPath();
                     ctx.moveTo(r.points[0].x, r.points[0].y);
-                    
-                    // Smooth Curve Rendering (Quadtratic Bezier)
+                    // Quadratic Bezier Smoothing
                     for (let i = 1; i < r.points.length - 1; i++) {
                         const xc = (r.points[i].x + r.points[i + 1].x) / 2;
                         const yc = (r.points[i].y + r.points[i + 1].y) / 2;
                         ctx.quadraticCurveTo(r.points[i].x, r.points[i].y, xc, yc);
                     }
-                    // Connect last point
                     ctx.lineTo(r.points[r.points.length-1].x, r.points[r.points.length-1].y);
-
-                    ctx.strokeStyle = r.color;
-                    ctx.lineWidth = 3;
-                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = r.color; ctx.lineWidth = 3; ctx.lineCap = 'round';
                     ctx.setLineDash(r.type === 'block' ? [5, 8] : []);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
+                    ctx.stroke(); ctx.setLineDash([]);
 
-                    // Arrowhead at end
+                    // Arrowhead (on draw only)
                     if (r.type === 'draw') {
                         const last = r.points[r.points.length-1];
-                        const prev = r.points[r.points.length-5] || r.points[0]; // Go back a bit for angle
+                        const prev = r.points[r.points.length-5] || r.points[0];
                         const angle = Math.atan2(last.y - prev.y, last.x - prev.x);
-                        
                         ctx.beginPath();
                         ctx.moveTo(last.x, last.y);
                         ctx.lineTo(last.x - 12 * Math.cos(angle - Math.PI / 6), last.y - 12 * Math.sin(angle - Math.PI / 6));
                         ctx.lineTo(last.x - 12 * Math.cos(angle + Math.PI / 6), last.y - 12 * Math.sin(angle + Math.PI / 6));
-                        ctx.fillStyle = r.color;
-                        ctx.fill();
+                        ctx.fillStyle = r.color; ctx.fill();
                     }
                 });
 
-                // 2. Draw Defense
+                // Defense
                 Playbook.defense.forEach(d => {
                     ctx.beginPath(); ctx.arc(d.x, d.y, 12, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(239, 68, 68, 0.9)'; ctx.fill();
@@ -2916,20 +2939,18 @@
                     ctx.fillText(d.label, d.x, d.y);
                 });
 
-                // 3. Draw Offense
+                // Offense
                 Playbook.elements.forEach(el => {
                     ctx.beginPath(); ctx.arc(el.x, el.y, 14, 0, Math.PI * 2);
                     ctx.fillStyle = 'white'; ctx.fill();
-                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; 
-                    ctx.lineWidth = el === Playbook.dragTarget ? 3 : 1; 
-                    ctx.stroke();
+                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; ctx.lineWidth = el === Playbook.dragTarget ? 3 : 1; ctx.stroke();
                     ctx.fillStyle = 'black'; ctx.font = 'bold 11px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(el.label, el.x, el.y);
                 });
             },
 
-            // --- DATA & AI ---
-            
+            // --- E. DATA & AI ---
+
             generateFormationReport: () => {
                 const center = Playbook.elements.find(el => el.label === 'C');
                 if (!center) return { name: "Unclear", details: "No Center found." };
@@ -2975,7 +2996,7 @@
                     playId: Playbook.activePlayId || 'play_' + Date.now(),
                     title: name,
                     elements: Playbook.elements,
-                    defense: Playbook.defense, // SAVE DEFENSE TOO
+                    defense: Playbook.defense,
                     routes: Playbook.routes, 
                     linkedSessionId: UI.activeSessionId,
                     aiAnalysis: { formation: form.name, summary: form.details }
@@ -2995,8 +3016,6 @@
                     });
                 } catch(e) { console.error(e); }
             },
-            
-            // Render Grid & AI logic (kept same as previous version)
             renderGrid: () => {
                 const grid = document.getElementById('playbook-grid');
                 if(!grid) return;
