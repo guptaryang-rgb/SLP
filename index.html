@@ -2593,6 +2593,10 @@
         /**
          * PLAYBOOK ENGINE V3 (Fixes: Init, Defense Upload, Fast Detection)
          */
+        /**
+         * PLAYBOOK ENGINE V3 PRO
+         * Matches the new HTML (Hand Tool, Personnel Dropdown, Defense Manager)
+         */
         const Playbook = {
             canvas: null,
             ctx: null,
@@ -2619,7 +2623,9 @@
                 Playbook.elements = [];
                 Playbook.routes = [];
                 Playbook.defense = [];
-                document.getElementById('custom-defense-img').style.display = 'none';
+                const customImg = document.getElementById('custom-defense-img');
+                if(customImg) customImg.style.display = 'none';
+                
                 Playbook.setTool('move');
 
                 // Clear Chat
@@ -2647,12 +2653,12 @@
                         Playbook.elements = savedPlay.elements;
                         Playbook.routes = savedPlay.routes || [];
                     } else {
-                        // *** FIX #1: Force Default Players if New ***
+                        // LOAD DEFAULT PLAYERS (This fixes the empty screen)
                         Playbook.setPersonnel('11'); 
                     }
                     
                     Playbook.drawAll();
-                    Playbook.updateFormationHUD(); // Instant check
+                    Playbook.updateFormationHUD(); 
                 }, 150);
             },
 
@@ -2665,10 +2671,10 @@
                         el.style.background = (t === tool) ? 'rgba(255,255,255,0.1)' : 'transparent';
                     }
                 });
-                Playbook.canvas.style.cursor = (tool === 'move') ? 'grab' : 'crosshair';
+                if(Playbook.canvas) Playbook.canvas.style.cursor = (tool === 'move') ? 'grab' : 'crosshair';
             },
 
-            // *** FIX #1 CONT: Personnel Logic ***
+            // THIS IS THE FUNCTION YOUR DROPDOWN IS LOOKING FOR
             setPersonnel: (pers) => {
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
@@ -2687,16 +2693,22 @@
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                     Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los });
-                } else if (pers === '10') {
+                } else if (pers === '10') { // Empty
                     Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 60, y: los + 10 });
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                     Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los }); 
                     Playbook.elements.push({ id:'wr4', type:'O', label:'Y', x: c + 100, y: los }); 
-                } else if (pers === '12') {
+                } else if (pers === '12') { // 2 TE
                     Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c, y: los + 80 });
                     Playbook.elements.push({ id:'te1', type:'O', label:'Y', x: c + 90, y: los });
                     Playbook.elements.push({ id:'te2', type:'O', label:'U', x: c - 90, y: los });
+                    Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
+                    Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
+                } else if (pers === '21') { // I-Form
+                    Playbook.elements.push({ id:'fb', type:'O', label:'F', x: c, y: los + 60 });
+                    Playbook.elements.push({ id:'rb', type:'O', label:'T', x: c, y: los + 100 });
+                    Playbook.elements.push({ id:'te', type:'O', label:'Y', x: c + 90, y: los });
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                 }
@@ -2704,10 +2716,10 @@
                 Playbook.updateFormationHUD();
             },
 
-            // *** FIX #4: Defense Dropdown & Upload ***
+            // THIS IS THE FUNCTION YOUR DEFENSE MENU IS LOOKING FOR
             toggleDefense: (val) => {
                 const img = document.getElementById('custom-defense-img');
-                img.style.display = 'none'; // Hide custom image by default
+                if(img) img.style.display = 'none'; 
                 Playbook.defense = [];
 
                 if (val === 'custom') {
@@ -2736,14 +2748,12 @@
                         const img = document.getElementById('custom-defense-img');
                         img.src = e.target.result;
                         img.style.display = 'block';
-                        // Reset dropdown so user can select it again
                         document.getElementById('defense-select').value = 'custom';
                     };
                     reader.readAsDataURL(input.files[0]);
                 }
             },
 
-            // *** FIX #5: Instant Formation Detection ***
             generateFormationReport: () => {
                 const center = Playbook.elements.find(el => el.label === 'C');
                 if (!center) return { name: "Unclear", details: "No Center found." };
@@ -2762,7 +2772,7 @@
                 if (left === 2 && right === 2) name = "2x2 Spread";
                 if (left === 3 && right === 1) name = "3x1 Trips Left";
                 if (left === 1 && right === 3) name = "3x1 Trips Right";
-                if (left === 2 && right === 1 && backfield === 2) name = "Pro I-Form"; // Heuristic
+                if (left === 2 && right === 1 && backfield === 2) name = "Pro I-Form"; 
 
                 return { name: name, details: `${name} (${left}x${right} alignment).` };
             },
@@ -2773,7 +2783,6 @@
                 if(hud) hud.innerHTML = `Formation: <span style="color:var(--accent);">${rep.name}</span>`;
             },
 
-            // Physics & Drawing (Grid Snap)
             snapToGrid: (val) => Math.round(val / 10) * 10,
 
             handleStart: (e) => {
@@ -2828,7 +2837,7 @@
                     Playbook.dragTarget = null;
                     Playbook.canvas.style.cursor = 'grab';
                     Playbook.drawAll();
-                    Playbook.updateFormationHUD(); // Update formation name instantly
+                    Playbook.updateFormationHUD(); 
                 } 
                 else if (Playbook.isDrawingRoute) {
                     const rect = Playbook.canvas.getBoundingClientRect();
@@ -2893,7 +2902,6 @@
                         ctx.beginPath(); ctx.moveTo(r.path[1].x - 5, r.path[1].y); ctx.lineTo(r.path[1].x + 5, r.path[1].y); ctx.stroke();
                     } else {
                         ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.lineWidth = 3; ctx.stroke();
-                        // Arrowhead
                         const angle = Math.atan2(r.path[1].y - r.path[0].y, r.path[1].x - r.path[0].x);
                         ctx.beginPath();
                         ctx.moveTo(r.path[1].x, r.path[1].y);
@@ -2904,7 +2912,7 @@
                     ctx.setLineDash([]);
                 });
 
-                // Ghost Defense
+                // Defense
                 Playbook.defense.forEach(d => {
                     ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(239, 68, 68, 0.6)'; ctx.fill();
