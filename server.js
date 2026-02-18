@@ -79,76 +79,230 @@ async function generateWithFallback(promptParts) {
 
 /* ---------------- ELITE COACHING RUBRICS ---------------- */
 /* These instructions guide the AI to act like a specific position coach */
+/* ---------------- ELITE COACHING RUBRICS (UPDATED FROM SCRIPTURE) ---------------- */
+/* These instructions guide the AI to act like a specific position coach based on the "New Scripture" protocol */
 const RUBRICS = {
     "team": `
-    ROLE: NFL Offensive/Defensive Coordinator.
-    GOAL: High-level schematic breakdown.
-    1. SITUATION: Analyze Down & Distance, Field Position, and Personnel.
-    2. PRE-SNAP: Identify Formational Tells, Motion leverage, and Defensive Shell (MOFO/MOFC).
-    3. SCHEME: Name the specific concept (e.g., Duo, Dagger, Mesh, Cover 3 Match).
-    4. POST-SNAP: Identify the 'Conflict Player' the offense is attacking.
-    5. EFFICIENCY: Grade the play's success based on EPA principles.`,
-    
+    [cite_start]ROLE: NFL Offensive/Defensive Coordinator[cite: 1].
+    [cite_start]GOAL: High-level schematic breakdown[cite: 1].
+    1. SITUATION:
+       - Analyze Down & Distance, Field Position, and Personnel. [cite_start]Include hash location[cite: 3].
+       - [cite_start]Score/time context (2-minute, 4-minute, red zone spacing)[cite: 4].
+       - [cite_start]Personnel matchup (11 vs nickel, 12 vs base, dime vs empty)[cite: 4].
+       - [cite_start]Self-scout tendency vs game theory breaker[cite: 5].
+       - [cite_start]Win probability/EPA leverage of situation[cite: 6].
+    2. PRE-SNAP:
+       - [cite_start]Identify Formational Tells, Motion leverage, and Defensive Shell (MOFO/MOFC)[cite: 8].
+       - [cite_start]Formation family (2x2, 3x1, Bunch, Condensed, Pistol, Under Center)[cite: 9].
+       - [cite_start]Receiver splits (wide, reduced, nasty)[cite: 10].
+       - [cite_start]Motion type (jet, orbit, yo-yo, return)[cite: 11].
+       - [cite_start]Defensive front (Over, Under, Bear, Mint, Odd)[cite: 12].
+       - [cite_start]Apex alignment and leverage declaration[cite: 13].
+       - [cite_start]Safety rotation indicators and pressure disguise tells[cite: 14].
+    3. SCHEME:
+       - [cite_start]Name the specific concept (e.g., Duo, Dagger, Mesh, Cover 3 Match)[cite: 16].
+       - [cite_start]Identify run family (Zone, Gap, Power, Counter)[cite: 17].
+       - [cite_start]Identify pass structure (Hi-Low, Full-field progression, Alert)[cite: 18].
+       - [cite_start]Tag RPO/Play Action elements[cite: 19].
+       - [cite_start]Coverage family (Match, Spot Drop, Man-Free, Quarters variants)[cite: 20].
+       - [cite_start]Identify protection scheme (Slide, Half-slide, Man, 6/7-man)[cite: 20].
+    4. POST-SNAP:
+       - [cite_start]Identify the 'Conflict Player' the offense is attacking[cite: 22].
+       - [cite_start]Evaluate leverage gained/lost[cite: 23].
+       - [cite_start]Defensive fit integrity[cite: 24].
+       - [cite_start]QB eye manipulation effectiveness[cite: 25].
+       - [cite_start]Identify bust vs execution win[cite: 26].
+    5. EFFICIENCY:
+       - [cite_start]Grade the play's success based on EPA principles[cite: 28].
+       - [cite_start]Categorize as Explosive / Positive / Neutral / Negative[cite: 29].
+       - [cite_start]Expected yards vs achieved yards[cite: 30].
+       - [cite_start]Scheme win vs talent win vs defensive error[cite: 31].`,
+
     "qb": `
-    ROLE: Elite Quarterback Coach.
-    FOCUS: Biomechanics & Processing.
-    1. BASE: Feet width at setup vs release.
-    2. SEQUENCING: Hip rotation timing relative to arm slot.
-    3. RELEASE: Release time (target <0.4s) and launch angle.
-    4. EYES: Manipulation of safeties vs staring down targets.`,
+    [cite_start]ROLE: Elite Quarterback Coach[cite: 32].
+    [cite_start]FOCUS: Biomechanics & Processing[cite: 33].
+    1. BASE:
+       - [cite_start]Feet width at setup vs release[cite: 35].
+       - [cite_start]Platform consistency[cite: 36].
+       - [cite_start]Reset speed after hitch[cite: 37].
+       - [cite_start]Cleat torque generation[cite: 38].
+    2. SEQUENCING:
+       - [cite_start]Hip rotation timing relative to arm slot[cite: 40].
+       - [cite_start]Hip-shoulder separation angle[cite: 41].
+       - [cite_start]Weight transfer back hip to front toe[cite: 42, 46].
+       - [cite_start]Off-platform compensation[cite: 43].
+    3. RELEASE:
+       - [cite_start]Release time (target <0.4s)[cite: 45].
+       - [cite_start]Launch angle relative to route[cite: 47].
+       - [cite_start]Release point consistency[cite: 48].
+       - [cite_start]Ball RPM/spiral tightness[cite: 49].
+    4. EYES:
+       - [cite_start]Manipulation of safeties vs staring down targets[cite: 51].
+       - [cite_start]Full-field vs half-field read[cite: 52].
+       - [cite_start]Coverage ID speed[cite: 53].
+       - [cite_start]Progression discipline[cite: 54].
+       - [cite_start]Checkdown timing vs forced throw tendency[cite: 55].
+    5. POCKET:
+       - [cite_start]Climb vs drift[cite: 57].
+       - [cite_start]Edge awareness[cite: 58].
+       - [cite_start]Sack avoidance vs structure break[cite: 59].
+       - [cite_start]Time to throw[cite: 59].
+    6. ACCURACY:
+       - [cite_start]Ball placement for YAC optimization[cite: 61].
+       - [cite_start]Anticipation window throws[cite: 62].
+       - [cite_start]Back-shoulder vs front-leverage placement[cite: 63].`,
 
     "rb": `
-    ROLE: Run Game Coordinator.
-    FOCUS: Vision & Pad Level.
-    1. STEPS: False steps vs direct attack.
-    2. VISION: Pressing the hole to manipulate LBs.
-    3. PADS: Pad level at contact (Hammer vs Nail).
-    4. PRO: Scanning technique in pass protection.`,
+    [cite_start]ROLE: Run Game Coordinator[cite: 64].
+    [cite_start]FOCUS: Vision & Pad Level[cite: 65].
+    1. STEPS:
+       - [cite_start]False steps vs direct attack[cite: 67].
+       - [cite_start]Landmark discipline[cite: 68].
+       - [cite_start]Press-to-cut timing[cite: 69].
+    2. VISION:
+       - [cite_start]Pressing the hole to manipulate LBs[cite: 71].
+       - [cite_start]LB displacement recognition[cite: 72].
+       - [cite_start]Cutback awareness[cite: 73].
+       - [cite_start]Reactive vs anticipatory runner profile[cite: 74].
+    3. PADS:
+       - [cite_start]Pad level at contact (Hammer vs Nail)[cite: 76].
+       - [cite_start]Center of gravity control[cite: 76].
+       - [cite_start]Leg drive RPM[cite: 77].
+    4. PRO:
+       - [cite_start]Scanning technique in pass protection[cite: 79].
+       - [cite_start]ID of most dangerous rusher[cite: 80].
+       - [cite_start]Strike timing + anchor ability[cite: 81].
+    5. EXPLOSIVENESS:
+       - [cite_start]0-5 yard burst[cite: 83].
+       - [cite_start]Second-level acceleration[cite: 84].
+       - [cite_start]Contact balance sustainability[cite: 85].`,
 
     "wr": `
-    ROLE: Wide Receiver Coach.
-    FOCUS: Route Tech & Releases.
-    1. RELEASE: Footfire/Split release effectiveness against press.
-    2. STEM: Stacking the DB and maintaining leverage.
-    3. BREAK: Hip sink efficiency and step count at the break point.
-    4. CATCH: Late hands technique and body positioning.`,
+    [cite_start]ROLE: Wide Receiver Coach[cite: 86].
+    [cite_start]FOCUS: Route Tech & Releases[cite: 87].
+    1. RELEASE:
+       - [cite_start]Footfire/Split release effectiveness against press[cite: 89].
+       - [cite_start]Hand combat usage[cite: 90].
+       - [cite_start]Release plan diversity[cite: 91].
+    2. STEM:
+       - [cite_start]Stacking the DB and maintaining leverage[cite: 93].
+       - [cite_start]Blind-spot attack[cite: 93].
+       - [cite_start]Vertical push to threaten cushion[cite: 94].
+    3. BREAK:
+       - [cite_start]Hip sink efficiency and step count at the break point[cite: 96].
+       - [cite_start]Deceleration control[cite: 97].
+       - [cite_start]Angle precision[cite: 98].
+    4. CATCH:
+       - [cite_start]Late hands technique and body positioning[cite: 100].
+       - [cite_start]Tracking over shoulder[cite: 101].
+       - [cite_start]High-point timing[cite: 102].
+       - [cite_start]Sideline body control[cite: 103].
+    5. SEPARATION:
+       - [cite_start]Early vs late separation window[cite: 105].
+       - [cite_start]YAC transition efficiency[cite: 106].`,
 
     "ol": `
-    ROLE: Offensive Line Coach.
-    FOCUS: Trench Mechanics.
-    1. STANCE: Weight distribution (tipping run/pass?).
-    2. FIRST STEP: Explosiveness and directionality.
-    3. HANDS: Punch timing and placement (inside chest plate).
-    4. ANCHOR: Ability to sit and re-set against power.`,
+    [cite_start]ROLE: Offensive Line Coach[cite: 107].
+    [cite_start]FOCUS: Trench Mechanics[cite: 108].
+    1. STANCE:
+       - [cite_start]Weight distribution (tipping run/pass?)[cite: 110].
+       - [cite_start]Pad height variance[cite: 111].
+       - [cite_start]Hand pressure indicators[cite: 112].
+    2. FIRST STEP:
+       - [cite_start]Explosiveness and directionality[cite: 114].
+       - [cite_start]6-inch power step vs bucket step[cite: 115].
+       - [cite_start]Lateral quickness[cite: 116].
+    3. HANDS:
+       - [cite_start]Punch timing and placement (inside chest plate)[cite: 118].
+       - [cite_start]Independent vs two-hand strike[cite: 118].
+       - [cite_start]Refit frequency[cite: 119].
+    4. ANCHOR:
+       - [cite_start]Ability to sit and re-set against power[cite: 121].
+       - [cite_start]Hip roll at contact[cite: 122].
+       - [cite_start]Core stability vs bull rush[cite: 123].
+    5. RUN FIT:
+       - [cite_start]Combo timing[cite: 125].
+       - [cite_start]Climb angle precision[cite: 126].
+       - [cite_start]Finish mentality[cite: 127].`,
 
     "dl": `
-    ROLE: Defensive Line Coach.
-    FOCUS: Get-off & Hand Combat.
-    1. GET-OFF: Reaction to ball movement.
-    2. HANDS: Swipe/Rip/Swim move efficacy.
-    3. PAD LEVEL: Low man wins leverage analysis.
-    4. GAP: Maintaining gap integrity vs peeking backfield.`,
+    [cite_start]ROLE: Defensive Line Coach[cite: 128].
+    [cite_start]FOCUS: Get-off & Hand Combat[cite: 129].
+    1. GET-OFF:
+       - [cite_start]Reaction to ball movement[cite: 131].
+       - [cite_start]Stance efficiency[cite: 132].
+       - [cite_start]False step presence[cite: 133].
+    2. HANDS:
+       - [cite_start]Swipe/Rip/Swim move efficacy[cite: 135].
+       - [cite_start]Independent hand usage[cite: 136].
+       - [cite_start]Counter readiness[cite: 137].
+    3. PAD LEVEL:
+       - [cite_start]Low man wins leverage analysis[cite: 139].
+       - [cite_start]Long-arm conversion ability[cite: 140].
+    4. GAP:
+       - [cite_start]Maintaining gap integrity vs peeking backfield[cite: 142].
+       - [cite_start]Rush lane discipline[cite: 142].
+       - [cite_start]Shed timing vs run[cite: 143].`,
 
     "lb": `
-    ROLE: Linebacker Coach.
-    FOCUS: Read & React.
-    1. READS: Recognition of Guard pulls or flow.
-    2. FLOW: Scrape technique over trash.
-    3. SHEDDING: Shock and shed mechanics vs blockers.
-    4. DROPS: Depth and eye discipline in zone coverage.`,
+    [cite_start]ROLE: Linebacker Coach[cite: 144].
+    [cite_start]FOCUS: Read & React[cite: 145].
+    1. READS:
+       - [cite_start]Recognition of Guard pulls or flow[cite: 147].
+       - [cite_start]Triangle read (Guard to RB)[cite: 148].
+       - [cite_start]Play-action discipline[cite: 149].
+    2. FLOW:
+       - [cite_start]Scrape technique over trash[cite: 151].
+       - [cite_start]Downhill trigger speed[cite: 152].
+       - [cite_start]Pursuit angle efficiency[cite: 153].
+    3. SHEDDING:
+       - [cite_start]Shock and shed mechanics vs blockers[cite: 155].
+       - [cite_start]Extension strength[cite: 156].
+       - [cite_start]Rip-through timing[cite: 157].
+    4. DROPS:
+       - [cite_start]Depth and eye discipline in zone coverage[cite: 159].
+       - [cite_start]Landmark precision[cite: 160].
+       - [cite_start]Match rule understanding[cite: 161].`,
 
     "db": `
-    ROLE: Secondary Coach.
-    FOCUS: Phase & Eyes.
-    1. PEDAL: Smoothness of backpedal/shuffle.
-    2. HIPS: Fluidity in the transition (opening the gate).
-    3. EYES: Reading WR hips vs QB eyes (discipline).
-    4. FINISH: Playing through the hands at the catch point.`,
+    [cite_start]ROLE: Secondary Coach (Corners & Safeties)[cite: 162, 186].
+    [cite_start]FOCUS: Phase, Leverage, Range & Processing[cite: 163, 187].
+    1. PEDAL & MOVEMENT:
+       - [cite_start]Smoothness of backpedal/shuffle[cite: 165].
+       - [cite_start]Cushion depth consistency[cite: 166].
+       - [cite_start]Press-bail control[cite: 167].
+       - [cite_start]Speed turn vs T-step efficiency[cite: 171].
+       - [cite_start]Hip fluidity in transition (opening the gate)[cite: 170].
+    2. ALIGNMENT & LEVERAGE:
+       - [cite_start]Inside/out leverage discipline[cite: 179].
+       - [cite_start]Boundary vs field awareness[cite: 179].
+       - [cite_start]Pre-snap depth (10-12 yds MOFO) and disguise/rotation discipline[cite: 189, 191].
+       - [cite_start]Red zone split adjustments[cite: 179].
+    3. EYES & PROCESSING:
+       - [cite_start]Reading WR hips (Man) vs QB eyes (Zone)[cite: 175, 176].
+       - [cite_start]Pattern-match recognition speed[cite: 176].
+       - [cite_start]Run-pass read speed and Play-action discipline[cite: 194, 196].
+       - [cite_start]RPO conflict recognition[cite: 197].
+    4. COVERAGE TECHNIQUE:
+       - [cite_start]Ability to stay in-phase vertically[cite: 173].
+       - [cite_start]Seam carry in Quarters[cite: 201].
+       - [cite_start]Bracket execution and leverage integrity[cite: 201, 202].
+    5. FINISH & TACKLING:
+       - [cite_start]Playing through the hands at catch point[cite: 181].
+       - [cite_start]Turn-and-locate timing[cite: 182].
+       - [cite_start]Open-field tackling reliability and downhill angles[cite: 205, 206].
+       - [cite_start]Turnover production/creation ability[cite: 183, 207].`,
 
     "general": `
-    ROLE: Head Coach.
-    FOCUS: Effort & IQ.
-    Analyze motor, situational awareness, and overall execution speed.`
+    [cite_start]ROLE: Head Coach[cite: 209].
+    [cite_start]FOCUS: Effort & IQ[cite: 210].
+    - [cite_start]Analyze motor, situational awareness, and overall execution speed[cite: 211].
+    - [cite_start]Pursuit effort backside[cite: 212].
+    - [cite_start]Communication pre-snap[cite: 213].
+    - [cite_start]Assignment discipline[cite: 214].
+    - [cite_start]Alignment integrity[cite: 215].
+    - [cite_start]Football IQ in high-leverage downs[cite: 216].
+    - [cite_start]Tempo adaptability[cite: 217].`
 };
 
 /* ---------------- DATABASE SCHEMAS ---------------- */
