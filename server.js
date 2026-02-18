@@ -328,17 +328,22 @@ const Session = mongoose.model("Session", new mongoose.Schema({
 }));
 
 
-// NEW: Schema for Playbook Concepts
+// NEW: Schema for Playbook Concepts (Updated for V6)
 const PlaySchema = new mongoose.Schema({
     owner: String,              // User ID
-    playId: String,             // Unique ID (e.g., "play_12345")
-    title: String,              // "Mesh Concept"
-    linkedSessionId: String,    // The "Bridge" to film analysis
-    elements: Array,            // The drawing data [{x, y, label, type}]
-    aiAnalysis: {               // The "Brain" storage
-        formation: String,      // "Trips Right"
-        summary: String,        // "High-low read on the Mike LB"
-        keyReads: [String]      // ["Read Corner", "Check Safety"]
+    playId: String,             // Unique ID
+    title: String,              // Concept Name
+    linkedSessionId: String,    // Context Bridge
+    
+    // The "Drawing" Data
+    elements: Array,            // Offensive Players (O)
+    defense: Array,             // Defensive Players (D) - NEW
+    routes: Array,              // Vector/Freehand Lines - NEW
+    
+    aiAnalysis: {               
+        formation: String,
+        summary: String,
+        keyReads: [String]
     },
     createdAt: { type: Date, default: Date.now }
 });
@@ -738,23 +743,25 @@ app.post("/api/chat", requireAuth, async (req, res) => {
   }
 });
 
-// 11. Save a Play Design
+// 11. Save a Play Design (Pro Version)
 app.post("/api/save-play", requireAuth, async (req, res) => {
     try {
-        const { playId, title, elements, linkedSessionId, aiAnalysis } = req.body;
+        // We now destructure 'defense' and 'routes' from the request
+        const { playId, title, elements, defense, routes, linkedSessionId, aiAnalysis } = req.body;
         
-        // Upsert: If play exists, update it. If not, create it.
+        // Upsert: Update if exists, Create if new
         const play = await Play.findOneAndUpdate(
             { playId, owner: req.auth.userId },
             { 
                 title, 
                 elements, 
+                defense,  // <--- Saving Defense
+                routes,   // <--- Saving Curves/Lines
                 linkedSessionId,
                 aiAnalysis,
-                // If it's a new save, set owner. If updating, keep owner.
                 $setOnInsert: { owner: req.auth.userId } 
             },
-            { new: true, upsert: true } // "new" returns the updated doc, "upsert" creates if missing
+            { new: true, upsert: true }
         );
 
         res.json({ success: true, play });
