@@ -1367,12 +1367,11 @@
                     <div style="position:relative;">
                         <span style="font-size:0.6rem; color:#666; position:absolute; top:-8px; left:2px;">DEFENSE</span>
                         <select id="defense-select" class="input-box" style="width:130px; font-size:0.8rem; height:32px; padding:0 8px;" onchange="Playbook.toggleDefense(this.value)">
-                            <option value="none">None</option>
-                            <option value="cover3">Cover 3 Sky</option>
-                            <option value="cover2">Cover 2 Hard</option>
-                            <option value="cover4">Cover 4 (Quarters)</option>
-                            <option value="manfree">Man Free (Blitz)</option>
-                            <option value="custom">+ Upload Custom...</option>
+                            <option value="none">Clear Defense</option>
+                            <option value="cover3">Cover 3 (11-Man)</option>
+                            <option value="cover2">Cover 2 (11-Man)</option>
+                            <option value="base43">Base 4-3 (Custom)</option>
+                            <option value="base34">Base 3-4 (Custom)</option>
                         </select>
                     </div>
                 </div>
@@ -2587,27 +2586,23 @@
         };
 
         /**
-         * 5. PLAYBOOK ENGINE PRO (Intelligent Design Lab)
-         * Features: Grid Snap, Ghost Defense, Vector Routes, AI Integration
-         */
-        /**
-         * PLAYBOOK ENGINE V3 (Fixes: Init, Defense Upload, Fast Detection)
-         */
-        /**
-         * PLAYBOOK ENGINE V3 PRO
-         * Matches the new HTML (Hand Tool, Personnel Dropdown, Defense Manager)
+         * PLAYBOOK ENGINE V4 (Sandbox Mode)
+         * Features: 11-Man Defense, Drag-and-Drop Defense, Universal Drawing
          */
         const Playbook = {
             canvas: null,
             ctx: null,
-            elements: [],       
-            routes: [],         
-            defense: [],        
             
+            // Unified Data
+            elements: [],       // Offense {id, x, y, label, type:'O'}
+            defense: [],        // Defense {id, x, y, label, type:'D'}
+            routes: [],         // Lines {playerId, path:[{x,y}], type}
+            
+            // State
             activePlayId: null,
             isDragging: false,
             isDrawingRoute: false,
-            dragTarget: null,
+            dragTarget: null,   // Can be O or D
             activeTool: 'move', 
             currentRoutePoints: [],
 
@@ -2619,13 +2614,10 @@
                 Playbook.activePlayId = playId;
                 document.getElementById('designer-modal').style.display = 'flex';
                 
-                // Reset everything
+                // Reset Logic
                 Playbook.elements = [];
-                Playbook.routes = [];
                 Playbook.defense = [];
-                const customImg = document.getElementById('custom-defense-img');
-                if(customImg) customImg.style.display = 'none';
-                
+                Playbook.routes = [];
                 Playbook.setTool('move');
 
                 // Clear Chat
@@ -2644,17 +2636,17 @@
                     Playbook.canvas.onmousemove = Playbook.handleMove;
                     Playbook.canvas.onmouseup = Playbook.handleEnd;
 
-                    // LOAD DATA
+                    // Load Play or Default
                     const plays = Store.get('playbook') || [];
                     const savedPlay = plays.find(p => (p.playId || p.id) === playId);
 
-                    if (savedPlay && savedPlay.elements && savedPlay.elements.length > 0) {
+                    if (savedPlay) {
                         document.getElementById('play-name').value = savedPlay.title;
-                        Playbook.elements = savedPlay.elements;
+                        Playbook.elements = savedPlay.elements || [];
+                        Playbook.defense = savedPlay.defense || []; // Load Defense
                         Playbook.routes = savedPlay.routes || [];
                     } else {
-                        // LOAD DEFAULT PLAYERS (This fixes the empty screen)
-                        Playbook.setPersonnel('11'); 
+                        Playbook.setPersonnel('11'); // Default Offense
                     }
                     
                     Playbook.drawAll();
@@ -2674,7 +2666,7 @@
                 if(Playbook.canvas) Playbook.canvas.style.cursor = (tool === 'move') ? 'grab' : 'crosshair';
             },
 
-            // THIS IS THE FUNCTION YOUR DROPDOWN IS LOOKING FOR
+            // --- OFFENSE PRESETS ---
             setPersonnel: (pers) => {
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
@@ -2682,9 +2674,10 @@
                 const los = h * 0.65; 
 
                 Playbook.elements = [];
-                // Line
+                Playbook.routes = []; // Clear routes on reset
+
+                // OL + QB
                 ['L','G','C','G','T'].forEach((p, i) => Playbook.elements.push({ id: `ol_${i}`, type:'O', label:p, x: c + (i-2)*30, y: los }));
-                // QB
                 Playbook.elements.push({ id:'qb', type:'O', label:'Q', x: c, y: los + 40 });
 
                 if (pers === '11') {
@@ -2716,83 +2709,76 @@
                 Playbook.updateFormationHUD();
             },
 
-            // THIS IS THE FUNCTION YOUR DEFENSE MENU IS LOOKING FOR
+            // --- DEFENSE PRESETS (11 MAN) ---
             toggleDefense: (val) => {
-                const img = document.getElementById('custom-defense-img');
-                if(img) img.style.display = 'none'; 
                 Playbook.defense = [];
-
-                if (val === 'custom') {
-                    document.getElementById('defense-upload').click();
-                    return;
-                }
+                if (val === 'none') { Playbook.drawAll(); return; }
 
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
                 const los = h * 0.65;
+                const c = w / 2;
 
-                if (val === 'cover3') {
-                    Playbook.defense.push({ label:'CB', x: 40, y: los - 150 }, { label:'FS', x: w/2, y: los - 200 }, { label:'CB', x: w-40, y: los - 150 });
-                    Playbook.defense.push({ label:'W', x: w/2 - 80, y: los - 40 }, { label:'M', x: w/2, y: los - 40 }, { label:'S', x: w/2 + 80, y: los - 40 });
-                } else if (val === 'cover2') {
-                    Playbook.defense.push({ label:'S', x: w/2 - 100, y: los - 200 }, { label:'S', x: w/2 + 100, y: los - 200 });
-                    Playbook.defense.push({ label:'CB', x: 40, y: los - 40 }, { label:'CB', x: w-40, y: los - 40 }, { label:'M', x: w/2, y: los - 50 });
+                const createD = (lbl, x, y) => ({ id: `def_${Date.now()}_${Math.random()}`, type:'D', label:lbl, x, y });
+
+                if (val === 'base43') {
+                    // DL
+                    Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
+                    // LBs
+                    Playbook.defense.push(createD('W', c-120, los-80), createD('M', c, los-80), createD('S', c+120, los-80));
+                    // DBs
+                    Playbook.defense.push(createD('C', 40, los-40), createD('C', w-40, los-40));
+                    Playbook.defense.push(createD('FS', c-60, los-200), createD('SS', c+60, los-200));
+                } 
+                else if (val === 'base34') {
+                    // DL
+                    Playbook.defense.push(createD('E', c-60, los-20), createD('N', c, los-20), createD('E', c+60, los-20));
+                    // LBs
+                    Playbook.defense.push(createD('OLB', c-130, los-40), createD('ILB', c-40, los-80), createD('ILB', c+40, los-80), createD('OLB', c+130, los-40));
+                    // DBs
+                    Playbook.defense.push(createD('C', 40, los-40), createD('C', w-40, los-40));
+                    Playbook.defense.push(createD('FS', c, los-220), createD('SS', c, los-180));
                 }
+                else if (val === 'cover3') {
+                    // 11 Man Cover 3 Shell
+                    Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
+                    Playbook.defense.push(createD('W', c-120, los-60), createD('M', c, los-60), createD('S', c+120, los-60)); // Underneath
+                    Playbook.defense.push(createD('CB', 40, los-180), createD('CB', w-40, los-180)); // Deep 1/3
+                    Playbook.defense.push(createD('FS', c, los-220)); // Deep 1/3
+                    Playbook.defense.push(createD('SS', c+60, los-60)); // Box Safety
+                }
+                else if (val === 'cover2') {
+                    // 11 Man Cover 2 Shell
+                    Playbook.defense.push(createD('E', c-90, los-20), createD('T', c-30, los-20), createD('T', c+30, los-20), createD('E', c+90, los-20));
+                    Playbook.defense.push(createD('W', c-120, los-60), createD('M', c, los-80), createD('S', c+120, los-60));
+                    Playbook.defense.push(createD('CB', 40, los-40), createD('CB', w-40, los-40)); // Squat
+                    Playbook.defense.push(createD('S', c-80, los-220), createD('S', c+80, los-220)); // Deep 1/2
+                }
+
                 Playbook.drawAll();
             },
 
-            handleDefenseUpload: (input) => {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.getElementById('custom-defense-img');
-                        img.src = e.target.result;
-                        img.style.display = 'block';
-                        document.getElementById('defense-select').value = 'custom';
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            },
-
-            generateFormationReport: () => {
-                const center = Playbook.elements.find(el => el.label === 'C');
-                if (!center) return { name: "Unclear", details: "No Center found." };
-                const midLine = center.x;
-                let left = 0, right = 0, backfield = 0;
-                Playbook.elements.forEach(el => {
-                    if (el.label === 'C' || el.label === 'Q') return;
-                    if (el.y > center.y + 20) backfield++; 
-                    else if (el.x < midLine - 20) left++;
-                    else if (el.x > midLine + 20) right++;
-                });
-                
-                let name = "Custom";
-                if (backfield === 1) name = "Singleback / Gun";
-                if (backfield === 0) name = "Empty";
-                if (left === 2 && right === 2) name = "2x2 Spread";
-                if (left === 3 && right === 1) name = "3x1 Trips Left";
-                if (left === 1 && right === 3) name = "3x1 Trips Right";
-                if (left === 2 && right === 1 && backfield === 2) name = "Pro I-Form"; 
-
-                return { name: name, details: `${name} (${left}x${right} alignment).` };
-            },
-
-            updateFormationHUD: () => {
-                const rep = Playbook.generateFormationReport();
-                const hud = document.getElementById('formation-hud');
-                if(hud) hud.innerHTML = `Formation: <span style="color:var(--accent);">${rep.name}</span>`;
-            },
+            // --- INTERACTION ENGINE ---
 
             snapToGrid: (val) => Math.round(val / 10) * 10,
+
+            // Helper to find ANY player (Offense OR Defense)
+            hitTest: (x, y) => {
+                // Check Offense first
+                let target = Playbook.elements.find(el => Math.sqrt((el.x - x)**2 + (el.y - y)**2) < 20);
+                // Check Defense if no Offense found
+                if (!target) {
+                    target = Playbook.defense.find(el => Math.sqrt((el.x - x)**2 + (el.y - y)**2) < 20);
+                }
+                return target;
+            },
 
             handleStart: (e) => {
                 const rect = Playbook.canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                Playbook.dragTarget = Playbook.elements.find(el => {
-                    const dx = el.x - x; const dy = el.y - y;
-                    return Math.sqrt(dx * dx + dy * dy) < 20;
-                });
+
+                Playbook.dragTarget = Playbook.hitTest(x, y);
 
                 if (Playbook.activeTool === 'move' && Playbook.dragTarget) {
                     Playbook.isDragging = true;
@@ -2811,6 +2797,7 @@
                 if (Playbook.activeTool === 'move' && Playbook.isDragging && Playbook.dragTarget) {
                     Playbook.dragTarget.x = x;
                     Playbook.dragTarget.y = y;
+                    // Move Attached Routes
                     const route = Playbook.routes.find(r => r.playerId === Playbook.dragTarget.id);
                     if(route && route.path.length > 0) route.path[0] = {x, y};
                     Playbook.drawAll();
@@ -2820,7 +2807,7 @@
                     Playbook.ctx.beginPath();
                     Playbook.ctx.moveTo(Playbook.currentRoutePoints[0].x, Playbook.currentRoutePoints[0].y);
                     Playbook.ctx.lineTo(x, y);
-                    Playbook.ctx.strokeStyle = Playbook.activeTool === 'block' ? '#fff' : '#f59e0b';
+                    Playbook.ctx.strokeStyle = Playbook.activeTool === 'block' ? '#fff' : (Playbook.dragTarget.type === 'D' ? '#ef4444' : '#f59e0b');
                     Playbook.ctx.lineWidth = 3;
                     Playbook.ctx.setLineDash(Playbook.activeTool === 'block' ? [5,5] : []);
                     Playbook.ctx.stroke();
@@ -2845,10 +2832,12 @@
                     const y = Playbook.snapToGrid(e.clientY - rect.top);
                     Playbook.currentRoutePoints.push({x, y});
                     
+                    // Overwrite old route for this player
                     Playbook.routes = Playbook.routes.filter(r => r.playerId !== Playbook.dragTarget.id);
                     Playbook.routes.push({
                         playerId: Playbook.dragTarget.id,
                         type: Playbook.activeTool,
+                        ownerType: Playbook.dragTarget.type, // 'O' or 'D'
                         path: [...Playbook.currentRoutePoints]
                     });
                     Playbook.isDrawingRoute = false;
@@ -2862,24 +2851,22 @@
                 Playbook.drawAll();
             },
 
+            // --- RENDERING ---
+
             drawField: () => {
                 const ctx = Playbook.ctx;
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
                 ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
-                // Grid
                 ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
                 ctx.beginPath();
                 for(let i=0; i<w; i+=30) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
                 for(let i=0; i<h; i+=30) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
                 ctx.stroke();
-                // Hashes
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath();
                 ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
                 ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
                 ctx.stroke();
-                // LOS
                 const center = Playbook.elements.find(el => el.label === 'C');
                 if(center) {
                     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; 
@@ -2891,45 +2878,78 @@
                 Playbook.drawField();
                 const ctx = Playbook.ctx;
 
-                // Routes
+                // 1. Draw Routes
                 Playbook.routes.forEach(r => {
                     if(r.path.length < 2) return;
                     ctx.beginPath();
                     ctx.moveTo(r.path[0].x, r.path[0].y);
                     ctx.lineTo(r.path[1].x, r.path[1].y);
+                    
                     if (r.type === 'block') {
                         ctx.strokeStyle = '#fff'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.stroke();
+                        // T-Bar
                         ctx.beginPath(); ctx.moveTo(r.path[1].x - 5, r.path[1].y); ctx.lineTo(r.path[1].x + 5, r.path[1].y); ctx.stroke();
                     } else {
-                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.lineWidth = 3; ctx.stroke();
+                        // Defense = Red, Offense = Orange
+                        ctx.strokeStyle = r.ownerType === 'D' ? '#ef4444' : '#f59e0b'; 
+                        ctx.setLineDash([]); ctx.lineWidth = 3; ctx.stroke();
+                        // Arrowhead
                         const angle = Math.atan2(r.path[1].y - r.path[0].y, r.path[1].x - r.path[0].x);
                         ctx.beginPath();
                         ctx.moveTo(r.path[1].x, r.path[1].y);
                         ctx.lineTo(r.path[1].x - 10 * Math.cos(angle - Math.PI / 6), r.path[1].y - 10 * Math.sin(angle - Math.PI / 6));
                         ctx.lineTo(r.path[1].x - 10 * Math.cos(angle + Math.PI / 6), r.path[1].y - 10 * Math.sin(angle + Math.PI / 6));
-                        ctx.fillStyle = '#f59e0b'; ctx.fill();
+                        ctx.fillStyle = r.ownerType === 'D' ? '#ef4444' : '#f59e0b';
+                        ctx.fill();
                     }
                     ctx.setLineDash([]);
                 });
 
-                // Defense
+                // 2. Draw Defense
                 Playbook.defense.forEach(d => {
                     ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(239, 68, 68, 0.6)'; ctx.fill();
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.9)'; ctx.fill();
+                    ctx.strokeStyle = d === Playbook.dragTarget ? '#fff' : 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2; ctx.stroke();
                     ctx.fillStyle = 'white'; ctx.font = 'bold 9px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(d.label, d.x, d.y);
                 });
 
-                // Players
+                // 3. Draw Offense
                 Playbook.elements.forEach(el => {
                     ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
                     ctx.fillStyle = 'white'; ctx.fill();
-                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; 
-                    ctx.lineWidth = el === Playbook.dragTarget ? 3 : 1; 
-                    ctx.stroke();
+                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; ctx.lineWidth = el === Playbook.dragTarget ? 3 : 1; ctx.stroke();
                     ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(el.label, el.x, el.y);
                 });
+            },
+
+            // --- DATA & AI ---
+            
+            generateFormationReport: () => {
+                const center = Playbook.elements.find(el => el.label === 'C');
+                if (!center) return { name: "Unclear", details: "No Center found." };
+                const midLine = center.x;
+                let left = 0, right = 0, backfield = 0;
+                Playbook.elements.forEach(el => {
+                    if (el.label === 'C' || el.label === 'Q') return;
+                    if (el.y > center.y + 20) backfield++; 
+                    else if (el.x < midLine - 20) left++;
+                    else if (el.x > midLine + 20) right++;
+                });
+                let name = "Custom";
+                if (backfield === 1) name = "Singleback / Gun";
+                if (backfield === 0) name = "Empty";
+                if (left === 2 && right === 2) name = "2x2 Spread";
+                if (left === 3 && right === 1) name = "3x1 Trips Left";
+                if (left === 1 && right === 3) name = "3x1 Trips Right";
+                return { name: name, details: `${name} (${left}x${right}).` };
+            },
+
+            updateFormationHUD: () => {
+                const rep = Playbook.generateFormationReport();
+                const hud = document.getElementById('formation-hud');
+                if(hud) hud.innerHTML = `Formation: <span style="color:var(--accent);">${rep.name}</span>`;
             },
 
             loadLibrary: async () => {
@@ -2951,6 +2971,7 @@
                     playId: Playbook.activePlayId || 'play_' + Date.now(),
                     title: name,
                     elements: Playbook.elements,
+                    defense: Playbook.defense, // SAVE DEFENSE TOO
                     routes: Playbook.routes, 
                     linkedSessionId: UI.activeSessionId,
                     aiAnalysis: { formation: form.name, summary: form.details }
@@ -2970,6 +2991,8 @@
                     });
                 } catch(e) { console.error(e); }
             },
+            
+            // Render Grid & AI logic (kept same as previous version)
             renderGrid: () => {
                 const grid = document.getElementById('playbook-grid');
                 if(!grid) return;
@@ -3008,11 +3031,9 @@
                 history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:600;">${msg}</div>`;
                 input.value = '';
                 history.innerHTML += `<div id="chalk-loading" style="color:#888; font-size:0.75rem; margin-top:4px;">Scanning formation...</div>`;
-                
                 const form = Playbook.generateFormationReport();
                 const session = Playbook.getLinkedContext(Playbook.activePlayId);
-                const context = `ROLE: Offensive Coordinator. DRAWING: ${form.name}. INTEL: ${session ? session.notes : "None"}.`;
-                
+                const context = `ROLE: OC. DRAWING: ${form.name}. INTEL: ${session ? session.notes : "None"}.`;
                 try {
                     const response = await CoachAI.analyze(`${context}\nUSER: ${msg}`, null);
                     document.getElementById('chalk-loading').remove();
