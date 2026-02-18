@@ -1226,7 +1226,7 @@
 
 <body>
 
-    <div class="navbar">
+   <div class="navbar">
         <div class="logo" onclick="window.location.reload()">
             <div class="logo-icon"></div>
             Vantage<span>Vision</span>
@@ -1246,8 +1246,7 @@
             <div class="hero-wrapper">
                 <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
-                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and
-                    team strategy.</p>
+                <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
 
                 <div class="onboarding-grid">
                     <div class="step-card">
@@ -1258,8 +1257,7 @@
                     <div class="step-card">
                         <div class="step-num">02</div>
                         <div class="step-title">Select Mode</div>
-                        <div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for
-                            scheme.</div>
+                        <div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for scheme.</div>
                     </div>
                     <div class="step-card">
                         <div class="step-num">03</div>
@@ -1280,8 +1278,7 @@
         <div id="war-room-view" class="view">
             <div class="app-body">
                 <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn"
-                            onclick="App.createNewSession()">+</button></div>
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
@@ -1293,9 +1290,7 @@
                         <button class="dash-btn" onclick="alert('Roster & Tendency Report')">👥 Roster</button>
                     </div>
 
-                    <div id="chat-feed"
-                        style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;">
-                    </div>
+                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;"></div>
 
                     <div class="input-bar">
                         <select id="pos-select" class="pos-select">
@@ -1308,14 +1303,12 @@
                         </select>
 
                         <input type="file" id="file-input" hidden accept="video/*">
-                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);"
-                            onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
+                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
 
                         <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
                         <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
 
-                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library
-                            ☰</button>
+                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
                     </div>
                 </div>
 
@@ -1344,266 +1337,17 @@
                             <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
                             <div style="color:#666;">AI-Linked Concept Library</div>
                         </div>
-                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;"
-                            onclick="Playbook.openDesigner()">+ New Concept</button>
+                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;" onclick="Playbook.openDesigner()">+ New Concept</button>
                     </div>
 
-                    <div id="playbook-grid"
-                        style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div id="analysis-overlay"
-        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
-
-        <div class="overlay-header"
-            style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
-            <div style="display:flex; gap:12px; align-items:center;">
-                <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
-                <span class="badge" style="background:var(--accent); color:black;">VCM</span>
-            </div>
-            <div style="display:flex; gap:12px;">
-                <button class="tool-btn" onclick="UI.toggleContextPanel(true)">📝 Edit Situation</button>
-                <button class="tool-btn" onclick="UI.closeOverlay()">✕ Close</button>
-            </div>
-        </div>
-
-        <div id="workspace-split"
-            style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
-
-            <div id="popup-video-container"
-                style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
-                <div id="telestrator-view"
-                    style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
-                    <video id="ghost-video" playsinline webkit-playsinline muted
-                        style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
-                    <video id="main-video" playsinline webkit-playsinline
-                        style="width:100%; height:100%; object-fit:contain; display:block;"></video>
-                    <canvas id="draw-canvas"
-                        style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
-                </div>
-
-                <div class="video-controls">
-                    <button class="v-btn" id="play-pause-btn">⏯</button>
-                    <div class="scrubber-container">
-                        <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                        <div id="video-time"
-                            style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00
+                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
                         </div>
-                    </div>
-                    <div class="tele-tools">
-                        <button id="draw-btn" class="tool-btn">✏️ Draw</button>
-                        <button id="clear-btn" class="tool-btn">Clear</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="context-side-panel"
-                style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
-
-                <h3
-                    style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">
-                    Edit Play</h3>
-                <input type="hidden" id="edit-clip-id">
-
-                <div style="margin-bottom:16px; background:#1a1a1a; padding:4px; border-radius:8px; display:flex;">
-                    <button id="btn-pass" class="sit-btn selected" onclick="UI.setPlayType('pass')"
-                        style="border:none; border-radius:6px;">PASS</button>
-                    <button id="btn-run" class="sit-btn" onclick="UI.setPlayType('run')"
-                        style="border:none; border-radius:6px;">RUN</button>
-                </div>
-                <input type="hidden" id="edit-type" value="pass">
-
-                <div style="margin-bottom:16px; display:flex; gap:10px;">
-                    <div style="flex:1;">
-                        <label style="color:#888; font-size:0.7rem; font-weight:700;">DOWN</label>
-                        <select id="edit-down" class="input-box" style="margin-top:4px; width:100%;">
-                            <option value="1">1st Down</option>
-                            <option value="2">2nd Down</option>
-                            <option value="3">3rd Down</option>
-                            <option value="4">4th Down</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
-                        <label style="color:#888; font-size:0.7rem; font-weight:700;">TO GO</label>
-                        <input type="number" id="edit-togo" class="input-box" style="margin-top:4px; width:100%;"
-                            placeholder="10">
-                    </div>
-                </div>
-
-                <div style="margin-bottom:16px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full
-                            Field)</label>
-                        <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺
-                            Reset</button>
-                    </div>
-
-                    <div id="plotter-container"
-                        style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
-                        <canvas id="plotter-canvas" style="display:block; width:100%; height:100%;"></canvas>
-
-                        <div id="plotter-hint"
-                            style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">
-                            Tap to set SNAP location
-                        </div>
-                    </div>
-                </div>
-
-                <input type="hidden" id="edit-start-x">
-                <input type="hidden" id="edit-start-y">
-                <input type="hidden" id="edit-catch-x">
-                <input type="hidden" id="edit-catch-y">
-                <input type="hidden" id="edit-end-x">
-                <input type="hidden" id="edit-end-y">
-
-                <div
-                    style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.8rem; color:#aaa;">
-                    <span>Gain: <b id="disp-gain" style="color:white;">0</b> yds</span>
-                    <span id="disp-air-row">Air: <b id="disp-air" style="color:#38bdf8;">0</b> yds</span>
-                </div>
-
-                <div style="margin-top:auto;">
-                    <button class="cta-btn" style="width:100%;" onclick="UI.saveContext()">Save Situation</button>
-                    <button class="tool-btn" style="width:100%; margin-top:10px; justify-content:center; border:none;"
-                        onclick="UI.toggleContextPanel(false)">Cancel</button>
                 </div>
             </div>
         </div>
 
-        <div id="popup-report-container"
-            style="width:100%; padding:40px 20px; display:flex; flex-direction:column; align-items:center; background:#050505;">
-            <div
-                style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI
-                    (LIVE)</div>
-                <div id="overlay-chat-history"
-                    style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..."
-                        style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
-                    <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
-                </div>
-            </div>
-            <div class="report-wrapper" id="report-injection-site"></div>
-        </div>
-
-    </div>
-
-    <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content">
-            <h3 style="margin-top:0; color:white;">Strategy Hub</h3>
-            <p style="color:#888; margin-bottom:16px;">Define analysis rules. These persist across all sessions.</p>
-            <textarea id="rules-input"
-                style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;"
-                placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
-            <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;"
-                onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
-        </div>
-    </div>
-
-    <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-        <div class="modal-content"
-            style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
-
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
-                <div>
-                    <h2 style="margin:0; color:white;">Team Intelligence Hub</h2>
-                    <div style="color:#666; font-size:0.8rem;">Opponent Scout & Tendency Report</div>
-                </div>
-                <button class="tool-btn"
-                    onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
-            </div>
-
-            <div class="situation-bar">
-                <select id="filter-down" class="sit-select" onchange="UI.refreshStats()">
-                    <option value="all">Down: All</option>
-                    <option value="1">1st Down</option>
-                    <option value="2">2nd Down</option>
-                    <option value="3">3rd Down</option>
-                    <option value="4">4th Down</option>
-                </select>
-                <select id="filter-dist" class="sit-select" onchange="UI.refreshStats()">
-                    <option value="all">Distance: All</option>
-                    <option value="short">Short (< 3 yds)</option>
-                    <option value="med">Medium (3-7 yds)</option>
-                    <option value="long">Long (> 7 yds)</option>
-                </select>
-                <select id="filter-zone" class="sit-select" onchange="UI.refreshStats()">
-                    <option value="all">Field Zone: All</option>
-                    <option value="red">Red Zone</option>
-                    <option value="open">Open Field</option>
-                    <option value="backed">Backed Up</option>
-                </select>
-            </div>
-
-            <div style="overflow-y:auto; flex:1; padding-right:10px;">
-
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <h4 class="stat-title">1. OFFENSIVE FORMATION USAGE</h4>
-                        <div style="height:250px; position:relative;"><canvas id="chart-off-form"></canvas></div>
-                    </div>
-                    <div class="stat-card">
-                        <h4 class="stat-title">DEFENSIVE FRONT/SHELL TENDENCY</h4>
-                        <div style="height:250px; position:relative;"><canvas id="chart-def-form"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="stat-grid">
-                    <div class="stat-card" style="grid-column: span 1;">
-                        <h4 class="stat-title">3. EFFICIENCY MATRIX (Success Rate %)</h4>
-                        <div style="overflow-y:auto; height:250px;">
-                            <table class="heatmap-table" id="efficiency-table">
-                            </table>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <h4 class="stat-title">4. COVERAGE VULNERABILITY (Success Rate Allowed)</h4>
-                        <div style="height:250px;"><canvas id="chart-coverage"></canvas></div>
-                    </div>
-                </div>
-
-                <div class="stat-grid">
-                    <div class="stat-card">
-                        <h4 class="stat-title">5. TOP OFFENSIVE CONCEPTS</h4>
-                        <div style="height:300px;"><canvas id="chart-conflict"></canvas></div>
-                        <div class="stat-card">
-                            <h4 class="stat-title">6A. PASSING DISTRIBUTION (Air Yards)</h4>
-                            <div
-                                style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
-                                <div class="football-field">
-                                    <canvas id="chart-field-pass" style="width:100%; height:100%;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="stat-card">
-                            <h4 class="stat-title">6B. RUSHING DISTRIBUTION (Gap Scheme)</h4>
-                            <div
-                                style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
-                                <div class="football-field">
-                                    <canvas id="chart-field-run" style="width:100%; height:100%;"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
-            <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
-        </div>
-
-        </div> <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
+    </div> 
+    <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
         <div class="modal-content" style="max-width:1200px; width:95vw; height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
             <div style="padding:16px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:300px; font-weight:700; background:#111;">
@@ -1644,724 +1388,789 @@
     </div>
 
     <div id="analysis-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
-         </div>
+        <div class="overlay-header" style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
+                <span class="badge" style="background:var(--accent); color:black;">VCM</span>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="tool-btn" onclick="UI.toggleContextPanel(true)">📝 Edit Situation</button>
+                <button class="tool-btn" onclick="UI.closeOverlay()">✕ Close</button>
+            </div>
+        </div>
+
+        <div id="workspace-split" style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
+            <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
+                <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
+                    <video id="ghost-video" playsinline webkit-playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0; pointer-events:none; z-index:5;"></video>
+                    <video id="main-video" playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; display:block;"></video>
+                    <canvas id="draw-canvas" style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
+                </div>
+                <div class="video-controls">
+                    <button class="v-btn" id="play-pause-btn">⏯</button>
+                    <div class="scrubber-container">
+                        <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
+                        <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
+                    </div>
+                    <div class="tele-tools">
+                        <button id="draw-btn" class="tool-btn">✏️ Draw</button>
+                        <button id="clear-btn" class="tool-btn">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
+                <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Edit Play</h3>
+                <input type="hidden" id="edit-clip-id">
+                <div style="margin-bottom:16px; background:#1a1a1a; padding:4px; border-radius:8px; display:flex;">
+                    <button id="btn-pass" class="sit-btn selected" onclick="UI.setPlayType('pass')" style="border:none; border-radius:6px;">PASS</button>
+                    <button id="btn-run" class="sit-btn" onclick="UI.setPlayType('run')" style="border:none; border-radius:6px;">RUN</button>
+                </div>
+                <input type="hidden" id="edit-type" value="pass">
+                <div style="margin-bottom:16px; display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">DOWN</label>
+                        <select id="edit-down" class="input-box" style="margin-top:4px; width:100%;">
+                            <option value="1">1st Down</option>
+                            <option value="2">2nd Down</option>
+                            <option value="3">3rd Down</option>
+                            <option value="4">4th Down</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="color:#888; font-size:0.7rem; font-weight:700;">TO GO</label>
+                        <input type="number" id="edit-togo" class="input-box" style="margin-top:4px; width:100%;" placeholder="10">
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full Field)</label>
+                        <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺ Reset</button>
+                    </div>
+                    <div id="plotter-container" style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
+                        <canvas id="plotter-canvas" style="display:block; width:100%; height:100%;"></canvas>
+                        <div id="plotter-hint" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">Tap to set SNAP location</div>
+                    </div>
+                </div>
+                <input type="hidden" id="edit-start-x">
+                <input type="hidden" id="edit-start-y">
+                <input type="hidden" id="edit-catch-x">
+                <input type="hidden" id="edit-catch-y">
+                <input type="hidden" id="edit-end-x">
+                <input type="hidden" id="edit-end-y">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.8rem; color:#aaa;">
+                    <span>Gain: <b id="disp-gain" style="color:white;">0</b> yds</span>
+                    <span id="disp-air-row">Air: <b id="disp-air" style="color:#38bdf8;">0</b> yds</span>
+                </div>
+                <div style="margin-top:auto;">
+                    <button class="cta-btn" style="width:100%;" onclick="UI.saveContext()">Save Situation</button>
+                    <button class="tool-btn" style="width:100%; margin-top:10px; justify-content:center; border:none;" onclick="UI.toggleContextPanel(false)">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="popup-report-container" style="width:100%; padding:40px 20px; display:flex; flex-direction:column; align-items:center; background:#050505;">
+            <div style="width:100%; max-width:900px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:16px;">
+                <div style="font-size:0.8rem; font-weight:700; color:var(--accent); margin-bottom:8px;">ASK COACH AI (LIVE)</div>
+                <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                <div style="display:flex; gap:8px;">
+                    <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
+                </div>
+            </div>
+            <div class="report-wrapper" id="report-injection-site"></div>
+        </div>
+    </div>
 
     <div id="auth-modal" class="modal" style="display: flex; z-index:9999;">
         <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
     </div>
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-         <div class="modal-content">
+        <div class="modal-content">
             <h3 style="margin-top:0; color:white;">Strategy Hub</h3>
+            <p style="color:#888; margin-bottom:16px;">Define analysis rules. These persist across all sessions.</p>
+            <textarea id="rules-input" style="width:100%; height:150px; background:#080808; border:1px solid var(--border); color:white; padding:16px; border-radius:8px;" placeholder="Example: In Cover 3, if #1 receiver goes vertical, CB must carry him deep..."></textarea>
             <button class="tool-btn" style="margin-top:16px; width:100%; justify-content:center;" onclick="document.getElementById('strategy-modal').style.display='none'">Save Configuration</button>
-         </div>
+        </div>
     </div>
 
     <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
-         <div class="modal-content" style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
-             <button class="tool-btn" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
-             </div>
+        <div class="modal-content" style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <div>
+                    <h2 style="margin:0; color:white;">Team Intelligence Hub</h2>
+                    <div style="color:#666; font-size:0.8rem;">Opponent Scout & Tendency Report</div>
+                </div>
+                <button class="tool-btn" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+            </div>
+            <div class="situation-bar">
+                <select id="filter-down" class="sit-select" onchange="UI.refreshStats()">
+                    <option value="all">Down: All</option>
+                    <option value="1">1st Down</option>
+                    <option value="2">2nd Down</option>
+                    <option value="3">3rd Down</option>
+                    <option value="4">4th Down</option>
+                </select>
+                <select id="filter-dist" class="sit-select" onchange="UI.refreshStats()">
+                    <option value="all">Distance: All</option>
+                    <option value="short">Short (< 3 yds)</option>
+                    <option value="med">Medium (3-7 yds)</option>
+                    <option value="long">Long (> 7 yds)</option>
+                </select>
+                <select id="filter-zone" class="sit-select" onchange="UI.refreshStats()">
+                    <option value="all">Field Zone: All</option>
+                    <option value="red">Red Zone</option>
+                    <option value="open">Open Field</option>
+                    <option value="backed">Backed Up</option>
+                </select>
+            </div>
+            <div style="overflow-y:auto; flex:1; padding-right:10px;">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <h4 class="stat-title">1. OFFENSIVE FORMATION USAGE</h4>
+                        <div style="height:250px; position:relative;"><canvas id="chart-off-form"></canvas></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="stat-title">DEFENSIVE FRONT/SHELL TENDENCY</h4>
+                        <div style="height:250px; position:relative;"><canvas id="chart-def-form"></canvas></div>
+                    </div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-card" style="grid-column: span 1;">
+                        <h4 class="stat-title">3. EFFICIENCY MATRIX (Success Rate %)</h4>
+                        <div style="overflow-y:auto; height:250px;">
+                            <table class="heatmap-table" id="efficiency-table"></table>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h4 class="stat-title">4. COVERAGE VULNERABILITY (Success Rate Allowed)</h4>
+                        <div style="height:250px;"><canvas id="chart-coverage"></canvas></div>
+                    </div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <h4 class="stat-title">5. TOP OFFENSIVE CONCEPTS</h4>
+                        <div style="height:300px;"><canvas id="chart-conflict"></canvas></div>
+                        <div class="stat-card">
+                            <h4 class="stat-title">6A. PASSING DISTRIBUTION (Air Yards)</h4>
+                            <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                                <div class="football-field">
+                                    <canvas id="chart-field-pass" style="width:100%; height:100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <h4 class="stat-title">6B. RUSHING DISTRIBUTION (Gap Scheme)</h4>
+                            <div style="height:350px; background:#1e1e1e; border-radius:8px; padding:10px; display:flex; justify-content:center;">
+                                <div class="football-field">
+                                    <canvas id="chart-field-run" style="width:100%; height:100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-        <script>
-            /**
-             * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
-             * Manages LocalStorage with strict separation between Self and Team chats.
-             */
-            const Store = {
-                get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
-                set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+    <script>
+        /**
+         * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
+         */
+        const Store = {
+            get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
 
-                init: () => {
-                    // Initialize Sessions
-                    // FIX: Start with empty array. Do NOT create fake local sessions.
-                    if (!Store.get('sessions')) Store.set('sessions', []);
-                    // Initialize Global Clips
-                    if (!Store.get('clips')) Store.set('clips', []);
-                    // Initialize Isolated Chat Stores
-                    if (!Store.get('chat_self')) Store.set('chat_self', []);
-                    if (!Store.get('chat_team')) Store.set('chat_team', []);
-                },
+            init: () => {
+                if (!Store.get('sessions')) Store.set('sessions', []);
+                if (!Store.get('clips')) Store.set('clips', []);
+                if (!Store.get('chat_self')) Store.set('chat_self', []);
+                if (!Store.get('chat_team')) Store.set('chat_team', []);
+            },
 
-                addClip: (clip) => {
-                    const clips = Store.get('clips') || [];
-                    clips.unshift(clip);
-                    Store.set('clips', clips);
-                    return clips;
-                },
+            addClip: (clip) => {
+                const clips = Store.get('clips') || [];
+                clips.unshift(clip);
+                Store.set('clips', clips);
+                return clips;
+            },
 
-                getClips: () => Store.get('clips') || [],
+            getClips: () => Store.get('clips') || [],
 
-                // --- CHAT ISOLATION LOGIC ---
-                addMessage: (mode, msg) => {
-                    // mode must be 'self' or 'team'
-                    const key = `chat_${mode}`;
-                    const history = Store.get(key) || [];
-                    history.push(msg);
-                    Store.set(key, history);
-                },
+            addMessage: (mode, msg) => {
+                const key = `chat_${mode}`;
+                const history = Store.get(key) || [];
+                history.push(msg);
+                Store.set(key, history);
+            },
 
-                getChat: (mode) => {
-                    const key = `chat_${mode}`;
-                    return Store.get(key) || [];
-                }
-            };
+            getChat: (mode) => {
+                const key = `chat_${mode}`;
+                return Store.get(key) || [];
+            }
+        };
 
-            /**
-             * 2. TELESTRATOR ENGINE (Drawing, Touch, Pencil)
-             * Handles the video player and drawing canvas synchronization.
-             */
-            class TelestratorEngine {
-                constructor() {
-                    this.video = document.getElementById('main-video');
-                    this.canvas = document.getElementById('draw-canvas');
-                    this.ctx = this.canvas.getContext('2d');
-                    this.isDrawing = false;
-                    this.mode = 'view';
-                    this.strokes = [];
-                    this.currentPath = [];
+        class TelestratorEngine {
+            constructor() {
+                this.video = document.getElementById('main-video');
+                this.canvas = document.getElementById('draw-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.isDrawing = false;
+                this.mode = 'view';
+                this.strokes = [];
+                this.currentPath = [];
 
-                    this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
-                    this.bindEvents();
-                }
+                this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
+                this.bindEvents();
+            }
 
-                init(videoUrl) {
-                    this.video.src = videoUrl;
-                    this.strokes = [];
-                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.resizeObserver.observe(this.video);
+            init(videoUrl) {
+                this.video.src = videoUrl;
+                this.strokes = [];
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.resizeObserver.observe(this.video);
 
-                    document.getElementById('analysis-overlay').style.display = 'flex';
-                    this.video.play().catch(e => console.log("Autoplay blocked", e));
-                    this.fitCanvas();
-                    this.startLoop();
-                }
+                document.getElementById('analysis-overlay').style.display = 'flex';
+                this.video.play().catch(e => console.log("Autoplay blocked", e));
+                this.fitCanvas();
+                this.startLoop();
+            }
 
-                close() {
-                    document.getElementById('analysis-overlay').style.display = 'none';
+            close() {
+                document.getElementById('analysis-overlay').style.display = 'none';
+                this.video.pause();
+                this.video.src = "";
+                this.resizeObserver.disconnect();
+                cancelAnimationFrame(this.animId);
+            }
+
+            fitCanvas() {
+                const rect = this.video.getBoundingClientRect();
+                if (rect.width === 0) return;
+
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                this.canvas.style.width = `${rect.width}px`;
+                this.canvas.style.height = `${rect.height}px`;
+                this.canvas.style.top = `${this.video.offsetTop}px`;
+                this.canvas.style.left = `${this.video.offsetLeft}px`;
+
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+            }
+
+            bindEvents() {
+                document.addEventListener('keydown', (e) => {
+                    if (document.getElementById('analysis-overlay').style.display !== 'none') {
+                        if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
+                        if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
+                    }
+                });
+
+                this.canvas.addEventListener('pointerdown', (e) => {
+                    if (this.mode !== 'draw') return;
+                    e.preventDefault();
+                    this.isDrawing = true;
+                    this.canvas.setPointerCapture(e.pointerId);
                     this.video.pause();
-                    this.video.src = "";
-                    this.resizeObserver.disconnect();
-                    cancelAnimationFrame(this.animId);
-                }
+                    const { x, y } = this.getCoords(e);
+                    const pressure = e.pressure || 0.5;
+                    this.currentPath = [{ x, y, p: pressure }];
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, y);
+                    this.ctx.strokeStyle = "#fbbf24";
+                    this.ctx.lineWidth = 2 + (pressure * 6);
+                });
 
-                fitCanvas() {
-                    const rect = this.video.getBoundingClientRect();
-                    if (rect.width === 0) return;
-
-                    this.canvas.width = rect.width;
-                    this.canvas.height = rect.height;
-                    this.canvas.style.width = `${rect.width}px`;
-                    this.canvas.style.height = `${rect.height}px`;
-                    this.canvas.style.top = `${this.video.offsetTop}px`;
-                    this.canvas.style.left = `${this.video.offsetLeft}px`;
-
-                    this.ctx.lineCap = 'round';
-                    this.ctx.lineJoin = 'round';
-                }
-
-                bindEvents() {
-                    // Keyboard Shortcuts
-                    document.addEventListener('keydown', (e) => {
-                        if (document.getElementById('analysis-overlay').style.display !== 'none') {
-                            if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
-                            if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
-                        }
-                    });
-
-                    // --- APPLE PENCIL & TOUCH LOGIC ---
-                    this.canvas.addEventListener('pointerdown', (e) => {
-                        if (this.mode !== 'draw') return;
-                        e.preventDefault();
-
-                        this.isDrawing = true;
-                        this.canvas.setPointerCapture(e.pointerId); // CRITICAL: Locks pencil to canvas
-                        this.video.pause();
-
-                        const { x, y } = this.getCoords(e);
-                        const pressure = e.pressure || 0.5;
-
-                        this.currentPath = [{ x, y, p: pressure }];
-                        this.ctx.beginPath();
-                        this.ctx.moveTo(x, y);
-                        this.ctx.strokeStyle = "#fbbf24";
-                        this.ctx.lineWidth = 2 + (pressure * 6);
-                    });
-
-                    this.canvas.addEventListener('pointermove', (e) => {
-                        if (!this.isDrawing) return;
-                        if (e.pointerType === 'touch') e.preventDefault(); // Stop scrolling
-
-                        const { x, y } = this.getCoords(e);
-                        const pressure = e.pressure || 0.5;
-
-                        this.currentPath.push({ x, y, p: pressure });
-
-                        // Dynamic line width based on Apple Pencil pressure
-                        this.ctx.lineWidth = 2 + (pressure * 6);
-                        this.ctx.lineTo(x, y);
-                        this.ctx.stroke();
-                    });
-
-                    this.canvas.addEventListener('pointerup', (e) => {
-                        this.canvas.releasePointerCapture(e.pointerId);
-                        this.endStroke();
-                    });
-
-                    this.canvas.addEventListener('pointercancel', (e) => {
-                        this.canvas.releasePointerCapture(e.pointerId);
-                        this.endStroke();
-                    });
-
-                    // UI Controls
-                    document.getElementById('draw-btn').onclick = () => this.toggleMode();
-                    document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
-                    document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
-
-                    // Scrubber Logic
-                    const scrubber = document.getElementById('video-scrubber');
-                    this.video.ontimeupdate = () => {
-                        if (!this.video.paused) {
-                            scrubber.value = this.video.currentTime;
-                            document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
-                        }
-                    };
-                    this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
-                    scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
-                }
-
-                getCoords(e) {
-                    const rect = this.canvas.getBoundingClientRect();
-                    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-                }
-
-                endStroke() {
+                this.canvas.addEventListener('pointermove', (e) => {
                     if (!this.isDrawing) return;
-                    this.isDrawing = false;
-                    if (this.currentPath.length > 0) {
-                        this.strokes.push({
-                            path: [...this.currentPath],
-                            startTime: this.video.currentTime,
-                            duration: 3.0 // Strokes fade after 3 seconds
-                        });
+                    if (e.pointerType === 'touch') e.preventDefault();
+                    const { x, y } = this.getCoords(e);
+                    const pressure = e.pressure || 0.5;
+                    this.currentPath.push({ x, y, p: pressure });
+                    this.ctx.lineWidth = 2 + (pressure * 6);
+                    this.ctx.lineTo(x, y);
+                    this.ctx.stroke();
+                });
+
+                this.canvas.addEventListener('pointerup', (e) => {
+                    this.canvas.releasePointerCapture(e.pointerId);
+                    this.endStroke();
+                });
+
+                this.canvas.addEventListener('pointercancel', (e) => {
+                    this.canvas.releasePointerCapture(e.pointerId);
+                    this.endStroke();
+                });
+
+                document.getElementById('draw-btn').onclick = () => this.toggleMode();
+                document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
+                document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
+
+                const scrubber = document.getElementById('video-scrubber');
+                this.video.ontimeupdate = () => {
+                    if (!this.video.paused) {
+                        scrubber.value = this.video.currentTime;
+                        document.getElementById('video-time').innerText = this.formatTime(this.video.currentTime);
                     }
-                    this.currentPath = [];
+                };
+                this.video.onloadedmetadata = () => { scrubber.max = this.video.duration; this.fitCanvas(); };
+                scrubber.oninput = () => { this.video.currentTime = scrubber.value; };
+            }
+
+            getCoords(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            endStroke() {
+                if (!this.isDrawing) return;
+                this.isDrawing = false;
+                if (this.currentPath.length > 0) {
+                    this.strokes.push({
+                        path: [...this.currentPath],
+                        startTime: this.video.currentTime,
+                        duration: 3.0
+                    });
                 }
+                this.currentPath = [];
+            }
 
-                toggleMode() {
-                    this.mode = this.mode === 'view' ? 'draw' : 'view';
-                    const btn = document.getElementById('draw-btn');
-
-                    if (this.mode === 'draw') {
-                        btn.classList.add('active'); // Adds the blue outline
-                        btn.innerText = "✏️ Drawing...";
-                        this.canvas.style.pointerEvents = 'auto';
-                        this.canvas.style.cursor = 'crosshair';
-                        this.video.pause();
-                    } else {
-                        btn.classList.remove('active'); // Removes the blue outline
-                        btn.innerText = "✏️ Draw";
-                        this.canvas.style.pointerEvents = 'none';
-                        this.canvas.style.cursor = 'default';
-                    }
-                }
-
-                startLoop() {
-                    const loop = () => {
-                        if (!this.isDrawing && !this.video.paused) {
-                            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                            const t = this.video.currentTime;
-                            this.strokes.forEach(s => {
-                                if (t >= s.startTime && t <= (s.startTime + s.duration)) {
-                                    const age = t - s.startTime;
-                                    const opacity = 1 - (age / s.duration);
-                                    this.ctx.beginPath();
-                                    this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                                    if (s.path.length > 0) {
-                                        this.ctx.moveTo(s.path[0].x, s.path[0].y);
-                                        for (let i = 1; i < s.path.length; i++) {
-                                            this.ctx.lineWidth = 2 + (s.path[i].p * 4);
-                                            this.ctx.lineTo(s.path[i].x, s.path[i].y);
-                                        }
-                                    }
-                                    this.ctx.stroke();
-                                }
-                            });
-                        }
-                        this.animId = requestAnimationFrame(loop);
-                    };
-                    loop();
-                }
-
-                formatTime(s) {
-                    const m = Math.floor(s / 60);
-                    const sec = Math.floor(s % 60).toString().padStart(2, '0');
-                    return `${m}:${sec}`;
+            toggleMode() {
+                this.mode = this.mode === 'view' ? 'draw' : 'view';
+                const btn = document.getElementById('draw-btn');
+                if (this.mode === 'draw') {
+                    btn.classList.add('active');
+                    btn.innerText = "✏️ Drawing...";
+                    this.canvas.style.pointerEvents = 'auto';
+                    this.canvas.style.cursor = 'crosshair';
+                    this.video.pause();
+                } else {
+                    btn.classList.remove('active');
+                    btn.innerText = "✏️ Draw";
+                    this.canvas.style.pointerEvents = 'none';
+                    this.canvas.style.cursor = 'default';
                 }
             }
 
-            const Telestrator = new TelestratorEngine();
-
-            /**
-             * 3. COACH AI MOCK (Simulated Backend)
-             * Generates context-aware responses and Scout Cards.
-             */
-            const CoachAI = {
-                analyze: async (text, file) => {
-                    // Helper: Convert File to Base64 for Server
-                    const toBase64 = file => new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(file);
-                        reader.onload = () => resolve(reader.result.split(',')[1]);
-                        reader.onerror = error => reject(error);
-                    });
-
-                    const token = await window.Clerk.session.getToken();
-
-                    // Prepare Payload
-                    let payload = {
-                        message: text,
-                        sessionId: UI.activeSessionId,
-                        sport: 'football',
-                        position: document.getElementById('pos-select').value || 'general'
-                    };
-
-                    if (file) {
-                        payload.fileData = await toBase64(file);
-                        payload.mimeType = file.type;
-                    }
-
-                    try {
-                        const res = await fetch('/api/chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify(payload)
+            startLoop() {
+                const loop = () => {
+                    if (!this.isDrawing && !this.video.paused) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        const t = this.video.currentTime;
+                        this.strokes.forEach(s => {
+                            if (t >= s.startTime && t <= (s.startTime + s.duration)) {
+                                const age = t - s.startTime;
+                                const opacity = 1 - (age / s.duration);
+                                this.ctx.beginPath();
+                                this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
+                                if (s.path.length > 0) {
+                                    this.ctx.moveTo(s.path[0].x, s.path[0].y);
+                                    for (let i = 1; i < s.path.length; i++) {
+                                        this.ctx.lineWidth = 2 + (s.path[i].p * 4);
+                                        this.ctx.lineTo(s.path[i].x, s.path[i].y);
+                                    }
+                                }
+                                this.ctx.stroke();
+                            }
                         });
-
-                        const data = await res.json();
-
-                        // Handle Video Analysis Response
-                        if (data.newClip) {
-                            const clip = data.newClip;
-                            // Map Server JSON to UI Scout Card format
-                            const scoutData = {
-                                id: clip._id,
-                                title: clip.title,
-                                formation: clip.formation,
-                                grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
-                                iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
-                                tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
-                                effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
-                                summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
-                                fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
-                            };
-
-                            Store.addClip(clip); // Update local store
-                            setTimeout(() => UI.renderLibrary(), 100);
-                            return { type: 'card', data: scoutData, clip: clip };
-                        }
-                        // Handle Text Chat Response
-                        else {
-                            const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
-                            return { type: 'text', text: replyText };
-                        }
-                    } catch (e) {
-                        console.error("AI Error:", e);
-                        return { type: 'text', text: "Error connecting to Coach AI. Please check server logs." };
                     }
-                },
+                    this.animId = requestAnimationFrame(loop);
+                };
+                loop();
+            }
 
-                generateScoutCard: (clip) => {
-                    const grades = ['A-', 'B+', 'B-', 'C+'];
-                    return {
-                        id: clip.id,
-                        title: clip.title,
-                        formation: ['Trips Right', 'Doubles', 'Empty', 'I-Form'][Math.floor(Math.random() * 4)],
-                        grade: grades[Math.floor(Math.random() * grades.length)],
-                        iq: ['A', 'A-', 'B+'][Math.floor(Math.random() * 3)],
-                        tech: ['B', 'B-', 'C+'][Math.floor(Math.random() * 3)],
-                        effort: '100',
-                        summary: "Key analysis points: The spacing on the route combination was compressed. The defense disguised Cover 3 as Cover 2, causing a hesitation in the decision-making process.",
-                        fix: "Drill Suggestion: 'Recognition & Release' - Focus on identifying safety rotation immediately post-snap."
-                    };
-                },
+            formatTime(s) {
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60).toString().padStart(2, '0');
+                return `${m}:${sec}`;
+            }
+        }
 
-                getTextResponse: (input) => {
-                    return "I've logged that note. Based on your strategy settings, ensure you are watching for the weak-side linebacker blitz when in that formation. Would you like to review a clip?";
+        const Telestrator = new TelestratorEngine();
+
+        const CoachAI = {
+            analyze: async (text, file) => {
+                const toBase64 = file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = error => reject(error);
+                });
+
+                const token = await window.Clerk.session.getToken();
+                let payload = {
+                    message: text,
+                    sessionId: UI.activeSessionId,
+                    sport: 'football',
+                    position: document.getElementById('pos-select').value || 'general'
+                };
+
+                if (file) {
+                    payload.fileData = await toBase64(file);
+                    payload.mimeType = file.type;
                 }
-            };
 
-
-            const Plotter = {
-                step: 0,
-                coords: { start: null, catch: null, end: null },
-                ctx: null,
-                canvas: null,
-
-                init: () => {
-                    const container = document.getElementById('plotter-container');
-                    Plotter.canvas = document.getElementById('plotter-canvas');
-                    if (!Plotter.canvas || !container) return;
-
-                    // FORCE RESIZE
-                    const resize = () => {
-                        Plotter.canvas.width = container.clientWidth;
-                        Plotter.canvas.height = container.clientHeight;
-                        Plotter.ctx = Plotter.canvas.getContext('2d');
-                        Plotter.draw();
-                    };
-
-                    // Resize immediately, and again after transition (300ms)
-                    resize();
-                    setTimeout(resize, 50);
-                    setTimeout(resize, 350);
-
-                    Plotter.canvas.onclick = (e) => {
-                        const rect = Plotter.canvas.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-                        Plotter.handleClick(x, y);
-                    };
-                },
-
-                reset: () => {
-                    Plotter.step = 0;
-                    Plotter.coords = { start: null, catch: null, end: null };
-                    const hint = document.getElementById('plotter-hint');
-                    if (hint) hint.innerText = "Tap to set SNAP location";
-                    Plotter.draw();
-                    Plotter.updateInputs();
-                },
-
-                load: (data) => {
-                    Plotter.reset();
-                    // Wait for layout to settle before drawing points
-                    setTimeout(() => {
-                        const w = Plotter.canvas.width;
-                        const h = Plotter.canvas.height;
-
-                        // Only load if valid numbers exist
-                        if (data.startX && !isNaN(data.startX) && w > 0) {
-                            Plotter.coords.start = { x: (data.startX / 100) * w, y: (data.startY / 100) * h };
-                            if (data.catchX) Plotter.coords.catch = { x: (data.catchX / 100) * w, y: (data.catchY / 100) * h };
-                            if (data.endX) Plotter.coords.end = { x: (data.endX / 100) * w, y: (data.endY / 100) * h };
-
-                            Plotter.step = 3;
-                            const hint = document.getElementById('plotter-hint');
-                            if (hint) hint.innerText = "Play Loaded. Reset to redraw.";
-                            Plotter.draw();
-                        }
-                    }, 400); // Wait longer than the slide-in animation
-                },
-
-                handleClick: (x, y) => {
-                    const hint = document.getElementById('plotter-hint');
-                    if (Plotter.step === 0) {
-                        Plotter.coords.start = { x, y }; Plotter.step = 1;
-                        if (hint) hint.innerText = "Where was the CATCH / MOVE?";
-                    } else if (Plotter.step === 1) {
-                        Plotter.coords.catch = { x, y }; Plotter.step = 2;
-                        if (hint) hint.innerText = "Where did the play END?";
-                    } else if (Plotter.step === 2) {
-                        Plotter.coords.end = { x, y }; Plotter.step = 3;
-                        if (hint) hint.innerText = "Done! Click Save.";
-                    }
-                    Plotter.draw();
-                    Plotter.updateInputs();
-                },
-
-                draw: () => {
-                    const ctx = Plotter.ctx;
-                    const w = Plotter.canvas.width;
-                    const h = Plotter.canvas.height;
-                    if (!ctx || w === 0) return;
-
-                    // Grass
-                    ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
-
-                    // Yard Lines (White)
-                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                    ctx.textAlign = 'center'; ctx.font = '10px monospace'; ctx.lineWidth = 1;
-
-                    for (let i = 1; i < 10; i++) {
-                        const yPos = (h / 10) * i;
-                        ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
-                        let num = i * 10; if (num > 50) num = 100 - num;
-                        ctx.fillText(num, w * 0.15, yPos - 2); ctx.fillText(num, w * 0.85, yPos - 2);
-                    }
-
-                    // Hashes
-                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
-                    ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
-                    ctx.stroke();
-
-                    // Vectors
-                    const c = Plotter.coords;
-                    if (c.start) {
-                        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI * 2); ctx.fill();
-                    }
-                    if (c.start && c.catch) {
-                        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
-                        ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
-                        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI * 2); ctx.fill();
-                    }
-                    if (c.catch && c.end) {
-                        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
-                        ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
-                        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
-                    }
-                },
-
-                updateInputs: () => {
-                    const c = Plotter.coords;
-                    const w = Plotter.canvas.width;
-                    const h = Plotter.canvas.height;
-                    if (w === 0) return;
-
-                    if (c.start) {
-                        document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
-                        document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
-                    }
-                    if (c.catch) {
-                        document.getElementById('edit-catch-x').value = (c.catch.x / w) * 100;
-                        document.getElementById('edit-catch-y').value = (c.catch.y / h) * 100;
-                    }
-                    if (c.end) {
-                        document.getElementById('edit-end-x').value = (c.end.x / w) * 100;
-                        document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
-                    }
-
-                    // Live Gain Update
-                    if (c.start && c.end) {
-                        const yardsPerPx = 100 / h;
-                        const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
-                        document.getElementById('disp-gain').innerText = Math.round(totalDist);
-                        if (c.catch) {
-                            const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
-                            document.getElementById('disp-air').innerText = Math.round(airDist);
-                        }
-                    }
-                }
-            };
-            const UI = {
-                currentMode: 'about',
-                activeSessionId: null,
-                overlayClipId: null,
-
-                // [HELPER] Standardize Grades
-                gradeToNum: (g) => {
-                    if (!g) return 0;
-                    const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
-                    return m[g.trim()] || 2.0;
-                },
-
-                // [INIT] App Startup
-                init: async () => {
-                    try {
-                        const token = await window.Clerk.session.getToken();
-                        const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                        const sessions = await res.json();
-                        Store.set('sessions', sessions);
-                        if (sessions.length > 0 && !UI.activeSessionId) {
-                            const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
-                            if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
-                        }
-                    } catch (e) { console.error("Session Load Failed", e); }
-
-                    document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
-
-                    const fInput = document.getElementById('file-input');
-                    if (fInput) fInput.onchange = (e) => {
-                        if (e.target.files[0]) {
-                            const btn = document.getElementById('file-btn');
-                            btn.style.background = 'var(--success)';
-                            btn.style.color = 'black';
-                            btn.innerHTML = '✅ Ready';
-                        }
-                    };
-
-                    const sBtn = document.getElementById('send-btn');
-                    if (sBtn) sBtn.onclick = UI.handleSend;
-                },
-
-                switchTab: (tab) => {
-                    UI.currentMode = tab;
-
-                    // 1. Update Navigation Buttons
-                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-
-                    // 2. Hide ALL views first
-                    document.querySelectorAll('.view').forEach(v => {
-                        v.classList.remove('active-view');
-                        v.style.opacity = 0; // Prepare for fade-in
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
                     });
 
-                    // 3. Determine Target View
-                    let targetViewId = 'landing-view'; // Default to Vision
+                    const data = await res.json();
 
-                    if (tab === 'self' || tab === 'team') {
-                        targetViewId = 'war-room-view';
-                    } else if (tab === 'playbook') {
-                        targetViewId = 'playbook-view';
-                    }
-
-                    // 4. Show Target View
-                    const viewEl = document.getElementById(targetViewId);
-                    if (viewEl) {
-                        viewEl.classList.add('active-view');
-                        setTimeout(() => viewEl.style.opacity = 1, 50); // Fade in
-                    }
-
-                    // 5. Handle Logic Specific to Tab
-                    if (tab !== 'about') {
-                        // Check Auth for restricted tabs
-                        if (window.Clerk && !window.Clerk.user) {
-                            document.getElementById('auth-modal').style.display = 'flex';
-                            return;
-                        }
-
-                        // Toggle Position Select (Only for Self Analysis)
-                        const posSelect = document.getElementById('pos-select');
-                        if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
-
-                        // If entering War Room, Refresh Sessions
-                        if (targetViewId === 'war-room-view') {
-                            // Check if current session matches tab type (Self vs Team)
-                            const sessions = Store.get('sessions') || [];
-                            const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
-
-                            if (!currentSess || currentSess.type !== tab) {
-                                UI.activeSessionId = null; // Clear invalid session
-                                document.getElementById('chat-feed').innerHTML = ''; // Clear chat
-                                // Try to find a valid session for this tab
-                                const lastValid = sessions.find(s => s.type === tab);
-                                if (lastValid) UI.selectSession(lastValid.sessionId || lastValid.id);
-                                else UI.renderSessionList();
-                            } else {
-                                UI.renderSessionList();
-                            }
-                        }
-
-                        // If entering Playbook, Load Grid
-                        if (targetViewId === 'playbook-view') {
-                            if (Playbook) Playbook.renderGrid();
-                        }
-                    }
-                },
-
-                // [UPDATED] HANDLE RUN/PASS TOGGLE
-                setPlayType: (type) => {
-                    document.getElementById('edit-type').value = type;
-                    const btnPass = document.getElementById('btn-pass');
-                    const btnRun = document.getElementById('btn-run');
-                    // The new layout hides 'disp-air-row' instead of 'edit-air'
-                    const airRow = document.getElementById('disp-air-row');
-
-                    if (type === 'pass') {
-                        btnPass.classList.add('selected'); btnRun.classList.remove('selected');
-                        if (airRow) airRow.style.visibility = 'visible';
+                    if (data.newClip) {
+                        const clip = data.newClip;
+                        const scoutData = {
+                            id: clip._id,
+                            title: clip.title,
+                            formation: clip.formation,
+                            grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
+                            fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
+                        };
+                        Store.addClip(clip);
+                        setTimeout(() => UI.renderLibrary(), 100);
+                        return { type: 'card', data: scoutData, clip: clip };
                     } else {
-                        btnRun.classList.add('selected'); btnPass.classList.remove('selected');
-                        if (airRow) airRow.style.visibility = 'hidden';
+                        const replyText = typeof data.reply === 'string' ? data.reply : JSON.stringify(data.reply);
+                        return { type: 'text', text: replyText };
                     }
-                },
+                } catch (e) {
+                    console.error("AI Error:", e);
+                    return { type: 'text', text: "Error connecting to Coach AI. Please check server logs." };
+                }
+            }
+        };
 
-                renderMessageHTML: (msg) => {
-                    const feed = document.getElementById('chat-feed');
-                    if (msg.type === 'user') {
-                        feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
-                    } else {
-                        feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
+        const Plotter = {
+            step: 0,
+            coords: { start: null, catch: null, end: null },
+            ctx: null,
+            canvas: null,
+
+            init: () => {
+                const container = document.getElementById('plotter-container');
+                Plotter.canvas = document.getElementById('plotter-canvas');
+                if (!Plotter.canvas || !container) return;
+
+                const resize = () => {
+                    Plotter.canvas.width = container.clientWidth;
+                    Plotter.canvas.height = container.clientHeight;
+                    Plotter.ctx = Plotter.canvas.getContext('2d');
+                    Plotter.draw();
+                };
+
+                resize();
+                setTimeout(resize, 50);
+                setTimeout(resize, 350);
+
+                Plotter.canvas.onclick = (e) => {
+                    const rect = Plotter.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    Plotter.handleClick(x, y);
+                };
+            },
+
+            reset: () => {
+                Plotter.step = 0;
+                Plotter.coords = { start: null, catch: null, end: null };
+                const hint = document.getElementById('plotter-hint');
+                if (hint) hint.innerText = "Tap to set SNAP location";
+                Plotter.draw();
+                Plotter.updateInputs();
+            },
+
+            load: (data) => {
+                Plotter.reset();
+                setTimeout(() => {
+                    const w = Plotter.canvas.width;
+                    const h = Plotter.canvas.height;
+                    if (data.startX && !isNaN(data.startX) && w > 0) {
+                        Plotter.coords.start = { x: (data.startX / 100) * w, y: (data.startY / 100) * h };
+                        if (data.catchX) Plotter.coords.catch = { x: (data.catchX / 100) * w, y: (data.catchY / 100) * h };
+                        if (data.endX) Plotter.coords.end = { x: (data.endX / 100) * w, y: (data.endY / 100) * h };
+                        Plotter.step = 3;
+                        const hint = document.getElementById('plotter-hint');
+                        if (hint) hint.innerText = "Play Loaded. Reset to redraw.";
+                        Plotter.draw();
                     }
-                },
+                }, 400);
+            },
 
-                toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
-                toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
-                toggleModal: (id) => document.getElementById(id).style.display = 'flex',
-                closeOverlay: () => Telestrator.close(),
+            handleClick: (x, y) => {
+                const hint = document.getElementById('plotter-hint');
+                if (Plotter.step === 0) {
+                    Plotter.coords.start = { x, y }; Plotter.step = 1;
+                    if (hint) hint.innerText = "Where was the CATCH / MOVE?";
+                } else if (Plotter.step === 1) {
+                    Plotter.coords.catch = { x, y }; Plotter.step = 2;
+                    if (hint) hint.innerText = "Where did the play END?";
+                } else if (Plotter.step === 2) {
+                    Plotter.coords.end = { x, y }; Plotter.step = 3;
+                    if (hint) hint.innerText = "Done! Click Save.";
+                }
+                Plotter.draw();
+                Plotter.updateInputs();
+            },
 
-                // [FIXED] SELECT SESSION (Prevents Data Wiping)
-                selectSession: async (sessId) => {
-                    UI.activeSessionId = sessId;
-                    const feed = document.getElementById('chat-feed');
-                    feed.innerHTML = '';
-                    const sessions = Store.get('sessions') || [];
-                    const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
+            draw: () => {
+                const ctx = Plotter.ctx;
+                const w = Plotter.canvas.width;
+                const h = Plotter.canvas.height;
+                if (!ctx || w === 0) return;
 
-                    // 1. Render Chat History
-                    if (currentSession && currentSession.history && currentSession.history.length > 0) {
-                        currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
-                        feed.scrollTop = feed.scrollHeight;
-                    } else {
-                        const mode = UI.currentMode;
-                        const icon = mode === 'self' ? '👤' : '🛡️';
-                        feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
+                ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.textAlign = 'center'; ctx.font = '10px monospace'; ctx.lineWidth = 1;
+
+                for (let i = 1; i < 10; i++) {
+                    const yPos = (h / 10) * i;
+                    ctx.beginPath(); ctx.moveTo(0, yPos); ctx.lineTo(w, yPos); ctx.stroke();
+                    let num = i * 10; if (num > 50) num = 100 - num;
+                    ctx.fillText(num, w * 0.15, yPos - 2); ctx.fillText(num, w * 0.85, yPos - 2);
+                }
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
+                ctx.stroke();
+
+                const c = Plotter.coords;
+                if (c.start) {
+                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(c.start.x, c.start.y, 6, 0, Math.PI * 2); ctx.fill();
+                }
+                if (c.start && c.catch) {
+                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.setLineDash([]);
+                    ctx.beginPath(); ctx.moveTo(c.start.x, c.start.y); ctx.lineTo(c.catch.x, c.catch.y); ctx.stroke();
+                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(c.catch.x, c.catch.y, 4, 0, Math.PI * 2); ctx.fill();
+                }
+                if (c.catch && c.end) {
+                    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
+                    ctx.beginPath(); ctx.moveTo(c.catch.x, c.catch.y); ctx.lineTo(c.end.x, c.end.y); ctx.stroke();
+                    ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.rect(c.end.x - 5, c.end.y - 5, 10, 10); ctx.fill();
+                }
+            },
+
+            updateInputs: () => {
+                const c = Plotter.coords;
+                const w = Plotter.canvas.width;
+                const h = Plotter.canvas.height;
+                if (w === 0) return;
+
+                if (c.start) {
+                    document.getElementById('edit-start-x').value = (c.start.x / w) * 100;
+                    document.getElementById('edit-start-y').value = (c.start.y / h) * 100;
+                }
+                if (c.catch) {
+                    document.getElementById('edit-catch-x').value = (c.catch.x / w) * 100;
+                    document.getElementById('edit-catch-y').value = (c.catch.y / h) * 100;
+                }
+                if (c.end) {
+                    document.getElementById('edit-end-x').value = (c.end.x / w) * 100;
+                    document.getElementById('edit-end-y').value = (c.end.y / h) * 100;
+                }
+
+                if (c.start && c.end) {
+                    const yardsPerPx = 100 / h;
+                    const totalDist = Math.hypot(c.end.x - c.start.x, c.end.y - c.start.y) * yardsPerPx;
+                    document.getElementById('disp-gain').innerText = Math.round(totalDist);
+                    if (c.catch) {
+                        const airDist = Math.hypot(c.catch.x - c.start.x, c.catch.y - c.start.y) * yardsPerPx;
+                        document.getElementById('disp-air').innerText = Math.round(airDist);
                     }
+                }
+            }
+        };
 
-                    // 2. Load Clips (Safety Check)
-                    try {
-                        const token = await window.Clerk.session.getToken();
-                        const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const UI = {
+            currentMode: 'about',
+            activeSessionId: null,
+            overlayClipId: null,
 
-                        if (res.ok) {
-                            const serverClips = await res.json();
-                            // ONLY overwrite if server actually has data. Otherwise keep local.
-                            if (serverClips && serverClips.length > 0) {
-                                Store.set('clips', serverClips);
-                            } else {
-                                console.log("Server returned no clips. Keeping local data.");
-                            }
-                        }
-                    } catch (e) {
-                        console.log("Offline Mode: Loaded clips from Local Storage");
+            gradeToNum: (g) => {
+                if (!g) return 0;
+                const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
+                return m[g.trim()] || 2.0;
+            },
+
+            init: async () => {
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                    const sessions = await res.json();
+                    Store.set('sessions', sessions);
+                    if (sessions.length > 0 && !UI.activeSessionId) {
+                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                        if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
                     }
+                } catch (e) { console.error("Session Load Failed", e); }
 
-                    UI.renderSessionList();
-                    UI.renderLibrary();
-                },
+                document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
 
-                renderSessionList: () => {
-                    const list = document.getElementById('session-list');
-                    const sessions = Store.get('sessions') || [];
-                    const modeSessions = sessions.filter(s => s.type === UI.currentMode);
-                    list.innerHTML = modeSessions.map(s => {
-                        const validId = s.sessionId || s.id;
-                        return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
-                    }).join('');
-                },
+                const fInput = document.getElementById('file-input');
+                if (fInput) fInput.onchange = (e) => {
+                    if (e.target.files[0]) {
+                        const btn = document.getElementById('file-btn');
+                        btn.style.background = 'var(--success)';
+                        btn.style.color = 'black';
+                        btn.innerHTML = '✅ Ready';
+                    }
+                };
 
-                renderLibrary: () => {
-                    const list = document.getElementById('lib-grid');
-                    if (!list) return;
-                    list.innerHTML = '';
-                    const clips = Store.get('clips') || [];
-                    const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
+                const sBtn = document.getElementById('send-btn');
+                if (sBtn) sBtn.onclick = UI.handleSend;
+            },
 
-                    if (sessionClips.length === 0) {
-                        list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
+            switchTab: (tab) => {
+                UI.currentMode = tab;
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+                document.querySelectorAll('.view').forEach(v => {
+                    v.classList.remove('active-view');
+                    v.style.opacity = 0;
+                });
+
+                let targetViewId = 'landing-view';
+                if (tab === 'self' || tab === 'team') targetViewId = 'war-room-view';
+                else if (tab === 'playbook') targetViewId = 'playbook-view';
+
+                const viewEl = document.getElementById(targetViewId);
+                if (viewEl) {
+                    viewEl.classList.add('active-view');
+                    setTimeout(() => viewEl.style.opacity = 1, 50);
+                }
+
+                if (tab !== 'about') {
+                    if (window.Clerk && !window.Clerk.user) {
+                        document.getElementById('auth-modal').style.display = 'flex';
                         return;
                     }
+                    const posSelect = document.getElementById('pos-select');
+                    if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
 
-                    const folders = { 'Inbox': [] };
-                    sessionClips.forEach(c => {
-                        const sec = c.section || 'Inbox';
-                        if (!folders[sec]) folders[sec] = [];
-                        folders[sec].push(c);
-                    });
+                    if (targetViewId === 'war-room-view') {
+                        const sessions = Store.get('sessions') || [];
+                        const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                        if (!currentSess || currentSess.type !== tab) {
+                            UI.activeSessionId = null;
+                            document.getElementById('chat-feed').innerHTML = '';
+                            const lastValid = sessions.find(s => s.type === tab);
+                            if (lastValid) UI.selectSession(lastValid.sessionId || lastValid.id);
+                            else UI.renderSessionList();
+                        } else {
+                            UI.renderSessionList();
+                        }
+                    }
+                    if (targetViewId === 'playbook-view') {
+                        if (Playbook) Playbook.renderGrid();
+                    }
+                }
+            },
 
-                    for (const [name, groupClips] of Object.entries(folders)) {
-                        if (groupClips.length === 0) continue;
-                        list.innerHTML += `<div class="folder-header">${name}</div>`;
-                        groupClips.forEach(c => {
-                            list.innerHTML += `
+            setPlayType: (type) => {
+                document.getElementById('edit-type').value = type;
+                const btnPass = document.getElementById('btn-pass');
+                const btnRun = document.getElementById('btn-run');
+                const airRow = document.getElementById('disp-air-row');
+                if (type === 'pass') {
+                    btnPass.classList.add('selected'); btnRun.classList.remove('selected');
+                    if (airRow) airRow.style.visibility = 'visible';
+                } else {
+                    btnRun.classList.add('selected'); btnPass.classList.remove('selected');
+                    if (airRow) airRow.style.visibility = 'hidden';
+                }
+            },
+
+            renderMessageHTML: (msg) => {
+                const feed = document.getElementById('chat-feed');
+                if (msg.type === 'user') {
+                    feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
+                } else {
+                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
+                }
+            },
+
+            toggleSidebar: () => document.getElementById('left-panel').classList.toggle('collapsed'),
+            toggleLibrary: () => document.getElementById('right-panel').classList.toggle('collapsed'),
+            toggleModal: (id) => document.getElementById(id).style.display = 'flex',
+            closeOverlay: () => Telestrator.close(),
+
+            selectSession: async (sessId) => {
+                UI.activeSessionId = sessId;
+                const feed = document.getElementById('chat-feed');
+                feed.innerHTML = '';
+                const sessions = Store.get('sessions') || [];
+                const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
+
+                if (currentSession && currentSession.history && currentSession.history.length > 0) {
+                    currentSession.history.forEach(msg => UI.renderMessageHTML({ type: msg.role === 'model' ? 'ai' : 'user', content: msg.text }));
+                    feed.scrollTop = feed.scrollHeight;
+                } else {
+                    const mode = UI.currentMode;
+                    const icon = mode === 'self' ? '👤' : '🛡️';
+                    feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
+                }
+
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (res.ok) {
+                        const serverClips = await res.json();
+                        if (serverClips && serverClips.length > 0) {
+                            Store.set('clips', serverClips);
+                        }
+                    }
+                } catch (e) {
+                    console.log("Offline Mode: Loaded clips from Local Storage");
+                }
+                UI.renderSessionList();
+                UI.renderLibrary();
+            },
+
+            renderSessionList: () => {
+                const list = document.getElementById('session-list');
+                const sessions = Store.get('sessions') || [];
+                const modeSessions = sessions.filter(s => s.type === UI.currentMode);
+                list.innerHTML = modeSessions.map(s => {
+                    const validId = s.sessionId || s.id;
+                    return `<div class="session-item ${validId === UI.activeSessionId ? 'active' : ''}" onclick="UI.selectSession('${validId}')"><span>${s.title}</span><span style="font-size:0.7rem; color:#666;">${new Date(s.date || Date.now()).toLocaleDateString()}</span></div>`
+                }).join('');
+            },
+
+            renderLibrary: () => {
+                const list = document.getElementById('lib-grid');
+                if (!list) return;
+                list.innerHTML = '';
+                const clips = Store.get('clips') || [];
+                const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
+
+                if (sessionClips.length === 0) {
+                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
+                    return;
+                }
+
+                const folders = { 'Inbox': [] };
+                sessionClips.forEach(c => {
+                    const sec = c.section || 'Inbox';
+                    if (!folders[sec]) folders[sec] = [];
+                    folders[sec].push(c);
+                });
+
+                for (const [name, groupClips] of Object.entries(folders)) {
+                    if (groupClips.length === 0) continue;
+                    list.innerHTML += `<div class="folder-header">${name}</div>`;
+                    groupClips.forEach(c => {
+                        list.innerHTML += `
                         <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
-                            <button class="clip-menu-btn" 
-                                onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">
-                                ⋮
-                            </button>
+                            <button class="clip-menu-btn" onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">⋮</button>
                             <div class="clip-thumb-mini" style="background:#000;">
                                 ${c.thumbnailUrl ? `<img src="${c.thumbnailUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">` : '▶'}
                             </div>
@@ -2370,376 +2179,345 @@
                                 <div style="font-size:0.75rem; color:#888;">${c.formation || 'Unknown'}</div>
                             </div>
                         </div>`;
-                        });
-                    }
-                },
+                    });
+                }
+            },
 
-                showTeamStats: () => {
-                    document.getElementById('stats-modal').style.display = 'flex';
-                    setTimeout(() => { UI.refreshStats(); }, 50);
-                },
+            showTeamStats: () => {
+                document.getElementById('stats-modal').style.display = 'flex';
+                setTimeout(() => { UI.refreshStats(); }, 50);
+            },
 
-                // [FIXED] CHART ENGINE (Robust Data Checks)
-                refreshStats: () => {
-                    const getSeededRandom = (seedStr) => {
-                        let h = 0x811c9dc5;
-                        for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 0x01000193); }
-                        return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; }
-                    };
-
-                    const footballFieldPlugin = {
-                        id: 'footballField',
-                        beforeDraw: (chart) => {
-                            const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
-                            ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
-                            const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
-                            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                            ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
-                            ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                            ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
-                            for (let i = 0; i <= 100; i += 10) {
-                                const Y = y.getPixelForValue(i);
-                                ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
-                                ctx.lineWidth = (i === 0 || i === 100 || i === 50) ? 2 : 1; ctx.stroke();
-                                if (i > 0 && i < 100) {
-                                    const num = i <= 50 ? i : 100 - i;
-                                    ctx.fillText(num, x.getPixelForValue(6), Y + 4); ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
-                                }
+            refreshStats: () => {
+                const footballFieldPlugin = {
+                    id: 'footballField',
+                    beforeDraw: (chart) => {
+                        const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                        ctx.fillStyle = '#355e3b'; ctx.fillRect(left, top, width, height);
+                        const zeroY = y.getPixelForValue(0); const hundredY = y.getPixelForValue(100);
+                        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                        ctx.fillRect(left, y.getPixelForValue(-10), width, zeroY - y.getPixelForValue(-10));
+                        ctx.fillRect(left, hundredY, width, y.getPixelForValue(110) - hundredY);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'center'; ctx.font = 'bold 10px "JetBrains Mono"';
+                        for (let i = 0; i <= 100; i += 10) {
+                            const Y = y.getPixelForValue(i);
+                            ctx.beginPath(); ctx.moveTo(left, Y); ctx.lineTo(right, Y);
+                            ctx.lineWidth = (i === 0 || i === 100 || i === 50) ? 2 : 1; ctx.stroke();
+                            if (i > 0 && i < 100) {
+                                const num = i <= 50 ? i : 100 - i;
+                                ctx.fillText(num, x.getPixelForValue(6), Y + 4); ctx.fillText(num, x.getPixelForValue(47.3), Y + 4);
                             }
                         }
-                    };
+                    }
+                };
 
-                    const vectorPlugin = {
-                        id: 'vectorLines',
-                        beforeDatasetsDraw(chart) {
-                            const { ctx, scales: { x, y } } = chart;
-                            chart.data.datasets.forEach((dataset, i) => {
-                                const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
-                                dataset.data.forEach(pt => {
-                                    if (pt.pStart) {
-                                        const mapX = (val) => x.getPixelForValue((val / 100) * 53.3);
-                                        const mapY = (val) => y.getPixelForValue(val);
-                                        const flip = (v) => 100 - v; // INVERT Y
+                const vectorPlugin = {
+                    id: 'vectorLines',
+                    beforeDatasetsDraw(chart) {
+                        const { ctx, scales: { x, y } } = chart;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+                            dataset.data.forEach(pt => {
+                                if (pt.pStart) {
+                                    const mapX = (val) => x.getPixelForValue((val / 100) * 53.3);
+                                    const mapY = (val) => y.getPixelForValue(val);
+                                    const flip = (v) => 100 - v;
+                                    const startX = mapX(pt.pStart.x);
+                                    const startY = mapY(flip(pt.pStart.y));
+                                    const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
+                                    const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
+                                    const endX = mapX(pt.pEnd.x);
+                                    const endY = mapY(flip(pt.pEnd.y));
 
-                                        const startX = mapX(pt.pStart.x);
-                                        const startY = mapY(flip(pt.pStart.y));
-                                        const catchX = pt.pCatch ? mapX(pt.pCatch.x) : null;
-                                        const catchY = pt.pCatch ? mapY(flip(pt.pCatch.y)) : null;
-                                        const endX = mapX(pt.pEnd.x);
-                                        const endY = mapY(flip(pt.pEnd.y));
-
-                                        ctx.save(); ctx.lineWidth = 3;
-                                        if (pt.type === 'pass' && catchX) {
-                                            ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
-                                            ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
-                                        } else {
-                                            ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
-                                        }
-
-                                        // Manual Dots
-                                        ctx.setLineDash([]);
-                                        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(startX, startY, 4, 0, Math.PI * 2); ctx.fill();
-                                        ctx.fillStyle = pt.type === 'pass' ? '#ef4444' : '#f59e0b'; ctx.beginPath(); ctx.rect(endX - 3, endY - 3, 6, 6); ctx.fill();
-
-                                        ctx.restore();
+                                    ctx.save(); ctx.lineWidth = 3;
+                                    if (pt.type === 'pass' && catchX) {
+                                        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(catchX, catchY); ctx.stroke();
+                                        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(catchX, catchY); ctx.lineTo(endX, endY); ctx.stroke();
+                                    } else {
+                                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
                                     }
-                                });
+                                    ctx.setLineDash([]);
+                                    ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(startX, startY, 4, 0, Math.PI * 2); ctx.fill();
+                                    ctx.fillStyle = pt.type === 'pass' ? '#ef4444' : '#f59e0b'; ctx.beginPath(); ctx.rect(endX - 3, endY - 3, 6, 6); ctx.fill();
+                                    ctx.restore();
+                                }
                             });
-                        }
-                    };
-
-                    const allClips = Store.get('clips') || [];
-                    const clips = allClips.filter(c => c.fullData?.data?.situation);
-
-                    ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
-                        const el = document.getElementById(id); if (Chart.getChart(el)) Chart.getChart(el).destroy();
-                    });
-
-                    if (clips.length === 0) return;
-
-                    const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
-                    const passShots = [], runShots = [];
-
-                    clips.forEach(c => {
-                        const d = c.fullData;
-                        const sit = d.data.situation || {};
-                        const off = d.data.o_formation || c.formation || "Unknown";
-                        const def = d.data.d_formation || "Unknown";
-                        const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
-
-                        offForms[off] = (offForms[off] || 0) + 1;
-                        defForms[def] = (defForms[def] || 0) + 1;
-                        if (!matrix[off]) matrix[off] = {}; if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
-                        matrix[off][def].p++; if (isSuccess) matrix[off][def].s++;
-                        if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if (isSuccess) coverSuccess[def].s++;
-
-                        let concept = d.tactical_breakdown?.concept || "Unknown";
-                        if (concept.length > 15) concept = concept.substring(0, 15) + "..";
-                        concepts[concept] = (concepts[concept] || 0) + 1;
-
-                        // [FIX] Validates against undefined/null, but allows 0
-                        if (sit.plot_startX !== undefined && sit.plot_startX !== null) {
-                            const shot = {
-                                type: sit.play_type || 'pass',
-                                // Pass RAW data. vectorPlugin handles the flip.
-                                pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
-                                pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
-                                pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
-                                clipId: c._id || c.id
-                            };
-                            const displayX = (shot.pEnd.x / 100) * 53.3;
-                            const displayY = 100 - shot.pEnd.y;
-
-                            if (shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
-                            else passShots.push({ x: displayX, y: displayY, ...shot });
-                        }
-                    });
-
-                    const renderBar = (id, data, color) => {
-                        const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
-                        new Chart(document.getElementById(id), {
-                            type: 'bar', indexAxis: 'y',
-                            data: { labels, datasets: [{ data: labels.map(k => data[k]), backgroundColor: color, borderRadius: 4 }] },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } }
                         });
-                    };
-                    renderBar('chart-off-form', offForms, '#38bdf8');
-                    renderBar('chart-def-form', defForms, '#ef4444');
-                    renderBar('chart-conflict', concepts, '#8b5cf6');
-
-                    const covL = Object.keys(coverSuccess);
-                    const covD = covL.map(k => Math.round((coverSuccess[k].s / coverSuccess[k].p) * 100));
-                    new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v => v > 50 ? '#10b981' : '#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
-
-                    const table = document.getElementById('efficiency-table');
-                    table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if (!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s / c.p) * 100); const col = p > 50 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p > 50 ? '#34d399' : '#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
-
-                    // [FIX] radius: 0 hides default dots
-                    const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if (els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if (pt.clipId) { UI.playClip(pt.clipId); } } } };
-
-                    new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-                    new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
-                },
-
-                // [FIXED] TOGGLE PANEL (Loads Plotter Data Correctly)
-                toggleContextPanel: (show) => {
-                    const panel = document.getElementById('context-side-panel');
-                    if (show) {
-                        const targetId = UI.overlayClipId;
-                        if (!targetId) { alert("No clip active."); return; }
-
-                        const clips = Store.get('clips') || [];
-                        const clip = clips.find(c => (c._id || c.id) === targetId);
-                        if (!clip) return;
-
-                        // 1. Initialize Plotter Canvas
-                        Plotter.init();
-
-                        document.getElementById('edit-clip-id').value = targetId;
-                        const s = clip.fullData?.data?.situation || {};
-
-                        UI.setPlayType(s.play_type || 'pass');
-                        document.getElementById('edit-down').value = s.down || 1;
-                        document.getElementById('edit-togo').value = s.distance_togo || 10;
-
-                        // 2. Load Plotter Drawing
-                        // We check if data exists and is valid number
-                        if (s.plot_startX !== undefined && s.plot_startX !== null) {
-                            Plotter.load({
-                                startX: parseFloat(s.plot_startX),
-                                startY: parseFloat(s.plot_startY),
-                                catchX: parseFloat(s.plot_catchX),
-                                catchY: parseFloat(s.plot_catchY),
-                                endX: parseFloat(s.plot_endX),
-                                endY: parseFloat(s.plot_endY)
-                            });
-                        } else {
-                            Plotter.reset(); // Clear if no data
-                        }
-
-                        panel.style.display = 'flex';
-                    } else {
-                        panel.style.display = 'none';
                     }
-                },
+                };
 
-                setEditVal: (field, val) => {
-                    document.getElementById(`edit-${field}`).value = val;
-                    // Helper for button classes if needed
-                },
+                const allClips = Store.get('clips') || [];
+                const clips = allClips.filter(c => c.fullData?.data?.situation);
 
-                // [FIXED] SAVE CONTEXT (Ensures Numbers & Coordinates)
-                saveContext: async () => {
-                    const id = document.getElementById('edit-clip-id').value;
-                    const type = document.getElementById('edit-type').value;
-                    const down = Number(document.getElementById('edit-down').value);
-                    const togo = Number(document.getElementById('edit-togo').value);
+                ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
+                    const el = document.getElementById(id); if (Chart.getChart(el)) Chart.getChart(el).destroy();
+                });
 
-                    // 1. Grab Plotter Data Safely
-                    // We use Number() to fix the "string" issue
-                    const p = {
-                        startX: Number(document.getElementById('edit-start-x').value),
-                        startY: Number(document.getElementById('edit-start-y').value),
-                        catchX: Number(document.getElementById('edit-catch-x').value),
-                        catchY: Number(document.getElementById('edit-catch-y').value),
-                        endX: Number(document.getElementById('edit-end-x').value),
-                        endY: Number(document.getElementById('edit-end-y').value)
-                    };
+                if (clips.length === 0) return;
 
-                    const clips = Store.get('clips') || [];
-                    const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+                const offForms = {}, defForms = {}, concepts = {}, coverSuccess = {}, matrix = {};
+                const passShots = [], runShots = [];
 
-                    if (clipIndex > -1) {
-                        if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
-                        if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+                clips.forEach(c => {
+                    const d = c.fullData;
+                    const sit = d.data.situation || {};
+                    const off = d.data.o_formation || c.formation || "Unknown";
+                    const def = d.data.d_formation || "Unknown";
+                    const isSuccess = UI.gradeToNum(d.scouting_report?.report_card?.overall) >= 2.7;
 
-                        const newSituation = {
-                            play_type: type,
-                            down: parseInt(down) || 1,
-                            distance_togo: parseInt(togo) || 10,
-                            // Save the Plotter Coordinates
-                            plot_startX: p.startX, plot_startY: p.startY,
-                            plot_catchX: p.catchX, plot_catchY: p.catchY,
-                            plot_endX: p.endX, plot_endY: p.endY
+                    offForms[off] = (offForms[off] || 0) + 1;
+                    defForms[def] = (defForms[def] || 0) + 1;
+                    if (!matrix[off]) matrix[off] = {}; if (!matrix[off][def]) matrix[off][def] = { p: 0, s: 0 };
+                    matrix[off][def].p++; if (isSuccess) matrix[off][def].s++;
+                    if (!coverSuccess[def]) coverSuccess[def] = { p: 0, s: 0 }; coverSuccess[def].p++; if (isSuccess) coverSuccess[def].s++;
+
+                    let concept = d.tactical_breakdown?.concept || "Unknown";
+                    if (concept.length > 15) concept = concept.substring(0, 15) + "..";
+                    concepts[concept] = (concepts[concept] || 0) + 1;
+
+                    if (sit.plot_startX !== undefined && sit.plot_startX !== null) {
+                        const shot = {
+                            type: sit.play_type || 'pass',
+                            pStart: { x: parseFloat(sit.plot_startX), y: parseFloat(sit.plot_startY) },
+                            pEnd: { x: parseFloat(sit.plot_endX), y: parseFloat(sit.plot_endY) },
+                            pCatch: sit.plot_catchX ? { x: parseFloat(sit.plot_catchX), y: parseFloat(sit.plot_catchY) } : null,
+                            clipId: c._id || c.id
                         };
-
-                        // 2. Save Locally Immediately
-                        clips[clipIndex].fullData.data.situation = newSituation;
-                        Store.set('clips', clips);
-
-                        // 3. Try Saving to Server (Ignore errors if offline)
-                        try {
-                            const token = await window.Clerk.session.getToken();
-                            await fetch('/api/update-clip-data', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({
-                                    clipId: id,
-                                    title: clips[clipIndex].title,
-                                    situation: newSituation,
-                                    summary: clips[clipIndex].fullData.scouting_report?.summary
-                                })
-                            });
-                        } catch (e) { console.log("Saved locally"); }
-
-                        UI.refreshStats();
-                        UI.toggleContextPanel(false);
+                        const displayX = (shot.pEnd.x / 100) * 53.3;
+                        const displayY = 100 - shot.pEnd.y;
+                        if (shot.type === 'run') runShots.push({ x: displayX, y: displayY, ...shot });
+                        else passShots.push({ x: displayX, y: displayY, ...shot });
                     }
-                },
+                });
 
-                // Standard functions kept same
-                openContextEditor: () => { UI.toggleContextPanel(true); },
-                toggleMirror: () => { /* Deprecated by Plotter, but kept for safe API */ },
-                playClip: (id) => {
+                const renderBar = (id, data, color) => {
+                    const labels = Object.keys(data).sort((a, b) => data[b] - data[a]);
+                    new Chart(document.getElementById(id), {
+                        type: 'bar', indexAxis: 'y',
+                        data: { labels, datasets: [{ data: labels.map(k => data[k]), backgroundColor: color, borderRadius: 4 }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#333' } }, y: { grid: { display: false }, ticks: { color: 'white' } } } }
+                    });
+                };
+                renderBar('chart-off-form', offForms, '#38bdf8');
+                renderBar('chart-def-form', defForms, '#ef4444');
+                renderBar('chart-conflict', concepts, '#8b5cf6');
+
+                const covL = Object.keys(coverSuccess);
+                const covD = covL.map(k => Math.round((coverSuccess[k].s / coverSuccess[k].p) * 100));
+                new Chart(document.getElementById('chart-coverage'), { type: 'bar', indexAxis: 'y', data: { labels: covL, datasets: [{ data: covD, backgroundColor: covD.map(v => v > 50 ? '#10b981' : '#ef4444') }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 }, y: { ticks: { color: 'white' } } } } });
+
+                const table = document.getElementById('efficiency-table');
+                table.innerHTML = `<thead><tr><th>O / D</th>${Object.keys(defForms).map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>` + Object.keys(matrix).map(off => `<tr><td><strong style="color:white;">${off}</strong></td>` + Object.keys(defForms).map(def => { const c = matrix[off][def]; if (!c) return `<td><span style="color:#444;">-</span></td>`; const p = Math.round((c.s / c.p) * 100); const col = p > 50 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'; return `<td><div class="heat-cell" style="background:${col}; color:${p > 50 ? '#34d399' : '#f87171'};">${p}%</div></td>`; }).join('') + '</tr>').join('') + '</tbody>';
+
+                const opts = { responsive: true, maintainAspectRatio: false, scales: { x: { display: false, min: 0, max: 53.3 }, y: { display: false, min: -10, max: 110 } }, plugins: { legend: { display: false } }, onClick: (e, els, chart) => { if (els.length) { const pt = chart.data.datasets[els[0].datasetIndex].data[els[0].index]; if (pt.clipId) { UI.playClip(pt.clipId); } } } };
+
+                new Chart(document.getElementById('chart-field-pass'), { type: 'scatter', data: { datasets: [{ label: 'Pass', data: passShots, pointStyle: 'circle', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+                new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
+            },
+
+            toggleContextPanel: (show) => {
+                const panel = document.getElementById('context-side-panel');
+                if (show) {
+                    const targetId = UI.overlayClipId;
+                    if (!targetId) { alert("No clip active."); return; }
                     const clips = Store.get('clips') || [];
-                    const clip = clips.find(c => (c._id || c.id) === id);
+                    const clip = clips.find(c => (c._id || c.id) === targetId);
                     if (!clip) return;
-                    UI.overlayClipId = clip._id || clip.id;
 
-                    const reportContainer = document.getElementById('report-injection-site');
-                    if (reportContainer) {
-                        if (clip.fullData) {
-                            const scoutData = {
-                                id: clip._id, title: clip.title, formation: clip.formation,
-                                grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
-                                iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
-                                tech: clip.fullData.scouting_report?.report_card?.technique || "-",
-                                effort: clip.fullData.scouting_report?.report_card?.effort || "-",
-                                summary: clip.fullData.scouting_report?.summary || "No summary available.",
-                                fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
-                            };
-                            reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
-                        } else {
-                            reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
-                        }
+                    Plotter.init();
+                    document.getElementById('edit-clip-id').value = targetId;
+                    const s = clip.fullData?.data?.situation || {};
+                    UI.setPlayType(s.play_type || 'pass');
+                    document.getElementById('edit-down').value = s.down || 1;
+                    document.getElementById('edit-togo').value = s.distance_togo || 10;
+
+                    if (s.plot_startX !== undefined && s.plot_startX !== null) {
+                        Plotter.load({
+                            startX: parseFloat(s.plot_startX),
+                            startY: parseFloat(s.plot_startY),
+                            catchX: parseFloat(s.plot_catchX),
+                            catchY: parseFloat(s.plot_catchY),
+                            endX: parseFloat(s.plot_endX),
+                            endY: parseFloat(s.plot_endY)
+                        });
+                    } else {
+                        Plotter.reset();
                     }
-                    Telestrator.init(clip.videoUrl);
-                },
-                handleOverlayChat: async () => {
-                    const input = document.getElementById('overlay-chat-input');
-                    const history = document.getElementById('overlay-chat-history');
-                    const txt = input.value;
-                    if (!txt || !UI.overlayClipId) return;
-                    history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
-                    input.value = ''; history.scrollTop = history.scrollHeight;
+                    panel.style.display = 'flex';
+                } else {
+                    panel.style.display = 'none';
+                }
+            },
 
-                    const loadingId = 'thinking_' + Date.now();
-                    history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
-                    history.scrollTop = history.scrollHeight;
+            setEditVal: (field, val) => {
+                document.getElementById(`edit-${field}`).value = val;
+            },
+
+            saveContext: async () => {
+                const id = document.getElementById('edit-clip-id').value;
+                const type = document.getElementById('edit-type').value;
+                const down = Number(document.getElementById('edit-down').value);
+                const togo = Number(document.getElementById('edit-togo').value);
+
+                const p = {
+                    startX: Number(document.getElementById('edit-start-x').value),
+                    startY: Number(document.getElementById('edit-start-y').value),
+                    catchX: Number(document.getElementById('edit-catch-x').value),
+                    catchY: Number(document.getElementById('edit-catch-y').value),
+                    endX: Number(document.getElementById('edit-end-x').value),
+                    endY: Number(document.getElementById('edit-end-y').value)
+                };
+
+                const clips = Store.get('clips') || [];
+                const clipIndex = clips.findIndex(c => (c._id || c.id) === id);
+
+                if (clipIndex > -1) {
+                    if (!clips[clipIndex].fullData) clips[clipIndex].fullData = { data: {} };
+                    if (!clips[clipIndex].fullData.data) clips[clipIndex].fullData.data = {};
+
+                    const newSituation = {
+                        play_type: type,
+                        down: parseInt(down) || 1,
+                        distance_togo: parseInt(togo) || 10,
+                        plot_startX: p.startX, plot_startY: p.startY,
+                        plot_catchX: p.catchX, plot_catchY: p.catchY,
+                        plot_endX: p.endX, plot_endY: p.endY
+                    };
+
+                    clips[clipIndex].fullData.data.situation = newSituation;
+                    Store.set('clips', clips);
 
                     try {
                         const token = await window.Clerk.session.getToken();
-                        const res = await fetch('/api/clip-chat', {
+                        await fetch('/api/update-clip-data', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                            body: JSON.stringify({
+                                clipId: id,
+                                title: clips[clipIndex].title,
+                                situation: newSituation,
+                                summary: clips[clipIndex].fullData.scouting_report?.summary
+                            })
                         });
-                        const data = await res.json();
-                        const loader = document.getElementById(loadingId);
-                        if (loader) loader.remove();
-                        if (!res.ok) throw new Error(data.error || "Server Error");
-                        const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
-                    } catch (e) {
-                        const loader = document.getElementById(loadingId); if (loader) loader.remove();
-                        history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
+                    } catch (e) { console.log("Saved locally"); }
+
+                    UI.refreshStats();
+                    UI.toggleContextPanel(false);
+                }
+            },
+
+            openContextEditor: () => { UI.toggleContextPanel(true); },
+            toggleMirror: () => { },
+            playClip: (id) => {
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === id);
+                if (!clip) return;
+                UI.overlayClipId = clip._id || clip.id;
+
+                const reportContainer = document.getElementById('report-injection-site');
+                if (reportContainer) {
+                    if (clip.fullData) {
+                        const scoutData = {
+                            id: clip._id, title: clip.title, formation: clip.formation,
+                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided."
+                        };
+                        reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
+                    } else {
+                        reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
                     }
-                    history.scrollTop = history.scrollHeight;
-                },
-                handleSend: async () => {
-                    const input = document.getElementById('user-input');
-                    const fileInput = document.getElementById('file-input');
-                    const feed = document.getElementById('chat-feed');
+                }
+                Telestrator.init(clip.videoUrl);
+            },
+            handleOverlayChat: async () => {
+                const input = document.getElementById('overlay-chat-input');
+                const history = document.getElementById('overlay-chat-history');
+                const txt = input.value;
+                if (!txt || !UI.overlayClipId) return;
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${txt}</div>`;
+                input.value = ''; history.scrollTop = history.scrollHeight;
 
-                    if (!input.value && !fileInput.files.length) return;
-                    if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
-                    if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
+                const loadingId = 'thinking_' + Date.now();
+                history.innerHTML += `<div id="${loadingId}" style="align-self:flex-start; background:#222; border:1px solid var(--border); padding:12px; border-radius:8px; max-width:80%; margin-bottom:10px;"><div style="font-size:0.75rem; color:#888; margin-bottom:4px;">Coach AI is thinking...</div><div class="thinking-bar"></div></div>`;
+                history.scrollTop = history.scrollHeight;
 
-                    const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                    const sessions = Store.get('sessions');
-                    const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                    if (sessIdx > -1) {
-                        if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
-                        sessions[sessIdx].history.push({ role: 'user', text: userText });
-                        Store.set('sessions', sessions);
-                    }
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/clip-chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ message: txt, clipId: UI.overlayClipId })
+                    });
+                    const data = await res.json();
+                    const loader = document.getElementById(loadingId);
+                    if (loader) loader.remove();
+                    if (!res.ok) throw new Error(data.error || "Server Error");
+                    const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
+                } catch (e) {
+                    const loader = document.getElementById(loadingId); if (loader) loader.remove();
+                    history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
+                }
+                history.scrollTop = history.scrollHeight;
+            },
+            handleSend: async () => {
+                const input = document.getElementById('user-input');
+                const fileInput = document.getElementById('file-input');
+                const feed = document.getElementById('chat-feed');
 
-                    UI.renderMessageHTML({ type: 'user', content: userText });
-                    input.value = '';
-                    const file = fileInput.files[0];
-                    fileInput.value = '';
-                    document.getElementById('file-btn').innerHTML = '📎 Upload Film';
-                    document.getElementById('file-btn').style.background = '#222';
-                    document.getElementById('file-btn').style.color = '#ccc';
+                if (!input.value && !fileInput.files.length) return;
+                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
+                if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
 
-                    const loadId = 'load_' + Date.now();
-                    feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
-                    feed.scrollTop = feed.scrollHeight;
+                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
+                const sessions = Store.get('sessions');
+                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if (sessIdx > -1) {
+                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
+                    sessions[sessIdx].history.push({ role: 'user', text: userText });
+                    Store.set('sessions', sessions);
+                }
 
-                    const res = await CoachAI.analyze(userText, file);
-                    document.getElementById(loadId).remove();
+                UI.renderMessageHTML({ type: 'user', content: userText });
+                input.value = '';
+                const file = fileInput.files[0];
+                fileInput.value = '';
+                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
+                document.getElementById('file-btn').style.background = '#222';
+                document.getElementById('file-btn').style.color = '#ccc';
 
-                    let aiContent = res.text;
-                    if (res.type === 'card') {
-                        UI.renderLibrary();
-                        aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
-                    }
+                const loadId = 'load_' + Date.now();
+                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
+                feed.scrollTop = feed.scrollHeight;
 
-                    const sessions2 = Store.get('sessions');
-                    const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                    if (sessIdx2 > -1) {
-                        sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
-                        Store.set('sessions', sessions2);
-                    }
+                const res = await CoachAI.analyze(userText, file);
+                document.getElementById(loadId).remove();
 
-                    feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
-                    feed.scrollTop = feed.scrollHeight;
-                },
-                buildScoutCardHTML: (data, isChatPreview = false) => {
-                    const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
-                    const cursor = isChatPreview ? 'cursor:pointer;' : '';
-                    return `
+                let aiContent = res.text;
+                if (res.type === 'card') {
+                    UI.renderLibrary();
+                    aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
+                }
+
+                const sessions2 = Store.get('sessions');
+                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if (sessIdx2 > -1) {
+                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
+                    Store.set('sessions', sessions2);
+                }
+
+                feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
+                feed.scrollTop = feed.scrollHeight;
+            },
+            buildScoutCardHTML: (data, isChatPreview = false) => {
+                const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
+                const cursor = isChatPreview ? 'cursor:pointer;' : '';
+                return `
                 <div class="scout-card" style="${cursor}" ${onclick}>
                     <div class="scout-header">
                         <div>
@@ -2766,386 +2544,351 @@
                         </div>
                     </div>
                 </div>`;
-                }
-            };
-            /**
-                     * 5. PLAYBOOK ENGINE (The Architect)
-                     */
-            /**
-             * 5. PLAYBOOK ENGINE (The Intelligent Design Lab)
-             * Now connected to the Database & AI
-             */
-            const Playbook = {
-                canvas: null,
-                ctx: null,
-                elements: [], // Stores players {x, y, label, type}
-                activePlayId: null, // The Play ID being edited
-                isDragging: false,
-                dragTarget: null,
+            }
+        };
 
-                init: async () => {
-                    // ON LOAD: Fetch plays from the database, not just local storage
-                    await Playbook.loadLibrary();
-                },
+        const Playbook = {
+            canvas: null,
+            ctx: null,
+            elements: [],
+            activePlayId: null,
+            isDragging: false,
+            dragTarget: null,
 
-                // --- A. DATA SYNC (The "Cloud" Connection) ---
+            init: async () => {
+                await Playbook.loadLibrary();
+            },
 
-                loadLibrary: async () => {
-                    try {
-                        const token = await window.Clerk.session.getToken();
-                        const res = await fetch('/api/get-plays', {
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        
-                        if (res.ok) {
-                            const plays = await res.json();
-                            Store.set('playbook', plays); // Update local store with cloud data
-                            Playbook.renderGrid();
-                        }
-                    } catch (e) {
-                        console.log("Offline Mode: Loading local plays only.");
+            loadLibrary: async () => {
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/get-plays', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (res.ok) {
+                        const plays = await res.json();
+                        Store.set('playbook', plays);
                         Playbook.renderGrid();
                     }
-                },
-
-                savePlay: async () => {
-                    const name = document.getElementById('play-name').value || "Untitled Concept";
-                    const linkedSessionId = UI.activeSessionId;
-
-                    // 1. RUN THE TRANSLATOR (Make the AI "See" the formation)
-                    const formationData = Playbook.generateFormationReport();
-
-                    const payload = {
-                        playId: Playbook.activePlayId || 'play_' + Date.now(),
-                        title: name,
-                        elements: Playbook.elements,
-                        linkedSessionId: linkedSessionId,
-                        aiAnalysis: {
-                            formation: formationData.name,
-                            summary: formationData.details
-                        }
-                    };
-
-                    // 2. Optimistic Update (Show it instantly)
-                    const plays = Store.get('playbook') || [];
-                    const existingIdx = plays.findIndex(p => p.playId === payload.playId);
-                    if (existingIdx > -1) plays[existingIdx] = payload;
-                    else plays.unshift(payload);
-                    Store.set('playbook', plays);
+                } catch (e) {
+                    console.log("Offline Mode: Loading local plays only.");
                     Playbook.renderGrid();
-                    document.getElementById('designer-modal').style.display = 'none';
+                }
+            },
 
-                    // 3. Send to Database
+            savePlay: async () => {
+                const name = document.getElementById('play-name').value || "Untitled Concept";
+                const linkedSessionId = UI.activeSessionId;
+                const formationData = Playbook.generateFormationReport();
+
+                const payload = {
+                    playId: Playbook.activePlayId || 'play_' + Date.now(),
+                    title: name,
+                    elements: Playbook.elements,
+                    linkedSessionId: linkedSessionId,
+                    aiAnalysis: {
+                        formation: formationData.name,
+                        summary: formationData.details
+                    }
+                };
+
+                const plays = Store.get('playbook') || [];
+                const existingIdx = plays.findIndex(p => p.playId === payload.playId);
+                if (existingIdx > -1) plays[existingIdx] = payload;
+                else plays.unshift(payload);
+                Store.set('playbook', plays);
+                Playbook.renderGrid();
+                document.getElementById('designer-modal').style.display = 'none';
+
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    await fetch('/api/save-play', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log("✅ Play Saved to Cloud");
+                    Playbook.loadLibrary();
+                } catch (e) {
+                    console.error("Save Failed:", e);
+                    alert("Saved locally, but sync failed.");
+                }
+            },
+
+            generateFormationReport: () => {
+                const center = Playbook.elements.find(el => el.label === 'C');
+                if (!center) return { name: "Unclear", details: "No Center found." };
+
+                const midLine = center.x;
+                let left = 0, right = 0, backfield = 0;
+
+                Playbook.elements.forEach(el => {
+                    if (el.label === 'C' || el.label === 'Q') return;
+                    if (el.y > center.y + 30) backfield++; 
+                    else if (el.x < midLine - 20) left++;
+                    else if (el.x > midLine + 20) right++;
+                });
+
+                let name = "Custom";
+                if (backfield === 1) name = "Singleback";
+                if (backfield === 0) name = "Empty";
+                if (left === 2 && right === 2) name = "2x2 Spread";
+                if (left === 3 && right === 1) name = "3x1 Trips Left";
+                if (left === 1 && right === 3) name = "3x1 Trips Right";
+
+                return { 
+                    name: name, 
+                    details: `${name} (${left}x${right} alignment with ${backfield} back).` 
+                };
+            },
+
+            openDesigner: (playId = null) => {
+                Playbook.activePlayId = playId;
+                const modal = document.getElementById('designer-modal');
+                modal.style.display = 'flex';
+
+                const chatHistory = document.getElementById('designer-chat-history');
+                if(chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
+
+                setTimeout(() => {
+                    const container = document.getElementById('designer-container');
+                    Playbook.canvas = document.getElementById('designer-canvas');
+                    Playbook.canvas.width = container.clientWidth;
+                    Playbook.canvas.height = container.clientHeight;
+                    Playbook.ctx = Playbook.canvas.getContext('2d');
+
+                    Playbook.canvas.onmousedown = Playbook.handleStart;
+                    Playbook.canvas.onmousemove = Playbook.handleMove;
+                    Playbook.canvas.onmouseup = Playbook.handleEnd;
+
+                    const plays = Store.get('playbook') || [];
+                    const savedPlay = plays.find(p => (p.playId || p.id) === playId);
+
+                    if (savedPlay) {
+                        document.getElementById('play-name').value = savedPlay.title;
+                        Playbook.elements = savedPlay.elements || [];
+                    } else {
+                        document.getElementById('play-name').value = "";
+                        Playbook.elements = [];
+                        const w = Playbook.canvas.width;
+                        const h = Playbook.canvas.height;
+                        const c = w / 2;
+                        const los = h * 0.7;
+                        ['C','G','G','T','T'].forEach((p, i) => Playbook.elements.push({ type:'O', label:p, x: c + (i-2)*35, y: los }));
+                        Playbook.elements.push({ type:'O', label:'Q', x: c, y: los + 40 });
+                        Playbook.elements.push({ type:'O', label:'R', x: c - 50, y: los + 40 });
+                        Playbook.elements.push({ type:'O', label:'X', x: 60, y: los });
+                        Playbook.elements.push({ type:'O', label:'Z', x: w - 60, y: los });
+                        Playbook.elements.push({ type:'O', label:'Y', x: c - 110, y: los });
+                        Playbook.elements.push({ type:'O', label:'H', x: c + 110, y: los });
+                    }
+                    Playbook.drawAll();
+                }, 100);
+            },
+
+            renderGrid: () => {
+                const grid = document.getElementById('playbook-grid');
+                if(!grid) return;
+                const plays = Store.get('playbook') || [];
+
+                if (plays.length === 0) {
+                    grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
+                    return;
+                }
+
+                grid.innerHTML = plays.map(p => `
+                    <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.playId || p.id}')">
+                        <div class="scout-header">
+                            <div>
+                                <div class="play-title">${p.title}</div>
+                                <div style="font-size:0.7rem; color:#666;">${p.aiAnalysis ? p.aiAnalysis.formation : 'Unknown Formation'}</div>
+                            </div>
+                            ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
+                        </div>
+                        <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
+                            ${p.elements.map(el => `<div style="position:absolute; left:${el.x/10}%; top:${el.y/10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            clearCanvas: () => Playbook.openDesigner(),
+
+            handleStart: (e) => {
+                const rect = Playbook.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                Playbook.dragTarget = Playbook.elements.find(el => {
+                    const dx = el.x - x; const dy = el.y - y;
+                    return Math.sqrt(dx * dx + dy * dy) < 20; 
+                });
+                if (Playbook.dragTarget) Playbook.isDragging = true;
+            },
+
+            handleMove: (e) => {
+                if (!Playbook.isDragging || !Playbook.dragTarget) return;
+                const rect = Playbook.canvas.getBoundingClientRect();
+                Playbook.dragTarget.x = e.clientX - rect.left;
+                Playbook.dragTarget.y = e.clientY - rect.top;
+                Playbook.drawAll();
+            },
+
+            handleEnd: () => { Playbook.isDragging = false; Playbook.dragTarget = null; },
+
+            drawField: () => {
+                const ctx = Playbook.ctx;
+                const w = Playbook.canvas.width;
+                const h = Playbook.canvas.height;
+                ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
+                ctx.stroke();
+            },
+
+            drawAll: () => {
+                Playbook.drawField();
+                const ctx = Playbook.ctx;
+                Playbook.elements.forEach(el => {
+                    ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white'; ctx.fill();
+                    ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
+                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(el.label, el.x, el.y);
+                });
+            },
+
+            getLinkedContext: (playId) => {
+                const plays = Store.get('playbook') || [];
+                const play = plays.find(p => (p.playId || p.id) === playId);
+                
+                if (play && play.linkedSessionId) {
+                    const sessions = Store.get('sessions') || [];
+                    const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
+                    
+                    if (!contextSession) return null;
+
+                    const relevantHistory = contextSession.history
+                        .filter(msg => msg.role === 'model')
+                        .slice(-5)
+                        .map(m => m.text)
+                        .join("\n- ");
+
+                    return {
+                        title: contextSession.title,
+                        notes: relevantHistory || "No tactical notes yet."
+                    };
+                }
+                return null;
+            },
+
+            handleChalkTalk: async () => {
+                const input = document.getElementById('designer-chat-input');
+                const history = document.getElementById('designer-chat-history');
+                const msg = input.value;
+                if(!msg) return;
+
+                if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:600;">${msg}</div>`;
+                input.value = '';
+                history.innerHTML += `<div id="chalk-loading" style="color:#888; font-size:0.75rem; margin-top:4px; font-style:italic;">Scanning formation & checking film notes...</div>`;
+                history.scrollTop = history.scrollHeight;
+
+                const formationIntel = Playbook.generateFormationReport();
+                const sessionIntel = Playbook.getLinkedContext(Playbook.activePlayId);
+                
+                let systemContext = `
+                    ROLE: Offensive Quality Control Coach.
+                    TASK: Validate this play design against specific game film intel.
+                    
+                    CURRENT DRAWING (The Canvas):
+                    Formation: ${formationIntel.name}
+                    Details: ${formationIntel.details}
+
+                    LINKED GAME FILM (The Memory):
+                    Session Name: ${sessionIntel ? sessionIntel.title : "None"}
+                    Key Scouting Notes: 
+                    ${sessionIntel ? sessionIntel.notes : "No prior film analysis linked."}
+                `;
+
+                try {
+                    const response = await CoachAI.analyze(`${systemContext}\n\nUSER QUESTION: ${msg}`, null);
+                    if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                    history.innerHTML += `<div style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#e4e4e7; font-size:0.85rem; margin-bottom:12px;">
+                        <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach AI:</strong> 
+                        ${response.text}
+                    </div>`;
+                } catch (e) {
+                    if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
+                    history.innerHTML += `<div style="color:red; font-size:0.8rem;">Error connecting to Coach AI.</div>`;
+                }
+                history.scrollTop = history.scrollHeight;
+            }
+        };
+
+        const App = {
+            init: () => {
+                let attempts = 0;
+                const checkAuth = setInterval(() => {
+                    attempts++;
+                    if (window.Clerk) {
+                        clearInterval(checkAuth);
+                        Clerk.load()
+                            .then(() => {
+                                if (!Clerk.user) {
+                                    Clerk.mountSignIn(document.getElementById('sign-in'));
+                                } else {
+                                    document.getElementById('auth-modal').style.display = 'none';
+                                    Clerk.mountUserButton(document.getElementById('user-button'));
+                                    UI.init();
+                                    Playbook.init(); 
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Clerk Auth Failed:", err);
+                                document.getElementById('auth-modal').style.display = 'none';
+                                UI.init();
+                                Playbook.init(); 
+                            });
+                    } else if (attempts > 10) {
+                        clearInterval(checkAuth);
+                        console.warn("Clerk timeout - forcing init");
+                        document.getElementById('auth-modal').style.display = 'none';
+                        UI.init();
+                        Playbook.init(); 
+                    }
+                }, 300);
+            },
+            createNewSession: async () => {
+                const title = prompt("New Session Name:");
+                if (title) {
                     try {
                         const token = await window.Clerk.session.getToken();
-                        await fetch('/api/save-play', {
+                        const res = await fetch('/api/create-session', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify(payload)
+                            body: JSON.stringify({ title, type: UI.currentMode })
                         });
-                        console.log("✅ Play Saved to Cloud");
-                        Playbook.loadLibrary(); // Sync to be sure
-                    } catch (e) {
-                        console.error("Save Failed:", e);
-                        alert("Saved locally, but sync failed.");
-                    }
-                },
-
-                // --- B. THE SMART TRANSLATOR (Spatial Awareness) ---
-                
-                generateFormationReport: () => {
-                    const center = Playbook.elements.find(el => el.label === 'C');
-                    if (!center) return { name: "Unclear", details: "No Center found." };
-
-                    const midLine = center.x;
-                    let left = 0, right = 0, backfield = 0;
-
-                    Playbook.elements.forEach(el => {
-                        if (el.label === 'C' || el.label === 'Q') return;
-                        // Behind the QB/Center?
-                        if (el.y > center.y + 30) backfield++; 
-                        // Left or Right?
-                        else if (el.x < midLine - 20) left++;
-                        else if (el.x > midLine + 20) right++;
-                    });
-
-                    // Basic Logic Engine
-                    let name = "Custom";
-                    if (backfield === 1) name = "Singleback";
-                    if (backfield === 0) name = "Empty";
-                    if (left === 2 && right === 2) name = "2x2 Spread";
-                    if (left === 3 && right === 1) name = "3x1 Trips Left";
-                    if (left === 1 && right === 3) name = "3x1 Trips Right";
-
-                    return { 
-                        name: name, 
-                        details: `${name} (${left}x${right} alignment with ${backfield} back).` 
-                    };
-                },
-
-                // --- C. STANDARD DESIGNER FUNCTIONS (Drawing, Grid, Interaction) ---
-
-                openDesigner: (playId = null) => {
-                    Playbook.activePlayId = playId;
-                    const modal = document.getElementById('designer-modal');
-                    modal.style.display = 'flex';
-
-                    // Clear Chat
-                    const chatHistory = document.getElementById('designer-chat-history');
-                    if(chatHistory) chatHistory.innerHTML = '<div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">Linking to Analysis intel...</div>';
-
-                    setTimeout(() => {
-                        const container = document.getElementById('designer-container');
-                        Playbook.canvas = document.getElementById('designer-canvas');
-                        Playbook.canvas.width = container.clientWidth;
-                        Playbook.canvas.height = container.clientHeight;
-                        Playbook.ctx = Playbook.canvas.getContext('2d');
-
-                        Playbook.canvas.onmousedown = Playbook.handleStart;
-                        Playbook.canvas.onmousemove = Playbook.handleMove;
-                        Playbook.canvas.onmouseup = Playbook.handleEnd;
-
-                        const plays = Store.get('playbook') || [];
-                        // Note: Our DB schema uses "playId", but local might use "id". We check both.
-                        const savedPlay = plays.find(p => (p.playId || p.id) === playId);
-
-                        if (savedPlay) {
-                            document.getElementById('play-name').value = savedPlay.title;
-                            Playbook.elements = savedPlay.elements || [];
-                        } else {
-                            // Default 11-Man Formation
-                            document.getElementById('play-name').value = "";
-                            Playbook.elements = [];
-                            const w = Playbook.canvas.width;
-                            const h = Playbook.canvas.height;
-                            const c = w / 2;
-                            const los = h * 0.7;
-                            ['C','G','G','T','T'].forEach((p, i) => Playbook.elements.push({ type:'O', label:p, x: c + (i-2)*35, y: los }));
-                            Playbook.elements.push({ type:'O', label:'Q', x: c, y: los + 40 });
-                            Playbook.elements.push({ type:'O', label:'R', x: c - 50, y: los + 40 });
-                            Playbook.elements.push({ type:'O', label:'X', x: 60, y: los });
-                            Playbook.elements.push({ type:'O', label:'Z', x: w - 60, y: los });
-                            Playbook.elements.push({ type:'O', label:'Y', x: c - 110, y: los });
-                            Playbook.elements.push({ type:'O', label:'H', x: c + 110, y: los });
-                        }
-                        Playbook.drawAll();
-                    }, 100);
-                },
-
-                renderGrid: () => {
-                    const grid = document.getElementById('playbook-grid');
-                    if(!grid) return;
-                    const plays = Store.get('playbook') || [];
-
-                    if (plays.length === 0) {
-                        grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center; padding:40px;">No plays designed yet.</div>';
-                        return;
-                    }
-
-                    grid.innerHTML = plays.map(p => `
-                        <div class="scout-card" style="cursor:pointer;" onclick="Playbook.openDesigner('${p.playId || p.id}')">
-                            <div class="scout-header">
-                                <div>
-                                    <div class="play-title">${p.title}</div>
-                                    <div style="font-size:0.7rem; color:#666;">${p.aiAnalysis ? p.aiAnalysis.formation : 'Unknown Formation'}</div>
-                                </div>
-                                ${p.linkedSessionId ? '<span style="font-size:0.6rem; background:rgba(56,189,248,0.15); color:var(--accent); padding:4px 8px; border-radius:4px;">🔗 LINKED</span>' : ''}
-                            </div>
-                            <div style="height:120px; background:#355e3b; position:relative; overflow:hidden; opacity:0.8;">
-                                ${p.elements.map(el => `<div style="position:absolute; left:${el.x/10}%; top:${el.y/10}%; width:4px; height:4px; background:white; border-radius:50%;"></div>`).join('')}
-                            </div>
-                        </div>
-                    `).join('');
-                },
-
-                clearCanvas: () => Playbook.openDesigner(),
-
-                handleStart: (e) => {
-                    const rect = Playbook.canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    Playbook.dragTarget = Playbook.elements.find(el => {
-                        const dx = el.x - x; const dy = el.y - y;
-                        return Math.sqrt(dx * dx + dy * dy) < 20; // Increased grab radius
-                    });
-                    if (Playbook.dragTarget) Playbook.isDragging = true;
-                },
-
-                handleMove: (e) => {
-                    if (!Playbook.isDragging || !Playbook.dragTarget) return;
-                    const rect = Playbook.canvas.getBoundingClientRect();
-                    Playbook.dragTarget.x = e.clientX - rect.left;
-                    Playbook.dragTarget.y = e.clientY - rect.top;
-                    Playbook.drawAll();
-                },
-
-                handleEnd: () => { Playbook.isDragging = false; Playbook.dragTarget = null; },
-
-                drawField: () => {
-                    const ctx = Playbook.ctx;
-                    const w = Playbook.canvas.width;
-                    const h = Playbook.canvas.height;
-                    ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
-                    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
-                    ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
-                    ctx.stroke();
-                },
-
-                drawAll: () => {
-                    Playbook.drawField();
-                    const ctx = Playbook.ctx;
-                    Playbook.elements.forEach(el => {
-                        ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
-                        ctx.fillStyle = 'white'; ctx.fill();
-                        ctx.strokeStyle = 'black'; ctx.lineWidth = 1; ctx.stroke();
-                        ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
-                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                        ctx.fillText(el.label, el.x, el.y);
-                    });
-                },
-
-                // --- D. CHALK TALK (Context Bridge) ---
-
-                getLinkedContext: (playId) => {
-                    const plays = Store.get('playbook') || [];
-                    const play = plays.find(p => (p.playId || p.id) === playId);
-                    
-                    if (play && play.linkedSessionId) {
+                        if (!res.ok) throw new Error("Server failed to create session");
+                        const newSession = await res.json();
                         const sessions = Store.get('sessions') || [];
-                        const contextSession = sessions.find(s => (s.sessionId || s.id) === play.linkedSessionId);
-                        
-                        if (!contextSession) return null;
-
-                        const relevantHistory = contextSession.history
-                            .filter(msg => msg.role === 'model')
-                            .slice(-5)
-                            .map(m => m.text)
-                            .join("\n- ");
-
-                        return {
-                            title: contextSession.title,
-                            notes: relevantHistory || "No tactical notes yet."
-                        };
-                    }
-                    return null;
-                },
-
-                handleChalkTalk: async () => {
-                    const input = document.getElementById('designer-chat-input');
-                    const history = document.getElementById('designer-chat-history');
-                    const msg = input.value;
-                    if(!msg) return;
-
-                    if(document.getElementById('chalk-talk-hint')) document.getElementById('chalk-talk-hint').remove();
-                    history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:10px 14px; border-radius:12px; max-width:90%; font-size:0.85rem; margin-bottom:8px; font-weight:600;">${msg}</div>`;
-                    input.value = '';
-                    history.innerHTML += `<div id="chalk-loading" style="color:#888; font-size:0.75rem; margin-top:4px; font-style:italic;">Scanning formation & checking film notes...</div>`;
-                    history.scrollTop = history.scrollHeight;
-
-                    // THE AI PROMPT CONSTRUCTION
-                    const formationIntel = Playbook.generateFormationReport();
-                    const sessionIntel = Playbook.getLinkedContext(Playbook.activePlayId);
-                    
-                    let systemContext = `
-                        ROLE: Offensive Quality Control Coach.
-                        TASK: Validate this play design against specific game film intel.
-                        
-                        CURRENT DRAWING (The Canvas):
-                        Formation: ${formationIntel.name}
-                        Details: ${formationIntel.details}
-
-                        LINKED GAME FILM (The Memory):
-                        Session Name: ${sessionIntel ? sessionIntel.title : "None"}
-                        Key Scouting Notes: 
-                        ${sessionIntel ? sessionIntel.notes : "No prior film analysis linked."}
-                    `;
-
-                    try {
-                        const response = await CoachAI.analyze(`${systemContext}\n\nUSER QUESTION: ${msg}`, null);
-                        if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
-                        history.innerHTML += `<div style="background:#1a1a1a; padding:12px; border-radius:12px; border:1px solid var(--border); line-height:1.5; color:#e4e4e7; font-size:0.85rem; margin-bottom:12px;">
-                            <strong style="color:var(--accent); display:block; margin-bottom:4px;">Coach AI:</strong> 
-                            ${response.text}
-                        </div>`;
+                        sessions.unshift(newSession);
+                        Store.set('sessions', sessions);
+                        await UI.selectSession(newSession.sessionId);
                     } catch (e) {
-                        if(document.getElementById('chalk-loading')) document.getElementById('chalk-loading').remove();
-                        history.innerHTML += `<div style="color:red; font-size:0.8rem;">Error connecting to Coach AI.</div>`;
-                    }
-                    history.scrollTop = history.scrollHeight;
-                }
-            };
-            const App = {
-                init: () => {
-                    let attempts = 0;
-                    const checkAuth = setInterval(() => {
-                        attempts++;
-                        if (window.Clerk) {
-                            clearInterval(checkAuth);
-                            Clerk.load()
-                                .then(() => {
-                                    if (!Clerk.user) {
-                                        Clerk.mountSignIn(document.getElementById('sign-in'));
-                                    } else {
-                                        document.getElementById('auth-modal').style.display = 'none';
-                                        Clerk.mountUserButton(document.getElementById('user-button'));
-                                        
-                                        // 1. SUCCESS PATH
-                                        UI.init();
-                                        Playbook.init(); // <--- ADD HERE
-                                    }
-                                })
-                                .catch(err => {
-                                    console.error("Clerk Auth Failed:", err);
-                                    document.getElementById('auth-modal').style.display = 'none';
-                                    
-                                    // 2. ERROR PATH
-                                    UI.init();
-                                    Playbook.init(); // <--- ADD HERE
-                                });
-                        } else if (attempts > 10) {
-                            clearInterval(checkAuth);
-                            console.warn("Clerk timeout - forcing init");
-                            document.getElementById('auth-modal').style.display = 'none';
-                            
-                            // 3. TIMEOUT PATH
-                            UI.init();
-                            Playbook.init(); // <--- ADD HERE
-                        }
-                    }, 300);
-                },
-                createNewSession: async () => {
-                    const title = prompt("New Session Name:");
-                    if (title) {
-                        try {
-                            const token = await window.Clerk.session.getToken();
-                            const res = await fetch('/api/create-session', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({ title, type: UI.currentMode })
-                            });
-
-                            if (!res.ok) throw new Error("Server failed to create session");
-
-                            const newSession = await res.json();
-                            const sessions = Store.get('sessions') || [];
-                            sessions.unshift(newSession);
-                            Store.set('sessions', sessions);
-
-                            await UI.selectSession(newSession.sessionId);
-
-                        } catch (e) {
-                            console.error(e);
-                            alert("Failed to create session. Check server console.");
-                        }
+                        console.error(e);
+                        alert("Failed to create session. Check server console.");
                     }
                 }
-            };
+            }
+        };
 
-            window.onload = App.init;
+        window.onload = App.init;
 
-        </script>
+    </script>
 
 </body>
 
