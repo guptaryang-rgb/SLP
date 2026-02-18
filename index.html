@@ -1352,18 +1352,33 @@
             
             <div style="padding:12px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; gap:12px; align-items:center;">
-                    <input type="text" id="play-name" class="input-box" placeholder="Concept Name (e.g. Mesh)" style="width:250px; font-weight:700; background:#111;">
-                    <select id="personnel-select" class="input-box" style="width:120px; font-size:0.8rem;" onchange="Playbook.setPersonnel(this.value)">
-                        <option value="11">11 Pers (1 RB)</option>
-                        <option value="12">12 Pers (2 TE)</option>
-                        <option value="10">10 Pers (Empty)</option>
-                    </select>
+                    <input type="text" id="play-name" class="input-box" placeholder="Concept Name" style="width:200px; font-weight:700; background:#111;">
+                    
+                    <div style="position:relative;">
+                        <span style="font-size:0.6rem; color:#666; position:absolute; top:-8px; left:2px;">OFFENSE</span>
+                        <select id="personnel-select" class="input-box" style="width:110px; font-size:0.8rem; height:32px; padding:0 8px;" onchange="Playbook.setPersonnel(this.value)">
+                            <option value="11">11 (1 RB)</option>
+                            <option value="12">12 (2 TE)</option>
+                            <option value="10">10 (Empty)</option>
+                            <option value="21">21 (2 Back)</option>
+                        </select>
+                    </div>
+
+                    <div style="position:relative;">
+                        <span style="font-size:0.6rem; color:#666; position:absolute; top:-8px; left:2px;">DEFENSE</span>
+                        <select id="defense-select" class="input-box" style="width:130px; font-size:0.8rem; height:32px; padding:0 8px;" onchange="Playbook.toggleDefense(this.value)">
+                            <option value="none">None</option>
+                            <option value="cover3">Cover 3 Sky</option>
+                            <option value="cover2">Cover 2 Hard</option>
+                            <option value="cover4">Cover 4 (Quarters)</option>
+                            <option value="manfree">Man Free (Blitz)</option>
+                            <option value="custom">+ Upload Custom...</option>
+                        </select>
+                    </div>
                 </div>
+
                 <div style="display:flex; gap:12px;">
-                    <button class="tool-btn" onclick="Playbook.toggleDefense('cover3')">🛡️ vs Cover 3</button>
-                    <button class="tool-btn" onclick="Playbook.toggleDefense('cover2')">🛡️ vs Cover 2</button>
-                    <div style="width:1px; height:24px; background:var(--border);"></div>
-                    <button class="cta-btn" style="margin:0; padding:8px 20px; font-size:0.85rem;" onclick="Playbook.savePlay()">Save</button>
+                    <button class="cta-btn" style="margin:0; padding:8px 20px; font-size:0.85rem;" onclick="Playbook.savePlay()">Save to Library</button>
                     <button class="tool-btn" style="border:none;" onclick="document.getElementById('designer-modal').style.display='none'">✕</button>
                 </div>
             </div>
@@ -1371,34 +1386,34 @@
             <div style="flex:1; display:flex; position:relative; overflow:hidden;">
                 
                 <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:16px;">
-                    <div class="tool-icon active" id="tool-move" onclick="Playbook.setTool('move')" style="cursor:pointer; padding:8px; border-radius:4px; font-size:1.2rem;" title="Move Players">✋</div>
-                    <div class="tool-icon" id="tool-draw" onclick="Playbook.setTool('draw')" style="cursor:pointer; padding:8px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Draw Routes">✏️</div>
-                    <div class="tool-icon" id="tool-block" onclick="Playbook.setTool('block')" style="cursor:pointer; padding:8px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Blocking Mode">🛡️</div>
+                    <div class="tool-icon active" id="tool-move" onclick="Playbook.setTool('move')" style="cursor:pointer; padding:8px; border-radius:4px; font-size:1.2rem;" title="Move Players (Grid Snap)">✋</div>
+                    <div class="tool-icon" id="tool-draw" onclick="Playbook.setTool('draw')" style="cursor:pointer; padding:8px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Draw Route">✏️</div>
+                    <div class="tool-icon" id="tool-block" onclick="Playbook.setTool('block')" style="cursor:pointer; padding:8px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Block / Motion">🛡️</div>
                     <div style="height:1px; width:30px; background:#333; margin:8px 0;"></div>
                     <div class="tool-icon" onclick="Playbook.clearLines()" style="cursor:pointer; opacity:0.5; font-size:1.2rem;" title="Clear Routes">🧹</div>
                 </div>
 
                 <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:default; background:#355e3b;">
+                    <img id="custom-defense-img" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0.3; pointer-events:none;">
+                    
                     <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
                     
                     <div style="position:absolute; bottom:16px; left:16px; display:flex; gap:12px;">
-                        <div style="background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:6px; color:#aaa; font-size:0.75rem; pointer-events:none;">
-                            Grid Snap: <span style="color:var(--success);">ON</span>
-                        </div>
-                        <div id="formation-hud" style="background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:6px; color:white; font-size:0.75rem; pointer-events:none;">
-                            Formation: Detecting...
+                        <div id="formation-hud" style="background:rgba(0,0,0,0.8); padding:8px 12px; border-radius:6px; color:white; font-size:0.8rem; font-weight:600; border:1px solid rgba(255,255,255,0.1);">
+                            Formation: <span style="color:#aaa;">Detecting...</span>
                         </div>
                     </div>
+                    
+                    <input type="file" id="defense-upload" hidden accept="image/*" onchange="Playbook.handleDefenseUpload(this)">
                 </div>
 
                 <div style="width:320px; background:#080808; border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:20;">
                     <div style="padding:12px; font-size:0.7rem; font-weight:800; color:var(--accent); border-bottom:1px solid var(--border); letter-spacing:1px; display:flex; justify-content:space-between;">
                         <span>COACH AI : CHALK TALK</span>
-                        <span style="opacity:0.5;">LIVE</span>
                     </div>
                     <div id="designer-chat-history" style="flex:1; overflow-y:auto; padding:16px; font-size:0.85rem; display:flex; flex-direction:column; gap:12px; background: #050505;">
                         <div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">
-                            Linking to Analysis intel...
+                            Analysis Bridge Active.
                         </div>
                     </div>
                     <div style="padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; background:#0a0a0a;">
@@ -2575,36 +2590,36 @@
          * 5. PLAYBOOK ENGINE PRO (Intelligent Design Lab)
          * Features: Grid Snap, Ghost Defense, Vector Routes, AI Integration
          */
+        /**
+         * PLAYBOOK ENGINE V3 (Fixes: Init, Defense Upload, Fast Detection)
+         */
         const Playbook = {
             canvas: null,
             ctx: null,
-            // Data Structure
-            elements: [],       // Players {x, y, label, type}
-            routes: [],         // Lines {startId, path:[{x,y}], type}
-            defense: [],        // Ghost Defenders {x, y, label}
+            elements: [],       
+            routes: [],         
+            defense: [],        
             
-            // State
             activePlayId: null,
             isDragging: false,
             isDrawingRoute: false,
             dragTarget: null,
-            activeTool: 'move', // 'move', 'draw', 'block'
+            activeTool: 'move', 
             currentRoutePoints: [],
 
             init: async () => {
                 await Playbook.loadLibrary();
             },
 
-            // --- A. SETUP & TOOLS ---
-
             openDesigner: (playId = null) => {
                 Playbook.activePlayId = playId;
                 document.getElementById('designer-modal').style.display = 'flex';
                 
-                // Reset State
+                // Reset everything
                 Playbook.elements = [];
                 Playbook.routes = [];
                 Playbook.defense = [];
+                document.getElementById('custom-defense-img').style.display = 'none';
                 Playbook.setTool('move');
 
                 // Clear Chat
@@ -2618,119 +2633,164 @@
                     Playbook.canvas.height = container.clientHeight;
                     Playbook.ctx = Playbook.canvas.getContext('2d');
 
-                    // Event Listeners
+                    // Bind Events
                     Playbook.canvas.onmousedown = Playbook.handleStart;
                     Playbook.canvas.onmousemove = Playbook.handleMove;
                     Playbook.canvas.onmouseup = Playbook.handleEnd;
 
+                    // LOAD DATA
                     const plays = Store.get('playbook') || [];
                     const savedPlay = plays.find(p => (p.playId || p.id) === playId);
 
-                    if (savedPlay) {
+                    if (savedPlay && savedPlay.elements && savedPlay.elements.length > 0) {
                         document.getElementById('play-name').value = savedPlay.title;
-                        Playbook.elements = savedPlay.elements || [];
-                        Playbook.routes = savedPlay.routes || []; // Load Routes
+                        Playbook.elements = savedPlay.elements;
+                        Playbook.routes = savedPlay.routes || [];
                     } else {
-                        Playbook.setPersonnel('11'); // Default to 11 Pers
+                        // *** FIX #1: Force Default Players if New ***
+                        Playbook.setPersonnel('11'); 
                     }
+                    
                     Playbook.drawAll();
-                }, 100);
+                    Playbook.updateFormationHUD(); // Instant check
+                }, 150);
             },
 
             setTool: (tool) => {
                 Playbook.activeTool = tool;
                 ['move', 'draw', 'block'].forEach(t => {
                     const el = document.getElementById(`tool-${t}`);
-                    if(el) el.style.opacity = (t === tool) ? '1' : '0.5';
-                    if(el) el.style.background = (t === tool) ? 'rgba(255,255,255,0.1)' : 'transparent';
+                    if(el) {
+                        el.style.opacity = (t === tool) ? '1' : '0.5';
+                        el.style.background = (t === tool) ? 'rgba(255,255,255,0.1)' : 'transparent';
+                    }
                 });
                 Playbook.canvas.style.cursor = (tool === 'move') ? 'grab' : 'crosshair';
             },
 
+            // *** FIX #1 CONT: Personnel Logic ***
             setPersonnel: (pers) => {
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
                 const c = w / 2;
-                const los = h * 0.65; // Line of Scrimmage
+                const los = h * 0.65; 
 
                 Playbook.elements = [];
-                // Core: OL + QB
+                // Line
                 ['L','G','C','G','T'].forEach((p, i) => Playbook.elements.push({ id: `ol_${i}`, type:'O', label:p, x: c + (i-2)*30, y: los }));
+                // QB
                 Playbook.elements.push({ id:'qb', type:'O', label:'Q', x: c, y: los + 40 });
 
-                // Personnel Logic
                 if (pers === '11') {
-                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 50, y: los + 40 }); // RB
-                    Playbook.elements.push({ id:'te', type:'O', label:'Y', x: c + 90, y: los }); // TE Inline
+                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 50, y: los + 40 });
+                    Playbook.elements.push({ id:'te', type:'O', label:'Y', x: c + 90, y: los });
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
-                    Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los }); // Slot
-                } else if (pers === '10') { // Empty
-                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 60, y: los + 10 }); // RB in Slot
+                    Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los });
+                } else if (pers === '10') {
+                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c - 60, y: los + 10 });
                     Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
                     Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                     Playbook.elements.push({ id:'wr3', type:'O', label:'H', x: c - 100, y: los }); 
                     Playbook.elements.push({ id:'wr4', type:'O', label:'Y', x: c + 100, y: los }); 
+                } else if (pers === '12') {
+                    Playbook.elements.push({ id:'rb', type:'O', label:'R', x: c, y: los + 80 });
+                    Playbook.elements.push({ id:'te1', type:'O', label:'Y', x: c + 90, y: los });
+                    Playbook.elements.push({ id:'te2', type:'O', label:'U', x: c - 90, y: los });
+                    Playbook.elements.push({ id:'wr1', type:'O', label:'X', x: 60, y: los }); 
+                    Playbook.elements.push({ id:'wr2', type:'O', label:'Z', x: w - 60, y: los }); 
                 }
                 Playbook.drawAll();
+                Playbook.updateFormationHUD();
             },
 
-            toggleDefense: (type) => {
+            // *** FIX #4: Defense Dropdown & Upload ***
+            toggleDefense: (val) => {
+                const img = document.getElementById('custom-defense-img');
+                img.style.display = 'none'; // Hide custom image by default
+                Playbook.defense = [];
+
+                if (val === 'custom') {
+                    document.getElementById('defense-upload').click();
+                    return;
+                }
+
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
                 const los = h * 0.65;
-                Playbook.defense = [];
 
-                if (type === 'cover3') {
-                    // Deep 3rds
-                    Playbook.defense.push({ label:'CB', x: 40, y: los - 150 });
-                    Playbook.defense.push({ label:'FS', x: w/2, y: los - 200 });
-                    Playbook.defense.push({ label:'CB', x: w-40, y: los - 150 });
-                    // Underneath
-                    Playbook.defense.push({ label:'W', x: w/2 - 80, y: los - 40 });
-                    Playbook.defense.push({ label:'M', x: w/2, y: los - 40 });
-                    Playbook.defense.push({ label:'S', x: w/2 + 80, y: los - 40 });
-                } else if (type === 'cover2') {
-                    // Deep Halves
-                    Playbook.defense.push({ label:'S', x: w/2 - 100, y: los - 200 });
-                    Playbook.defense.push({ label:'S', x: w/2 + 100, y: los - 200 });
-                    // Corners Squat
-                    Playbook.defense.push({ label:'CB', x: 40, y: los - 40 });
-                    Playbook.defense.push({ label:'CB', x: w-40, y: los - 40 });
-                    Playbook.defense.push({ label:'M', x: w/2, y: los - 50 });
+                if (val === 'cover3') {
+                    Playbook.defense.push({ label:'CB', x: 40, y: los - 150 }, { label:'FS', x: w/2, y: los - 200 }, { label:'CB', x: w-40, y: los - 150 });
+                    Playbook.defense.push({ label:'W', x: w/2 - 80, y: los - 40 }, { label:'M', x: w/2, y: los - 40 }, { label:'S', x: w/2 + 80, y: los - 40 });
+                } else if (val === 'cover2') {
+                    Playbook.defense.push({ label:'S', x: w/2 - 100, y: los - 200 }, { label:'S', x: w/2 + 100, y: los - 200 });
+                    Playbook.defense.push({ label:'CB', x: 40, y: los - 40 }, { label:'CB', x: w-40, y: los - 40 }, { label:'M', x: w/2, y: los - 50 });
                 }
                 Playbook.drawAll();
             },
 
-            // --- B. CANVAS PHYSICS (Snapping & Interaction) ---
-
-            snapToGrid: (val) => {
-                const gridSize = 10;
-                return Math.round(val / gridSize) * gridSize;
+            handleDefenseUpload: (input) => {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.getElementById('custom-defense-img');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        // Reset dropdown so user can select it again
+                        document.getElementById('defense-select').value = 'custom';
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
             },
+
+            // *** FIX #5: Instant Formation Detection ***
+            generateFormationReport: () => {
+                const center = Playbook.elements.find(el => el.label === 'C');
+                if (!center) return { name: "Unclear", details: "No Center found." };
+                const midLine = center.x;
+                let left = 0, right = 0, backfield = 0;
+                Playbook.elements.forEach(el => {
+                    if (el.label === 'C' || el.label === 'Q') return;
+                    if (el.y > center.y + 20) backfield++; 
+                    else if (el.x < midLine - 20) left++;
+                    else if (el.x > midLine + 20) right++;
+                });
+                
+                let name = "Custom";
+                if (backfield === 1) name = "Singleback / Gun";
+                if (backfield === 0) name = "Empty";
+                if (left === 2 && right === 2) name = "2x2 Spread";
+                if (left === 3 && right === 1) name = "3x1 Trips Left";
+                if (left === 1 && right === 3) name = "3x1 Trips Right";
+                if (left === 2 && right === 1 && backfield === 2) name = "Pro I-Form"; // Heuristic
+
+                return { name: name, details: `${name} (${left}x${right} alignment).` };
+            },
+
+            updateFormationHUD: () => {
+                const rep = Playbook.generateFormationReport();
+                const hud = document.getElementById('formation-hud');
+                if(hud) hud.innerHTML = `Formation: <span style="color:var(--accent);">${rep.name}</span>`;
+            },
+
+            // Physics & Drawing (Grid Snap)
+            snapToGrid: (val) => Math.round(val / 10) * 10,
 
             handleStart: (e) => {
                 const rect = Playbook.canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-
-                // 1. Check if clicking a player
                 Playbook.dragTarget = Playbook.elements.find(el => {
                     const dx = el.x - x; const dy = el.y - y;
                     return Math.sqrt(dx * dx + dy * dy) < 20;
                 });
 
-                if (Playbook.activeTool === 'move') {
-                    if (Playbook.dragTarget) {
-                        Playbook.isDragging = true;
-                        Playbook.canvas.style.cursor = 'grabbing';
-                    }
-                } else if (Playbook.activeTool === 'draw' || Playbook.activeTool === 'block') {
-                    if (Playbook.dragTarget) {
-                        Playbook.isDrawingRoute = true;
-                        // Start a new route for this player
-                        Playbook.currentRoutePoints = [{x: Playbook.dragTarget.x, y: Playbook.dragTarget.y}];
-                    }
+                if (Playbook.activeTool === 'move' && Playbook.dragTarget) {
+                    Playbook.isDragging = true;
+                    Playbook.canvas.style.cursor = 'grabbing';
+                } else if ((Playbook.activeTool === 'draw' || Playbook.activeTool === 'block') && Playbook.dragTarget) {
+                    Playbook.isDrawingRoute = true;
+                    Playbook.currentRoutePoints = [{x: Playbook.dragTarget.x, y: Playbook.dragTarget.y}];
                 }
             },
 
@@ -2742,12 +2802,11 @@
                 if (Playbook.activeTool === 'move' && Playbook.isDragging && Playbook.dragTarget) {
                     Playbook.dragTarget.x = x;
                     Playbook.dragTarget.y = y;
-                    // Update any existing route starts attached to this player
                     const route = Playbook.routes.find(r => r.playerId === Playbook.dragTarget.id);
                     if(route && route.path.length > 0) route.path[0] = {x, y};
+                    Playbook.drawAll();
                 } 
                 else if (Playbook.isDrawingRoute) {
-                    // Visualize the line being drawn
                     Playbook.drawAll();
                     Playbook.ctx.beginPath();
                     Playbook.ctx.moveTo(Playbook.currentRoutePoints[0].x, Playbook.currentRoutePoints[0].y);
@@ -2757,13 +2816,10 @@
                     Playbook.ctx.setLineDash(Playbook.activeTool === 'block' ? [5,5] : []);
                     Playbook.ctx.stroke();
                 }
-                
-                if (Playbook.activeTool === 'move' && Playbook.isDragging) Playbook.drawAll();
             },
 
             handleEnd: (e) => {
                 if (Playbook.activeTool === 'move' && Playbook.isDragging) {
-                    // Snap to Grid on Release
                     if(Playbook.dragTarget) {
                         Playbook.dragTarget.x = Playbook.snapToGrid(Playbook.dragTarget.x);
                         Playbook.dragTarget.y = Playbook.snapToGrid(Playbook.dragTarget.y);
@@ -2771,28 +2827,21 @@
                     Playbook.isDragging = false;
                     Playbook.dragTarget = null;
                     Playbook.canvas.style.cursor = 'grab';
-                    Playbook.drawAll(); // Redraw snapped
-                    // Update Formation HUD
-                    const form = Playbook.generateFormationReport();
-                    document.getElementById('formation-hud').innerText = `Formation: ${form.name}`;
+                    Playbook.drawAll();
+                    Playbook.updateFormationHUD(); // Update formation name instantly
                 } 
                 else if (Playbook.isDrawingRoute) {
                     const rect = Playbook.canvas.getBoundingClientRect();
                     const x = Playbook.snapToGrid(e.clientX - rect.left);
                     const y = Playbook.snapToGrid(e.clientY - rect.top);
-                    
-                    // Save Route
                     Playbook.currentRoutePoints.push({x, y});
                     
-                    // Remove old route for this player if exists
                     Playbook.routes = Playbook.routes.filter(r => r.playerId !== Playbook.dragTarget.id);
-                    
                     Playbook.routes.push({
                         playerId: Playbook.dragTarget.id,
-                        type: Playbook.activeTool, // 'draw' or 'block'
+                        type: Playbook.activeTool,
                         path: [...Playbook.currentRoutePoints]
                     });
-
                     Playbook.isDrawingRoute = false;
                     Playbook.currentRoutePoints = [];
                     Playbook.drawAll();
@@ -2804,33 +2853,24 @@
                 Playbook.drawAll();
             },
 
-            // --- C. RENDERING ENGINE ---
-
             drawField: () => {
                 const ctx = Playbook.ctx;
                 const w = Playbook.canvas.width;
                 const h = Playbook.canvas.height;
-                
-                // Grass
-                ctx.fillStyle = '#355e3b'; 
-                ctx.fillRect(0, 0, w, h);
-                
-                // Grid Lines (Subtle)
-                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                ctx.lineWidth = 1;
+                ctx.fillStyle = '#355e3b'; ctx.fillRect(0, 0, w, h);
+                // Grid
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
                 ctx.beginPath();
-                for(let i=0; i<w; i+=30) { ctx.moveTo(i,0); ctx.lineTo(i,h); } // Vertical
-                for(let i=0; i<h; i+=30) { ctx.moveTo(0,i); ctx.lineTo(w,i); } // Horizontal
+                for(let i=0; i<w; i+=30) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
+                for(let i=0; i<h; i+=30) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
                 ctx.stroke();
-
-                // Hashes & Numbers
+                // Hashes
                 ctx.strokeStyle = 'rgba(255,255,255,0.3)';
                 ctx.beginPath();
-                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h); // Left Hash
-                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h); // Right Hash
+                ctx.moveTo(w * 0.35, 0); ctx.lineTo(w * 0.35, h);
+                ctx.moveTo(w * 0.65, 0); ctx.lineTo(w * 0.65, h);
                 ctx.stroke();
-                
-                // LOS Marker
+                // LOS
                 const center = Playbook.elements.find(el => el.label === 'C');
                 if(center) {
                     ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; 
@@ -2842,81 +2882,46 @@
                 Playbook.drawField();
                 const ctx = Playbook.ctx;
 
-                // 1. Draw Routes (Under players)
+                // Routes
                 Playbook.routes.forEach(r => {
                     if(r.path.length < 2) return;
                     ctx.beginPath();
                     ctx.moveTo(r.path[0].x, r.path[0].y);
                     ctx.lineTo(r.path[1].x, r.path[1].y);
-                    
                     if (r.type === 'block') {
-                        ctx.strokeStyle = '#fff'; 
-                        ctx.setLineDash([5, 5]); 
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-                        // T-Bar for Block
+                        ctx.strokeStyle = '#fff'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.stroke();
                         ctx.beginPath(); ctx.moveTo(r.path[1].x - 5, r.path[1].y); ctx.lineTo(r.path[1].x + 5, r.path[1].y); ctx.stroke();
                     } else {
-                        ctx.strokeStyle = '#f59e0b'; 
-                        ctx.setLineDash([]); 
-                        ctx.lineWidth = 3;
-                        ctx.stroke();
+                        ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([]); ctx.lineWidth = 3; ctx.stroke();
                         // Arrowhead
                         const angle = Math.atan2(r.path[1].y - r.path[0].y, r.path[1].x - r.path[0].x);
                         ctx.beginPath();
                         ctx.moveTo(r.path[1].x, r.path[1].y);
                         ctx.lineTo(r.path[1].x - 10 * Math.cos(angle - Math.PI / 6), r.path[1].y - 10 * Math.sin(angle - Math.PI / 6));
                         ctx.lineTo(r.path[1].x - 10 * Math.cos(angle + Math.PI / 6), r.path[1].y - 10 * Math.sin(angle + Math.PI / 6));
-                        ctx.fillStyle = '#f59e0b';
-                        ctx.fill();
+                        ctx.fillStyle = '#f59e0b'; ctx.fill();
                     }
                     ctx.setLineDash([]);
                 });
 
-                // 2. Draw Ghost Defense
+                // Ghost Defense
                 Playbook.defense.forEach(d => {
                     ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(239, 68, 68, 0.5)'; ctx.fill(); // Red Ghost
-                    ctx.fillStyle = 'white'; ctx.font = 'bold 9px Inter';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'rgba(239, 68, 68, 0.6)'; ctx.fill();
+                    ctx.fillStyle = 'white'; ctx.font = 'bold 9px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(d.label, d.x, d.y);
                 });
 
-                // 3. Draw Offensive Players
+                // Players
                 Playbook.elements.forEach(el => {
                     ctx.beginPath(); ctx.arc(el.x, el.y, 12, 0, Math.PI * 2);
                     ctx.fillStyle = 'white'; ctx.fill();
-                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; // Blue glow if grabbing
+                    ctx.strokeStyle = el === Playbook.dragTarget ? '#38bdf8' : 'black'; 
                     ctx.lineWidth = el === Playbook.dragTarget ? 3 : 1; 
                     ctx.stroke();
-
-                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter';
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                     ctx.fillText(el.label, el.x, el.y);
                 });
-            },
-
-            // --- D. DATA SYNC & AI (Same logic, just ensuring variables match) ---
-            
-            generateFormationReport: () => {
-                // Re-using the same logic from Phase 2
-                const center = Playbook.elements.find(el => el.label === 'C');
-                if (!center) return { name: "Unclear", details: "No Center found." };
-                const midLine = center.x;
-                let left = 0, right = 0, backfield = 0;
-                Playbook.elements.forEach(el => {
-                    if (el.label === 'C' || el.label === 'Q') return;
-                    if (el.y > center.y + 30) backfield++; 
-                    else if (el.x < midLine - 20) left++;
-                    else if (el.x > midLine + 20) right++;
-                });
-                let name = "Custom";
-                if (backfield === 1) name = "Singleback";
-                if (backfield === 0) name = "Empty";
-                if (left === 2 && right === 2) name = "2x2 Spread";
-                if (left === 3 && right === 1) name = "3x1 Trips Left";
-                if (left === 1 && right === 3) name = "3x1 Trips Right";
-                return { name: name, details: `${name} (${left}x${right} alignment).` };
             },
 
             loadLibrary: async () => {
@@ -2938,20 +2943,16 @@
                     playId: Playbook.activePlayId || 'play_' + Date.now(),
                     title: name,
                     elements: Playbook.elements,
-                    routes: Playbook.routes, // Save Routes too
+                    routes: Playbook.routes, 
                     linkedSessionId: UI.activeSessionId,
                     aiAnalysis: { formation: form.name, summary: form.details }
                 };
-                
-                // Optimistic
                 const plays = Store.get('playbook') || [];
                 const idx = plays.findIndex(p => p.playId === payload.playId);
                 if(idx > -1) plays[idx] = payload; else plays.unshift(payload);
                 Store.set('playbook', plays);
                 Playbook.renderGrid();
                 document.getElementById('designer-modal').style.display = 'none';
-
-                // Server
                 try {
                     const token = await window.Clerk.session.getToken();
                     await fetch('/api/save-play', {
@@ -2959,12 +2960,8 @@
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify(payload)
                     });
-                    console.log("Saved.");
                 } catch(e) { console.error(e); }
             },
-
-            // (Keep renderGrid, getLinkedContext, handleChalkTalk same as before, they work fine)
-            // Just copying them here for safety context reference
             renderGrid: () => {
                 const grid = document.getElementById('playbook-grid');
                 if(!grid) return;
