@@ -2729,6 +2729,7 @@
             lastDragY: 0, 
             contextTarget: null,
 
+            // Animation & Sim State
             animating: false, 
             animTime: 0, 
             animMaxTime: 6.0, 
@@ -2736,6 +2737,7 @@
             qbSimMode: false, 
             passResult: null, 
             losY: 0,
+            ball: null, // NEW: Tracks the ball in the air
 
             init: async () => { 
                 await Playbook.loadLibrary(); 
@@ -2861,15 +2863,22 @@
                 Playbook.drawAll();
             },
 
+            // --- FIXED ROUTE TREE MENU (Double Click instead of Right Click) ---
             handleDoubleClick: (e) => {
-                if (Playbook.activeTool !== 'move') return;
-                
                 const r = Playbook.canvas.getBoundingClientRect();
-                const target = Playbook.hitTest(e.clientX - r.left, e.clientY - r.top);
+                const x = e.clientX - r.left; 
+                const y = e.clientY - r.top;
+                const target = Playbook.hitTest(x, y);
                 
-                if (target) { 
-                    target.angle = ((target.angle || 0) + 45) % 360; 
-                    Playbook.drawAll(); 
+                // If double click an Offensive player, show route menu
+                if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') { 
+                    Playbook.contextTarget = target;
+                    const menu = document.getElementById('route-menu');
+                    if (menu) {
+                        menu.style.display = 'flex';
+                        menu.style.left = (x + 15) + 'px';
+                        menu.style.top = (y + 15) + 'px';
+                    }
                 }
             },
 
@@ -2895,114 +2904,95 @@
             },
 
             throwPass: (targetReceiver) => {
-                Playbook.animating = false; 
-                
-                if (Playbook.animReq) {
-                    cancelAnimationFrame(Playbook.animReq);
-                }
-                
-                const btn = document.getElementById('anim-play-btn');
-                if (btn) btn.innerHTML = "▶";
-                
-                const qb = Playbook.elements.find(e => e.label === 'Q'); 
-                if (!qb) return;
+                const qb = Playbook.elements.find(e => e.label === 'Q');
+                // Prevent throwing if no QB, or if the ball is already in the air
+                if (!qb || (Playbook.ball && Playbook.ball.active)) return;
 
                 const qbPos = Playbook.getAnimPos(qb);
-                const recPos = Playbook.getAnimPos(targetReceiver);
-
-                let interceptedBy = null;
-                Playbook.defense.forEach(d => {
-                    const dPos = Playbook.getAnimPos(d, true); // True flag checks AI routes
-                    if (Math.hypot(dPos.x - recPos.x, dPos.y - recPos.y) < 40) {
-                        interceptedBy = d;
-                    }
-                });
-
-                const dest = interceptedBy ? Playbook.getAnimPos(interceptedBy, true) : recPos;
                 
-                if (interceptedBy) {
-                    Playbook.passResult = { 
-                        status: 'INTERCEPTED/PBU', 
-                        color: '#ef4444', 
-                        p1: qbPos, 
-                        p2: dest, 
-                        msg: `Covered by ${interceptedBy.label}` 
-                    };
-                } else { 
-                    const yds = Math.round((qbPos.y - recPos.y) / 8); 
-                    Playbook.passResult = { 
-                        status: 'COMPLETED', 
-                        color: '#10b981', 
-                        p1: qbPos, 
-                        p2: dest, 
-                        msg: `Gain of ${yds > 0 ? yds : 0} yds` 
-                    }; 
-                }
+                // Calculate Lead: Where will WR be in 1 second?
+                const travelTime = 1.0; 
+                const predictedRecPos = Playbook.getAnimPosAtTime(targetReceiver, Playbook.animTime + travelTime);
 
-                let passFrame = 0;
-                const animatePass = () => {
-                    passFrame += 0.1; 
-                    if (passFrame >= 1) { 
-                        Playbook.drawAll(); 
-                        return; 
-                    }
-                    
-                    Playbook.drawAll(); 
-                    const ctx = Playbook.ctx;
-                    ctx.beginPath(); 
-                    ctx.arc(qbPos.x + (dest.x - qbPos.x) * passFrame, qbPos.y + (dest.y - qbPos.y) * passFrame, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = '#fbbf24'; 
-                    ctx.fill(); 
-                    ctx.strokeStyle = '#fff'; 
-                    ctx.lineWidth = 1; 
-                    ctx.stroke();
-                    
-                    requestAnimationFrame(animatePass);
+                // Spawn the ball into the physics engine
+                Playbook.ball = {
+                    active: true,
+                    startX: qbPos.x, 
+                    startY: qbPos.y,
+                    x: qbPos.x, 
+                    y: qbPos.y,
+                    targetX: predictedRecPos.x, 
+                    targetY: predictedRecPos.y,
+                    progress: 0
                 };
-                animatePass();
+
+                // Tell the defense the ball is in the air so they can react!
+                if (typeof Playbook.calculateDefensiveAI === 'function') {
+                    Playbook.calculateDefensiveAI();
+                }
             },
 
             // --- NEW: REACTIVE AI CALCULATOR ---
+            // --- NEW: REACTIVE AI & TRENCH WARFARE ---
             calculateDefensiveAI: () => {
                 Playbook.aiRoutes = [];
                 
-                // Generate tracking paths for defenders based on offensive routes
                 Playbook.defense.forEach(d => {
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
-                    const speed = zone ? 60 : 100; // Zone defenders drift slower, Man defenders chase faster
                     let target = { x: d.x, y: d.y };
                     
-                    if (zone) {
-                        // Drift to center of zone
-                        target.x = zone.points[0].x; 
-                        target.y = zone.points[0].y - 30;
-                    } else {
-                        // Find closest man
-                        let closest = null; 
-                        let minDist = 999;
+                    // 1. BALL IN AIR: Everyone breaks on the ball
+                    if (Playbook.ball && Playbook.ball.active) {
+                        target.x = Playbook.ball.targetX;
+                        target.y = Playbook.ball.targetY;
+                    }
+                    // 2. TRENCH WARFARE: D-Line attacks O-Line
+                    else if (['E', 'T', 'N'].includes(d.label)) {
+                        let closestOL = null; let minDist = 999;
+                        Playbook.elements.filter(o => ['L', 'G', 'C', 'T'].includes(o.label)).forEach(o => {
+                            let dist = Math.hypot(o.x - d.x, o.y - d.y);
+                            if (dist < minDist) { minDist = dist; closestOL = o; }
+                        });
                         
+                        // If near an OL, engage in block. Otherwise rush QB.
+                        if (closestOL && minDist < 60) {
+                            target.x = closestOL.x; target.y = closestOL.y - 15; 
+                        } else {
+                            const qb = Playbook.elements.find(o => o.label === 'Q');
+                            if (qb) { target.x = qb.x; target.y = qb.y; }
+                        }
+                    }
+                    // 3. ZONE COVERAGE: Drift and React
+                    else if (zone) {
+                        target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Drift to center
+                        
+                        // Scan for threats entering zone
+                        const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
+                        const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
+                        
+                        Playbook.elements.filter(o => o.type === 'O' && o.label !== 'Q' && o.label !== 'C').forEach(o => {
+                            const oPos = Playbook.getAnimPosAtTime(o, Playbook.animTime + 0.5); // Look 0.5s ahead
+                            // Is offensive player inside the oval?
+                            if (Math.hypot((oPos.x - zone.points[0].x)/rX, (oPos.y - zone.points[0].y)/rY) <= 1) {
+                                target.x = oPos.x; target.y = oPos.y - 15; // Break on receiver
+                            }
+                        });
+                    }
+                    // 4. MAN COVERAGE: Chase closest
+                    else {
+                        let closest = null; let minDist = 999;
                         Playbook.elements.forEach(o => {
                             if (o.label === 'C' || o.label === 'Q' || o.label.includes('ol_')) return;
                             let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { 
-                                minDist = dist; 
-                                closest = o; 
-                            }
+                            if (dist < minDist) { minDist = dist; closest = o; }
                         });
-                        
                         if (closest) {
-                            // Predict where man will be in 2 seconds
-                            const endPos = Playbook.getAnimPosAtTime(closest, 2.0);
-                            target.x = endPos.x; 
-                            target.y = endPos.y + 20; // Inside/Under leverage
+                            const endPos = Playbook.getAnimPosAtTime(closest, Playbook.animTime + 0.5);
+                            target.x = endPos.x; target.y = endPos.y - 10;
                         }
                     }
                     
-                    // Create invisible AI tracking route
-                    Playbook.aiRoutes.push({ 
-                        ownerId: d.id, 
-                        points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] 
-                    });
+                    Playbook.aiRoutes.push({ ownerId: d.id, points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] });
                 });
             },
 
@@ -3045,19 +3035,45 @@
             
             animateLoop: () => {
                 if (!Playbook.animating) return;
-                
                 Playbook.animTime += 0.03; 
                 
+                // Live Defense Calculation
+                if (Math.floor(Playbook.animTime * 100) % 15 === 0) Playbook.calculateDefensiveAI(); // Update AI every few frames
+
+                // Ball Flight Physics
+                if (Playbook.ball && Playbook.ball.active) {
+                    Playbook.ball.progress += 0.03; // Ball takes ~1 sec to arrive
+                    Playbook.ball.x = Playbook.ball.startX + (Playbook.ball.targetX - Playbook.ball.startX) * Playbook.ball.progress;
+                    Playbook.ball.y = Playbook.ball.startY + (Playbook.ball.targetY - Playbook.ball.startY) * Playbook.ball.progress;
+
+                    // Ball arrives! Calculate outcome.
+                    if (Playbook.ball.progress >= 1) {
+                        Playbook.ball.active = false;
+                        Playbook.animating = false; // Stop play on catch
+                        
+                        let interceptedBy = null;
+                        Playbook.defense.forEach(d => {
+                            const dPos = Playbook.getAnimPos(d, true);
+                            if (Math.hypot(dPos.x - Playbook.ball.x, dPos.y - Playbook.ball.y) < 35) interceptedBy = d;
+                        });
+
+                        if (interceptedBy) {
+                            Playbook.passResult = { status: 'INTERCEPTED / PBU', color: '#ef4444', p1: {x:Playbook.ball.startX, y:Playbook.ball.startY}, p2: {x:Playbook.ball.x, y:Playbook.ball.y}, msg: `Covered by ${interceptedBy.label}` };
+                        } else {
+                            // Accurate Yards from Line of Scrimmage!
+                            const passLength = Math.round((Playbook.losY - Playbook.ball.y) / 10);
+                            Playbook.passResult = { status: 'COMPLETED', color: '#10b981', p1: {x:Playbook.ball.startX, y:Playbook.ball.startY}, p2: {x:Playbook.ball.x, y:Playbook.ball.y}, msg: `Gain of ${passLength > 0 ? passLength : 0} yds` };
+                        }
+                    }
+                }
+
                 if (Playbook.animTime > Playbook.animMaxTime) { 
                     Playbook.animTime = 0; 
-                    if (Playbook.qbSimMode) {
-                        Playbook.toggleQBSim(); 
-                    }
+                    if (Playbook.qbSimMode) Playbook.toggleQBSim(); 
                 }
                 
                 const timer = document.getElementById('anim-timer');
                 const scrubber = document.getElementById('anim-scrubber');
-                
                 if (timer) timer.innerText = Playbook.animTime.toFixed(1) + "s";
                 if (scrubber) scrubber.value = (Playbook.animTime / Playbook.animMaxTime) * 100;
                 
@@ -3352,32 +3368,36 @@
                     ctx.lineWidth = 2; 
                     ctx.stroke();
 
-                    const angle = el.angle !== undefined ? el.angle : (el.type === 'D' ? 180 : 0);
-                    const rad = angle * Math.PI / 180;
-                    ctx.beginPath(); 
-                    ctx.moveTo(drawX, drawY); 
-                    ctx.lineTo(drawX + 18 * Math.sin(rad), drawY - 18 * Math.cos(rad));
-                    ctx.strokeStyle = el.type === 'D' ? 'white' : 'black'; 
-                    ctx.lineWidth = 3; 
-                    ctx.stroke();
                     
                     ctx.fillStyle = el.type === 'D' ? 'white' : 'black'; 
                     ctx.font = 'bold 10px Inter'; 
                     ctx.textAlign = 'center'; 
-                    ctx.textBaseline = 'middle'; 
+                    ctx.textBaseline = 'middle';
                     ctx.fillText(el.label, drawX, drawY);
-                });
+                }); // <-- This closes the allPlayers.forEach loop
 
+                // --- NEW: Draw Flying Ball ---
+                if (Playbook.ball && Playbook.ball.active) {
+                    ctx.beginPath(); 
+                    ctx.arc(Playbook.ball.x, Playbook.ball.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fbbf24'; 
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff'; 
+                    ctx.lineWidth = 1; 
+                    ctx.stroke();
+                }
+
+                // --- Draw QB Sim Result Banner ---
                 if (Playbook.passResult) {
                     ctx.beginPath(); 
-                    ctx.moveTo(Playbook.passResult.p1.x, Playbook.passResult.p1.y); 
+                    ctx.moveTo(Playbook.passResult.p1.x, Playbook.passResult.p1.y);
                     ctx.lineTo(Playbook.passResult.p2.x, Playbook.passResult.p2.y);
                     ctx.strokeStyle = '#fbbf24'; 
                     ctx.lineWidth = 4; 
                     ctx.setLineDash([10, 10]); 
                     ctx.stroke(); 
                     ctx.setLineDash([]);
-                    
+
                     ctx.fillStyle = Playbook.passResult.color; 
                     ctx.fillRect(Playbook.canvas.width / 2 - 120, 40, 240, 40);
                     ctx.fillStyle = 'black'; 
@@ -3386,7 +3406,7 @@
                     ctx.textBaseline = 'middle';
                     ctx.fillText(Playbook.passResult.status + ": " + Playbook.passResult.msg, Playbook.canvas.width / 2, 60);
                 }
-            },
+            }, // <-- This closes the drawAll function
 
             // --- STANDARD UTILITIES ---
             hitTest: (x, y) => { 
