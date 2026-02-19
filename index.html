@@ -1704,7 +1704,8 @@
         /**
          * 1. STORAGE ENGINE (Data Persistence & Chat Isolation)
          */
-        const Store = {
+        localStorage.removeItem('playbook');
+         const Store = {
             get: (key) => JSON.parse(localStorage.getItem(key) || 'null'),
             set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
 
@@ -3680,8 +3681,9 @@
                         Clerk.load()
                             .then(() => {
                                 if (!Clerk.user) {
-                                    Clerk.mountSignIn(document.getElementById('sign-in'));
-                                } else {
+                                document.getElementById('auth-modal').style.display = 'flex'; // SURGICAL FIX: Un-hide if needed
+                                Clerk.mountSignIn(document.getElementById('sign-in'));
+                            } else {
                                     document.getElementById('auth-modal').style.display = 'none';
                                     Clerk.mountUserButton(document.getElementById('user-button'));
                                     UI.init();
