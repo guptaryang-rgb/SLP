@@ -2798,67 +2798,34 @@
                 const qb = Playbook.elements.find(e => e.label === 'Q');
                 if (!qb) return;
 
-                // Function to find exact current X/Y of player during animation
-                const getAnimPos = (player) => {
-                    const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                    if (!route || route.points.length === 0) {
-                        return { x: player.x, y: player.y };
-                    }
-
-                    const speed = 120; // Pixels per second
-                    const targetDist = Playbook.animTime * speed;
-                    let currentDist = 0;
-
-                    for (let i = 0; i < route.points.length - 1; i++) {
-                        let p1 = route.points[i]; 
-                        let p2 = route.points[i + 1];
-                        let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                        
-                        if (currentDist + segDist >= targetDist) {
-                            let fraction = (targetDist - currentDist) / segDist;
-                            return { 
-                                x: p1.x + (p2.x - p1.x) * fraction, 
-                                y: p1.y + (p2.y - p1.y) * fraction 
-                            };
-                        }
-                        currentDist += segDist;
-                    }
-                    return route.points[route.points.length - 1];
-                };
-
-                const qbPos = getAnimPos(qb);
-                const recPos = getAnimPos(targetReceiver);
+                // Use the new global calculator
+                const qbPos = Playbook.getAnimPos(qb);
+                const recPos = Playbook.getAnimPos(targetReceiver);
 
                 let interceptedBy = null;
                 // Check if any defender is within 40 pixels of the receiver (Breakup/INT range)
                 Playbook.defense.forEach(d => {
-                    const dPos = getAnimPos(d);
+                    const dPos = Playbook.getAnimPos(d);
                     const distanceToRec = Math.hypot(dPos.x - recPos.x, dPos.y - recPos.y);
                     if (distanceToRec < 40) {
                         interceptedBy = d;
                     }
                 });
 
-                // --- NEW: Animated Ball Flight ---
-                const passDestination = interceptedBy ? getAnimPos(interceptedBy) : recPos;
+                // --- Animated Ball Flight ---
+                const passDestination = interceptedBy ? Playbook.getAnimPos(interceptedBy) : recPos;
                 
                 // Set the final result data
                 if (interceptedBy) {
                     Playbook.passResult = { 
-                        status: 'INTERCEPTED / PBU', 
-                        color: '#ef4444', 
-                        p1: qbPos, 
-                        p2: passDestination, 
-                        msg: `Covered by ${interceptedBy.label}` 
+                        status: 'INTERCEPTED / PBU', color: '#ef4444', 
+                        p1: qbPos, p2: passDestination, msg: `Covered by ${interceptedBy.label}` 
                     };
                 } else {
                     const passLength = Math.round((qbPos.y - recPos.y) / 10);
                     Playbook.passResult = { 
-                        status: 'COMPLETED', 
-                        color: '#10b981', 
-                        p1: qbPos, 
-                        p2: passDestination, 
-                        msg: `Gain of ${passLength > 0 ? passLength : 0} yds` 
+                        status: 'COMPLETED', color: '#10b981', 
+                        p1: qbPos, p2: passDestination, msg: `Gain of ${passLength > 0 ? passLength : 0} yds` 
                     };
                 }
 
@@ -3050,12 +3017,42 @@
             },
 
             // --- 4. INTERACTION LOGIC ---
-            hitTest: (x, y) => {
-                let target = Playbook.elements.find(el => Math.sqrt((el.x - x) ** 2 + (el.y - y) ** 2) < 25);
-                if (!target) {
-                    target = Playbook.defense.find(el => Math.sqrt((el.x - x) ** 2 + (el.y - y) ** 2) < 25);
+            // --- NEW: Global Position Calculator ---
+            getAnimPos: (player) => {
+                // If at 0 seconds, return start position
+                if (Playbook.animTime === 0) return { x: player.x, y: player.y };
+                
+                const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
+                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
+
+                const speed = 120; // 120 pixels per second
+                const targetDist = Playbook.animTime * speed;
+                let currentDist = 0;
+
+                for (let i = 0; i < route.points.length - 1; i++) {
+                    let p1 = route.points[i]; 
+                    let p2 = route.points[i + 1];
+                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    
+                    if (currentDist + segDist >= targetDist) {
+                        let fraction = (targetDist - currentDist) / segDist;
+                        return { 
+                            x: p1.x + (p2.x - p1.x) * fraction, 
+                            y: p1.y + (p2.y - p1.y) * fraction 
+                        };
+                    }
+                    currentDist += segDist;
                 }
-                return target;
+                return route.points[route.points.length - 1]; // Return end of route
+            },
+
+            // --- 4. INTERACTION LOGIC ---
+            hitTest: (x, y) => {
+                const allPlayers = [...Playbook.elements, ...Playbook.defense];
+                return allPlayers.find(el => {
+                    const pos = Playbook.getAnimPos(el); // FIX: Check where they are NOW, not where they started
+                    return Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < 25;
+                });
             },
 
             handleStart: (e) => {
@@ -3245,40 +3242,12 @@
                     ctx.setLineDash([]);
                 });
 
-                // Draw Players (Constant Velocity)
+                // Draw Players (Constant Velocity & Freeze on Pause)
                 const allPlayers = [...Playbook.defense, ...Playbook.elements];
                 allPlayers.forEach(el => {
-                    let drawX = el.x; 
-                    let drawY = el.y;
-
-                    if (Playbook.animating || Playbook.passResult) {
-                        const route = Playbook.routes.find(r => r.ownerId === el.id && !r.type.includes('zone'));
-                        if (route && route.points.length > 0) {
-                            const speed = 120; // 120 pixels per second
-                            const targetDist = Playbook.animTime * speed;
-                            let currentDist = 0;
-                            let isFinished = true;
-
-                            for (let i = 0; i < route.points.length - 1; i++) {
-                                let p1 = route.points[i]; 
-                                let p2 = route.points[i + 1];
-                                let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                                
-                                if (currentDist + segDist >= targetDist) {
-                                    let fraction = (targetDist - currentDist) / segDist;
-                                    drawX = p1.x + (p2.x - p1.x) * fraction;
-                                    drawY = p1.y + (p2.y - p1.y) * fraction;
-                                    isFinished = false;
-                                    break;
-                                }
-                                currentDist += segDist;
-                            }
-                            if (isFinished) { 
-                                drawX = route.points[route.points.length - 1].x; 
-                                drawY = route.points[route.points.length - 1].y; 
-                            }
-                        }
-                    }
+                    const pos = Playbook.getAnimPos(el); // Calculate exact position for current time
+                    let drawX = pos.x; 
+                    let drawY = pos.y;
 
                     ctx.beginPath(); 
                     ctx.arc(drawX, drawY, 13, 0, Math.PI * 2);
