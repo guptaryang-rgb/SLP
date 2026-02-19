@@ -1363,15 +1363,36 @@
                 <div style="display:flex; gap:12px; align-items:center;">
                     <input type="text" id="play-name" class="input-box" placeholder="Concept Name" style="width:180px; font-weight:700; background:#111;">
                     
-                    <div style="position:relative;">
-                        <span style="font-size:0.6rem; color:#666; position:absolute; top:-8px; left:2px;">PERSONNEL</span>
-                        <select id="personnel-select" class="input-box" style="width:100px; font-size:0.8rem; height:32px; padding:0 8px;" onchange="Playbook.setPersonnel(this.value)">
-                            <option value="11">11 (1 RB)</option>
-                            <option value="12">12 (2 TE)</option>
-                            <option value="10">10 (Empty)</option>
-                            <option value="21">21 (2 Back)</option>
-                            <option value="bunch">Bunch</option>
-                        </select>
+                    <div style="display:flex; gap:6px; align-items:flex-end; border-right:1px solid #333; padding-right:12px;">
+                        <div style="position:relative;">
+                            <span style="font-size:0.6rem; color:#666; position:absolute; top:-12px; left:2px;">HASH</span>
+                            <select id="sim-hash" class="input-box" style="width:80px; font-size:0.75rem; height:32px; padding:0 4px;" onchange="Playbook.setPersonnel(document.getElementById('personnel-select').value)">
+                                <option value="mid">Middle</option>
+                                <option value="left">L Hash</option>
+                                <option value="right">R Hash</option>
+                            </select>
+                        </div>
+                        <div style="position:relative;">
+                            <span style="font-size:0.6rem; color:#666; position:absolute; top:-12px; left:2px;">PERSONNEL</span>
+                            <select id="personnel-select" class="input-box" style="width:100px; font-size:0.75rem; height:32px; padding:0 4px;" onchange="Playbook.setPersonnel(this.value)">
+                                <option value="11">11 (1 RB)</option>
+                                <option value="12">12 (2 TE)</option>
+                                <option value="10">10 (Empty)</option>
+                                <option value="21">21 (2 Back)</option>
+                                <option value="bunch">Bunch</option>
+                            </select>
+                        </div>
+                        <div style="position:relative;">
+                            <span style="font-size:0.6rem; color:#666; position:absolute; top:-12px; left:2px;">SITUATION</span>
+                            <div style="display:flex; gap:4px;">
+                                <select id="sim-down" class="input-box" style="width:60px; font-size:0.75rem; height:32px; padding:0 4px;">
+                                    <option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option>
+                                </select>
+                                <select id="sim-dist" class="input-box" style="width:70px; font-size:0.75rem; height:32px; padding:0 4px;">
+                                    <option value="short">Short</option><option value="med" selected>Med</option><option value="long">Long</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="position:relative;">
@@ -1433,6 +1454,14 @@
 
                 <div id="designer-container" style="flex:1; position:relative; overflow:hidden; cursor:default; background:#355e3b;">
                     <canvas id="designer-canvas" style="display:block; width:100%; height:100%;"></canvas>
+                    
+                    <div id="route-menu" style="display:none; position:absolute; background:#111; border:1px solid var(--accent); border-radius:6px; z-index:9999; flex-direction:column; padding:4px; box-shadow:0 10px 20px rgba(0,0,0,0.8);">
+                        <div style="font-size:0.6rem; color:#888; padding:4px 8px; text-align:center;">QUICK ROUTES</div>
+                        <button class="tool-btn" style="border:none; border-radius:4px; justify-content:center; background:transparent;" onclick="Playbook.applyPresetRoute('streak')">Go / Streak</button>
+                        <button class="tool-btn" style="border:none; border-radius:4px; justify-content:center; background:transparent;" onclick="Playbook.applyPresetRoute('slant')">Slant</button>
+                        <button class="tool-btn" style="border:none; border-radius:4px; justify-content:center; background:transparent;" onclick="Playbook.applyPresetRoute('post')">Post</button>
+                        <button class="tool-btn" style="border:none; border-radius:4px; justify-content:center; background:transparent;" onclick="Playbook.applyPresetRoute('out')">Out / Curl</button>
+                    </div>
                     
                     <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); padding:8px 16px; border-radius:20px; border:1px solid var(--border); display:flex; gap:12px; align-items:center; z-index:10;">
                         <button id="anim-play-btn" onclick="Playbook.toggleAnimation()" style="background:var(--accent); color:black; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">▶</button>
@@ -2675,18 +2704,21 @@
         };
 
         /**
-         * PLAYBOOK ENGINE V14 (The QB Simulator)
-         * - Auto-Draw Defensive Coverages (Zones/Man)
-         * - Constant Velocity Physics (True Speed)
-         * - QB VR Simulator (Throwing & Interception Logic)
-         * - Fully formatted and readable
+         * PLAYBOOK ENGINE V15 (The AI Physics Update)
+         * - Reactive Defensive AI (Man Chasing & Zone Drifting)
+         * - Hash Marks & Yard Line Rendering
+         * - Right-Click Route Tree Presets
+         * - Spacebar Play/Pause
+         * - Down & Distance Smart Logic
+         * - FULLY FORMATTED / UNCOMPRESSED
          */
         const Playbook = {
             canvas: null, 
             ctx: null,
             elements: [], 
             defense: [], 
-            routes: [], // Includes lines and zones
+            routes: [], 
+            aiRoutes: [], // Hidden routes generated by Defensive AI
 
             activePlayId: null, 
             isDragging: false, 
@@ -2694,31 +2726,42 @@
             dragTarget: null,
             activeTool: 'move', 
             lastDragX: 0, 
-            lastDragY: 0,
+            lastDragY: 0, 
+            contextTarget: null,
 
-            // Animation & Sim State
             animating: false, 
             animTime: 0, 
             animMaxTime: 6.0, 
             animReq: null,
             qbSimMode: false, 
-            passResult: null,
+            passResult: null, 
+            losY: 0,
 
             init: async () => { 
                 await Playbook.loadLibrary(); 
+                
+                // 1. SPACEBAR LISTENER
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && document.getElementById('designer-modal').style.display !== 'none') {
+                        // Prevent spacebar if typing in text box
+                        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+                        e.preventDefault();
+                        Playbook.toggleAnimation();
+                    }
+                });
             },
 
             openDesigner: (playId = null) => {
                 Playbook.activePlayId = playId;
                 document.getElementById('designer-modal').style.display = 'flex';
                 document.getElementById('counter-modal').style.display = 'none';
-                Playbook.stopAnimation();
-                Playbook.qbSimMode = false;
+                Playbook.stopAnimation(); 
+                Playbook.qbSimMode = false; 
                 Playbook.passResult = null;
-
                 Playbook.elements = []; 
                 Playbook.defense = []; 
-                Playbook.routes = [];
+                Playbook.routes = []; 
+                Playbook.aiRoutes = [];
                 Playbook.setTool('move');
 
                 requestAnimationFrame(() => {
@@ -2732,36 +2775,97 @@
                     Playbook.canvas.onpointerdown = Playbook.handleStart;
                     Playbook.canvas.onpointermove = Playbook.handleMove;
                     Playbook.canvas.onpointerup = Playbook.handleEnd;
-                    Playbook.canvas.onpointercancel = Playbook.handleEnd;
                     Playbook.canvas.ondblclick = Playbook.handleDoubleClick;
+                    
+                    // Right Click Listener
+                    Playbook.canvas.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        const r = Playbook.canvas.getBoundingClientRect();
+                        const target = Playbook.hitTest(e.clientX - r.left, e.clientY - r.top);
+                        if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') {
+                            Playbook.contextTarget = target;
+                            const menu = document.getElementById('route-menu');
+                            if (menu) {
+                                menu.style.display = 'flex';
+                                menu.style.left = (e.clientX - r.left + 10) + 'px';
+                                menu.style.top = (e.clientY - r.top + 10) + 'px';
+                            }
+                        }
+                    };
+                    
+                    // Hide menu on standard click
+                    document.addEventListener('click', (e) => { 
+                        if (e.target.tagName !== 'BUTTON' && document.getElementById('route-menu')) {
+                            document.getElementById('route-menu').style.display = 'none'; 
+                        }
+                    });
 
                     const plays = Store.get('playbook') || [];
                     const savedPlay = plays.find(p => (p.playId || p.id) === playId);
-
+                    
                     if (savedPlay && savedPlay.elements && savedPlay.elements.length > 0) {
                         document.getElementById('play-name').value = savedPlay.title;
-                        Playbook.elements = savedPlay.elements;
-                        Playbook.defense = savedPlay.defense || [];
+                        Playbook.elements = savedPlay.elements; 
+                        Playbook.defense = savedPlay.defense || []; 
                         Playbook.routes = savedPlay.routes || [];
                     } else { 
                         Playbook.setPersonnel('11'); 
                     }
+                    
                     Playbook.drawAll(); 
                     Playbook.updateFormationHUD();
                 });
             },
 
-            closeDesigner: () => {
-                Playbook.stopAnimation();
-                document.getElementById('designer-modal').style.display = 'none';
+            closeDesigner: () => { 
+                Playbook.stopAnimation(); 
+                document.getElementById('designer-modal').style.display = 'none'; 
+            },
+
+            // --- ROUTE PRESETS ---
+            applyPresetRoute: (routeType) => {
+                const menu = document.getElementById('route-menu');
+                if (menu) menu.style.display = 'none';
+                
+                if (!Playbook.contextTarget) return;
+                
+                const p = Playbook.contextTarget;
+                const rList = Playbook.routes.filter(r => r.ownerId !== p.id); // clear old
+                
+                const w = Playbook.canvas.width;
+                const isLeft = p.x < w / 2;
+                const inside = isLeft ? 60 : -60;
+                const outside = isLeft ? -60 : 60;
+                let pts = [];
+
+                if (routeType === 'streak') {
+                    pts = [{x: p.x, y: p.y}, {x: p.x, y: p.y - 180}];
+                } else if (routeType === 'slant') {
+                    pts = [{x: p.x, y: p.y}, {x: p.x + inside/2, y: p.y - 30}, {x: p.x + inside*2, y: p.y - 120}];
+                } else if (routeType === 'post') {
+                    pts = [{x: p.x, y: p.y}, {x: p.x, y: p.y - 100}, {x: p.x + inside*1.5, y: p.y - 200}];
+                } else if (routeType === 'out') {
+                    pts = [{x: p.x, y: p.y}, {x: p.x, y: p.y - 80}, {x: p.x + outside, y: p.y - 80}];
+                }
+
+                rList.push({ 
+                    id: 'r' + Date.now(), 
+                    ownerId: p.id, 
+                    ownerType: 'O', 
+                    type: 'draw', 
+                    points: pts, 
+                    color: '#f59e0b' 
+                });
+                
+                Playbook.routes = rList; 
+                Playbook.drawAll();
             },
 
             handleDoubleClick: (e) => {
                 if (Playbook.activeTool !== 'move') return;
+                
                 const r = Playbook.canvas.getBoundingClientRect();
-                const x = e.clientX - r.left; 
-                const y = e.clientY - r.top;
-                const target = Playbook.hitTest(x, y);
+                const target = Playbook.hitTest(e.clientX - r.left, e.clientY - r.top);
                 
                 if (target) { 
                     target.angle = ((target.angle || 0) + 45) % 360; 
@@ -2769,221 +2873,325 @@
                 }
             },
 
-            // --- 1. QB SIMULATOR LOGIC ---
+            // --- VR SIM & DEFENSIVE AI ---
             toggleQBSim: () => {
                 Playbook.qbSimMode = !Playbook.qbSimMode;
                 const btn = document.getElementById('qb-sim-btn');
                 Playbook.passResult = null;
-
-                if (Playbook.qbSimMode) {
-                    btn.style.background = '#10b981'; 
-                    btn.style.color = 'black';
-                    if (!Playbook.animating) {
-                        Playbook.toggleAnimation();
+                
+                if (Playbook.qbSimMode) { 
+                    if (btn) {
+                        btn.style.background = '#10b981'; 
+                        btn.style.color = 'black'; 
                     }
-                } else {
-                    btn.style.background = 'transparent'; 
-                    btn.style.color = '#10b981';
-                    Playbook.stopAnimation();
+                    if (!Playbook.animating) Playbook.toggleAnimation(); 
+                } else { 
+                    if (btn) {
+                        btn.style.background = 'transparent'; 
+                        btn.style.color = '#10b981'; 
+                    }
+                    Playbook.stopAnimation(); 
                 }
             },
 
             throwPass: (targetReceiver) => {
-                Playbook.animating = false; // Pause the play
+                Playbook.animating = false; 
+                
                 if (Playbook.animReq) {
                     cancelAnimationFrame(Playbook.animReq);
                 }
-                document.getElementById('anim-play-btn').innerHTML = "▶";
-
-                const qb = Playbook.elements.find(e => e.label === 'Q');
+                
+                const btn = document.getElementById('anim-play-btn');
+                if (btn) btn.innerHTML = "▶";
+                
+                const qb = Playbook.elements.find(e => e.label === 'Q'); 
                 if (!qb) return;
 
-                // Use the new global calculator
                 const qbPos = Playbook.getAnimPos(qb);
                 const recPos = Playbook.getAnimPos(targetReceiver);
 
                 let interceptedBy = null;
-                // Check if any defender is within 40 pixels of the receiver (Breakup/INT range)
                 Playbook.defense.forEach(d => {
-                    const dPos = Playbook.getAnimPos(d);
-                    const distanceToRec = Math.hypot(dPos.x - recPos.x, dPos.y - recPos.y);
-                    if (distanceToRec < 40) {
+                    const dPos = Playbook.getAnimPos(d, true); // True flag checks AI routes
+                    if (Math.hypot(dPos.x - recPos.x, dPos.y - recPos.y) < 40) {
                         interceptedBy = d;
                     }
                 });
 
-                // --- Animated Ball Flight ---
-                const passDestination = interceptedBy ? Playbook.getAnimPos(interceptedBy) : recPos;
+                const dest = interceptedBy ? Playbook.getAnimPos(interceptedBy, true) : recPos;
                 
-                // Set the final result data
                 if (interceptedBy) {
                     Playbook.passResult = { 
-                        status: 'INTERCEPTED / PBU', color: '#ef4444', 
-                        p1: qbPos, p2: passDestination, msg: `Covered by ${interceptedBy.label}` 
+                        status: 'INTERCEPTED/PBU', 
+                        color: '#ef4444', 
+                        p1: qbPos, 
+                        p2: dest, 
+                        msg: `Covered by ${interceptedBy.label}` 
                     };
-                } else {
-                    const passLength = Math.round((qbPos.y - recPos.y) / 10);
+                } else { 
+                    const yds = Math.round((qbPos.y - recPos.y) / 8); 
                     Playbook.passResult = { 
-                        status: 'COMPLETED', color: '#10b981', 
-                        p1: qbPos, p2: passDestination, msg: `Gain of ${passLength > 0 ? passLength : 0} yds` 
-                    };
+                        status: 'COMPLETED', 
+                        color: '#10b981', 
+                        p1: qbPos, 
+                        p2: dest, 
+                        msg: `Gain of ${yds > 0 ? yds : 0} yds` 
+                    }; 
                 }
 
-                // Animate the pass (creates a fast moving yellow dot)
                 let passFrame = 0;
                 const animatePass = () => {
-                    passFrame += 0.1; // Speed of the ball
-                    if (passFrame >= 1) {
-                        Playbook.drawAll(); // Show final result banner
-                        return;
+                    passFrame += 0.1; 
+                    if (passFrame >= 1) { 
+                        Playbook.drawAll(); 
+                        return; 
                     }
                     
-                    Playbook.drawAll(); // Redraw field
-                    
-                    // Draw moving ball
-                    const currentX = qbPos.x + (passDestination.x - qbPos.x) * passFrame;
-                    const currentY = qbPos.y + (passDestination.y - qbPos.y) * passFrame;
-                    
+                    Playbook.drawAll(); 
                     const ctx = Playbook.ctx;
-                    ctx.beginPath();
-                    ctx.arc(currentX, currentY, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = '#fbbf24'; // Yellow football
-                    ctx.fill();
-                    ctx.strokeStyle = '#fff';
-                    ctx.lineWidth = 1;
+                    ctx.beginPath(); 
+                    ctx.arc(qbPos.x + (dest.x - qbPos.x) * passFrame, qbPos.y + (dest.y - qbPos.y) * passFrame, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fbbf24'; 
+                    ctx.fill(); 
+                    ctx.strokeStyle = '#fff'; 
+                    ctx.lineWidth = 1; 
                     ctx.stroke();
-
+                    
                     requestAnimationFrame(animatePass);
                 };
-                
                 animatePass();
             },
 
-            // --- 2. CONSTANT VELOCITY ANIMATION ---
+            // --- NEW: REACTIVE AI CALCULATOR ---
+            calculateDefensiveAI: () => {
+                Playbook.aiRoutes = [];
+                
+                // Generate tracking paths for defenders based on offensive routes
+                Playbook.defense.forEach(d => {
+                    const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
+                    const speed = zone ? 60 : 100; // Zone defenders drift slower, Man defenders chase faster
+                    let target = { x: d.x, y: d.y };
+                    
+                    if (zone) {
+                        // Drift to center of zone
+                        target.x = zone.points[0].x; 
+                        target.y = zone.points[0].y - 30;
+                    } else {
+                        // Find closest man
+                        let closest = null; 
+                        let minDist = 999;
+                        
+                        Playbook.elements.forEach(o => {
+                            if (o.label === 'C' || o.label === 'Q' || o.label.includes('ol_')) return;
+                            let dist = Math.hypot(o.x - d.x, o.y - d.y);
+                            if (dist < minDist) { 
+                                minDist = dist; 
+                                closest = o; 
+                            }
+                        });
+                        
+                        if (closest) {
+                            // Predict where man will be in 2 seconds
+                            const endPos = Playbook.getAnimPosAtTime(closest, 2.0);
+                            target.x = endPos.x; 
+                            target.y = endPos.y + 20; // Inside/Under leverage
+                        }
+                    }
+                    
+                    // Create invisible AI tracking route
+                    Playbook.aiRoutes.push({ 
+                        ownerId: d.id, 
+                        points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] 
+                    });
+                });
+            },
+
             toggleAnimation: () => {
                 if (Playbook.qbSimMode && Playbook.passResult) {
-                    Playbook.passResult = null;
+                    Playbook.passResult = null; 
                 }
                 
                 const btn = document.getElementById('anim-play-btn');
-                if (Playbook.animating) {
+                
+                if (Playbook.animating) { 
                     Playbook.stopAnimation(); 
-                    btn.innerHTML = "▶";
-                } else {
+                    if (btn) btn.innerHTML = "▶"; 
+                } else { 
+                    Playbook.calculateDefensiveAI(); // Init AI Brain
                     Playbook.animating = true; 
-                    btn.innerHTML = "⏸";
+                    if (btn) btn.innerHTML = "⏸"; 
                     if (Playbook.animTime >= Playbook.animMaxTime) {
-                        Playbook.animTime = 0;
+                        Playbook.animTime = 0; 
                     }
-                    Playbook.animateLoop();
+                    Playbook.animateLoop(); 
                 }
             },
-
-            stopAnimation: () => {
-                Playbook.animating = false;
-                if (Playbook.animReq) {
-                    cancelAnimationFrame(Playbook.animReq);
-                }
-                Playbook.drawAll();
-            },
-
-            scrubAnimation: (val) => {
+            
+            stopAnimation: () => { 
                 Playbook.animating = false; 
-                document.getElementById('anim-play-btn').innerHTML = "▶";
-                Playbook.animTime = (val / 100) * Playbook.animMaxTime;
-                document.getElementById('anim-timer').innerText = Playbook.animTime.toFixed(1) + "s";
-                Playbook.drawAll();
+                if (Playbook.animReq) {
+                    cancelAnimationFrame(Playbook.animReq); 
+                }
+                Playbook.drawAll(); 
             },
-
+            
+            scrubAnimation: (val) => { 
+                Playbook.animating = false; 
+                const btn = document.getElementById('anim-play-btn');
+                if (btn) btn.innerHTML = "▶"; 
+                Playbook.animTime = (val / 100) * Playbook.animMaxTime; 
+                Playbook.drawAll(); 
+            },
+            
             animateLoop: () => {
                 if (!Playbook.animating) return;
                 
-                Playbook.animTime += 0.03; // Time tick
+                Playbook.animTime += 0.03; 
                 
-                if (Playbook.animTime > Playbook.animMaxTime) {
-                    Playbook.animTime = 0;
+                if (Playbook.animTime > Playbook.animMaxTime) { 
+                    Playbook.animTime = 0; 
                     if (Playbook.qbSimMode) {
-                        Playbook.toggleQBSim();
+                        Playbook.toggleQBSim(); 
                     }
                 }
                 
-                document.getElementById('anim-timer').innerText = Playbook.animTime.toFixed(1) + "s";
-                document.getElementById('anim-scrubber').value = (Playbook.animTime / Playbook.animMaxTime) * 100;
+                const timer = document.getElementById('anim-timer');
+                const scrubber = document.getElementById('anim-scrubber');
                 
-                Playbook.drawAll();
+                if (timer) timer.innerText = Playbook.animTime.toFixed(1) + "s";
+                if (scrubber) scrubber.value = (Playbook.animTime / Playbook.animMaxTime) * 100;
+                
+                Playbook.drawAll(); 
                 Playbook.animReq = requestAnimationFrame(Playbook.animateLoop);
             },
 
-            // --- 3. AUTO-DRAW DEFENSIVE ZONES ---
+            // Helper for specific time prediction
+            getAnimPosAtTime: (player, timeOverride) => {
+                const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
+                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
+                
+                const speed = 120; 
+                const targetDist = timeOverride * speed; 
+                let currentDist = 0;
+                
+                for (let i = 0; i < route.points.length - 1; i++) {
+                    let p1 = route.points[i]; 
+                    let p2 = route.points[i + 1]; 
+                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    
+                    if (currentDist + segDist >= targetDist) { 
+                        let f = (targetDist - currentDist) / segDist; 
+                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
+                    }
+                    currentDist += segDist;
+                } 
+                return route.points[route.points.length - 1];
+            },
+
+            getAnimPos: (player, useAIRoutes = false) => {
+                if (Playbook.animTime === 0) return { x: player.x, y: player.y };
+                
+                let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
+                
+                // AI fallback
+                if (useAIRoutes && !route) {
+                    route = Playbook.aiRoutes.find(r => r.ownerId === player.id); 
+                }
+                
+                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
+                
+                const speed = player.type === 'D' ? 80 : 120; // Defense reacts slightly slower
+                const targetDist = Playbook.animTime * speed;
+                let currentDist = 0;
+                
+                for (let i = 0; i < route.points.length - 1; i++) {
+                    let p1 = route.points[i]; 
+                    let p2 = route.points[i + 1]; 
+                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    
+                    if (currentDist + segDist >= targetDist) { 
+                        let f = (targetDist - currentDist) / segDist; 
+                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
+                    }
+                    currentDist += segDist;
+                } 
+                return route.points[route.points.length - 1];
+            },
+
+            // --- SMART DEFENSE LOGIC ---
             toggleDefense: (val) => {
                 Playbook.defense = []; 
-                Playbook.activeDefenseType = val;
-                Playbook.clearRoutes('D'); // Clear old defensive routes & zones
-
+                Playbook.activeDefenseType = val; 
+                Playbook.clearRoutes('D'); 
+                
                 if (val === 'none') { 
                     Playbook.drawAll(); 
                     return; 
                 }
-
+                
                 const w = Playbook.canvas.width; 
                 const h = Playbook.canvas.height; 
-                const los = h * 0.65; 
-                const c = w / 2;
+                const los = Playbook.losY || h * 0.75; 
+                
+                // Track Ball Position based on hash
+                const hashEl = document.getElementById('sim-hash');
+                const hash = hashEl ? hashEl.value : 'mid';
+                let c = w / 2; 
+                
+                if (hash === 'left') c -= 100; 
+                if (hash === 'right') c += 100;
 
-                // Helper to create defender AND their zone automatically
                 const createD = (lbl, x, y, zoneType = null, zoneDx = 0, zoneDy = 0) => {
-                    const id = `def_${Date.now()}_${Math.random()}`;
+                    const id = `def_${Date.now()}_${Math.random()}`; 
                     Playbook.defense.push({ id, type: 'D', label: lbl, x, y });
-
+                    
                     if (zoneType) {
                         let color = 'rgba(255,255,255,0.2)';
-                        if (zoneType === 'zone-deep') color = 'rgba(56, 189, 248, 0.4)'; // Blue
-                        if (zoneType === 'zone-hook') color = 'rgba(251, 191, 36, 0.4)'; // Yellow
-                        if (zoneType === 'zone-flat') color = 'rgba(168, 85, 247, 0.4)'; // Purple
-
-                        Playbook.routes.push({
-                            id: 'r' + Date.now() + id, 
+                        if (zoneType === 'zone-deep') color = 'rgba(56, 189, 248, 0.4)'; 
+                        if (zoneType === 'zone-hook') color = 'rgba(251, 191, 36, 0.4)'; 
+                        if (zoneType === 'zone-flat') color = 'rgba(168, 85, 247, 0.4)';
+                        
+                        Playbook.routes.push({ 
+                            id: 'r'+id, 
                             ownerId: id, 
                             ownerType: 'D', 
-                            type: zoneType,
+                            type: zoneType, 
                             points: [{ x, y }, { x: x + zoneDx, y: y + zoneDy }], 
-                            color: color
+                            color: color 
                         });
                     }
                 };
 
-                // AI Coverage Injection Logic
+                // Expanded Library
                 if (val === 'cover3' || val === 'cover3_mable') {
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
                     createD('E', c + 90, los - 20);
                     
-                    createD('W', c - 120, los - 60, 'zone-hook', 0, 40);
-                    createD('M', c, los - 60, 'zone-hook', 0, 40);
+                    createD('W', c - 120, los - 60, 'zone-hook', 0, 40); 
+                    createD('M', c, los - 60, 'zone-hook', 0, 40); 
                     createD('S', c + 120, los - 60, 'zone-flat', 40, 20);
                     
-                    createD('CB', 40, los - 180, 'zone-deep', 0, 80);
-                    createD('CB', w - 40, los - 180, 'zone-deep', 0, 80);
-                    createD('FS', c, los - 220, 'zone-deep', 0, 80);
+                    createD('CB', 40, los - 180, 'zone-deep', 0, 80); 
+                    createD('CB', w - 40, los - 180, 'zone-deep', 0, 80); 
+                    createD('FS', c, los - 220, 'zone-deep', 0, 80); 
                     createD('SS', c + 60, los - 60, 'zone-flat', 50, 20);
-                }
-                else if (val === 'cover2' || val === 'tampa_2') {
+                } else if (val === 'cover2' || val === 'tampa_2') {
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
                     createD('E', c + 90, los - 20);
                     
-                    createD('W', c - 120, los - 60, 'zone-hook', 0, 40);
-                    createD('M', c, los - 80, val === 'tampa_2' ? 'zone-deep' : 'zone-hook', 0, val === 'tampa_2' ? 100 : 40);
+                    createD('W', c - 120, los - 60, 'zone-hook', 0, 40); 
+                    createD('M', c, los - 80, val === 'tampa_2' ? 'zone-deep' : 'zone-hook', 0, val === 'tampa_2' ? 100 : 40); 
                     createD('S', c + 120, los - 60, 'zone-hook', 0, 40);
                     
-                    createD('CB', 40, los - 40, 'zone-flat', 0, 40);
-                    createD('CB', w - 40, los - 40, 'zone-flat', 0, 40);
-                    createD('FS', c - 80, los - 220, 'zone-deep', 0, 100);
+                    createD('CB', 40, los - 40, 'zone-flat', 0, 40); 
+                    createD('CB', w - 40, los - 40, 'zone-flat', 0, 40); 
+                    createD('FS', c - 80, los - 220, 'zone-deep', 0, 100); 
                     createD('SS', c + 80, los - 220, 'zone-deep', 0, 100);
-                }
-                else if (val === 'cover4') {
+                } else if (val === 'cover4') {
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
@@ -2994,11 +3202,10 @@
                     createD('S', c + 120, los - 60, 'zone-hook', 0, 40);
                     
                     createD('CB', 40, los - 120, 'zone-deep', 0, 80); 
-                    createD('CB', w - 40, los - 120, 'zone-deep', 0, 80);
+                    createD('CB', w - 40, los - 120, 'zone-deep', 0, 80); 
                     createD('FS', c - 60, los - 220, 'zone-deep', 0, 80); 
                     createD('SS', c + 60, los - 220, 'zone-deep', 0, 80);
-                }
-                else {
+                } else {
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
@@ -3009,174 +3216,14 @@
                     createD('S', c + 120, los - 80);
                     
                     createD('CB', 40, los - 40); 
-                    createD('CB', w - 40, los - 40);
+                    createD('CB', w - 40, los - 40); 
                     createD('FS', c - 60, los - 200); 
                     createD('SS', c + 60, los - 200);
-                }
+                } 
                 Playbook.drawAll();
             },
 
-            // --- 4. INTERACTION LOGIC ---
-            // --- NEW: Global Position Calculator ---
-            getAnimPos: (player) => {
-                // If at 0 seconds, return start position
-                if (Playbook.animTime === 0) return { x: player.x, y: player.y };
-                
-                const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
-
-                const speed = 120; // 120 pixels per second
-                const targetDist = Playbook.animTime * speed;
-                let currentDist = 0;
-
-                for (let i = 0; i < route.points.length - 1; i++) {
-                    let p1 = route.points[i]; 
-                    let p2 = route.points[i + 1];
-                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                    
-                    if (currentDist + segDist >= targetDist) {
-                        let fraction = (targetDist - currentDist) / segDist;
-                        return { 
-                            x: p1.x + (p2.x - p1.x) * fraction, 
-                            y: p1.y + (p2.y - p1.y) * fraction 
-                        };
-                    }
-                    currentDist += segDist;
-                }
-                return route.points[route.points.length - 1]; // Return end of route
-            },
-
-            // --- 4. INTERACTION LOGIC ---
-            hitTest: (x, y) => {
-                const allPlayers = [...Playbook.elements, ...Playbook.defense];
-                return allPlayers.find(el => {
-                    const pos = Playbook.getAnimPos(el); // FIX: Check where they are NOW, not where they started
-                    return Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < 25;
-                });
-            },
-
-            handleStart: (e) => {
-                e.preventDefault(); 
-                const r = Playbook.canvas.getBoundingClientRect(); 
-                const x = e.clientX - r.left; 
-                const y = e.clientY - r.top;
-
-                // IF IN QB SIM MODE, capture the throw!
-                if (Playbook.qbSimMode && Playbook.animating) {
-                    const target = Playbook.hitTest(x, y);
-                    if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') {
-                        Playbook.throwPass(target);
-                    }
-                    return;
-                }
-
-                if (Playbook.activeTool === 'eraser') { 
-                    Playbook.isDrawing = true; 
-                    Playbook.eraseAt(x, y); 
-                    return; 
-                }
-
-                Playbook.dragTarget = Playbook.hitTest(x, y);
-
-                if (Playbook.activeTool === 'move' && Playbook.dragTarget) {
-                    Playbook.isDragging = true; 
-                    Playbook.lastDragX = x; 
-                    Playbook.lastDragY = y;
-                    Playbook.canvas.style.cursor = 'grabbing'; 
-                    Playbook.canvas.setPointerCapture(e.pointerId);
-                }
-                else if (Playbook.dragTarget) {
-                    Playbook.isDrawing = true; 
-                    Playbook.canvas.setPointerCapture(e.pointerId);
-                    
-                    let color = '#fff'; 
-                    let type = Playbook.activeTool;
-                    
-                    if (type === 'draw') color = Playbook.dragTarget.type === 'D' ? '#ef4444' : '#f59e0b';
-                    if (type === 'zone-deep') color = 'rgba(56, 189, 248, 0.4)';
-                    if (type === 'zone-hook') color = 'rgba(251, 191, 36, 0.4)';
-                    if (type === 'zone-flat') color = 'rgba(168, 85, 247, 0.4)';
-
-                    Playbook.routes.push({ 
-                        id: 'r' + Date.now(), 
-                        ownerId: Playbook.dragTarget.id, 
-                        ownerType: Playbook.dragTarget.type, 
-                        type: type, 
-                        points: [{ x, y }], 
-                        color: color 
-                    });
-                }
-            },
-
-            handleMove: (e) => {
-                e.preventDefault(); 
-                if (!Playbook.isDragging && !Playbook.isDrawing) return;
-                
-                const r = Playbook.canvas.getBoundingClientRect(); 
-                const x = e.clientX - r.left; 
-                const y = e.clientY - r.top;
-                
-                if (Playbook.activeTool === 'eraser') { 
-                    Playbook.eraseAt(x, y); 
-                    return; 
-                }
-
-                if (Playbook.isDragging && Playbook.dragTarget) {
-                    const dx = x - Playbook.lastDragX; 
-                    const dy = y - Playbook.lastDragY;
-                    Playbook.dragTarget.x += dx; 
-                    Playbook.dragTarget.y += dy;
-                    
-                    Playbook.routes.forEach(rt => { 
-                        if (rt.ownerId === Playbook.dragTarget.id) {
-                            rt.points.forEach(p => { 
-                                p.x += dx; 
-                                p.y += dy; 
-                            });
-                        }
-                    });
-                    
-                    Playbook.lastDragX = x; 
-                    Playbook.lastDragY = y; 
-                    Playbook.drawAll();
-                } else if (Playbook.isDrawing) {
-                    const cr = Playbook.routes[Playbook.routes.length - 1];
-                    if (cr.type.includes('zone')) { 
-                        cr.points[1] = { x, y }; 
-                    }
-                    else if (Math.hypot(x - cr.points[cr.points.length - 1].x, y - cr.points[cr.points.length - 1].y) > 3) { 
-                        cr.points.push({ x, y }); 
-                    }
-                    Playbook.drawAll();
-                }
-            },
-
-            handleEnd: (e) => {
-                e.preventDefault(); 
-                Playbook.isDragging = false; 
-                Playbook.isDrawing = false; 
-                Playbook.dragTarget = null;
-                
-                if (Playbook.canvas) {
-                    Playbook.canvas.releasePointerCapture(e.pointerId);
-                }
-                if (Playbook.activeTool === 'move') { 
-                    Playbook.canvas.style.cursor = 'grab'; 
-                    Playbook.updateFormationHUD(); 
-                }
-            },
-
-            eraseAt: (ex, ey) => { 
-                Playbook.routes = Playbook.routes.filter(r => !r.points.some(p => Math.hypot(p.x - ex, p.y - ey) < 20)); 
-                Playbook.drawAll(); 
-            },
-
-            clearRoutes: (t) => { 
-                Playbook.routes = Playbook.routes.filter(r => r.ownerType !== t); 
-                Playbook.drawAll(); 
-            },
-
-            // --- 5. RENDER ENGINE (With True Speed) ---
+            // --- DRAWING ENGINE WITH YARD LINES ---
             drawField: () => {
                 if (!Playbook.ctx) return;
                 const ctx = Playbook.ctx; 
@@ -3186,27 +3233,76 @@
                 ctx.fillStyle = '#355e3b'; 
                 ctx.fillRect(0, 0, w, h);
                 
-                ctx.strokeStyle = 'rgba(255,255,255,0.1)'; 
-                ctx.lineWidth = 1; 
+                // NEW: YARD LINES & HASH MARKS
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)'; 
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.textAlign = 'left'; 
+                ctx.textBaseline = 'middle'; 
+                ctx.font = 'bold 14px "JetBrains Mono"';
+                
+                const losY = h * 0.75; // Shifted LOS down to give more deep field area
+                Playbook.losY = losY; 
+                
+                for(let i = -10; i <= 50; i += 5) {
+                    let y = losY - (i * 10); // 10px per yard
+                    if (y < 0 || y > h) continue;
+                    
+                    ctx.lineWidth = i % 10 === 0 ? 2 : 0.5; // Thicker every 10 yards
+                    ctx.beginPath(); 
+                    ctx.moveTo(0, y); 
+                    ctx.lineTo(w, y); 
+                    ctx.stroke();
+                    
+                    // Hash marks
+                    ctx.beginPath(); 
+                    ctx.moveTo(w*0.35, y-3); 
+                    ctx.lineTo(w*0.35, y+3); 
+                    ctx.stroke();
+                    
+                    ctx.beginPath(); 
+                    ctx.moveTo(w*0.65, y-3); 
+                    ctx.lineTo(w*0.65, y+3); 
+                    ctx.stroke();
+
+                    // Numbers
+                    if (i % 10 === 0 && i !== 0 && i !== 50) { 
+                        ctx.fillText(50 - i, 10, y); 
+                        ctx.fillText(50 - i, w - 30, y); 
+                    }
+                }
+
+                // Line of Scrimmage (Blue)
+                ctx.strokeStyle = '#3b82f6'; 
+                ctx.lineWidth = 3; 
                 ctx.beginPath(); 
-                for (let i = 0; i < w; i += 30) { ctx.moveTo(i, 0); ctx.lineTo(i, h); } 
-                for (let i = 0; i < h; i += 30) { ctx.moveTo(0, i); ctx.lineTo(w, i); } 
+                ctx.moveTo(0, losY); 
+                ctx.lineTo(w, losY); 
                 ctx.stroke();
                 
-                ctx.strokeStyle = '#3b82f6'; 
-                ctx.lineWidth = 2; 
+                // First Down Line (Yellow)
+                const distEl = document.getElementById('sim-dist');
+                const distType = distEl ? distEl.value : 'med';
+                
+                let yardage = 10;
+                if (distType === 'short') yardage = 3;
+                if (distType === 'med') yardage = 7;
+                if (distType === 'long') yardage = 15;
+                
+                let fdY = losY - (yardage * 10);
+                ctx.strokeStyle = '#fbbf24'; 
+                ctx.lineWidth = 3; 
                 ctx.beginPath(); 
-                ctx.moveTo(0, h * 0.65); 
-                ctx.lineTo(w, h * 0.65); 
+                ctx.moveTo(0, fdY); 
+                ctx.lineTo(w, fdY); 
                 ctx.stroke();
             },
 
             drawAll: () => {
-                if (!Playbook.ctx) return;
+                if (!Playbook.ctx) return; 
+                
                 Playbook.drawField(); 
                 const ctx = Playbook.ctx;
 
-                // Draw Zones
                 Playbook.routes.filter(r => r.type.includes('zone')).forEach(z => {
                     if (z.points.length < 2) return;
                     const rX = Math.abs(z.points[1].x - z.points[0].x) || 40; 
@@ -3220,13 +3316,13 @@
                     ctx.stroke();
                 });
 
-                // Draw Routes
                 Playbook.routes.filter(r => !r.type.includes('zone')).forEach(r => {
-                    if (r.points.length < 2) return;
+                    if (r.points.length < 2) return; 
                     ctx.beginPath(); 
                     ctx.moveTo(r.points[0].x, r.points[0].y);
+                    
                     for (let i = 1; i < r.points.length - 1; i++) {
-                        ctx.quadraticCurveTo(
+                        ctx.quadraticCurveTo( 
                             r.points[i].x, 
                             r.points[i].y, 
                             (r.points[i].x + r.points[i + 1].x) / 2, 
@@ -3242,10 +3338,9 @@
                     ctx.setLineDash([]);
                 });
 
-                // Draw Players (Constant Velocity & Freeze on Pause)
                 const allPlayers = [...Playbook.defense, ...Playbook.elements];
                 allPlayers.forEach(el => {
-                    const pos = Playbook.getAnimPos(el); // Calculate exact position for current time
+                    const pos = Playbook.getAnimPos(el, el.type === 'D'); // True enables AI tracking for defense
                     let drawX = pos.x; 
                     let drawY = pos.y;
 
@@ -3265,25 +3360,24 @@
                     ctx.strokeStyle = el.type === 'D' ? 'white' : 'black'; 
                     ctx.lineWidth = 3; 
                     ctx.stroke();
-
+                    
                     ctx.fillStyle = el.type === 'D' ? 'white' : 'black'; 
                     ctx.font = 'bold 10px Inter'; 
                     ctx.textAlign = 'center'; 
-                    ctx.textBaseline = 'middle';
+                    ctx.textBaseline = 'middle'; 
                     ctx.fillText(el.label, drawX, drawY);
                 });
 
-                // Draw QB Sim Result
                 if (Playbook.passResult) {
                     ctx.beginPath(); 
-                    ctx.moveTo(Playbook.passResult.p1.x, Playbook.passResult.p1.y);
+                    ctx.moveTo(Playbook.passResult.p1.x, Playbook.passResult.p1.y); 
                     ctx.lineTo(Playbook.passResult.p2.x, Playbook.passResult.p2.y);
                     ctx.strokeStyle = '#fbbf24'; 
                     ctx.lineWidth = 4; 
                     ctx.setLineDash([10, 10]); 
                     ctx.stroke(); 
                     ctx.setLineDash([]);
-
+                    
                     ctx.fillStyle = Playbook.passResult.color; 
                     ctx.fillRect(Playbook.canvas.width / 2 - 120, 40, 240, 40);
                     ctx.fillStyle = 'black'; 
@@ -3294,9 +3388,129 @@
                 }
             },
 
-            // --- ALL OTHER METHODS ---
+            // --- STANDARD UTILITIES ---
+            hitTest: (x, y) => { 
+                const allPlayers = [...Playbook.elements, ...Playbook.defense]; 
+                return allPlayers.find(el => { 
+                    const pos = Playbook.getAnimPos(el); 
+                    return Math.sqrt((pos.x - x) ** 2 + (pos.y - y) ** 2) < 25; 
+                }); 
+            },
+
+            handleStart: (e) => { 
+                e.preventDefault(); 
+                const r = Playbook.canvas.getBoundingClientRect(); 
+                const x = e.clientX - r.left; 
+                const y = e.clientY - r.top; 
+                
+                const menu = document.getElementById('route-menu');
+                if (menu) menu.style.display = 'none'; 
+                
+                if (Playbook.qbSimMode && Playbook.animating) { 
+                    const target = Playbook.hitTest(x, y); 
+                    if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') {
+                        Playbook.throwPass(target); 
+                    }
+                    return; 
+                } 
+                
+                if (Playbook.activeTool === 'eraser') { 
+                    Playbook.isDrawing = true; 
+                    Playbook.eraseAt(x, y); 
+                    return; 
+                } 
+                
+                Playbook.dragTarget = Playbook.hitTest(x, y); 
+                
+                if (Playbook.activeTool === 'move' && Playbook.dragTarget) { 
+                    Playbook.isDragging = true; 
+                    Playbook.lastDragX = x; 
+                    Playbook.lastDragY = y; 
+                    Playbook.canvas.style.cursor = 'grabbing'; 
+                    Playbook.canvas.setPointerCapture(e.pointerId); 
+                } else if (Playbook.dragTarget) { 
+                    Playbook.isDrawing = true; 
+                    Playbook.canvas.setPointerCapture(e.pointerId); 
+                    
+                    let color = '#fff'; 
+                    let type = Playbook.activeTool; 
+                    
+                    if (type === 'draw') color = Playbook.dragTarget.type === 'D' ? '#ef4444' : '#f59e0b'; 
+                    if (type === 'zone-deep') color = 'rgba(56, 189, 248, 0.4)'; 
+                    if (type === 'zone-hook') color = 'rgba(251, 191, 36, 0.4)'; 
+                    if (type === 'zone-flat') color = 'rgba(168, 85, 247, 0.4)'; 
+                    
+                    Playbook.routes.push({ 
+                        id: 'r' + Date.now(), 
+                        ownerId: Playbook.dragTarget.id, 
+                        ownerType: Playbook.dragTarget.type, 
+                        type: type, 
+                        points: [{ x, y }], 
+                        color: color 
+                    }); 
+                } 
+            },
+
+            handleMove: (e) => { 
+                e.preventDefault(); 
+                if (!Playbook.isDragging && !Playbook.isDrawing) return; 
+                
+                const r = Playbook.canvas.getBoundingClientRect(); 
+                const x = e.clientX - r.left; 
+                const y = e.clientY - r.top; 
+                
+                if (Playbook.activeTool === 'eraser') { 
+                    Playbook.eraseAt(x, y); 
+                    return; 
+                } 
+                
+                if (Playbook.isDragging && Playbook.dragTarget) { 
+                    const dx = x - Playbook.lastDragX; 
+                    const dy = y - Playbook.lastDragY; 
+                    Playbook.dragTarget.x += dx; 
+                    Playbook.dragTarget.y += dy; 
+                    
+                    Playbook.routes.forEach(rt => { 
+                        if (rt.ownerId === Playbook.dragTarget.id) { 
+                            rt.points.forEach(p => { 
+                                p.x += dx; 
+                                p.y += dy; 
+                            }); 
+                        } 
+                    }); 
+                    
+                    Playbook.lastDragX = x; 
+                    Playbook.lastDragY = y; 
+                    Playbook.drawAll(); 
+                } else if (Playbook.isDrawing) { 
+                    const cr = Playbook.routes[Playbook.routes.length - 1]; 
+                    if (cr.type && cr.type.includes('zone')) { 
+                        cr.points[1] = { x, y }; 
+                    } else if (Math.hypot(x - cr.points[cr.points.length - 1].x, y - cr.points[cr.points.length - 1].y) > 3) { 
+                        cr.points.push({ x, y }); 
+                    } 
+                    Playbook.drawAll(); 
+                } 
+            },
+
+            handleEnd: (e) => { 
+                e.preventDefault(); 
+                Playbook.isDragging = false; 
+                Playbook.isDrawing = false; 
+                Playbook.dragTarget = null; 
+                
+                if (Playbook.canvas) {
+                    Playbook.canvas.releasePointerCapture(e.pointerId); 
+                }
+                
+                if (Playbook.activeTool === 'move') { 
+                    Playbook.canvas.style.cursor = 'grab'; 
+                    Playbook.updateFormationHUD(); 
+                } 
+            },
+
             setTool: (tool) => { 
-                Playbook.activeTool = tool;
+                Playbook.activeTool = tool; 
                 ['move', 'draw', 'block', 'eraser', 'zone-deep', 'zone-hook', 'zone-flat'].forEach(t => { 
                     const el = document.getElementById(`tool-${t}`); 
                     if (el) { 
@@ -3315,33 +3529,52 @@
                 } 
             },
 
+            eraseAt: (ex, ey) => { 
+                Playbook.routes = Playbook.routes.filter(r => !r.points.some(p => Math.hypot(p.x - ex, p.y - ey) < 20)); 
+                Playbook.drawAll(); 
+            },
+
+            clearRoutes: (t) => { 
+                Playbook.routes = Playbook.routes.filter(r => r.ownerType !== t); 
+                Playbook.drawAll(); 
+            },
+            
+            // --- SMART AI SITUATION ---
             autoMatchDefense: () => { 
                 const report = Playbook.generateFormationReport(); 
                 const grid = document.getElementById('counter-grid'); 
                 if (!grid) return; 
-
-                const t = { 
-                    isSpread: report.width > 200, 
-                    isHeavy: report.backs >= 2, 
-                    isEmpty: report.backs === 0, 
-                    isTrips: report.name.includes("Trips") 
-                }; 
-
+                
+                const distEl = document.getElementById('sim-dist');
+                const downEl = document.getElementById('sim-down');
+                
+                const dist = distEl ? distEl.value : 'med';
+                const down = downEl ? parseInt(downEl.value) : 1;
+                
+                const isHeavy = report.backs >= 2; 
+                const isEmpty = report.backs === 0; 
+                const isTrips = report.name.includes("Trips");
+                
                 let options = []; 
-
-                if (t.isEmpty) {
+                if (dist === 'long' && down > 2) {
+                    options = [
+                        { name: "Drop 8", code: "drop_8", type: "Prevent", desc: "Flood passing lanes for 3rd & Long." }, 
+                        { name: "Tampa 2", code: "tampa_2", type: "Zone", desc: "Keep everything in front." }, 
+                        { name: "Cover 4", code: "cover4", type: "Match", desc: "Protect the sticks." }
+                    ];
+                } else if (isEmpty) {
                     options = [
                         { name: "Zero Blitz", code: "manfree", type: "Aggressive", desc: "Send 6 vs Empty." }, 
-                        { name: "Drop 8", code: "drop_8", type: "Conservative", desc: "Flood passing lanes." }, 
+                        { name: "Drop 8", code: "drop_8", type: "Conservative", desc: "Rush 3." }, 
                         { name: "Tampa 2", code: "tampa_2", type: "Zone", desc: "Protect seams." }
                     ]; 
-                } else if (t.isTrips) {
+                } else if (isTrips) {
                     options = [
                         { name: "Cover 3 Mable", code: "cover3_mable", type: "Zone Match", desc: "Rotate safety strong." }, 
                         { name: "Quarters", code: "cover4", type: "Hybrid", desc: "Box check trips." }, 
                         { name: "Nickel Blitz", code: "manfree", type: "Pressure", desc: "Bring nickel." }
                     ]; 
-                } else if (t.isHeavy) {
+                } else if (isHeavy) {
                     options = [
                         { name: "Bear Front", code: "bear_46", type: "Run Stop", desc: "Cover interior gaps." }, 
                         { name: "Base 4-3 Over", code: "base43", type: "Balanced", desc: "Standard run fit." }, 
@@ -3354,7 +3587,7 @@
                         { name: "Man Free", code: "manfree", type: "Man", desc: "Play tight coverage." }
                     ]; 
                 }
-
+                
                 grid.innerHTML = options.map(opt => `
                     <div onclick="Playbook.executeCounter('${opt.code}')" style="background:#222; border:1px solid #333; border-radius:8px; padding:12px; cursor:pointer;">
                         <div style="font-size:0.6rem; color:var(--accent); font-weight:700;">${opt.type.toUpperCase()}</div>
@@ -3374,16 +3607,14 @@
 
             generateFormationReport: () => { 
                 const c = Playbook.elements.find(e => e.label === 'C'); 
-                if (!c) {
-                    return { name: "Custom", backs: 0, width: 0 }; 
-                }
-
+                if (!c) return { name: "Custom", backs: 0, width: 0 }; 
+                
                 let l = 0;
                 let r = 0;
                 let b = 0;
                 let minX = c.x;
                 let maxX = c.x; 
-
+                
                 Playbook.elements.forEach(e => { 
                     if (e.label === 'C' || e.label === 'Q' || e.label.includes('ol_')) return; 
                     
@@ -3393,33 +3624,25 @@
                     if (e.y > c.y + 20) {
                         b++; 
                     } else { 
-                        if (e.x < c.x) {
-                            l++; 
-                        } else {
-                            r++; 
-                        }
+                        if (e.x < c.x) l++; 
+                        else r++; 
                     } 
                 }); 
-
+                
                 const w = maxX - minX; 
                 let n = "Spread"; 
                 
-                if (b === 0) {
-                    n = "Empty"; 
-                } else if (l === 3 || r === 3) {
-                    n = "Trips"; 
-                } else if (b >= 2) {
-                    n = "Heavy"; 
-                }
+                if (b === 0) n = "Empty"; 
+                else if (l === 3 || r === 3) n = "Trips"; 
+                else if (b >= 2) n = "Heavy"; 
+                
                 return { name: n, backs: b, width: w }; 
             },
 
             updateFormationHUD: (msg) => { 
                 const r = Playbook.generateFormationReport(); 
                 const h = document.getElementById('formation-hud'); 
-                if (h) {
-                    h.innerHTML = `Formation: <span style="color:var(--accent);">${msg || r.name}</span>`; 
-                }
+                if (h) h.innerHTML = `Formation: <span style="color:var(--accent);">${msg || r.name}</span>`; 
             },
 
             setPersonnel: (pers) => { 
@@ -3427,59 +3650,66 @@
                 
                 const w = Playbook.canvas.width; 
                 const h = Playbook.canvas.height; 
-                const c = w / 2; 
-                const los = h * 0.65; 
                 
+                const hashEl = document.getElementById('sim-hash');
+                const hash = hashEl ? hashEl.value : 'mid';
+                
+                let c = w / 2; 
+                if (hash === 'left') c -= 100; 
+                if (hash === 'right') c += 100;
+                
+                const los = h * 0.75; 
                 Playbook.elements = []; 
                 Playbook.routes = [];
-
-                ['L', 'G', 'C', 'G', 'T'].forEach((p, i) => {
-                    Playbook.elements.push({ id: `ol_${i}`, type: 'O', label: p, x: c + (i - 2) * 30, y: los });
+                
+                ['L', 'G', 'C', 'G', 'T'].forEach((p, i) => { 
+                    Playbook.elements.push({ id: `ol_${i}`, type: 'O', label: p, x: c + (i - 2) * 30, y: los }); 
                 }); 
                 
                 Playbook.elements.push({ id: 'qb', type: 'O', label: 'Q', x: c, y: los + 40 }); 
                 
-                if (pers === '11') { 
+                if (pers === '11') {
                     Playbook.elements.push(
                         { id: 'rb', type: 'O', label: 'R', x: c - 50, y: los + 40 }, 
                         { id: 'te', type: 'O', label: 'Y', x: c + 90, y: los }, 
-                        { id: 'wr1', type: 'O', label: 'X', x: 60, y: los }, 
-                        { id: 'wr2', type: 'O', label: 'Z', x: w - 60, y: los }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, 
                         { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }
                     ); 
-                } else if (pers === '10') { 
+                } else if (pers === '10') {
                     Playbook.elements.push(
                         { id: 'rb', type: 'O', label: 'R', x: c - 60, y: los + 10 }, 
-                        { id: 'wr1', type: 'O', label: 'X', x: 60, y: los }, 
-                        { id: 'wr2', type: 'O', label: 'Z', x: w - 60, y: los }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, 
                         { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }, 
                         { id: 'wr4', type: 'O', label: 'Y', x: c + 100, y: los }
                     ); 
-                } else if (pers === 'bunch') { 
+                } else if (pers === 'bunch') {
                     Playbook.elements.push(
                         { id: 'rb', type: 'O', label: 'R', x: c, y: los + 60 }, 
-                        { id: 'wr1', type: 'O', label: 'X', x: 60, y: los }, 
-                        { id: 'te', type: 'O', label: 'Y', x: w - 100, y: los }, 
-                        { id: 'wr2', type: 'O', label: 'Z', x: w - 80, y: los + 20 }, 
-                        { id: 'wr3', type: 'O', label: 'H', x: w - 120, y: los + 20 }
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'te', type: 'O', label: 'Y', x: c + 100, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 120, y: los + 20 }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c + 80, y: los + 20 }
                     ); 
-                } else if (pers === '12') { 
+                } else if (pers === '12') {
                     Playbook.elements.push(
                         { id: 'rb', type: 'O', label: 'R', x: c, y: los + 80 }, 
                         { id: 'te1', type: 'O', label: 'Y', x: c + 90, y: los }, 
                         { id: 'te2', type: 'O', label: 'U', x: c - 90, y: los }, 
-                        { id: 'wr1', type: 'O', label: 'X', x: 60, y: los }, 
-                        { id: 'wr2', type: 'O', label: 'Z', x: w - 60, y: los }
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }
                     ); 
                 } 
+                
                 Playbook.drawAll(); 
                 Playbook.updateFormationHUD(); 
             },
 
-            applyProtection: (scheme) => {
-                if (scheme === 'none') return;
+            applyProtection: (scheme) => { 
+                if (scheme === 'none') return; 
                 
-                Playbook.routes = Playbook.routes.filter(r => !r.ownerId.includes('ol_') && r.ownerId !== 'c');
+                Playbook.routes = Playbook.routes.filter(r => !r.ownerId.includes('ol_') && r.ownerId !== 'c'); 
                 
                 const createBlock = (id, dx, dy) => { 
                     const el = Playbook.elements.find(e => e.id === id); 
@@ -3493,8 +3723,8 @@
                             color: '#fff' 
                         }); 
                     }
-                };
-
+                }; 
+                
                 if (scheme === 'slide_left') { 
                     createBlock('ol_0', -20, -30); 
                     createBlock('ol_1', -20, -30); 
@@ -3519,16 +3749,14 @@
                     createBlock('ol_2', 0, -20); 
                     createBlock('ol_3', -15, -20); 
                     createBlock('ol_4', -20, -20); 
-                }
-                Playbook.drawAll();
+                } 
+                Playbook.drawAll(); 
             },
 
             loadLibrary: async () => { 
                 try { 
                     const token = await window.Clerk.session.getToken(); 
-                    const res = await fetch('/api/get-plays', { 
-                        headers: { 'Authorization': `Bearer ${token}` } 
-                    }); 
+                    const res = await fetch('/api/get-plays', { headers: { 'Authorization': `Bearer ${token}` } }); 
                     if (res.ok) { 
                         const plays = await res.json(); 
                         Store.set('playbook', plays); 
@@ -3570,14 +3798,11 @@
                     const token = await window.Clerk.session.getToken(); 
                     await fetch('/api/save-play', { 
                         method: 'POST', 
-                        headers: { 
-                            'Content-Type': 'application/json', 
-                            'Authorization': `Bearer ${token}` 
-                        }, 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
                         body: JSON.stringify(payload) 
                     }); 
                 } catch (e) { 
-                    console.log("Failed to save to server", e);
+                    console.log("Failed to save to server", e); 
                 } 
             },
 
@@ -3586,20 +3811,20 @@
                 if (!grid) return; 
                 
                 const plays = Store.get('playbook') || []; 
-                if (plays.length === 0) {
-                    grid.innerHTML = 'No plays.';
-                    return;
-                }
-
-                grid.innerHTML = plays.map(p => `
-                    <div class="scout-card" onclick="Playbook.openDesigner('${p.playId || p.id}')">
-                        <div class="scout-header">
-                            <div>
-                                <div class="play-title">${p.title}</div>
-                            </div>
-                        </div>
-                        <div style="height:120px; background:#355e3b;"></div>
-                    </div>
+                if (plays.length === 0) { 
+                    grid.innerHTML = 'No plays.'; 
+                    return; 
+                } 
+                
+                grid.innerHTML = plays.map(p => ` 
+                    <div class="scout-card" onclick="Playbook.openDesigner('${p.playId || p.id}')"> 
+                        <div class="scout-header"> 
+                            <div> 
+                                <div class="play-title">${p.title}</div> 
+                            </div> 
+                        </div> 
+                        <div style="height:120px; background:#355e3b;"></div> 
+                    </div> 
                 `).join(''); 
             },
 
@@ -3631,10 +3856,10 @@
                 const response = await CoachAI.analyze(`DRAWING: ${Playbook.generateFormationReport().name}. USER: ${msg}`, null); 
                 const history = document.getElementById('designer-chat-history'); 
                 
-                history.innerHTML += `
-                    <div style="background:#1a1a1a; padding:12px; margin-bottom:12px; color:#ddd;">
-                        <strong>Coach:</strong> ${response.text}
-                    </div>
+                history.innerHTML += ` 
+                    <div style="background:#1a1a1a; padding:12px; margin-bottom:12px; color:#ddd;"> 
+                        <strong>Coach:</strong> ${response.text} 
+                    </div> 
                 `; 
                 history.scrollTop = history.scrollHeight; 
             }
