@@ -2916,7 +2916,7 @@
                 // FIX: Removed Playbook.calculateDefensiveAI() to stop the teleport!
             },
 
-            // --- ADVANCED DEFENSIVE AI (Trench Warfare, Zones, & Run Fits) ---
+            // --- ADVANCED DEFENSIVE AI (Match Zones, Overloads, Bunch Tracking) ---
             calculateDefensiveAI: () => {
                 Playbook.aiRoutes = [];
                 const simTypeEl = document.getElementById('sim-type');
@@ -2924,38 +2924,105 @@
                 const isRun = simType === 'run';
                 const isPlayAction = simType === 'pa';
                 
+                // [PHASE 2] BUNCH RECOGNITION: Scan for 3+ clustered receivers
+                const receivers = Playbook.elements.filter(e => ['X', 'Z', 'Y', 'H', 'U'].includes(e.label));
+                let bunchCenter = null;
+                receivers.forEach(r1 => {
+                    let clustered = receivers.filter(r2 => Math.hypot(r1.x - r2.x, r1.y - r2.y) < 60);
+                    if (clustered.length >= 3) {
+                        bunchCenter = r1; 
+                    }
+                });
+
+                // [PHASE 2] TRENCH MATH: Track available blockers for 1-on-1 calculations
+                let availableBlockers = Playbook.elements.filter(o => ['L', 'G', 'C', 'T', 'R'].includes(o.label));
+                
                 Playbook.defense.forEach(d => {
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
                     let target = { x: d.x, y: d.y };
                     
-                    // TRENCH WARFARE (D-Line vs O-Line)
-                    if (['E', 'T', 'N'].includes(d.label)) {
-                        let closestOL = null; let minDist = 999;
-                        Playbook.elements.filter(o => ['L', 'G', 'C', 'T'].includes(o.label)).forEach(o => {
-                            let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { minDist = dist; closestOL = o; }
+                    // 1. BALL IN AIR (Break on throw)
+                    if (Playbook.ball && Playbook.ball.active) {
+                        const distToLanding = Math.hypot(Playbook.ball.targetX - d.x, Playbook.ball.targetY - d.y);
+                        if (distToLanding < 120) {
+                            target.x = Playbook.ball.targetX;
+                            target.y = Playbook.ball.targetY;
+                        }
+                    }
+                    // 2. TRENCH WARFARE & OVERLOAD BLITZING
+                    else if (['E', 'T', 'N'].includes(d.label)) {
+                        let closestBlocker = null; 
+                        let minDist = 999;
+                        
+                        availableBlockers.forEach((blocker, index) => {
+                            let dist = Math.hypot(blocker.x - d.x, blocker.y - d.y);
+                            if (dist < minDist) { 
+                                minDist = dist; 
+                                closestBlocker = { obj: blocker, idx: index }; 
+                            }
                         });
 
-                        target.x = closestOL ? closestOL.x : d.x; 
-                        target.y = closestOL ? closestOL.y - 10 : d.y + 20; 
+                        // If a blocker is near, engage and remove them from the pool
+                        if (closestBlocker && minDist < 60 && Playbook.animTime < 3.0) {
+                            target.x = closestBlocker.obj.x; 
+                            target.y = closestBlocker.obj.y - 10; 
+                            availableBlockers.splice(closestBlocker.idx, 1); // Blocker is occupied!
+                        } else {
+                            // UNBLOCKED RUSHER: Sprint directly at the QB!
+                            const rb = Playbook.elements.find(o => o.label === 'R');
+                            const qb = Playbook.elements.find(o => o.label === 'Q');
+                            const targetPlayer = isRun && rb ? rb : qb; 
+                            if (targetPlayer) { 
+                                target.x = targetPlayer.x; 
+                                target.y = targetPlayer.y; 
+                            }
+                        }
                     }
-                    // LINEBACKER RUN FITS & PLAY-ACTION
+                    // 3. LINEBACKER RUN FITS & PLAY-ACTION
                     else if ((isPlayAction || isRun) && ['W', 'M', 'S'].includes(d.label)) {
                         if (isRun) {
                             const rb = Playbook.elements.find(o => o.label === 'R');
                             if (rb) {
                                 const rbPos = Playbook.getAnimPosAtTime(rb, 2.0);
-                                target.x = rbPos.x; target.y = rbPos.y; 
+                                target.x = rbPos.x; 
+                                target.y = rbPos.y; 
                             }
                         } else if (isPlayAction) {
                             target.y = d.y + 15; // Bite on PA
                         }
                     }
-                    // ZONE COVERAGE
+                    // 4. ZONE MATCH COVERAGE (RIP/LIZ)
                     else if (zone && !isRun) {
-                        target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Drift to center
+                        target.x = zone.points[0].x; 
+                        target.y = zone.points[0].y - 30; // Default: Drift to center
+                        
+                        // BUNCH BRACKET: Widen alignment if defending a bunch formation
+                        if (bunchCenter && Math.hypot(bunchCenter.x - d.x, bunchCenter.y - d.y) < 100) {
+                            target.x += (d.x > bunchCenter.x) ? 30 : -30; // Cage the bunch
+                        }
+
+                        const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
+                        const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
+                        let matched = false;
+                        
+                        Playbook.elements.filter(o => o.type === 'O' && o.label !== 'Q' && o.label !== 'C').forEach(o => {
+                            const oPos = Playbook.getAnimPosAtTime(o, Playbook.animTime + 0.5);
+                            const isInsideZone = Math.hypot((oPos.x - zone.points[0].x)/rX, (oPos.y - zone.points[0].y)/rY) <= 1.2;
+                            
+                            // PATTERN MATCH: If pushing vertical deep into a blue zone, convert to Man Coverage
+                            if (isInsideZone && zone.type === 'zone-deep' && oPos.y < Playbook.losY - 100) {
+                                target.x = oPos.x; 
+                                target.y = oPos.y - 15; 
+                                matched = true;
+                            } 
+                            // Standard zone mirror for flats/hooks
+                            else if (isInsideZone && !matched) {
+                                target.x = oPos.x; 
+                                target.y = oPos.y - 15; 
+                            }
+                        });
                     }
-                    // MAN COVERAGE
+                    // 5. STANDARD MAN COVERAGE
                     else {
                         let closest = null; let minDist = 999;
                         Playbook.elements.forEach(o => {
@@ -2964,13 +3031,16 @@
                             if (dist < minDist) { minDist = dist; closest = o; }
                         });
                         if (closest) {
-                            // Predict deep downfield so they run a continuous path
                             const endPos = Playbook.getAnimPosAtTime(closest, 4.0);
-                            target.x = endPos.x; target.y = endPos.y - 10;
+                            target.x = endPos.x; 
+                            target.y = endPos.y - 10;
                         }
                     }
                     
-                    Playbook.aiRoutes.push({ ownerId: d.id, points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] });
+                    Playbook.aiRoutes.push({ 
+                        ownerId: d.id, 
+                        points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] 
+                    });
                 });
             },
 
@@ -3109,9 +3179,9 @@
 
                 if (Playbook.animTime > Playbook.animMaxTime) {
                     Playbook.animTime = 0;
-                    if (Playbook.qbSimMode) {
-                        Playbook.toggleQBSim();
-                    }
+                    // FIX: We removed the toggleQBSim() call here.
+                    // Now it just stops the animation but leaves the QB mode ON!
+                    Playbook.stopAnimation(); 
                 }
                 
                 const timer = document.getElementById('anim-timer');
