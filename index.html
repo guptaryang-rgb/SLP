@@ -2902,23 +2902,18 @@
 
                 const qbPos = Playbook.getAnimPos(qb);
                 const dist = Math.hypot(targetX - qbPos.x, targetY - qbPos.y);
-                
-                // Ball flies at 250 pixels per second
                 const travelTime = dist / 250; 
 
                 Playbook.ball = {
                     active: true,
-                    startX: qbPos.x, 
-                    startY: qbPos.y,
-                    x: qbPos.x, 
-                    y: qbPos.y,
-                    targetX: targetX, 
-                    targetY: targetY,
+                    throwTime: Playbook.animTime, // FIX: Record exact time of throw!
+                    startX: qbPos.x, startY: qbPos.y,
+                    x: qbPos.x, y: qbPos.y,
+                    targetX: targetX, targetY: targetY,
                     progress: 0,
-                    speedIncrement: 1 / (travelTime * 33) // Physics frame calc
+                    speedIncrement: 1 / (travelTime * 33) 
                 };
-
-                Playbook.calculateDefensiveAI(); // Tell defense ball is in the air
+                // FIX: Removed Playbook.calculateDefensiveAI() to stop the teleport!
             },
 
             // --- ADVANCED DEFENSIVE AI (Trench Warfare, Zones, & Run Fits) ---
@@ -2933,63 +2928,34 @@
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
                     let target = { x: d.x, y: d.y };
                     
-                    // 1. BALL IN AIR (Break on throw)
-                    if (Playbook.ball && Playbook.ball.active) {
-                        const distToLanding = Math.hypot(Playbook.ball.targetX - d.x, Playbook.ball.targetY - d.y);
-                        if (distToLanding < 120) {
-                            target.x = Playbook.ball.targetX;
-                            target.y = Playbook.ball.targetY;
-                        }
-                    }
-                    // 2. TRENCH WARFARE (D-Line vs O-Line)
-                    else if (['E', 'T', 'N'].includes(d.label)) {
-                        let closestOL = null; 
-                        let minDist = 999;
+                    // TRENCH WARFARE (D-Line vs O-Line)
+                    if (['E', 'T', 'N'].includes(d.label)) {
+                        let closestOL = null; let minDist = 999;
                         Playbook.elements.filter(o => ['L', 'G', 'C', 'T'].includes(o.label)).forEach(o => {
                             let dist = Math.hypot(o.x - d.x, o.y - d.y);
                             if (dist < minDist) { minDist = dist; closestOL = o; }
                         });
 
-                        if (closestOL && minDist < 60 && Playbook.animTime < 3.0) {
-                            target.x = closestOL.x; 
-                            target.y = closestOL.y - 10; // Engage block
-                        } else {
-                            const rb = Playbook.elements.find(o => o.label === 'R');
-                            const qb = Playbook.elements.find(o => o.label === 'Q');
-                            const targetPlayer = isRun && rb ? rb : qb; // Chase RB on run, QB on pass
-                            if (targetPlayer) { 
-                                target.x = targetPlayer.x; target.y = targetPlayer.y; 
-                            }
-                        }
+                        target.x = closestOL ? closestOL.x : d.x; 
+                        target.y = closestOL ? closestOL.y - 10 : d.y + 20; 
                     }
-                    // 3. LINEBACKER RUN FITS & PLAY-ACTION
+                    // LINEBACKER RUN FITS & PLAY-ACTION
                     else if ((isPlayAction || isRun) && ['W', 'M', 'S'].includes(d.label)) {
                         if (isRun) {
                             const rb = Playbook.elements.find(o => o.label === 'R');
                             if (rb) {
-                                const rbPos = Playbook.getAnimPosAtTime(rb, Playbook.animTime + 0.5);
-                                target.x = rbPos.x; target.y = rbPos.y; // Attack the gap
+                                const rbPos = Playbook.getAnimPosAtTime(rb, 2.0);
+                                target.x = rbPos.x; target.y = rbPos.y; 
                             }
-                        } else if (isPlayAction && Playbook.animTime < 1.5) {
+                        } else if (isPlayAction) {
                             target.y = d.y + 15; // Bite on PA
-                        } else if (zone) {
-                            target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Recover to zone
                         }
                     }
-                    // 4. ZONE COVERAGE
+                    // ZONE COVERAGE
                     else if (zone && !isRun) {
                         target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Drift to center
-                        const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
-                        const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
-                        
-                        Playbook.elements.filter(o => o.type === 'O' && o.label !== 'Q' && o.label !== 'C').forEach(o => {
-                            const oPos = Playbook.getAnimPosAtTime(o, Playbook.animTime + 0.5);
-                            if (Math.hypot((oPos.x - zone.points[0].x)/rX, (oPos.y - zone.points[0].y)/rY) <= 1) {
-                                target.x = oPos.x; target.y = oPos.y - 15; // Mirror receiver in zone
-                            }
-                        });
                     }
-                    // 5. MAN COVERAGE
+                    // MAN COVERAGE
                     else {
                         let closest = null; let minDist = 999;
                         Playbook.elements.forEach(o => {
@@ -2998,7 +2964,8 @@
                             if (dist < minDist) { minDist = dist; closest = o; }
                         });
                         if (closest) {
-                            const endPos = Playbook.getAnimPosAtTime(closest, Playbook.animTime + 0.5);
+                            // Predict deep downfield so they run a continuous path
+                            const endPos = Playbook.getAnimPosAtTime(closest, 4.0);
                             target.x = endPos.x; target.y = endPos.y - 10;
                         }
                     }
@@ -3008,64 +2975,69 @@
             },
 
             // --- ANIMATION & PHYSICS ENGINE ---
+            // --- ANIMATION & PHYSICS ENGINE ---
             toggleAnimation: () => {
-                if (Playbook.qbSimMode && Playbook.passResult) { 
-                    Playbook.passResult = null; 
-                    Playbook.ball = null; 
+                if (Playbook.qbSimMode && Playbook.passResult) {
+                    Playbook.passResult = null;
+                    Playbook.ball = null;
                 }
                 
                 const btn = document.getElementById('anim-play-btn');
                 
                 if (Playbook.animating) { 
                     Playbook.stopAnimation(); 
-                    if (btn) btn.innerHTML = "▶"; 
+                    if (btn) {
+                        btn.innerHTML = "▶";
+                    }
                 } else { 
                     Playbook.isSacked = false;
-                    Playbook.calculateDefensiveAI(); 
+                    Playbook.calculateDefensiveAI(); // FIX: Calculate ONCE at snap. No more mid-play resets!
                     Playbook.animating = true; 
                     
-                    if (btn) btn.innerHTML = "⏸"; 
+                    if (btn) {
+                        btn.innerHTML = "⏸";
+                    }
                     if (Playbook.animTime >= Playbook.animMaxTime) {
-                        Playbook.animTime = 0; 
+                        Playbook.animTime = 0;
                     }
                     Playbook.animateLoop(); 
                 }
             },
             
-            stopAnimation: () => { 
-                Playbook.animating = false; 
+            stopAnimation: () => {
+                Playbook.animating = false;
                 if (Playbook.animReq) {
-                    cancelAnimationFrame(Playbook.animReq); 
+                    cancelAnimationFrame(Playbook.animReq);
                 }
-                Playbook.drawAll(); 
+                Playbook.drawAll();
             },
             
-            scrubAnimation: (val) => { 
-                Playbook.animating = false; 
+            scrubAnimation: (val) => {
+                Playbook.animating = false;
                 const btn = document.getElementById('anim-play-btn');
-                if (btn) btn.innerHTML = "▶"; 
-                Playbook.animTime = (val / 100) * Playbook.animMaxTime; 
-                Playbook.drawAll(); 
+                if (btn) {
+                    btn.innerHTML = "▶";
+                }
+                Playbook.animTime = (val / 100) * Playbook.animMaxTime;
+                Playbook.drawAll();
             },
             
             animateLoop: () => {
                 if (!Playbook.animating) return;
                 
                 Playbook.animTime += 0.03; 
-                
-                // Live Defense Calculation (update every ~0.5 seconds of sim time)
-                if (Math.floor(Playbook.animTime * 100) % 15 === 0) {
-                    Playbook.calculateDefensiveAI(); 
-                }
 
                 // Pass Rush Timer (Sacks)
-                if (!Playbook.ball && Playbook.animTime > 3.0 && Playbook.qbSimMode && !Playbook.isSacked) {
+                const simTypeEl = document.getElementById('sim-type');
+                const isRun = simTypeEl && simTypeEl.value === 'run';
+
+                if (!Playbook.ball && Playbook.animTime > 3.0 && Playbook.qbSimMode && !Playbook.isSacked && !isRun) {
                     Playbook.isSacked = true;
                     Playbook.animating = false;
-                    Playbook.passResult = { 
-                        status: 'SACKED', 
-                        color: '#ef4444', 
-                        msg: 'Held the ball too long!' 
+                    Playbook.passResult = {
+                        status: 'SACKED',
+                        color: '#ef4444',
+                        msg: 'Held the ball too long!'
                     };
                 }
 
@@ -3079,91 +3051,98 @@
                         Playbook.ball.active = false;
                         Playbook.animating = false; 
                         
-                        let closestD = null; 
+                        let closestD = null;
                         let minDistD = 35; // DB Catch Radius
                         
                         Playbook.defense.forEach(d => {
-                            let p = Playbook.getAnimPos(d, true);
+                            let p = Playbook.getAnimPos(d);
                             let dist = Math.hypot(p.x - Playbook.ball.x, p.y - Playbook.ball.y);
-                            if (dist < minDistD) { 
-                                minDistD = dist; 
-                                closestD = d; 
+                            if (dist < minDistD) {
+                                minDistD = dist;
+                                closestD = d;
                             }
                         });
 
-                        let closestO = null; 
+                        let closestO = null;
                         let minDistO = 35; // WR Catch Radius
                         
                         Playbook.elements.forEach(o => {
                             if (o.label === 'Q' || o.label.includes('ol_')) return;
+                            
                             let p = Playbook.getAnimPos(o);
                             let dist = Math.hypot(p.x - Playbook.ball.x, p.y - Playbook.ball.y);
-                            if (dist < minDistO) { 
-                                minDistO = dist; 
-                                closestO = o; 
+                            if (dist < minDistO) {
+                                minDistO = dist;
+                                closestO = o;
                             }
                         });
 
                         const passLength = Math.round((Playbook.losY - Playbook.ball.y) / 10);
 
                         if (closestD && minDistD <= minDistO) {
-                            Playbook.passResult = { 
-                                status: 'INTERCEPTED', 
-                                color: '#ef4444', 
-                                p1: {x: Playbook.ball.startX, y: Playbook.ball.startY}, 
-                                p2: {x: Playbook.ball.x, y: Playbook.ball.y}, 
-                                msg: `Picked by ${closestD.label}` 
+                            Playbook.passResult = {
+                                status: 'INTERCEPTED',
+                                color: '#ef4444',
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
+                                msg: `Picked by ${closestD.label}`
                             };
                         } else if (closestO) {
-                            Playbook.passResult = { 
-                                status: 'COMPLETED', 
-                                color: '#10b981', 
-                                p1: {x: Playbook.ball.startX, y: Playbook.ball.startY}, 
-                                p2: {x: Playbook.ball.x, y: Playbook.ball.y}, 
-                                msg: `Gain of ${passLength} yds` 
+                            Playbook.passResult = {
+                                status: 'COMPLETED',
+                                color: '#10b981',
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
+                                msg: `Gain of ${passLength} yds`
                             };
                         } else {
-                            Playbook.passResult = { 
-                                status: 'INCOMPLETE', 
-                                color: '#888', 
-                                p1: {x: Playbook.ball.startX, y: Playbook.ball.startY}, 
-                                p2: {x: Playbook.ball.x, y: Playbook.ball.y}, 
-                                msg: `Thrown away / Dropped` 
+                            Playbook.passResult = {
+                                status: 'INCOMPLETE',
+                                color: '#888',
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
+                                msg: `Thrown away / Dropped`
                             };
                         }
                     }
                 }
 
-                if (Playbook.animTime > Playbook.animMaxTime) { 
-                    Playbook.animTime = 0; 
+                if (Playbook.animTime > Playbook.animMaxTime) {
+                    Playbook.animTime = 0;
                     if (Playbook.qbSimMode) {
-                        Playbook.toggleQBSim(); 
+                        Playbook.toggleQBSim();
                     }
                 }
                 
                 const timer = document.getElementById('anim-timer');
                 const scrubber = document.getElementById('anim-scrubber');
                 
-                if (timer) timer.innerText = Playbook.animTime.toFixed(1) + "s";
-                if (scrubber) scrubber.value = (Playbook.animTime / Playbook.animMaxTime) * 100;
+                if (timer) {
+                    timer.innerText = Playbook.animTime.toFixed(1) + "s";
+                }
+                if (scrubber) {
+                    scrubber.value = (Playbook.animTime / Playbook.animMaxTime) * 100;
+                }
                 
                 Playbook.drawAll(); 
                 Playbook.animReq = requestAnimationFrame(Playbook.animateLoop);
             },
 
             getAnimPosAtTime: (player, timeOverride) => {
-                const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
+                let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
+                if (!route && player.type === 'D') route = Playbook.aiRoutes.find(r => r.ownerId === player.id);
+                
                 const simType = document.getElementById('sim-type')?.value || 'pass';
 
-                // --- NEW: QB AUTO-DROPBACK LOGIC ---
+                // QB AUTO-DROPBACK LOGIC
                 if ((!route || route.points.length === 0) && player.label === 'Q') {
                     if (simType === 'pass' || simType === 'pa') {
-                        let prog = Math.min(timeOverride / 1.2, 1); // 1.2 sec dropback
-                        return { x: player.x, y: player.y + (30 * prog) }; // Drop 3 yds
+                        let prog = Math.min(timeOverride / 1.2, 1); 
+                        return { x: player.x, y: player.y + (30 * prog) }; 
                     } else if (simType === 'run') {
                         const rb = Playbook.elements.find(e => e.label === 'R');
                         if (rb) {
-                            let prog = Math.min(timeOverride / 0.8, 1); // Turn to handoff
+                            let prog = Math.min(timeOverride / 0.8, 1); 
                             return { x: player.x + (rb.x - player.x) * prog * 0.4, y: player.y + (rb.y - player.y) * prog * 0.4 };
                         }
                     }
@@ -3186,43 +3165,28 @@
                 return route.points[route.points.length - 1];
             },
 
-            getAnimPos: (player, useAIRoutes = false) => {
+            getAnimPos: (player) => {
                 if (Playbook.animTime === 0) return { x: player.x, y: player.y };
                 
-                let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                if (useAIRoutes && !route) route = Playbook.aiRoutes.find(r => r.ownerId === player.id); 
-                
-                const simType = document.getElementById('sim-type')?.value || 'pass';
-
-                // --- NEW: QB AUTO-DROPBACK LOGIC ---
-                if ((!route || route.points.length === 0) && player.label === 'Q') {
-                    if (simType === 'pass' || simType === 'pa') {
-                        let prog = Math.min(Playbook.animTime / 1.2, 1);
-                        return { x: player.x, y: player.y + (30 * prog) };
-                    } else if (simType === 'run') {
-                        const rb = Playbook.elements.find(e => e.label === 'R');
-                        if (rb) {
-                            let prog = Math.min(Playbook.animTime / 0.8, 1);
-                            return { x: player.x + (rb.x - player.x) * prog * 0.4, y: player.y + (rb.y - player.y) * prog * 0.4 };
-                        }
+                // --- NO-TELEPORT BALL REACTION LOGIC ---
+                if (player.type === 'D' && Playbook.ball && Playbook.ball.active && Playbook.animTime >= Playbook.ball.throwTime) {
+                    const posAtThrow = Playbook.getAnimPosAtTime(player, Playbook.ball.throwTime);
+                    const timeSinceThrow = Playbook.animTime - Playbook.ball.throwTime;
+                    const speed = Playbook.getSpeed(player.label);
+                    
+                    const dx = Playbook.ball.targetX - posAtThrow.x;
+                    const dy = Playbook.ball.targetY - posAtThrow.y;
+                    const distToBall = Math.hypot(dx, dy);
+                    
+                    // Only react if within 150 pixels (prevents the entire field from clumping)
+                    if (distToBall < 150 && distToBall > 0) {
+                        const distMoved = timeSinceThrow * speed;
+                        const f = Math.min(distMoved / distToBall, 1);
+                        return { x: posAtThrow.x + dx * f, y: posAtThrow.y + dy * f };
                     }
                 }
-
-                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
                 
-                const speed = Playbook.getSpeed(player.label);
-                const targetDist = Playbook.animTime * speed;
-                let currentDist = 0;
-                
-                for (let i = 0; i < route.points.length - 1; i++) {
-                    let p1 = route.points[i]; let p2 = route.points[i + 1]; let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                    if (currentDist + segDist >= targetDist) { 
-                        let f = (targetDist - currentDist) / segDist; 
-                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
-                    } 
-                    currentDist += segDist;
-                } 
-                return route.points[route.points.length - 1];
+                return Playbook.getAnimPosAtTime(player, Playbook.animTime);
             },
 
             // --- DEFENSE LIBRARY ---
