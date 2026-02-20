@@ -83,40 +83,29 @@ async function generateWithFallback(promptParts) {
 /* These instructions guide the AI to act like a specific position coach based on the "New Scripture" protocol */
 const RUBRICS = {
     "team": `
-    [cite_start]ROLE: NFL Offensive/Defensive Coordinator[cite: 1].
-    [cite_start]GOAL: High-level schematic breakdown[cite: 1].
+    ROLE: NFL Head Coach & Coordinator.
+    GOAL: High-level schematic breakdown AND detailed positional review.
     1. SITUATION:
-       - Analyze Down & Distance, Field Position, and Personnel. [cite_start]Include hash location[cite: 3].
-       - [cite_start]Score/time context (2-minute, 4-minute, red zone spacing)[cite: 4].
-       - [cite_start]Personnel matchup (11 vs nickel, 12 vs base, dime vs empty)[cite: 4].
-       - [cite_start]Self-scout tendency vs game theory breaker[cite: 5].
-       - [cite_start]Win probability/EPA leverage of situation[cite: 6].
+       - Analyze Down & Distance, Field Position, and Personnel. Include hash location.
+       - Score/time context (2-minute, 4-minute, red zone spacing).
+       - Win probability/EPA leverage of situation.
     2. PRE-SNAP:
-       - [cite_start]Identify Formational Tells, Motion leverage, and Defensive Shell (MOFO/MOFC)[cite: 8].
-       - [cite_start]Formation family (2x2, 3x1, Bunch, Condensed, Pistol, Under Center)[cite: 9].
-       - [cite_start]Receiver splits (wide, reduced, nasty)[cite: 10].
-       - [cite_start]Motion type (jet, orbit, yo-yo, return)[cite: 11].
-       - [cite_start]Defensive front (Over, Under, Bear, Mint, Odd)[cite: 12].
-       - [cite_start]Apex alignment and leverage declaration[cite: 13].
-       - [cite_start]Safety rotation indicators and pressure disguise tells[cite: 14].
+       - Identify Formational Tells, Motion leverage, and Defensive Shell (MOFO/MOFC).
+       - Formation family (2x2, 3x1, Bunch, Condensed, Pistol, Under Center).
+       - Defensive front (Over, Under, Bear, Mint, Odd) and apex alignment.
     3. SCHEME:
-       - [cite_start]Name the specific concept (e.g., Duo, Dagger, Mesh, Cover 3 Match)[cite: 16].
-       - [cite_start]Identify run family (Zone, Gap, Power, Counter)[cite: 17].
-       - [cite_start]Identify pass structure (Hi-Low, Full-field progression, Alert)[cite: 18].
-       - [cite_start]Tag RPO/Play Action elements[cite: 19].
-       - [cite_start]Coverage family (Match, Spot Drop, Man-Free, Quarters variants)[cite: 20].
-       - [cite_start]Identify protection scheme (Slide, Half-slide, Man, 6/7-man)[cite: 20].
+       - Name the specific concept (e.g., Duo, Dagger, Mesh, Cover 3 Match).
+       - Identify pass structure (Hi-Low, Full-field progression) or run family (Zone, Gap).
+       - Identify protection scheme (Slide, Half-slide, Man).
     4. POST-SNAP:
-       - [cite_start]Identify the 'Conflict Player' the offense is attacking[cite: 22].
-       - [cite_start]Evaluate leverage gained/lost[cite: 23].
-       - [cite_start]Defensive fit integrity[cite: 24].
-       - [cite_start]QB eye manipulation effectiveness[cite: 25].
-       - [cite_start]Identify bust vs execution win[cite: 26].
-    5. EFFICIENCY:
-       - [cite_start]Grade the play's success based on EPA principles[cite: 28].
-       - [cite_start]Categorize as Explosive / Positive / Neutral / Negative[cite: 29].
-       - [cite_start]Expected yards vs achieved yards[cite: 30].
-       - [cite_start]Scheme win vs talent win vs defensive error[cite: 31].`,
+       - Identify the 'Conflict Player' the offense is attacking.
+       - Evaluate leverage gained/lost and defensive fit integrity.
+       - QB eye manipulation effectiveness.
+    5. POSITIONAL BREAKDOWN (CRITICAL):
+       - Act as the position coach for EVERY group visible in the frame.
+       - Grade the QB's mechanics, the OL's anchor/fits, WR's route stems, DB's pedal, etc.
+       - Identify specific technical breakdowns or exceptional execution for each group.`,
+
 
     "qb": `
     [cite_start]ROLE: Elite Quarterback Coach[cite: 32].
@@ -634,20 +623,21 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
-    ROLE: ${position === 'team' ? "NFL Coordinator" : "Elite Position Coach"}.
+    ROLE: ${position === 'team' ? "NFL Head Coach & Coordinator" : "Elite Position Coach"}.
     CONTEXT: ${specificFocus}
     ROSTER: ${rosterContext}
 
     YOUR DUAL OBJECTIVE:
-    1. THE ANALYST (Data): Extract precise coordinates for the "Field Vision" charts.
-       - CLASSIFY: Play must be "Pass" (Air Attack) or "Run" (Ground Attack).
-       - PASS VECTORS: Origin (Pocket/Rollout) -> Target (Deep/Short, Hash/Numbers).
-       - RUN VECTORS: Origin (Mesh) -> Gap (A/B/C/D).
+    1. THE ANALYST (Data): Extract precise coordinates for the 2D Playbook Simulator.
+       - Estimate X/Y coordinates on a 0-100 scale.
+       - X Axis: 0 is Left Sideline, 50 is Middle of the field, 100 is Right Sideline.
+       - Y Axis: 0 is the far deep Endzone, 75 is the Line of Scrimmage, 100 is behind the QB.
+       - You MUST provide plot_startX, plot_startY (Snap/Pocket location), and plot_endX, plot_endY (Target/Catch location).
     
-    2. THE COACH (Insight): The 'scouting_report' must be detailed and specific.
+    2. THE COACH (Insight): The 'scouting_report' and 'positional' breakdown must be elite.
        - Do NOT just describe the play. DIAGNOSE it.
        - Explain WHY it worked/failed based on the "CONTEXT" provided above.
-       - Use professional terminology (e.g., "Hi-Lo Read," "Conflict Player," "Leverage").
+       - VISION GUARDRAIL: ONLY provide positional breakdowns for players clearly visible in the video frame. If the DBs are out of frame, do NOT invent an analysis for them.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -655,28 +645,31 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         "data": { 
             "o_formation": "Formation", 
             "d_formation": "Coverage Shell", 
-            "situation": { "down": "1/2/3/4", "distance": "Short/Med/Long", "zone": "Red/Open" }
+            "situation": { 
+                "play_type": "pass", 
+                "down": 1, 
+                "distance_togo": 10,
+                "plot_startX": 50,
+                "plot_startY": 80,
+                "plot_catchX": 30,
+                "plot_catchY": 60,
+                "plot_endX": 30,
+                "plot_endY": 50
+            }
         }, 
         "tactical_breakdown": {
-            "concept": "Scheme Name",
-            "play_type": "Pass/Run",
-            "yards_gained": 0,
-            "pass_chart": {
-                "start": "Pocket/Rollout Left/Rollout Right",
-                "end": "Left Numbers/Left Hash/Middle/Right Hash/Right Numbers",
-                "depth": 0, 
-                "result": "Complete/Incomplete/Int"
-            },
-            "run_chart": {
-                "gap": "A/B/C/D/Sweep",
-                "direction": "Left/Right/Middle"
-            }
+            "concept": "Scheme Name"
         },
         "scouting_report": { 
             "summary": "Detailed schematic analysis applying the coaching context.", 
             "coaching_prescription": { "fix": "Technical Fix", "drill": "Specific Drill" },
-            "report_card": { "overall": "Grade" }
-        }
+            "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
+        },
+        "positional": [
+            { "group": "Quarterback (QB)", "action": "3-step drop, read high-low on the flat defender.", "analysis": "Footwork was sloppy on the plant foot, causing the ball to sail high." },
+            { "group": "Offensive Line (OL)", "action": "Half-slide protection to the strong side.", "analysis": "Left Tackle got beat on an inside counter move. Failed to keep pad level low." },
+            { "group": "Receivers (WR/TE)", "action": "Mesh concept underneath with a vertical clear out.", "analysis": "Z receiver rounded off his Dig route. Needs to plant hard." }
+        ]
     }`;
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
