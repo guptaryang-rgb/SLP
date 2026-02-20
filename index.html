@@ -1382,8 +1382,10 @@
                                 <option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option>
                             </select>
                             <input type="number" id="sim-dist" class="input-box" value="10" style="width:50px; font-size:0.75rem; height:32px; padding:0 4px;" title="Distance to 1st Down">
-                            <select id="sim-type" class="input-box" style="width:65px; font-size:0.75rem; height:32px; padding:0 4px;" title="Play Action">
-                                <option value="pass">Dropback</option><option value="pa">Play Action</option>
+                           <select id="sim-type" class="input-box" style="width:75px; font-size:0.75rem; height:32px; padding:0 4px;" title="Play Type">
+                                <option value="pass">Dropback</option>
+                                <option value="pa">Play Action</option>
+                                <option value="run">Run (Handoff)</option>
                             </select>
                         </div>
                     </div>
@@ -2919,11 +2921,13 @@
                 Playbook.calculateDefensiveAI(); // Tell defense ball is in the air
             },
 
-            // --- ADVANCED DEFENSIVE AI (Trench Warfare & Zones) ---
+            // --- ADVANCED DEFENSIVE AI (Trench Warfare, Zones, & Run Fits) ---
             calculateDefensiveAI: () => {
                 Playbook.aiRoutes = [];
                 const simTypeEl = document.getElementById('sim-type');
-                const isPlayAction = simTypeEl && simTypeEl.value === 'pa';
+                const simType = simTypeEl ? simTypeEl.value : 'pass';
+                const isRun = simType === 'run';
+                const isPlayAction = simType === 'pa';
                 
                 Playbook.defense.forEach(d => {
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
@@ -2941,71 +2945,65 @@
                     else if (['E', 'T', 'N'].includes(d.label)) {
                         let closestOL = null; 
                         let minDist = 999;
-                        
                         Playbook.elements.filter(o => ['L', 'G', 'C', 'T'].includes(o.label)).forEach(o => {
                             let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { 
-                                minDist = dist; 
-                                closestOL = o; 
-                            }
+                            if (dist < minDist) { minDist = dist; closestOL = o; }
                         });
 
                         if (closestOL && minDist < 60 && Playbook.animTime < 3.0) {
                             target.x = closestOL.x; 
                             target.y = closestOL.y - 10; // Engage block
                         } else {
-                            const qb = Playbook.elements.find(o => o.label === 'Q'); // Block shed!
-                            if (qb) { 
-                                target.x = qb.x; 
-                                target.y = qb.y; 
+                            const rb = Playbook.elements.find(o => o.label === 'R');
+                            const qb = Playbook.elements.find(o => o.label === 'Q');
+                            const targetPlayer = isRun && rb ? rb : qb; // Chase RB on run, QB on pass
+                            if (targetPlayer) { 
+                                target.x = targetPlayer.x; target.y = targetPlayer.y; 
                             }
                         }
                     }
-                    // 3. PLAY-ACTION MANIPULATION
-                    else if (isPlayAction && ['W', 'M', 'S'].includes(d.label) && Playbook.animTime < 1.5) {
-                        target.y = d.y + 15; // Step forward toward Line of Scrimmage
+                    // 3. LINEBACKER RUN FITS & PLAY-ACTION
+                    else if ((isPlayAction || isRun) && ['W', 'M', 'S'].includes(d.label)) {
+                        if (isRun) {
+                            const rb = Playbook.elements.find(o => o.label === 'R');
+                            if (rb) {
+                                const rbPos = Playbook.getAnimPosAtTime(rb, Playbook.animTime + 0.5);
+                                target.x = rbPos.x; target.y = rbPos.y; // Attack the gap
+                            }
+                        } else if (isPlayAction && Playbook.animTime < 1.5) {
+                            target.y = d.y + 15; // Bite on PA
+                        } else if (zone) {
+                            target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Recover to zone
+                        }
                     }
                     // 4. ZONE COVERAGE
-                    else if (zone) {
-                        target.x = zone.points[0].x; 
-                        target.y = zone.points[0].y - 30; // Drift to center
-                        
+                    else if (zone && !isRun) {
+                        target.x = zone.points[0].x; target.y = zone.points[0].y - 30; // Drift to center
                         const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
                         const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
                         
                         Playbook.elements.filter(o => o.type === 'O' && o.label !== 'Q' && o.label !== 'C').forEach(o => {
                             const oPos = Playbook.getAnimPosAtTime(o, Playbook.animTime + 0.5);
                             if (Math.hypot((oPos.x - zone.points[0].x)/rX, (oPos.y - zone.points[0].y)/rY) <= 1) {
-                                target.x = oPos.x; 
-                                target.y = oPos.y - 15; // Mirror receiver in zone
+                                target.x = oPos.x; target.y = oPos.y - 15; // Mirror receiver in zone
                             }
                         });
                     }
                     // 5. MAN COVERAGE
                     else {
-                        let closest = null; 
-                        let minDist = 999;
-                        
+                        let closest = null; let minDist = 999;
                         Playbook.elements.forEach(o => {
                             if (o.label === 'C' || o.label === 'Q' || o.label.includes('ol_')) return;
                             let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { 
-                                minDist = dist; 
-                                closest = o; 
-                            }
+                            if (dist < minDist) { minDist = dist; closest = o; }
                         });
-                        
                         if (closest) {
                             const endPos = Playbook.getAnimPosAtTime(closest, Playbook.animTime + 0.5);
-                            target.x = endPos.x; 
-                            target.y = endPos.y - 10;
+                            target.x = endPos.x; target.y = endPos.y - 10;
                         }
                     }
                     
-                    Playbook.aiRoutes.push({ 
-                        ownerId: d.id, 
-                        points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] 
-                    });
+                    Playbook.aiRoutes.push({ ownerId: d.id, points: [{x: d.x, y: d.y}, {x: target.x, y: target.y}] });
                 });
             },
 
@@ -3155,25 +3153,33 @@
 
             getAnimPosAtTime: (player, timeOverride) => {
                 const route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                if (!route || route.points.length === 0) {
-                    return { x: player.x, y: player.y };
+                const simType = document.getElementById('sim-type')?.value || 'pass';
+
+                // --- NEW: QB AUTO-DROPBACK LOGIC ---
+                if ((!route || route.points.length === 0) && player.label === 'Q') {
+                    if (simType === 'pass' || simType === 'pa') {
+                        let prog = Math.min(timeOverride / 1.2, 1); // 1.2 sec dropback
+                        return { x: player.x, y: player.y + (30 * prog) }; // Drop 3 yds
+                    } else if (simType === 'run') {
+                        const rb = Playbook.elements.find(e => e.label === 'R');
+                        if (rb) {
+                            let prog = Math.min(timeOverride / 0.8, 1); // Turn to handoff
+                            return { x: player.x + (rb.x - player.x) * prog * 0.4, y: player.y + (rb.y - player.y) * prog * 0.4 };
+                        }
+                    }
                 }
+
+                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
                 
                 const speed = Playbook.getSpeed(player.label); 
                 const targetDist = timeOverride * speed; 
                 let currentDist = 0;
                 
                 for (let i = 0; i < route.points.length - 1; i++) {
-                    let p1 = route.points[i]; 
-                    let p2 = route.points[i + 1]; 
-                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                    
+                    let p1 = route.points[i]; let p2 = route.points[i + 1]; let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
                     if (currentDist + segDist >= targetDist) { 
                         let f = (targetDist - currentDist) / segDist; 
-                        return { 
-                            x: p1.x + (p2.x - p1.x) * f, 
-                            y: p1.y + (p2.y - p1.y) * f 
-                        }; 
+                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
                     } 
                     currentDist += segDist;
                 } 
@@ -3184,29 +3190,35 @@
                 if (Playbook.animTime === 0) return { x: player.x, y: player.y };
                 
                 let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                if (useAIRoutes && !route) {
-                    route = Playbook.aiRoutes.find(r => r.ownerId === player.id); 
-                }
+                if (useAIRoutes && !route) route = Playbook.aiRoutes.find(r => r.ownerId === player.id); 
                 
-                if (!route || route.points.length === 0) {
-                    return { x: player.x, y: player.y };
+                const simType = document.getElementById('sim-type')?.value || 'pass';
+
+                // --- NEW: QB AUTO-DROPBACK LOGIC ---
+                if ((!route || route.points.length === 0) && player.label === 'Q') {
+                    if (simType === 'pass' || simType === 'pa') {
+                        let prog = Math.min(Playbook.animTime / 1.2, 1);
+                        return { x: player.x, y: player.y + (30 * prog) };
+                    } else if (simType === 'run') {
+                        const rb = Playbook.elements.find(e => e.label === 'R');
+                        if (rb) {
+                            let prog = Math.min(Playbook.animTime / 0.8, 1);
+                            return { x: player.x + (rb.x - player.x) * prog * 0.4, y: player.y + (rb.y - player.y) * prog * 0.4 };
+                        }
+                    }
                 }
+
+                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
                 
                 const speed = Playbook.getSpeed(player.label);
                 const targetDist = Playbook.animTime * speed;
                 let currentDist = 0;
                 
                 for (let i = 0; i < route.points.length - 1; i++) {
-                    let p1 = route.points[i]; 
-                    let p2 = route.points[i + 1]; 
-                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-                    
+                    let p1 = route.points[i]; let p2 = route.points[i + 1]; let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
                     if (currentDist + segDist >= targetDist) { 
                         let f = (targetDist - currentDist) / segDist; 
-                        return { 
-                            x: p1.x + (p2.x - p1.x) * f, 
-                            y: p1.y + (p2.y - p1.y) * f 
-                        }; 
+                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
                     } 
                     currentDist += segDist;
                 } 
