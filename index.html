@@ -2971,15 +2971,18 @@
                 };
             },
 
-            // --- V18 PRE-COMPUTE AI MATRIX ---
-            // --- V18 PRE-COMPUTE AI MATRIX ---
+           // --- V18.1 PRE-COMPUTE AI MATRIX (Adaptive Defense Fixes) ---
             precomputeDefensiveAI: () => {
                 Playbook.aiRoutes = Playbook.defense.map(d => ({ ownerId: d.id, points: [{ x: d.x, y: d.y }] }));
 
                 const simType = document.getElementById('sim-type')?.value || 'pass';
-                const isRun = simType === 'run'; const isPA = simType === 'pa';
+                const isRun = simType === 'run'; 
+                const isPA = simType === 'pa';
+                const defType = Playbook.activeDefenseType || 'none';
 
+                // Initialize locked targets (memory for the simulation)
                 Playbook.defense.forEach(d => {
+                    d.lockedTargetId = null;
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
                     if (!zone && !['E','T','N'].includes(d.label)) {
                         let closest = null; let minDist = 999;
@@ -2992,6 +2995,7 @@
                     }
                 });
 
+                // Simulate Time Forward in 0.1s increments
                 for (let t = 0.1; t <= 6.0; t += 0.1) {
                     Playbook.defense.forEach(d => {
                         const routeObj = Playbook.aiRoutes.find(r => r.ownerId === d.id);
@@ -3012,12 +3016,20 @@
                                 targetY = d.y + 15; 
                             }
                         } 
+                        else if (d.lockedTargetId) {
+                            // FIX 1: ONCE LOCKED, STAY LOCKED (Perfect Pattern Match Carry)
+                            const lockedWR = Playbook.elements.find(o => o.id === d.lockedTargetId);
+                            if (lockedWR) {
+                                const wrPos = Playbook.getAnimPosAtTime(lockedWR, t);
+                                targetX = wrPos.x; 
+                                targetY = wrPos.y - 15; // Carry on the hip
+                            }
+                        }
                         else if (zone && !isRun) {
                             const zCenter = { x: zone.points[0].x, y: zone.points[0].y - 30 };
                             const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
                             const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
                             
-                            let matched = false;
                             let nearestWrDist = 999; 
                             let nearestWrPos = null;
 
@@ -3025,48 +3037,48 @@
                                 if (['C', 'Q', 'L', 'G', 'T'].includes(o.label)) return;
                                 const oPos = Playbook.getAnimPosAtTime(o, t);
                                 
-                                // FIX 2: Expanded Threat Radius for deep and flat zones!
-                                const threatMultiplier = zone.type === 'zone-deep' ? 2.5 : (zone.type === 'zone-flat' ? 2.0 : 1.5);
                                 const distToCenter = Math.hypot((oPos.x - zCenter.x)/rX, (oPos.y - zCenter.y)/rY);
-                                
                                 const absDist = Math.hypot(oPos.x - currentPos.x, oPos.y - currentPos.y);
+                                
                                 if (absDist < nearestWrDist) { nearestWrDist = absDist; nearestWrPos = oPos; }
 
-                                if (distToCenter <= threatMultiplier && !matched) {
-                                    if (zone.type === 'zone-deep' && oPos.y < Playbook.losY - 60) {
-                                        // Lock onto deep post/go routes
-                                        targetX = oPos.x; targetY = oPos.y - 20; matched = true;
-                                    } else if (zone.type === 'zone-flat') {
-                                        // FIX 4: Flat zone leverages outside against RB Swings
-                                        targetX = oPos.x + (oPos.x > zCenter.x ? -15 : 15); 
-                                        targetY = oPos.y - 10; matched = true;
-                                    } else if (zone.type === 'zone-hook') {
-                                        targetX = oPos.x; targetY = oPos.y - 15; matched = true;
+                                // FIX 2: AGGRESSIVE VERTICAL MATCHING
+                                if (zone.type === 'zone-deep' && distToCenter <= 2.5) {
+                                    if (oPos.y < Playbook.losY - 80) { // Receiver pushing deep!
+                                        d.lockedTargetId = o.id; // Lock on permanently
+                                    }
+                                }
+
+                                // FIX 3: TAMPA 2 MIKE CARRY
+                                if (d.label === 'M' && (defType === 'tampa_2' || defType === 'cover2')) {
+                                    // If a WR splits the safeties down the deep middle
+                                    if (oPos.y < Playbook.losY - 60 && Math.abs(oPos.x - Playbook.canvas.width/2) < 80) {
+                                        d.lockedTargetId = o.id; 
                                     }
                                 }
                             });
 
-                            if (!matched) {
-                                // FIX 3: Zone Squeeze Logic ("Looking for work")
-                                if (nearestWrPos && nearestWrDist < 200) {
+                            if (!d.lockedTargetId) {
+                                // FIX 4: PROXIMITY ANCHORING (No more wandering)
+                                if (nearestWrPos && nearestWrDist < 160) {
                                     if (zone.type === 'zone-hook') {
-                                        // Hook defenders anchor X-axis, drop underneath crossers on Y-axis
-                                        targetX = zCenter.x + (nearestWrPos.x - zCenter.x) * 0.15;
-                                        targetY = Math.max(zCenter.y, nearestWrPos.y + 15);
+                                        // Stay squarely underneath the crossing route
+                                        targetX = nearestWrPos.x;
+                                        targetY = Math.max(zCenter.y, nearestWrPos.y + 20); 
                                     } else if (zone.type === 'zone-flat') {
-                                        // Flat defenders drift wide towards threat
-                                        targetX = zCenter.x + (nearestWrPos.x - zCenter.x) * 0.3;
-                                        targetY = zCenter.y;
+                                        // Widen to leverage outside against RB swings or outs
+                                        targetX = nearestWrPos.x + (nearestWrPos.x > zCenter.x ? 25 : -25);
+                                        targetY = nearestWrPos.y + 10;
                                     } else {
                                         targetX = zCenter.x; targetY = zCenter.y;
                                     }
                                 } else {
-                                    targetX = zCenter.x; targetY = zCenter.y;
+                                    targetX = zCenter.x; targetY = zCenter.y; // Rest in zone
                                 }
                             }
                         } 
                         else {
-                            // BLIND MAN COVERAGE (0.3s Delay)
+                            // BLIND MAN COVERAGE
                             let closest = Playbook.elements.find(o => o.id === d.manTargetId);
                             if (closest) {
                                 const lookbackTime = Math.max(0, t - 0.3);
