@@ -1432,12 +1432,13 @@
 
             <div style="flex:1; display:flex; position:relative; overflow:hidden;">
                 
-                <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:10px; gap:8px; overflow-y:auto;">
+                <div style="width:60px; background:#111; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding-top:10px; gap:8px; overflow-y:auto; z-index:20;">
                     
                     <div style="font-size:0.6rem; color:#666;">TOOLS</div>
-                    <div class="tool-icon active" id="tool-move" onclick="Playbook.setTool('move')" style="cursor:pointer; padding:6px; border-radius:4px; font-size:1.2rem;" title="Move & Rotate (Dbl Click)">✋</div>
+                    <div class="tool-icon active" id="tool-move" onclick="Playbook.setTool('move')" style="cursor:pointer; padding:6px; border-radius:4px; font-size:1.2rem;" title="Move & Edit Waypoints">✋</div>
                     <div class="tool-icon" id="tool-draw" onclick="Playbook.setTool('draw')" style="cursor:pointer; padding:6px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Draw Route">✏️</div>
-                    <div class="tool-icon" id="tool-block" onclick="Playbook.setTool('block')" style="cursor:pointer; padding:6px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Block / Motion">🛡️</div>
+                    <div class="tool-icon" id="tool-block" onclick="Playbook.setTool('block')" style="cursor:pointer; padding:6px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Block">🛡️</div>
+                    <div class="tool-icon" id="tool-motion" onclick="Playbook.setTool('motion')" style="cursor:pointer; padding:6px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Pre-Snap Motion">🏃</div>
                     <div class="tool-icon" id="tool-eraser" onclick="Playbook.setTool('eraser')" style="cursor:pointer; padding:6px; border-radius:4px; opacity:0.5; font-size:1.2rem;" title="Eraser">🧼</div>
                     
                     <div style="height:1px; width:30px; background:#333; margin:4px 0;"></div>
@@ -1463,16 +1464,27 @@
                         <button class="tool-btn" style="border:none; border-radius:4px; justify-content:center; background:transparent;" onclick="Playbook.applyPresetRoute('out')">Out / Curl</button>
                     </div>
                     
-                    <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); padding:8px 16px; border-radius:20px; border:1px solid var(--border); display:flex; gap:12px; align-items:center; z-index:10;">
+                    <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); padding:8px 16px; border-radius:20px; border:1px solid var(--border); display:flex; gap:12px; align-items:center; z-index:10; white-space:nowrap;">
+                        
+                        <button id="run-motion-btn" onclick="Playbook.runMotion()" style="background:transparent; border:1px solid #06b6d4; color:#06b6d4; border-radius:15px; padding:4px 12px; font-size:0.75rem; font-weight:bold; cursor:pointer; transition:0.2s;" title="Execute Motion">🏃 Shift</button>
+
+                        <div style="width:1px; height:20px; background:#444;"></div>
+
                         <button id="anim-play-btn" onclick="Playbook.toggleAnimation()" style="background:var(--accent); color:black; border:none; border-radius:50%; width:30px; height:30px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;">▶</button>
-                        <input type="range" id="anim-scrubber" min="0" max="100" value="0" style="width:200px; accent-color:var(--accent);" oninput="Playbook.scrubAnimation(this.value)">
+                        <input type="range" id="anim-scrubber" min="0" max="100" value="0" style="width:150px; accent-color:var(--accent);" oninput="Playbook.scrubAnimation(this.value)">
                         <span id="anim-timer" style="color:white; font-family:monospace; font-size:0.8rem; width:30px;">0.0s</span>
                         
                         <div style="width:1px; height:20px; background:#444;"></div>
                         
-                        <button id="qb-sim-btn" onclick="Playbook.toggleQBSim()" style="background:transparent; border:1px solid #10b981; color:#10b981; border-radius:15px; padding:4px 12px; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:0.2s;">
-                            🏈 QB Sim
-                        </button>
+                        <button id="qb-sim-btn" onclick="Playbook.toggleQBSim()" style="background:transparent; border:1px solid #10b981; color:#10b981; border-radius:15px; padding:4px 12px; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:0.2s;">🏈 QB Sim</button>
+
+                        <div style="width:1px; height:20px; background:#444;"></div>
+
+                        <button id="record-btn" onclick="Playbook.toggleRecording()" style="background:transparent; border:none; color:white; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:0.2s; display:flex; align-items:center; gap:4px;">🎬 Rec</button>
+                    </div>
+
+                    <div id="toast-notification" style="position:absolute; top:20px; right:20px; background:var(--success); color:black; font-weight:bold; font-size:0.85rem; padding:10px 20px; border-radius:8px; opacity:0; pointer-events:none; transition:opacity 0.3s; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        Notification
                     </div>
 
                     <div style="position:absolute; top:16px; left:16px; display:flex; flex-direction:column; gap:8px;">
@@ -2704,12 +2716,13 @@
         };
 
         /**
-         * PLAYBOOK ENGINE V16 (Physics & True Simulator)
-         * - Throw to Space (Catch Radius Physics)
-         * - Player Speeds & Pass Rush Clocks (Sacks)
-         * - Play-Action AI Manipulation
-         * - Typable Yard Lines & Mobile Double-Tap
-         * - FULLY UNCOMPRESSED AND FORMATTED
+         * PLAYBOOK ENGINE V17 (The Master Simulator)
+         * - Draggable Route Waypoints (Node Editing)
+         * - Pre-Snap Motion Engine (Shift & Adjust)
+         * - MP4/WebM Video Canvas Export
+         * - Analytics Logging Loop
+         * - Match AI, Sacks, & Physics preserved.
+         * - FULLY UNCOMPRESSED
          */
         const Playbook = {
             canvas: null, 
@@ -2723,6 +2736,7 @@
             isDragging: false, 
             isDrawing: false, 
             dragTarget: null,
+            dragPoint: null, // Tracks route waypoints for editing
             activeTool: 'move', 
             lastDragX: 0, 
             lastDragY: 0, 
@@ -2735,14 +2749,19 @@
             animReq: null,
             qbSimMode: false, 
             passResult: null, 
+            resultLogged: false, // Prevents duplicate analytics logging
             losY: 0,
             ball: null,
             isSacked: false,
 
+            // Video Export State
+            isRecording: false,
+            mediaRecorder: null,
+            recordedChunks: [],
+
             init: async () => { 
                 await Playbook.loadLibrary(); 
                 
-                // Spacebar Listener
                 document.addEventListener('keydown', (e) => {
                     if (e.code === 'Space' && document.getElementById('designer-modal').style.display !== 'none') {
                         if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
@@ -2756,9 +2775,11 @@
                 Playbook.activePlayId = playId;
                 document.getElementById('designer-modal').style.display = 'flex';
                 document.getElementById('counter-modal').style.display = 'none';
+                
                 Playbook.stopAnimation(); 
                 Playbook.qbSimMode = false; 
                 Playbook.passResult = null;
+                Playbook.resultLogged = false;
                 Playbook.elements = []; 
                 Playbook.defense = []; 
                 Playbook.routes = []; 
@@ -2778,7 +2799,6 @@
                     Playbook.canvas.onpointerup = Playbook.handleEnd;
                     Playbook.canvas.onpointercancel = Playbook.handleEnd;
                     
-                    // Hide menu on standard click
                     document.addEventListener('click', (e) => { 
                         if (e.target.tagName !== 'BUTTON' && document.getElementById('route-menu')) {
                             document.getElementById('route-menu').style.display = 'none'; 
@@ -2804,33 +2824,147 @@
 
             closeDesigner: () => { 
                 Playbook.stopAnimation(); 
+                if (Playbook.isRecording) {
+                    Playbook.toggleRecording(); // Stop recording if closed
+                }
                 document.getElementById('designer-modal').style.display = 'none'; 
             },
 
-            // --- PLAYER SPEED ENGINE ---
-            getSpeed: (label) => {
-                if (['X', 'Z', 'H', 'Y', 'CB', 'FS', 'SS'].includes(label)) return 140; // Skill positions fast
-                if (['R', 'W', 'M', 'S'].includes(label)) return 115; // Backs/LBs
-                if (['E', 'T', 'N', 'L', 'G', 'C'].includes(label)) return 85; // Linemen slow
-                return 120; // Default QBs
+            // --- UI TOAST & LOGGING ---
+            showToast: (msg, color = 'var(--success)') => {
+                const t = document.getElementById('toast-notification');
+                if (!t) return;
+                t.innerText = msg;
+                t.style.background = color;
+                t.style.opacity = 1;
+                setTimeout(() => t.style.opacity = 0, 3000);
             },
 
-            // --- DOUBLE TAP & QUICK ROUTES ---
+            logAnalytics: (res) => {
+                const stats = Store.get('sim_stats') || [];
+                const playName = document.getElementById('play-name').value || 'Untitled Concept';
+                const def = document.getElementById('defense-select').value || 'Unknown Defense';
+                const yds = parseInt(res.msg.replace(/[^0-9-]/g, '')) || 0;
+                
+                stats.push({ 
+                    play: playName, 
+                    defense: def, 
+                    status: res.status, 
+                    yards: yds, 
+                    date: Date.now() 
+                });
+                Store.set('sim_stats', stats);
+                Playbook.showToast(`Logged to Analytics: ${res.status}`);
+            },
+
+            // --- EXPORT TO VIDEO ---
+            toggleRecording: () => {
+                const btn = document.getElementById('record-btn');
+                
+                if (Playbook.isRecording) {
+                    Playbook.mediaRecorder.stop();
+                    Playbook.isRecording = false;
+                    btn.style.color = 'white'; 
+                    btn.innerHTML = '🎬 Rec';
+                } else {
+                    try {
+                        const stream = Playbook.canvas.captureStream(30);
+                        Playbook.mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                        Playbook.recordedChunks = [];
+                        
+                        Playbook.mediaRecorder.ondataavailable = e => {
+                            if (e.data.size > 0) {
+                                Playbook.recordedChunks.push(e.data);
+                            }
+                        };
+                        
+                        Playbook.mediaRecorder.onstop = () => {
+                            const blob = new Blob(Playbook.recordedChunks, { type: 'video/webm' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url; 
+                            a.download = `Playbook_${document.getElementById('play-name').value || 'Export'}.webm`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            Playbook.showToast("Video downloaded successfully!");
+                        };
+                        
+                        Playbook.mediaRecorder.start();
+                        Playbook.isRecording = true;
+                        btn.style.color = '#ef4444'; 
+                        btn.innerHTML = '⏹ Stop';
+                        Playbook.showToast("Recording started...", '#f59e0b');
+                    } catch (e) {
+                        Playbook.showToast("Video export not supported in this browser.", 'var(--danger)');
+                    }
+                }
+            },
+
+            // --- PRE-SNAP MOTION ENGINE ---
+            runMotion: () => {
+                const mRoutes = Playbook.routes.filter(r => r.type === 'motion');
+                
+                if (mRoutes.length === 0) {
+                    Playbook.showToast("No motion paths drawn. Use the running man tool.", 'var(--warning)');
+                    return;
+                }
+                
+                let frames = 0; 
+                const duration = 20; // Fast 0.6s snap animation
+                
+                const loop = () => {
+                    frames++; 
+                    const progress = frames / duration;
+                    
+                    mRoutes.forEach(r => {
+                        const el = Playbook.elements.find(e => e.id === r.ownerId);
+                        if (el && r.points.length > 1) {
+                            const start = r.points[0]; 
+                            const end = r.points[r.points.length - 1];
+                            el.x = start.x + (end.x - start.x) * progress;
+                            el.y = start.y + (end.y - start.y) * progress;
+                        }
+                    });
+                    
+                    Playbook.drawAll();
+                    
+                    if (frames < duration) { 
+                        requestAnimationFrame(loop); 
+                    } else {
+                        // Motion complete. Erase lines and trigger defense shift.
+                        Playbook.routes = Playbook.routes.filter(r => r.type !== 'motion');
+                        Playbook.calculateDefensiveAI(); 
+                        Playbook.showToast("Defense Shifted!");
+                        Playbook.drawAll();
+                    }
+                };
+                
+                loop();
+            },
+
+            // --- PHYSICS & AI UTILS ---
+            getSpeed: (label) => {
+                if (['X', 'Z', 'H', 'Y', 'CB', 'FS', 'SS'].includes(label)) return 140; 
+                if (['R', 'W', 'M', 'S'].includes(label)) return 115; 
+                if (['E', 'T', 'N', 'L', 'G', 'C'].includes(label)) return 85; 
+                return 120; 
+            },
+
             handleDoubleClick: (e) => {
                 if (Playbook.activeTool !== 'move') return;
+                
                 const r = Playbook.canvas.getBoundingClientRect();
                 const x = e.clientX - r.left; 
                 const y = e.clientY - r.top;
                 const target = Playbook.hitTest(x, y);
                 
-                // Route Tree Menu Trigger
                 if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') { 
                     Playbook.contextTarget = target;
                     const menu = document.getElementById('route-menu');
-                    if (menu) {
-                        menu.style.display = 'flex';
-                        menu.style.left = (x + 15) + 'px';
-                        menu.style.top = (y + 15) + 'px';
+                    if (menu) { 
+                        menu.style.display = 'flex'; 
+                        menu.style.left = (x + 15) + 'px'; 
+                        menu.style.top = (y + 15) + 'px'; 
                     }
                 }
             },
@@ -2838,14 +2972,15 @@
             applyPresetRoute: (routeType) => {
                 const menu = document.getElementById('route-menu');
                 if (menu) menu.style.display = 'none';
+                
                 if (!Playbook.contextTarget) return;
                 
                 const p = Playbook.contextTarget;
                 const rList = Playbook.routes.filter(r => r.ownerId !== p.id); 
                 
-                const w = Playbook.canvas.width;
+                const w = Playbook.canvas.width; 
                 const isLeft = p.x < w / 2;
-                const inside = isLeft ? 60 : -60;
+                const inside = isLeft ? 60 : -60; 
                 const outside = isLeft ? -60 : 60;
                 let pts = [];
 
@@ -2867,17 +3002,18 @@
                     points: pts, 
                     color: '#f59e0b' 
                 });
+                
                 Playbook.routes = rList; 
                 Playbook.drawAll();
             },
 
-            // --- VR SIM: THROW TO SPACE ---
             toggleQBSim: () => {
                 Playbook.qbSimMode = !Playbook.qbSimMode;
                 const btn = document.getElementById('qb-sim-btn');
-                Playbook.passResult = null;
-                Playbook.ball = null;
-                Playbook.isSacked = false;
+                Playbook.passResult = null; 
+                Playbook.ball = null; 
+                Playbook.isSacked = false; 
+                Playbook.resultLogged = false;
                 
                 if (Playbook.qbSimMode) { 
                     if (btn) { 
@@ -2905,28 +3041,29 @@
                 const travelTime = dist / 250; 
 
                 Playbook.ball = {
-                    active: true,
-                    throwTime: Playbook.animTime, // FIX: Record exact time of throw!
-                    startX: qbPos.x, startY: qbPos.y,
-                    x: qbPos.x, y: qbPos.y,
-                    targetX: targetX, targetY: targetY,
+                    active: true, 
+                    throwTime: Playbook.animTime, 
+                    startX: qbPos.x, 
+                    startY: qbPos.y, 
+                    x: qbPos.x, 
+                    y: qbPos.y,
+                    targetX: targetX, 
+                    targetY: targetY, 
                     progress: 0,
                     speedIncrement: 1 / (travelTime * 33) 
                 };
-                // FIX: Removed Playbook.calculateDefensiveAI() to stop the teleport!
             },
 
-            // --- ADVANCED DEFENSIVE AI (Match Zones, Overloads, Bunch Tracking) ---
             calculateDefensiveAI: () => {
                 Playbook.aiRoutes = [];
                 const simTypeEl = document.getElementById('sim-type');
                 const simType = simTypeEl ? simTypeEl.value : 'pass';
-                const isRun = simType === 'run';
+                const isRun = simType === 'run'; 
                 const isPlayAction = simType === 'pa';
                 
-                // [PHASE 2] BUNCH RECOGNITION: Scan for 3+ clustered receivers
                 const receivers = Playbook.elements.filter(e => ['X', 'Z', 'Y', 'H', 'U'].includes(e.label));
                 let bunchCenter = null;
+                
                 receivers.forEach(r1 => {
                     let clustered = receivers.filter(r2 => Math.hypot(r1.x - r2.x, r1.y - r2.y) < 60);
                     if (clustered.length >= 3) {
@@ -2934,22 +3071,19 @@
                     }
                 });
 
-                // [PHASE 2] TRENCH MATH: Track available blockers for 1-on-1 calculations
                 let availableBlockers = Playbook.elements.filter(o => ['L', 'G', 'C', 'T', 'R'].includes(o.label));
                 
                 Playbook.defense.forEach(d => {
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
                     let target = { x: d.x, y: d.y };
                     
-                    // 1. BALL IN AIR (Break on throw)
                     if (Playbook.ball && Playbook.ball.active) {
                         const distToLanding = Math.hypot(Playbook.ball.targetX - d.x, Playbook.ball.targetY - d.y);
-                        if (distToLanding < 120) {
-                            target.x = Playbook.ball.targetX;
-                            target.y = Playbook.ball.targetY;
+                        if (distToLanding < 120) { 
+                            target.x = Playbook.ball.targetX; 
+                            target.y = Playbook.ball.targetY; 
                         }
                     }
-                    // 2. TRENCH WARFARE & OVERLOAD BLITZING
                     else if (['E', 'T', 'N'].includes(d.label)) {
                         let closestBlocker = null; 
                         let minDist = 999;
@@ -2961,15 +3095,13 @@
                                 closestBlocker = { obj: blocker, idx: index }; 
                             }
                         });
-
-                        // If a blocker is near, engage and remove them from the pool
+                        
                         if (closestBlocker && minDist < 60 && Playbook.animTime < 3.0) {
                             target.x = closestBlocker.obj.x; 
                             target.y = closestBlocker.obj.y - 10; 
-                            availableBlockers.splice(closestBlocker.idx, 1); // Blocker is occupied!
+                            availableBlockers.splice(closestBlocker.idx, 1); 
                         } else {
-                            // UNBLOCKED RUSHER: Sprint directly at the QB!
-                            const rb = Playbook.elements.find(o => o.label === 'R');
+                            const rb = Playbook.elements.find(o => o.label === 'R'); 
                             const qb = Playbook.elements.find(o => o.label === 'Q');
                             const targetPlayer = isRun && rb ? rb : qb; 
                             if (targetPlayer) { 
@@ -2978,27 +3110,24 @@
                             }
                         }
                     }
-                    // 3. LINEBACKER RUN FITS & PLAY-ACTION
                     else if ((isPlayAction || isRun) && ['W', 'M', 'S'].includes(d.label)) {
                         if (isRun) {
                             const rb = Playbook.elements.find(o => o.label === 'R');
-                            if (rb) {
-                                const rbPos = Playbook.getAnimPosAtTime(rb, 2.0);
+                            if (rb) { 
+                                const rbPos = Playbook.getAnimPosAtTime(rb, 2.0); 
                                 target.x = rbPos.x; 
                                 target.y = rbPos.y; 
                             }
-                        } else if (isPlayAction) {
-                            target.y = d.y + 15; // Bite on PA
+                        } else if (isPlayAction) { 
+                            target.y = d.y + 15; 
                         }
                     }
-                    // 4. ZONE MATCH COVERAGE (RIP/LIZ)
                     else if (zone && !isRun) {
                         target.x = zone.points[0].x; 
-                        target.y = zone.points[0].y - 30; // Default: Drift to center
+                        target.y = zone.points[0].y - 30; 
                         
-                        // BUNCH BRACKET: Widen alignment if defending a bunch formation
                         if (bunchCenter && Math.hypot(bunchCenter.x - d.x, bunchCenter.y - d.y) < 100) {
-                            target.x += (d.x > bunchCenter.x) ? 30 : -30; // Cage the bunch
+                            target.x += (d.x > bunchCenter.x) ? 30 : -30; 
                         }
 
                         const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
@@ -3009,31 +3138,33 @@
                             const oPos = Playbook.getAnimPosAtTime(o, Playbook.animTime + 0.5);
                             const isInsideZone = Math.hypot((oPos.x - zone.points[0].x)/rX, (oPos.y - zone.points[0].y)/rY) <= 1.2;
                             
-                            // PATTERN MATCH: If pushing vertical deep into a blue zone, convert to Man Coverage
-                            if (isInsideZone && zone.type === 'zone-deep' && oPos.y < Playbook.losY - 100) {
+                            if (isInsideZone && zone.type === 'zone-deep' && oPos.y < Playbook.losY - 100) { 
                                 target.x = oPos.x; 
                                 target.y = oPos.y - 15; 
-                                matched = true;
-                            } 
-                            // Standard zone mirror for flats/hooks
-                            else if (isInsideZone && !matched) {
+                                matched = true; 
+                            } else if (isInsideZone && !matched) { 
                                 target.x = oPos.x; 
                                 target.y = oPos.y - 15; 
                             }
                         });
                     }
-                    // 5. STANDARD MAN COVERAGE
                     else {
-                        let closest = null; let minDist = 999;
+                        let closest = null; 
+                        let minDist = 999;
+                        
                         Playbook.elements.forEach(o => {
                             if (o.label === 'C' || o.label === 'Q' || o.label.includes('ol_')) return;
                             let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { minDist = dist; closest = o; }
+                            if (dist < minDist) { 
+                                minDist = dist; 
+                                closest = o; 
+                            }
                         });
-                        if (closest) {
-                            const endPos = Playbook.getAnimPosAtTime(closest, 4.0);
+                        
+                        if (closest) { 
+                            const endPos = Playbook.getAnimPosAtTime(closest, 4.0); 
                             target.x = endPos.x; 
-                            target.y = endPos.y - 10;
+                            target.y = endPos.y - 10; 
                         }
                     }
                     
@@ -3044,52 +3175,45 @@
                 });
             },
 
-            // --- ANIMATION & PHYSICS ENGINE ---
-            // --- ANIMATION & PHYSICS ENGINE ---
             toggleAnimation: () => {
-                if (Playbook.qbSimMode && Playbook.passResult) {
-                    Playbook.passResult = null;
-                    Playbook.ball = null;
+                if (Playbook.qbSimMode && Playbook.passResult) { 
+                    Playbook.passResult = null; 
+                    Playbook.ball = null; 
+                    Playbook.resultLogged = false; 
                 }
                 
                 const btn = document.getElementById('anim-play-btn');
                 
                 if (Playbook.animating) { 
                     Playbook.stopAnimation(); 
-                    if (btn) {
-                        btn.innerHTML = "▶";
-                    }
+                    if (btn) btn.innerHTML = "▶"; 
                 } else { 
-                    Playbook.isSacked = false;
-                    Playbook.calculateDefensiveAI(); // FIX: Calculate ONCE at snap. No more mid-play resets!
+                    Playbook.isSacked = false; 
+                    Playbook.calculateDefensiveAI(); 
                     Playbook.animating = true; 
                     
-                    if (btn) {
-                        btn.innerHTML = "⏸";
-                    }
+                    if (btn) btn.innerHTML = "⏸"; 
                     if (Playbook.animTime >= Playbook.animMaxTime) {
-                        Playbook.animTime = 0;
+                        Playbook.animTime = 0; 
                     }
                     Playbook.animateLoop(); 
                 }
             },
             
-            stopAnimation: () => {
-                Playbook.animating = false;
+            stopAnimation: () => { 
+                Playbook.animating = false; 
                 if (Playbook.animReq) {
-                    cancelAnimationFrame(Playbook.animReq);
+                    cancelAnimationFrame(Playbook.animReq); 
                 }
-                Playbook.drawAll();
+                Playbook.drawAll(); 
             },
             
-            scrubAnimation: (val) => {
-                Playbook.animating = false;
-                const btn = document.getElementById('anim-play-btn');
-                if (btn) {
-                    btn.innerHTML = "▶";
-                }
-                Playbook.animTime = (val / 100) * Playbook.animMaxTime;
-                Playbook.drawAll();
+            scrubAnimation: (val) => { 
+                Playbook.animating = false; 
+                const btn = document.getElementById('anim-play-btn'); 
+                if (btn) btn.innerHTML = "▶"; 
+                Playbook.animTime = (val / 100) * Playbook.animMaxTime; 
+                Playbook.drawAll(); 
             },
             
             animateLoop: () => {
@@ -3097,94 +3221,95 @@
                 
                 Playbook.animTime += 0.03; 
 
-                // Pass Rush Timer (Sacks)
                 const simTypeEl = document.getElementById('sim-type');
                 const isRun = simTypeEl && simTypeEl.value === 'run';
 
                 if (!Playbook.ball && Playbook.animTime > 3.0 && Playbook.qbSimMode && !Playbook.isSacked && !isRun) {
-                    Playbook.isSacked = true;
+                    Playbook.isSacked = true; 
                     Playbook.animating = false;
-                    Playbook.passResult = {
-                        status: 'SACKED',
-                        color: '#ef4444',
-                        msg: 'Held the ball too long!'
+                    Playbook.passResult = { 
+                        status: 'SACKED', 
+                        color: '#ef4444', 
+                        msg: 'Held the ball too long!' 
                     };
                 }
 
-                // Ball Flight Physics & Catch Radius
                 if (Playbook.ball && Playbook.ball.active) {
                     Playbook.ball.progress += Playbook.ball.speedIncrement;
                     Playbook.ball.x = Playbook.ball.startX + (Playbook.ball.targetX - Playbook.ball.startX) * Playbook.ball.progress;
                     Playbook.ball.y = Playbook.ball.startY + (Playbook.ball.targetY - Playbook.ball.startY) * Playbook.ball.progress;
 
                     if (Playbook.ball.progress >= 1) {
-                        Playbook.ball.active = false;
+                        Playbook.ball.active = false; 
                         Playbook.animating = false; 
                         
-                        let closestD = null;
-                        let minDistD = 35; // DB Catch Radius
+                        let closestD = null; 
+                        let minDistD = 35; 
                         
                         Playbook.defense.forEach(d => {
-                            let p = Playbook.getAnimPos(d);
+                            let p = Playbook.getAnimPos(d); 
                             let dist = Math.hypot(p.x - Playbook.ball.x, p.y - Playbook.ball.y);
-                            if (dist < minDistD) {
-                                minDistD = dist;
-                                closestD = d;
+                            if (dist < minDistD) { 
+                                minDistD = dist; 
+                                closestD = d; 
                             }
                         });
 
-                        let closestO = null;
-                        let minDistO = 35; // WR Catch Radius
+                        let closestO = null; 
+                        let minDistO = 35; 
                         
                         Playbook.elements.forEach(o => {
                             if (o.label === 'Q' || o.label.includes('ol_')) return;
-                            
-                            let p = Playbook.getAnimPos(o);
+                            let p = Playbook.getAnimPos(o); 
                             let dist = Math.hypot(p.x - Playbook.ball.x, p.y - Playbook.ball.y);
-                            if (dist < minDistO) {
-                                minDistO = dist;
-                                closestO = o;
+                            if (dist < minDistO) { 
+                                minDistO = dist; 
+                                closestO = o; 
                             }
                         });
 
                         const passLength = Math.round((Playbook.losY - Playbook.ball.y) / 10);
-
+                        
                         if (closestD && minDistD <= minDistO) {
-                            Playbook.passResult = {
-                                status: 'INTERCEPTED',
-                                color: '#ef4444',
-                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
-                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
-                                msg: `Picked by ${closestD.label}`
+                            Playbook.passResult = { 
+                                status: 'INTERCEPTED', 
+                                color: '#ef4444', 
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY }, 
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y }, 
+                                msg: `Picked by ${closestD.label}` 
                             };
                         } else if (closestO) {
-                            Playbook.passResult = {
-                                status: 'COMPLETED',
-                                color: '#10b981',
-                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
-                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
-                                msg: `Gain of ${passLength} yds`
+                            Playbook.passResult = { 
+                                status: 'COMPLETED', 
+                                color: '#10b981', 
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY }, 
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y }, 
+                                msg: `Gain of ${passLength} yds` 
                             };
                         } else {
-                            Playbook.passResult = {
-                                status: 'INCOMPLETE',
-                                color: '#888',
-                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY },
-                                p2: { x: Playbook.ball.x, y: Playbook.ball.y },
-                                msg: `Thrown away / Dropped`
+                            Playbook.passResult = { 
+                                status: 'INCOMPLETE', 
+                                color: '#888', 
+                                p1: { x: Playbook.ball.startX, y: Playbook.ball.startY }, 
+                                p2: { x: Playbook.ball.x, y: Playbook.ball.y }, 
+                                msg: `Thrown away / Dropped` 
                             };
                         }
                     }
                 }
 
-                if (Playbook.animTime > Playbook.animMaxTime) {
-                    Playbook.animTime = 0;
-                    // FIX: We removed the toggleQBSim() call here.
-                    // Now it just stops the animation but leaves the QB mode ON!
+                // ANALYTICS TRIGGER
+                if (Playbook.passResult && !Playbook.resultLogged && Playbook.qbSimMode) {
+                    Playbook.logAnalytics(Playbook.passResult);
+                    Playbook.resultLogged = true;
+                }
+
+                if (Playbook.animTime > Playbook.animMaxTime) { 
+                    Playbook.animTime = 0; 
                     Playbook.stopAnimation(); 
                 }
                 
-                const timer = document.getElementById('anim-timer');
+                const timer = document.getElementById('anim-timer'); 
                 const scrubber = document.getElementById('anim-scrubber');
                 
                 if (timer) {
@@ -3199,36 +3324,49 @@
             },
 
             getAnimPosAtTime: (player, timeOverride) => {
-                let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone'));
-                if (!route && player.type === 'D') route = Playbook.aiRoutes.find(r => r.ownerId === player.id);
+                let route = Playbook.routes.find(r => r.ownerId === player.id && !r.type.includes('zone') && r.type !== 'motion');
+                
+                if (!route && player.type === 'D') {
+                    route = Playbook.aiRoutes.find(r => r.ownerId === player.id);
+                }
                 
                 const simType = document.getElementById('sim-type')?.value || 'pass';
-
-                // QB AUTO-DROPBACK LOGIC
+                
                 if ((!route || route.points.length === 0) && player.label === 'Q') {
                     if (simType === 'pass' || simType === 'pa') {
                         let prog = Math.min(timeOverride / 1.2, 1); 
                         return { x: player.x, y: player.y + (30 * prog) }; 
                     } else if (simType === 'run') {
                         const rb = Playbook.elements.find(e => e.label === 'R');
-                        if (rb) {
+                        if (rb) { 
                             let prog = Math.min(timeOverride / 0.8, 1); 
-                            return { x: player.x + (rb.x - player.x) * prog * 0.4, y: player.y + (rb.y - player.y) * prog * 0.4 };
+                            return { 
+                                x: player.x + (rb.x - player.x) * prog * 0.4, 
+                                y: player.y + (rb.y - player.y) * prog * 0.4 
+                            }; 
                         }
                     }
                 }
 
-                if (!route || route.points.length === 0) return { x: player.x, y: player.y };
+                if (!route || route.points.length === 0) {
+                    return { x: player.x, y: player.y };
+                }
                 
                 const speed = Playbook.getSpeed(player.label); 
                 const targetDist = timeOverride * speed; 
                 let currentDist = 0;
                 
                 for (let i = 0; i < route.points.length - 1; i++) {
-                    let p1 = route.points[i]; let p2 = route.points[i + 1]; let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    let p1 = route.points[i]; 
+                    let p2 = route.points[i + 1]; 
+                    let segDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    
                     if (currentDist + segDist >= targetDist) { 
                         let f = (targetDist - currentDist) / segDist; 
-                        return { x: p1.x + (p2.x - p1.x) * f, y: p1.y + (p2.y - p1.y) * f }; 
+                        return { 
+                            x: p1.x + (p2.x - p1.x) * f, 
+                            y: p1.y + (p2.y - p1.y) * f 
+                        }; 
                     } 
                     currentDist += segDist;
                 } 
@@ -3236,30 +3374,33 @@
             },
 
             getAnimPos: (player) => {
-                if (Playbook.animTime === 0) return { x: player.x, y: player.y };
+                if (Playbook.animTime === 0) {
+                    return { x: player.x, y: player.y };
+                }
                 
-                // --- NO-TELEPORT BALL REACTION LOGIC ---
                 if (player.type === 'D' && Playbook.ball && Playbook.ball.active && Playbook.animTime >= Playbook.ball.throwTime) {
                     const posAtThrow = Playbook.getAnimPosAtTime(player, Playbook.ball.throwTime);
                     const timeSinceThrow = Playbook.animTime - Playbook.ball.throwTime;
                     const speed = Playbook.getSpeed(player.label);
                     
-                    const dx = Playbook.ball.targetX - posAtThrow.x;
+                    const dx = Playbook.ball.targetX - posAtThrow.x; 
                     const dy = Playbook.ball.targetY - posAtThrow.y;
                     const distToBall = Math.hypot(dx, dy);
                     
-                    // Only react if within 150 pixels (prevents the entire field from clumping)
                     if (distToBall < 150 && distToBall > 0) {
                         const distMoved = timeSinceThrow * speed;
                         const f = Math.min(distMoved / distToBall, 1);
-                        return { x: posAtThrow.x + dx * f, y: posAtThrow.y + dy * f };
+                        return { 
+                            x: posAtThrow.x + dx * f, 
+                            y: posAtThrow.y + dy * f 
+                        };
                     }
                 }
                 
                 return Playbook.getAnimPosAtTime(player, Playbook.animTime);
             },
 
-            // --- DEFENSE LIBRARY ---
+            // --- DEFENSE & DRAWING ---
             toggleDefense: (val) => {
                 Playbook.defense = []; 
                 Playbook.activeDefenseType = val; 
@@ -3302,50 +3443,47 @@
                     }
                 };
 
-                // Fronts
-                if (val === 'bear_46') {
+                if (val === 'bear_46') { 
                     createD('E', c - 70, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('N', c, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 70, los - 20);
+                    createD('E', c + 70, los - 20); 
                     createD('M', c - 100, los - 50); 
-                    createD('S', c + 100, los - 50);
+                    createD('S', c + 100, los - 50); 
                     createD('CB', 40, los - 40); 
                     createD('CB', w - 40, los - 40); 
                     createD('FS', c, los - 200); 
-                    createD('SS', c + 140, los - 40);
-                } else if (val === 'base43') {
+                    createD('SS', c + 140, los - 40); 
+                } else if (val === 'base43') { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 80); 
                     createD('M', c, los - 80); 
-                    createD('S', c + 120, los - 80);
+                    createD('S', c + 120, los - 80); 
                     createD('CB', 40, los - 40); 
                     createD('CB', w - 40, los - 40); 
                     createD('FS', c - 60, los - 200); 
-                    createD('SS', c + 60, los - 200);
-                } else if (val === 'fire_zone') {
+                    createD('SS', c + 60, los - 200); 
+                } else if (val === 'fire_zone') { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 60, 'zone-flat', 40, 20); 
                     createD('M', c, los - 60, 'zone-hook', 0, 40); 
-                    createD('S', c + 120, los - 20); // Blitz
+                    createD('S', c + 120, los - 20); 
                     createD('CB', 40, los - 180, 'zone-deep', 0, 80); 
                     createD('CB', w - 40, los - 180, 'zone-deep', 0, 80); 
                     createD('FS', c, los - 220, 'zone-deep', 0, 80); 
-                    createD('SS', c + 60, los - 60, 'zone-flat', 50, 20);
-                }
-                // Shells
-                else if (val.includes('cover3')) {
+                    createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); 
+                } else if (val.includes('cover3')) { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 60, 'zone-hook', 0, 40); 
                     createD('M', c, los - 60, 'zone-hook', 0, 40); 
                     
@@ -3355,30 +3493,31 @@
                     } else { 
                         createD('S', c + 120, los - 60, 'zone-flat', 40, 20); 
                         createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); 
-                    }
+                    } 
+                    
                     createD('CB', 40, los - 180, 'zone-deep', 0, 80); 
                     createD('CB', w - 40, los - 180, 'zone-deep', 0, 80); 
                     createD('FS', c, los - 220, 'zone-deep', 0, 80); 
-                } else if (val === 'cover2' || val === 'tampa_2') {
+                } else if (val === 'cover2' || val === 'tampa_2') { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 60, 'zone-hook', 0, 40); 
                     createD('M', c, los - 80, val === 'tampa_2' ? 'zone-deep' : 'zone-hook', 0, val === 'tampa_2' ? 100 : 40); 
-                    createD('S', c + 120, los - 60, 'zone-hook', 0, 40);
+                    createD('S', c + 120, los - 60, 'zone-hook', 0, 40); 
                     createD('CB', 40, los - 40, 'zone-flat', 0, 40); 
                     createD('CB', w - 40, los - 40, 'zone-flat', 0, 40); 
                     createD('FS', c - 80, los - 220, 'zone-deep', 0, 100); 
-                    createD('SS', c + 80, los - 220, 'zone-deep', 0, 100);
-                } else if (val === 'cover4' || val === 'cover6') {
+                    createD('SS', c + 80, los - 220, 'zone-deep', 0, 100); 
+                } else if (val === 'cover4' || val === 'cover6') { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 60, 'zone-hook', 0, 40); 
                     createD('M', c, los - 60, 'zone-hook', 0, 40); 
-                    createD('S', c + 120, los - 60, 'zone-hook', 0, 40);
+                    createD('S', c + 120, los - 60, 'zone-hook', 0, 40); 
                     
                     if (val === 'cover6') { 
                         createD('CB', 40, los - 40, 'zone-flat', 0, 40); 
@@ -3386,26 +3525,26 @@
                     } else { 
                         createD('CB', 40, los - 120, 'zone-deep', 0, 80); 
                         createD('FS', c - 60, los - 220, 'zone-deep', 0, 80); 
-                    }
+                    } 
+                    
                     createD('CB', w - 40, los - 120, 'zone-deep', 0, 80); 
-                    createD('SS', c + 60, los - 220, 'zone-deep', 0, 80);
-                } else {
+                    createD('SS', c + 60, los - 220, 'zone-deep', 0, 80); 
+                } else { 
                     createD('E', c - 90, los - 20); 
                     createD('T', c - 30, los - 20); 
                     createD('T', c + 30, los - 20); 
-                    createD('E', c + 90, los - 20);
+                    createD('E', c + 90, los - 20); 
                     createD('W', c - 120, los - 80); 
                     createD('M', c, los - 80); 
-                    createD('S', c + 120, los - 80);
+                    createD('S', c + 120, los - 80); 
                     createD('CB', 40, los - 40); 
                     createD('CB', w - 40, los - 40); 
                     createD('FS', c - 60, los - 200); 
-                    createD('SS', c + 60, los - 200);
+                    createD('SS', c + 60, los - 200); 
                 } 
                 Playbook.drawAll();
             },
 
-            // --- DRAW FIELD & YARD LINES ---
             drawField: () => {
                 if (!Playbook.ctx) return;
                 
@@ -3444,7 +3583,7 @@
                     ctx.moveTo(w * 0.65, y - 3); 
                     ctx.lineTo(w * 0.65, y + 3); 
                     ctx.stroke();
-
+                    
                     if (i % 10 === 0 && i !== 0 && i !== 50) { 
                         ctx.fillText(50 - i, 10, y); 
                         ctx.fillText(50 - i, w - 30, y); 
@@ -3458,15 +3597,14 @@
                 ctx.lineTo(w, losY); 
                 ctx.stroke();
                 
-                const distEl = document.getElementById('sim-dist');
+                const distEl = document.getElementById('sim-dist'); 
                 const yardage = distEl ? parseInt(distEl.value) : 10;
-                let fdY = losY - (yardage * 10);
                 
                 ctx.strokeStyle = '#fbbf24'; 
                 ctx.lineWidth = 3; 
                 ctx.beginPath(); 
-                ctx.moveTo(0, fdY); 
-                ctx.lineTo(w, fdY); 
+                ctx.moveTo(0, losY - (yardage * 10)); 
+                ctx.lineTo(w, losY - (yardage * 10)); 
                 ctx.stroke();
             },
 
@@ -3478,8 +3616,10 @@
 
                 Playbook.routes.filter(r => r.type.includes('zone')).forEach(z => {
                     if (z.points.length < 2) return;
+                    
                     const rX = Math.abs(z.points[1].x - z.points[0].x) || 40; 
                     const rY = Math.abs(z.points[1].y - z.points[0].y) || 60;
+                    
                     ctx.beginPath(); 
                     ctx.ellipse(z.points[0].x, z.points[0].y - (rY / 2), rX, rY, 0, 0, 2 * Math.PI);
                     ctx.fillStyle = z.color; 
@@ -3491,6 +3631,7 @@
 
                 Playbook.routes.filter(r => !r.type.includes('zone')).forEach(r => {
                     if (r.points.length < 2) return; 
+                    
                     ctx.beginPath(); 
                     ctx.moveTo(r.points[0].x, r.points[0].y);
                     
@@ -3503,18 +3644,38 @@
                         );
                     }
                     ctx.lineTo(r.points[r.points.length - 1].x, r.points[r.points.length - 1].y);
-                    ctx.strokeStyle = r.color; 
+                    
+                    // MOTION LINE STYLING (Cyan Dashed)
+                    ctx.strokeStyle = r.type === 'motion' ? '#06b6d4' : r.color; 
                     ctx.lineWidth = 3; 
                     ctx.lineCap = 'round'; 
-                    ctx.setLineDash(r.type === 'block' ? [5, 8] : []); 
+                    ctx.setLineDash(r.type === 'block' ? [5, 8] : (r.type === 'motion' ? [4, 4] : [])); 
                     ctx.stroke(); 
                     ctx.setLineDash([]);
                 });
 
+                // DRAW DRAGGABLE WAYPOINTS (Only when moving)
+                if (Playbook.activeTool === 'move') {
+                    Playbook.routes.filter(r => !r.type.includes('zone')).forEach(r => {
+                        r.points.forEach((p, index) => {
+                            if (index > 0 && index < r.points.length) {
+                                ctx.beginPath(); 
+                                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                                ctx.fillStyle = 'white'; 
+                                ctx.fill(); 
+                                ctx.strokeStyle = '#000'; 
+                                ctx.lineWidth = 1; 
+                                ctx.stroke();
+                            }
+                        });
+                    });
+                }
+
                 const allPlayers = [...Playbook.defense, ...Playbook.elements];
                 
                 allPlayers.forEach(el => {
-                    const pos = Playbook.getAnimPos(el, el.type === 'D'); 
+                    const pos = Playbook.getAnimPos(el); 
+                    
                     ctx.beginPath(); 
                     ctx.arc(pos.x, pos.y, 13, 0, Math.PI * 2);
                     ctx.fillStyle = el.type === 'D' ? 'rgba(239, 68, 68, 0.9)' : 'white'; 
@@ -3551,6 +3712,7 @@
                         ctx.stroke(); 
                         ctx.setLineDash([]);
                     }
+                    
                     ctx.fillStyle = Playbook.passResult.color; 
                     ctx.fillRect(Playbook.canvas.width / 2 - 120, 40, 240, 40);
                     ctx.fillStyle = 'black'; 
@@ -3561,7 +3723,7 @@
                 }
             },
 
-            // --- STANDARD UTILITIES ---
+            // --- DRAG & DROP WITH WAYPOINTS ---
             hitTest: (x, y) => { 
                 const allPlayers = [...Playbook.elements, ...Playbook.defense]; 
                 return allPlayers.find(el => { 
@@ -3583,7 +3745,7 @@
                     return; 
                 }
                 Playbook.lastTapTime = now;
-
+                
                 if (document.getElementById('route-menu')) {
                     document.getElementById('route-menu').style.display = 'none'; 
                 }
@@ -3598,7 +3760,30 @@
                     Playbook.eraseAt(x, y); 
                     return; 
                 } 
-                
+
+                // 1. CHECK FOR WAYPOINT DRAG FIRST
+                if (Playbook.activeTool === 'move') {
+                    let hitNode = null;
+                    for (let rt of Playbook.routes) {
+                        if (rt.type.includes('zone')) continue;
+                        for (let i = 1; i < rt.points.length; i++) {
+                            if (Math.hypot(rt.points[i].x - x, rt.points[i].y - y) < 15) {
+                                hitNode = { route: rt, index: i }; 
+                                break;
+                            }
+                        }
+                        if (hitNode) break;
+                    }
+                    if (hitNode) {
+                        Playbook.isDragging = true; 
+                        Playbook.dragPoint = hitNode;
+                        Playbook.canvas.style.cursor = 'grabbing'; 
+                        Playbook.canvas.setPointerCapture(e.pointerId);
+                        return;
+                    }
+                }
+
+                // 2. CHECK FOR PLAYER DRAG
                 Playbook.dragTarget = Playbook.hitTest(x, y); 
                 
                 if (Playbook.activeTool === 'move' && Playbook.dragTarget) { 
@@ -3607,7 +3792,9 @@
                     Playbook.lastDragY = y; 
                     Playbook.canvas.style.cursor = 'grabbing'; 
                     Playbook.canvas.setPointerCapture(e.pointerId); 
-                } else if (Playbook.dragTarget) { 
+                } 
+                // 3. START DRAWING ROUTE
+                else if (Playbook.dragTarget) { 
                     Playbook.isDrawing = true; 
                     Playbook.canvas.setPointerCapture(e.pointerId); 
                     
@@ -3615,6 +3802,7 @@
                     let type = Playbook.activeTool; 
                     
                     if (type === 'draw') color = Playbook.dragTarget.type === 'D' ? '#ef4444' : '#f59e0b'; 
+                    if (type === 'motion') color = '#06b6d4';
                     if (type === 'zone-deep') color = 'rgba(56, 189, 248, 0.4)'; 
                     if (type === 'zone-hook') color = 'rgba(251, 191, 36, 0.4)'; 
                     if (type === 'zone-flat') color = 'rgba(168, 85, 247, 0.4)'; 
@@ -3643,9 +3831,19 @@
                     return; 
                 } 
                 
+                // WAYPOINT DRAGGING
+                if (Playbook.isDragging && Playbook.dragPoint) {
+                    Playbook.dragPoint.route.points[Playbook.dragPoint.index].x = x;
+                    Playbook.dragPoint.route.points[Playbook.dragPoint.index].y = y;
+                    Playbook.drawAll();
+                    return;
+                }
+
+                // PLAYER DRAGGING
                 if (Playbook.isDragging && Playbook.dragTarget) { 
                     const dx = x - Playbook.lastDragX; 
                     const dy = y - Playbook.lastDragY; 
+                    
                     Playbook.dragTarget.x += dx; 
                     Playbook.dragTarget.y += dy; 
                     
@@ -3661,12 +3859,14 @@
                     Playbook.lastDragX = x; 
                     Playbook.lastDragY = y; 
                     Playbook.drawAll(); 
-                } else if (Playbook.isDrawing) { 
+                } 
+                // LINE DRAWING
+                else if (Playbook.isDrawing) { 
                     const cr = Playbook.routes[Playbook.routes.length - 1]; 
                     
                     if (cr.type && cr.type.includes('zone')) { 
                         cr.points[1] = { x, y }; 
-                    } else if (Math.hypot(x - cr.points[cr.points.length - 1].x, y - cr.points[cr.points.length - 1].y) > 3) { 
+                    } else if (Math.hypot(x - cr.points[cr.points.length - 1].x, y - cr.points[cr.points.length - 1].y) > 8) { 
                         cr.points.push({ x, y }); 
                     } 
                     Playbook.drawAll(); 
@@ -3678,11 +3878,11 @@
                 Playbook.isDragging = false; 
                 Playbook.isDrawing = false; 
                 Playbook.dragTarget = null; 
+                Playbook.dragPoint = null; 
                 
                 if (Playbook.canvas) {
                     Playbook.canvas.releasePointerCapture(e.pointerId); 
                 }
-                
                 if (Playbook.activeTool === 'move') { 
                     Playbook.canvas.style.cursor = 'grab'; 
                     Playbook.updateFormationHUD(); 
@@ -3691,8 +3891,7 @@
             
             setTool: (tool) => { 
                 Playbook.activeTool = tool; 
-                
-                ['move', 'draw', 'block', 'eraser', 'zone-deep', 'zone-hook', 'zone-flat'].forEach(t => { 
+                ['move', 'draw', 'block', 'motion', 'eraser', 'zone-deep', 'zone-hook', 'zone-flat'].forEach(t => { 
                     const el = document.getElementById(`tool-${t}`); 
                     if (el) { 
                         el.style.opacity = (t === tool) ? '1' : '0.5'; 
@@ -3721,15 +3920,15 @@
                 Playbook.drawAll(); 
             },
             
+            // --- AUTO COUNTER LOGIC ---
             autoMatchDefense: () => { 
                 const report = Playbook.generateFormationReport(); 
                 const grid = document.getElementById('counter-grid'); 
                 if (!grid) return; 
                 
-                const distEl = document.getElementById('sim-dist');
+                const distEl = document.getElementById('sim-dist'); 
                 const downEl = document.getElementById('sim-down');
-                
-                const dist = distEl ? parseInt(distEl.value) : 10;
+                const dist = distEl ? parseInt(distEl.value) : 10; 
                 const down = downEl ? parseInt(downEl.value) : 1;
                 
                 const isHeavy = report.backs >= 2; 
@@ -3808,24 +4007,17 @@
                     if (e.y > c.y + 20) {
                         b++; 
                     } else { 
-                        if (e.x < c.x) {
-                            l++; 
-                        } else {
-                            r++; 
-                        }
+                        if (e.x < c.x) l++; 
+                        else r++; 
                     } 
                 }); 
                 
                 const w = maxX - minX; 
                 let n = "Spread"; 
                 
-                if (b === 0) {
-                    n = "Empty"; 
-                } else if (l === 3 || r === 3) {
-                    n = "Trips"; 
-                } else if (b >= 2) {
-                    n = "Heavy"; 
-                }
+                if (b === 0) n = "Empty"; 
+                else if (l === 3 || r === 3) n = "Trips"; 
+                else if (b >= 2) n = "Heavy"; 
                 
                 return { name: n, backs: b, width: w }; 
             },
@@ -3843,8 +4035,7 @@
                 
                 const w = Playbook.canvas.width; 
                 const h = Playbook.canvas.height; 
-                
-                const hashEl = document.getElementById('sim-hash');
+                const hashEl = document.getElementById('sim-hash'); 
                 const hash = hashEl ? hashEl.value : 'mid';
                 
                 let c = w / 2; 
@@ -3952,7 +4143,6 @@
                     const res = await fetch('/api/get-plays', { 
                         headers: { 'Authorization': `Bearer ${token}` } 
                     }); 
-                    
                     if (res.ok) { 
                         const plays = await res.json(); 
                         Store.set('playbook', plays); 
@@ -4010,7 +4200,6 @@
                 if (!grid) return; 
                 
                 const plays = Store.get('playbook') || []; 
-                
                 if (plays.length === 0) { 
                     grid.innerHTML = 'No plays.'; 
                     return; 
