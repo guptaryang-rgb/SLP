@@ -629,15 +629,12 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data): Extract precise coordinates for the 2D Playbook Simulator.
-       - Estimate X/Y coordinates on a 0-100 scale.
-       - X Axis: 0 is Left Sideline, 50 is Middle of the field, 100 is Right Sideline.
-       - Y Axis: 0 is the far deep Endzone, 75 is the Line of Scrimmage, 100 is behind the QB.
-       - You MUST provide plot_startX, plot_startY (Snap/Pocket location), and plot_endX, plot_endY (Target/Catch location).
+       - Estimate X/Y coordinates on a 0-100 scale (X: 0=Left Sideline, 50=Middle, 100=Right Sideline. Y: 75=Line of Scrimmage).
+       - You MUST provide plot_startX, plot_startY, plot_catchX, plot_catchY, plot_endX, plot_endY.
     
     2. THE COACH (Insight): The 'scouting_report' and 'positional' breakdown must be elite.
-       - Do NOT just describe the play. DIAGNOSE it.
-       - Explain WHY it worked/failed based on the "CONTEXT" provided above.
-       - VISION GUARDRAIL: ONLY provide positional breakdowns for players clearly visible in the video frame. If the DBs are out of frame, do NOT invent an analysis for them.
+       - You MUST analyze BOTH sides of the ball (Offense AND Defense).
+       - CRITICAL ANTI-LAZINESS RULE: You must provide completely UNIQUE and highly specific technical analysis for each of the 6 position groups listed in the JSON format. Do NOT repeat the overall summary in the positional breakdowns. If a position is out of frame, state "Out of frame - unable to grade."
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -666,9 +663,12 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
         },
         "positional": [
-            { "group": "Quarterback (QB)", "action": "3-step drop, read high-low on the flat defender.", "analysis": "Footwork was sloppy on the plant foot, causing the ball to sail high." },
-            { "group": "Offensive Line (OL)", "action": "Half-slide protection to the strong side.", "analysis": "Left Tackle got beat on an inside counter move. Failed to keep pad level low." },
-            { "group": "Receivers (WR/TE)", "action": "Mesh concept underneath with a vertical clear out.", "analysis": "Z receiver rounded off his Dig route. Needs to plant hard." }
+            { "group": "Quarterback (Offense)", "action": "Specific dropback/read execution", "analysis": "Unique mechanical critique of feet/eyes/release." },
+            { "group": "Offensive Line (Offense)", "action": "Specific protection/run block scheme", "analysis": "Unique critique of leverage, hand placement, or passed off stunts." },
+            { "group": "Skill Positions (Offense)", "action": "Specific route concepts or blocks run", "analysis": "Unique critique of route depth, stem, break, or catch point." },
+            { "group": "Defensive Line (Defense)", "action": "Specific rush lanes or gap fits", "analysis": "Unique critique of get-off, hand combat, or gap integrity." },
+            { "group": "Linebackers (Defense)", "action": "Specific drops or run fits", "analysis": "Unique critique of read steps, flow, or zone spacing." },
+            { "group": "Secondary (Defense)", "action": "Specific coverage responsibilities", "analysis": "Unique critique of backpedal, leverage, or pattern matching." }
         ]
     }`;
 
