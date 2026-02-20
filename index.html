@@ -2846,61 +2846,40 @@
             },
 
             // --- V18 PRE-SNAP MOTION ENGINE ---
+            // --- V18 PRE-SNAP MOTION ENGINE ---
             runMotion: () => {
                 const mRoutes = Playbook.routes.filter(r => r.type === 'motion');
+                if (mRoutes.length === 0) { Playbook.showToast("No motion paths drawn. Use the running man tool.", 'var(--warning)'); return; }
                 
-                if (mRoutes.length === 0) {
-                    Playbook.showToast("No motion paths drawn. Use the running man tool.", 'var(--warning)');
-                    return;
-                }
-                
-                let frames = 0; 
-                const duration = 40; // 1.3 seconds of smooth walking
+                let frames = 0; const duration = 40; 
                 
                 const loop = () => {
                     frames++; 
-                    
                     mRoutes.forEach(r => {
                         const el = Playbook.elements.find(e => e.id === r.ownerId);
                         if (el && r.points.length > 1) {
-                            const start = r.points[0]; 
-                            const end = r.points[r.points.length - 1];
-                            
-                            // Move player incrementally
-                            const dx = (end.x - start.x) / duration;
-                            const dy = (end.y - start.y) / duration;
-                            el.x += dx; 
-                            el.y += dy;
+                            const start = r.points[0]; const end = r.points[r.points.length - 1];
+                            const dx = (end.x - start.x) / duration; const dy = (end.y - start.y) / duration;
+                            el.x += dx; el.y += dy;
 
-                            // Defense dynamically slides to match the shift
                             const defShiftX = dx * 0.4; 
                             Playbook.defense.forEach(d => {
-                                if (['W', 'M', 'S', 'FS', 'SS'].includes(d.label)) {
+                                // FIX 1: Removed 'FS' and 'SS'. Only Box Linebackers shift now! Safeties stay anchored.
+                                if (['W', 'M', 'S'].includes(d.label)) {
                                     d.x += defShiftX;
                                     const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
-                                    if (z) {
-                                        z.points.forEach(zp => zp.x += defShiftX);
-                                    }
+                                    if (z) z.points.forEach(zp => zp.x += defShiftX);
                                 }
                             });
 
-                            // Chain the standard route so it follows the player
                             const pRoute = Playbook.routes.find(pr => pr.ownerId === el.id && pr.type === 'draw');
-                            if (pRoute) {
-                                pRoute.points.forEach(pt => { 
-                                    pt.x += dx; 
-                                    pt.y += dy; 
-                                });
-                            }
+                            if (pRoute) pRoute.points.forEach(pt => { pt.x += dx; pt.y += dy; });
                         }
                     });
                     
                     Playbook.drawAll();
-                    
-                    if (frames < duration) { 
-                        requestAnimationFrame(loop); 
-                    } else {
-                        // Clear the motion line. The play is now ready to snap!
+                    if (frames < duration) { requestAnimationFrame(loop); } 
+                    else {
                         Playbook.routes = Playbook.routes.filter(r => r.type !== 'motion');
                         Playbook.showToast("Motion Complete. Defense Adjusted!");
                         Playbook.drawAll();
@@ -2993,18 +2972,13 @@
             },
 
             // --- V18 PRE-COMPUTE AI MATRIX ---
+            // --- V18 PRE-COMPUTE AI MATRIX ---
             precomputeDefensiveAI: () => {
-                // Initialize defensive paths
-                Playbook.aiRoutes = Playbook.defense.map(d => ({
-                    ownerId: d.id,
-                    points: [{ x: d.x, y: d.y }]
-                }));
+                Playbook.aiRoutes = Playbook.defense.map(d => ({ ownerId: d.id, points: [{ x: d.x, y: d.y }] }));
 
                 const simType = document.getElementById('sim-type')?.value || 'pass';
-                const isRun = simType === 'run'; 
-                const isPA = simType === 'pa';
+                const isRun = simType === 'run'; const isPA = simType === 'pa';
 
-                // Assign Man Targets at T=0
                 Playbook.defense.forEach(d => {
                     const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
                     if (!zone && !['E','T','N'].includes(d.label)) {
@@ -3018,100 +2992,96 @@
                     }
                 });
 
-                // Simulate Time Forward in 0.1s increments to build reactive paths
                 for (let t = 0.1; t <= 6.0; t += 0.1) {
                     Playbook.defense.forEach(d => {
                         const routeObj = Playbook.aiRoutes.find(r => r.ownerId === d.id);
                         const currentPos = routeObj.points[routeObj.points.length - 1];
-                        let targetX = currentPos.x; 
-                        let targetY = currentPos.y;
+                        let targetX = currentPos.x; let targetY = currentPos.y;
                         const speed = Playbook.getSpeed(d.label);
                         const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
 
                         if (['E', 'T', 'N'].includes(d.label)) {
-                            // Basic Trench logic
                             const qb = Playbook.elements.find(o => o.label === 'Q');
                             if (qb) { targetX = qb.x; targetY = qb.y; }
                         } 
                         else if ((isPA || isRun) && ['W', 'M', 'S'].includes(d.label) && t < 1.5) {
                             if (isRun) {
                                 const rb = Playbook.elements.find(o => o.label === 'R');
-                                if (rb) {
-                                    const rbPos = Playbook.getAnimPosAtTime(rb, t);
-                                    targetX = rbPos.x; targetY = rbPos.y;
-                                }
+                                if (rb) { const rbPos = Playbook.getAnimPosAtTime(rb, t); targetX = rbPos.x; targetY = rbPos.y; }
                             } else if (isPA && t < 0.8) {
-                                targetY = d.y + 15; // Suck in on Play Action
+                                targetY = d.y + 15; 
                             }
                         } 
                         else if (zone && !isRun) {
                             const zCenter = { x: zone.points[0].x, y: zone.points[0].y - 30 };
-                            let threat = null; let minDist = 999;
+                            const rX = Math.abs(zone.points[1].x - zone.points[0].x) || 40;
+                            const rY = Math.abs(zone.points[1].y - zone.points[0].y) || 60;
                             
+                            let matched = false;
+                            let nearestWrDist = 999; 
+                            let nearestWrPos = null;
+
                             Playbook.elements.forEach(o => {
                                 if (['C', 'Q', 'L', 'G', 'T'].includes(o.label)) return;
                                 const oPos = Playbook.getAnimPosAtTime(o, t);
-                                const distToCenter = Math.hypot(oPos.x - zCenter.x, oPos.y - zCenter.y);
-                                if (distToCenter < 100) { 
-                                    if (distToCenter < minDist) { 
-                                        minDist = distToCenter; 
-                                        threat = oPos; 
+                                
+                                // FIX 2: Expanded Threat Radius for deep and flat zones!
+                                const threatMultiplier = zone.type === 'zone-deep' ? 2.5 : (zone.type === 'zone-flat' ? 2.0 : 1.5);
+                                const distToCenter = Math.hypot((oPos.x - zCenter.x)/rX, (oPos.y - zCenter.y)/rY);
+                                
+                                const absDist = Math.hypot(oPos.x - currentPos.x, oPos.y - currentPos.y);
+                                if (absDist < nearestWrDist) { nearestWrDist = absDist; nearestWrPos = oPos; }
+
+                                if (distToCenter <= threatMultiplier && !matched) {
+                                    if (zone.type === 'zone-deep' && oPos.y < Playbook.losY - 60) {
+                                        // Lock onto deep post/go routes
+                                        targetX = oPos.x; targetY = oPos.y - 20; matched = true;
+                                    } else if (zone.type === 'zone-flat') {
+                                        // FIX 4: Flat zone leverages outside against RB Swings
+                                        targetX = oPos.x + (oPos.x > zCenter.x ? -15 : 15); 
+                                        targetY = oPos.y - 10; matched = true;
+                                    } else if (zone.type === 'zone-hook') {
+                                        targetX = oPos.x; targetY = oPos.y - 15; matched = true;
                                     }
                                 }
                             });
 
-                            if (threat) {
-                                targetX = threat.x; targetY = threat.y - 15; // Match threat in zone
-                            } else {
-                                // V18 SQUEEZE LOGIC: Look for Work
-                                let nearestWrDist = 999; 
-                                let nearestWrPos = null;
-                                
-                                Playbook.elements.forEach(o => {
-                                    if (['C', 'Q', 'L', 'G', 'T'].includes(o.label)) return;
-                                    const oPos = Playbook.getAnimPosAtTime(o, t);
-                                    const dist = Math.hypot(oPos.x - currentPos.x, oPos.y - currentPos.y);
-                                    if (dist < nearestWrDist) { 
-                                        nearestWrDist = dist; 
-                                        nearestWrPos = oPos; 
+                            if (!matched) {
+                                // FIX 3: Zone Squeeze Logic ("Looking for work")
+                                if (nearestWrPos && nearestWrDist < 200) {
+                                    if (zone.type === 'zone-hook') {
+                                        // Hook defenders anchor X-axis, drop underneath crossers on Y-axis
+                                        targetX = zCenter.x + (nearestWrPos.x - zCenter.x) * 0.15;
+                                        targetY = Math.max(zCenter.y, nearestWrPos.y + 15);
+                                    } else if (zone.type === 'zone-flat') {
+                                        // Flat defenders drift wide towards threat
+                                        targetX = zCenter.x + (nearestWrPos.x - zCenter.x) * 0.3;
+                                        targetY = zCenter.y;
+                                    } else {
+                                        targetX = zCenter.x; targetY = zCenter.y;
                                     }
-                                });
-                                
-                                if (nearestWrPos && nearestWrDist < 180) {
-                                    // Drift towards nearest threat, but stay anchored to zone
-                                    targetX = zCenter.x + (nearestWrPos.x - zCenter.x) * 0.5;
-                                    targetY = zCenter.y + (nearestWrPos.y - zCenter.y) * 0.5;
                                 } else {
-                                    targetX = zCenter.x; 
-                                    targetY = zCenter.y;
+                                    targetX = zCenter.x; targetY = zCenter.y;
                                 }
                             }
                         } 
                         else {
-                            // V18 BLIND MAN COVERAGE
+                            // BLIND MAN COVERAGE (0.3s Delay)
                             let closest = Playbook.elements.find(o => o.id === d.manTargetId);
                             if (closest) {
-                                // 0.3 Second Reaction Delay! They target where the WR WAS 0.3s ago
                                 const lookbackTime = Math.max(0, t - 0.3);
                                 const oPos = Playbook.getAnimPosAtTime(closest, lookbackTime);
                                 targetX = oPos.x; targetY = oPos.y - 10;
                             }
                         }
 
-                        // Move towards the target at physics max speed
-                        const dx = targetX - currentPos.x;
-                        const dy = targetY - currentPos.y;
-                        const dist = Math.hypot(dx, dy);
-                        const step = speed * 0.1; 
+                        const dx = targetX - currentPos.x; const dy = targetY - currentPos.y;
+                        const dist = Math.hypot(dx, dy); const step = speed * 0.1; 
 
-                        if (dist < step) {
-                            routeObj.points.push({ x: targetX, y: targetY });
-                        } else {
+                        if (dist < step) { routeObj.points.push({ x: targetX, y: targetY }); } 
+                        else {
                             const frac = step / dist;
-                            routeObj.points.push({ 
-                                x: currentPos.x + dx * frac, 
-                                y: currentPos.y + dy * frac 
-                            });
+                            routeObj.points.push({ x: currentPos.x + dx * frac, y: currentPos.y + dy * frac });
                         }
                     });
                 }
