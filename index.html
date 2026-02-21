@@ -1741,7 +1741,36 @@
         </div>
     </div>
 
-<div id="auth-modal" class="modal" style="display: none; z-index:9999;">        <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
+    <div id="roster-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
+        <div class="modal-content" style="max-width:800px; width:90vw; max-height:80vh; display:flex; flex-direction:column; background:#080808; border-color:var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin:0; color:white; font-size:1.4rem;">👥 Roster & Tendencies</h2>
+                    <div style="font-size:0.75rem; color:#888; margin-top:4px;">Coach AI uses this data to personalize your film analysis.</div>
+                </div>
+                <button class="tool-btn" onclick="document.getElementById('roster-modal').style.display='none'">✕ Close</button>
+            </div>
+            
+            <div style="background:#111; padding:16px; border-radius:8px; border:1px solid var(--border); margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="roster-id" class="input-box" placeholder="Identifier (e.g. '#11' or 'Smith')" style="flex:1; min-width:140px;">
+                <select id="roster-pos" class="input-box" style="width:90px; padding:0 8px;">
+                    <option value="QB">QB</option><option value="RB">RB</option>
+                    <option value="WR">WR</option><option value="TE">TE</option>
+                    <option value="OL">OL</option><option value="DL">DL</option>
+                    <option value="LB">LB</option><option value="DB">DB</option>
+                </select>
+                <input type="number" id="roster-speed" class="input-box" placeholder="Speed (1-100)" style="width:110px;" max="100" min="1">
+                <input type="text" id="roster-notes" class="input-box" placeholder="Known tendencies or weaknesses..." style="flex:2; min-width:200px;">
+                <button class="cta-btn" style="margin:0; padding:10px 20px; font-size:0.85rem;" onclick="UI.addRosterPlayer()">+ Add</button>
+            </div>
+
+            <div id="roster-list" style="flex:1; overflow-y:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; padding-right:10px;">
+                </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal" style="display: none; z-index:9999;">
+        <div id="sign-in" style="background: white; padding: 20px; border-radius: 12px;"></div>
     </div>
 
     <div id="strategy-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
@@ -2469,13 +2498,16 @@
                     return;
                 }
 
+                // FIX: Close the video popup before transitioning!
+                UI.closeOverlay();
+
                 // 1. Switch the UI to the Playbook Tab
                 UI.switchTab('playbook');
 
                 // 2. Open a fresh designer canvas
                 Playbook.openDesigner('draft_' + Date.now());
 
-                // 3. Give the UI 100ms to render the canvas, then map the AI data
+                // 3. Give the UI 150ms to render the canvas, then map the AI data
                 setTimeout(() => {
                     document.getElementById('play-name').value = clip.title + " (Auto-Draft)";
                     
@@ -2844,6 +2876,105 @@
                 feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
                 feed.scrollTop = feed.scrollHeight;
             },
+
+            // --- ROSTER MANAGEMENT ---
+            showRoster: () => {
+                if (!UI.activeSessionId) { alert("Please select or create a session first!"); return; }
+                document.getElementById('roster-modal').style.display = 'flex';
+                UI.renderRoster();
+            },
+
+            renderRoster: () => {
+                const list = document.getElementById('roster-list');
+                const sessions = Store.get('sessions') || [];
+                const sess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                
+                if (!sess || !sess.roster || sess.roster.length === 0) {
+                    list.innerHTML = '<div style="color:#666; font-style:italic; grid-column: 1 / -1;">No players added to this session yet.</div>';
+                    return;
+                }
+
+                list.innerHTML = sess.roster.map(p => `
+                    <div style="background:#1a1a1a; border:1px solid var(--border); border-left:3px solid var(--accent); padding:12px; border-radius:6px; position:relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div style="font-weight:900; color:white; font-size:1rem;">${p.identifier}</div>
+                            <div style="font-size:0.7rem; background:#333; padding:2px 6px; border-radius:4px; color:#ccc; font-weight:bold;">${p.position}</div>
+                        </div>
+                        <div style="margin-top:8px; font-size:0.8rem; color:#aaa; line-height:1.5;">
+                            <span style="color:#38bdf8;">SPD:</span> ${p.speed || '85'}<br>
+                            <span style="color:#f59e0b;">NOTES:</span> ${p.notes && p.notes.length > 0 ? p.notes.join(', ') : 'None'}
+                        </div>
+                        <button onclick="UI.removeRosterPlayer('${p.identifier}')" style="position:absolute; bottom:8px; right:8px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); border-radius:4px; color:var(--danger); font-size:0.65rem; cursor:pointer; padding:4px 8px; transition:0.2s;">Remove</button>
+                    </div>
+                `).join('');
+            },
+
+            addRosterPlayer: async () => {
+                const id = document.getElementById('roster-id').value.trim();
+                const pos = document.getElementById('roster-pos').value;
+                const speed = document.getElementById('roster-speed').value;
+                const notes = document.getElementById('roster-notes').value.trim();
+
+                if (!id) return alert("Please enter a player identifier (e.g. #11).");
+
+                const sessions = Store.get('sessions') || [];
+                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if (sessIdx === -1) return;
+
+                const newPlayer = {
+                    identifier: id,
+                    position: pos,
+                    speed: speed ? parseInt(speed) : 85,
+                    notes: notes ? [notes] : [],
+                    weaknesses: [] 
+                };
+
+                if (!sessions[sessIdx].roster) sessions[sessIdx].roster = [];
+                // Check if player exists, overwrite if they do
+                const existingIdx = sessions[sessIdx].roster.findIndex(p => p.identifier === id);
+                if (existingIdx > -1) sessions[sessIdx].roster[existingIdx] = newPlayer;
+                else sessions[sessIdx].roster.push(newPlayer);
+                
+                Store.set('sessions', sessions);
+
+                // Clear inputs
+                document.getElementById('roster-id').value = '';
+                document.getElementById('roster-speed').value = '';
+                document.getElementById('roster-notes').value = '';
+
+                UI.renderRoster();
+
+                // Sync to Server
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    await fetch('/api/update-roster', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ sessionId: UI.activeSessionId, roster: sessions[sessIdx].roster })
+                    });
+                } catch(e) { console.log("Saved roster locally."); }
+            },
+
+            removeRosterPlayer: async (identifier) => {
+                const sessions = Store.get('sessions') || [];
+                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
+                if (sessIdx === -1) return;
+
+                sessions[sessIdx].roster = sessions[sessIdx].roster.filter(p => p.identifier !== identifier);
+                Store.set('sessions', sessions);
+                UI.renderRoster();
+
+                // Sync to Server
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    await fetch('/api/update-roster', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ sessionId: UI.activeSessionId, roster: sessions[sessIdx].roster })
+                    });
+                } catch(e) { console.log("Updated roster locally."); }
+            },
+
             buildScoutCardHTML: (data, isChatPreview = false) => {
                 const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
                 const cursor = isChatPreview ? 'cursor:pointer;' : '';
