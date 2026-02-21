@@ -919,11 +919,15 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(5px);
-            z-index: 2000;
+            z-index: 10000 !important; /* PRO FIX: Forces modals above EVERYTHING */
             display: none;
             justify-content: center;
             align-items: center;
             animation: fadeIn 0.2s ease;
+        }
+        
+        #analysis-overlay {
+            z-index: 9000 !important; /* PRO FIX: Keeps video under modals */
         }
 
         .modal-content {
@@ -1637,11 +1641,11 @@
         </div>
     </div>
 
-    <div id="analysis-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; z-index:5000; flex-direction:column; overflow-y:auto;">
+    <div id="analysis-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; background:#000; flex-direction:column; overflow-y:auto;">
         <div class="overlay-header" style="position:sticky; top:0; z-index:100; background:#080808; border-bottom:1px solid var(--border);">
             <div style="display:flex; gap:12px; align-items:center;">
-                <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:var(--text);">Analysis Mode</h3>
-                <span class="badge" style="background:var(--accent); color:black;">Vantage Cinema Mode</span>
+                <h3 id="overlay-title" style="margin:0; font-size:1.1rem; color:white;">Analysis Mode</h3>
+                <span class="badge" style="background:var(--accent); color:black; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:bold;">VCM</span>
             </div>
             <div style="display:flex; gap:12px;">
                 <button class="tool-btn" onclick="UI.toggleContextPanel(true)">📝 Edit Situation</button>
@@ -1649,57 +1653,58 @@
             </div>
         </div>
 
-        <div id="workspace-split" style="display:flex; width:100%; height:65vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
-            <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative;">
+        <div id="workspace-split" style="display:flex; width:100%; height:70vh; border-bottom:1px solid var(--border); position:relative; flex-shrink:0;">
+            
+            <div id="popup-video-container" style="flex:1; background:#050505; display:flex; flex-direction:column; position:relative; transition: all 0.3s ease; min-width:0;">
                 <div id="telestrator-view" style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;">
                     <video id="main-video" playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; display:block;"></video>
                     <canvas id="draw-canvas" style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
                 </div>
                 
-                <div class="video-controls">
-                    <select id="video-speed" style="background:rgba(0,0,0,0.5); border:1px solid var(--border); color:white; border-radius:4px; font-size:0.8rem; padding:4px 8px; cursor:pointer; outline:none;">
-                        <option value="0.25">0.25x</option>
-                        <option value="0.5">0.5x</option>
-                        <option value="1" selected>1.0x</option>
-                        <option value="1.5">1.5x</option>
-                    </select>
-                    
-                    <div style="display:flex; gap:4px; align-items:center; border-left:1px solid #333; border-right:1px solid #333; padding:0 12px; margin-left:8px;">
-                        <button class="v-btn" id="frame-back-btn" title="-1 Frame (Left Arrow)" style="min-width:30px;">⏮</button>
-                        <button class="v-btn" id="play-pause-btn" style="color:var(--accent);">⏯</button>
-                        <button class="v-btn" id="frame-fwd-btn" title="+1 Frame (Right Arrow)" style="min-width:30px;">⏭</button>
-                    </div>
-
-                    <div class="scrubber-container">
-                        <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
-                        <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
-                    </div>
-                    
-                    <div class="tele-tools" style="display:flex; flex-direction:column; gap:8px;">
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
-                                <button class="t-btn active" data-shape="freehand" title="Freehand">✏️</button>
-                                <button class="t-btn" data-shape="arrow" title="Straight Arrow">↗</button>
-                                <button class="t-btn" data-shape="circle" title="Player Ring">⭕</button>
-                            </div>
-                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
-                                <button class="c-btn active" data-color="#fbbf24" style="color:#fbbf24; text-shadow:0 0 5px #fbbf24;">●</button>
-                                <button class="c-btn" data-color="#ef4444" style="color:#ef4444; text-shadow:0 0 5px #ef4444;">●</button>
-                                <button class="c-btn" data-color="#10b981" style="color:#10b981; text-shadow:0 0 5px #10b981;">●</button>
-                            </div>
-                            <button id="undo-btn" class="tool-btn" style="padding:8px 10px;">↩ Undo</button>
-                            <button id="clear-btn" class="tool-btn" style="padding:8px 10px;">🗑 Clear</button>
+                <div class="video-controls" style="padding:12px 24px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                        <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                            <button class="t-btn active" data-shape="freehand" title="Freehand">✏️</button>
+                            <button class="t-btn" data-shape="arrow" title="Straight Arrow">↗</button>
+                            <button class="t-btn" data-shape="circle" title="Player Ring">⭕</button>
                         </div>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <button id="draw-mode-btn" class="tool-btn" style="flex:1; justify-content:center;">✏️ Enter Draw Mode</button>
-                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
-                                <button class="p-btn active" data-pin="false" title="Fades after 3 seconds">Fade</button>
-                                <button class="p-btn" data-pin="true" title="Stays permanently">Pin</button>
-                            </div>
+                        <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                            <button class="c-btn active" data-color="#fbbf24" style="color:#fbbf24; text-shadow:0 0 5px #fbbf24;">●</button>
+                            <button class="c-btn" data-color="#ef4444" style="color:#ef4444; text-shadow:0 0 5px #ef4444;">●</button>
+                            <button class="c-btn" data-color="#10b981" style="color:#10b981; text-shadow:0 0 5px #10b981;">●</button>
+                        </div>
+                        <button id="undo-btn" class="tool-btn" style="padding:8px 10px;">↩ Undo</button>
+                        <button id="clear-btn" class="tool-btn" style="padding:8px 10px;">🗑 Clear</button>
+                        
+                        <div style="width:1px; height:20px; background:#444; margin:0 4px;"></div>
+                        
+                        <div style="display:flex; gap:4px; align-items:center; background:#222; padding:4px 8px; border-radius:6px;">
+                            <button class="v-btn" id="frame-back-btn" title="-1 Frame" style="min-width:24px; font-size:1rem; padding:0;">⏮</button>
+                            <button class="v-btn" id="play-pause-btn" style="color:var(--accent); min-width:24px; font-size:1.2rem; padding:0;">⏯</button>
+                            <button class="v-btn" id="frame-fwd-btn" title="+1 Frame" style="min-width:24px; font-size:1rem; padding:0;">⏭</button>
+                        </div>
+                        <select id="video-speed" style="background:#222; border:1px solid var(--border); color:white; border-radius:6px; padding:6px; outline:none; cursor:pointer;">
+                            <option value="0.25">0.25x</option>
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1.0x</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:12px; align-items:center; width:100%;">
+                        <button id="draw-mode-btn" class="tool-btn" style="min-width:140px; justify-content:center;">✏️ Draw Mode</button>
+                        <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                            <button class="p-btn active" data-pin="false" title="Fades after 3 seconds">Fade</button>
+                            <button class="p-btn" data-pin="true" title="Stays permanently">Pin</button>
+                        </div>
+                        <div class="scrubber-container" style="flex:1; display:flex; align-items:center; gap:12px;">
+                            <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01" style="flex:1;">
+                            <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px; text-align:right;">0:00</div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-            <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
+            <div id="context-side-panel" style="display:none; width:340px; flex-shrink:0; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
                 <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Edit Play</h3>
                 <input type="hidden" id="edit-clip-id">
                 <div style="margin-bottom:16px; background:#1a1a1a; padding:4px; border-radius:8px; display:flex;">
@@ -1724,7 +1729,7 @@
                 </div>
                 <div style="margin-bottom:16px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY (Full Field)</label>
+                        <label style="color:#ccc; font-size:0.75rem; font-weight:700;">PLOT THE PLAY</label>
                         <button class="tool-btn" onclick="Plotter.reset()" style="padding:2px 8px; font-size:0.7rem;">↺ Reset</button>
                     </div>
                     <div id="plotter-container" style="position:relative; width:100%; height:450px; background:#222; border:2px solid #444; border-radius:4px; cursor:crosshair;">
@@ -1732,12 +1737,9 @@
                         <div id="plotter-hint" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-size:0.8rem; font-weight:bold; text-shadow:0 1px 4px black; pointer-events:none;">Tap to set SNAP location</div>
                     </div>
                 </div>
-                <input type="hidden" id="edit-start-x">
-                <input type="hidden" id="edit-start-y">
-                <input type="hidden" id="edit-catch-x">
-                <input type="hidden" id="edit-catch-y">
-                <input type="hidden" id="edit-end-x">
-                <input type="hidden" id="edit-end-y">
+                <input type="hidden" id="edit-start-x"><input type="hidden" id="edit-start-y">
+                <input type="hidden" id="edit-catch-x"><input type="hidden" id="edit-catch-y">
+                <input type="hidden" id="edit-end-x"><input type="hidden" id="edit-end-y">
                 <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.8rem; color:#aaa;">
                     <span>Gain: <b id="disp-gain" style="color:white;">0</b> yds</span>
                     <span id="disp-air-row">Air: <b id="disp-air" style="color:#38bdf8;">0</b> yds</span>
@@ -1758,7 +1760,7 @@
                     <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
                 </div>
             </div>
-            <div class="report-wrapper" id="report-injection-site"></div>
+            <div class="report-wrapper" id="report-injection-site" style="width:100%; max-width:900px;"></div>
         </div>
     </div>
 
@@ -2979,8 +2981,9 @@
             },
 
             // --- ROSTER MANAGEMENT ---
+            // --- ROSTER MANAGEMENT ---
             showRoster: () => {
-                if (!UI.activeSessionId) { alert("Please select or create a session first!"); return; }
+                // PRO FIX: Removed the alert block. It opens smoothly now.
                 document.getElementById('roster-modal').style.display = 'flex';
                 UI.renderRoster();
             },
@@ -2988,10 +2991,11 @@
             renderRoster: () => {
                 const list = document.getElementById('roster-list');
                 const sessions = Store.get('sessions') || [];
-                const sess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                // Fallback to the first available session if one isn't actively clicked
+                const sess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId) || sessions[0];
                 
                 if (!sess || !sess.roster || sess.roster.length === 0) {
-                    list.innerHTML = '<div style="color:#666; font-style:italic; grid-column: 1 / -1;">No players added to this session yet.</div>';
+                    list.innerHTML = '<div style="color:#666; font-style:italic; grid-column: 1 / -1; text-align:center; padding:20px;">No players added yet. Add one above!</div>';
                     return;
                 }
 
@@ -4086,10 +4090,61 @@
             },
 
             handleChalkTalk: async () => { 
-                const input = document.getElementById('designer-chat-input'); const msg = input.value; if (!msg) return; 
-                input.value = ''; const response = await CoachAI.analyze(`DRAWING: ${Playbook.generateFormationReport().name}. USER: ${msg}`, null); 
+                const input = document.getElementById('designer-chat-input'); 
+                const msg = input.value; 
+                if (!msg) return; 
+                input.value = ''; 
+                
                 const history = document.getElementById('designer-chat-history'); 
-                history.innerHTML += ` <div style="background:#1a1a1a; padding:12px; margin-bottom:12px; color:#ddd;"> <strong>Coach:</strong> ${response.text} </div> `; 
+                
+                // Add User Message to UI
+                history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:8px;">${msg}</div>`;
+                
+                // Add Loading State
+                const loadId = 'chalk_think_' + Date.now();
+                history.innerHTML += `<div id="${loadId}" style="align-self:flex-start; color:#888; font-size:0.75rem; margin-bottom:12px; font-style:italic;">Coach is looking at the board...</div>`;
+                history.scrollTop = history.scrollHeight; 
+
+                try {
+                    // 1. Take a screenshot of the Canvas
+                    const oldTool = Playbook.activeTool;
+                    Playbook.setTool('none'); // Hide the editing dots temporarily
+                    Playbook.drawAll(); 
+                    const imgData = Playbook.canvas.toDataURL('image/jpeg', 0.8);
+                    Playbook.setTool(oldTool); // Restore tools
+                    Playbook.drawAll();
+
+                    // 2. Package context (Formation + Defense + User Msg)
+                    const report = Playbook.generateFormationReport();
+                    const defSelect = document.getElementById('defense-select');
+                    const defCode = defSelect ? defSelect.options[defSelect.selectedIndex].text : 'Unknown';
+                    const contextMsg = `Offensive Formation: ${report.name}. Defensive Shell: ${defCode}. Question: ${msg}`;
+
+                    // 3. Send to Server
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/chalk-talk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ message: contextMsg, imageBase64: imgData })
+                    });
+
+                    const data = await res.json();
+                    document.getElementById(loadId).remove();
+
+                    if (!res.ok) throw new Error(data.error || "Server failed to respond.");
+
+                    // Clean markdown bolding
+                    const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong style="color:white;">$1</strong>');
+                    
+                    history.innerHTML += `
+                    <div style="background:#1a1a1a; border:1px solid var(--border); border-left:3px solid var(--accent); padding:12px; border-radius:6px; margin-bottom:12px; color:#ccc; font-size:0.85rem; line-height:1.6;">
+                        <strong style="color:var(--accent); font-size:0.75rem; letter-spacing:1px;">COACH AI:</strong><br>${cleanReply}
+                    </div>`;
+
+                } catch (e) {
+                    document.getElementById(loadId)?.remove();
+                    history.innerHTML += `<div style="color:var(--danger); font-size:0.75rem; margin-bottom:10px;">⚠️ Error: ${e.message}</div>`;
+                }
                 history.scrollTop = history.scrollHeight; 
             }
         };
