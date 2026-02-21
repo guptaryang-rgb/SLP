@@ -1040,6 +1040,23 @@
         }
         
         
+        /* ==========================================================================
+           10. TELESTRATOR BROADCASTER UI
+           ========================================================================== */
+        .t-btn, .c-btn, .p-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 1rem;
+            transition: 0.2s;
+            font-weight: 700;
+        }
+        .t-btn:hover, .c-btn:hover, .p-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .t-btn.active, .p-btn.active { background: rgba(56, 189, 248, 0.2); color: var(--accent); }
+        .c-btn.active { background: rgba(255, 255, 255, 0.15); transform: scale(1.1); }
+        
         /* Mobile Breakpoints */
         @media (max-width: 900px) {
 
@@ -1658,12 +1675,29 @@
                         <div id="video-time" style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00</div>
                     </div>
                     
-                    <div class="tele-tools">
-                        <button id="draw-btn" class="tool-btn">✏️ Draw</button>
-                        <button id="clear-btn" class="tool-btn">Clear</button>
+                    <div class="tele-tools" style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                                <button class="t-btn active" data-shape="freehand" title="Freehand">✏️</button>
+                                <button class="t-btn" data-shape="arrow" title="Straight Arrow">↗</button>
+                                <button class="t-btn" data-shape="circle" title="Player Ring">⭕</button>
+                            </div>
+                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                                <button class="c-btn active" data-color="#fbbf24" style="color:#fbbf24; text-shadow:0 0 5px #fbbf24;">●</button>
+                                <button class="c-btn" data-color="#ef4444" style="color:#ef4444; text-shadow:0 0 5px #ef4444;">●</button>
+                                <button class="c-btn" data-color="#10b981" style="color:#10b981; text-shadow:0 0 5px #10b981;">●</button>
+                            </div>
+                            <button id="undo-btn" class="tool-btn" style="padding:8px 10px;">↩ Undo</button>
+                            <button id="clear-btn" class="tool-btn" style="padding:8px 10px;">🗑 Clear</button>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button id="draw-mode-btn" class="tool-btn" style="flex:1; justify-content:center;">✏️ Enter Draw Mode</button>
+                            <div style="display:flex; background:#222; border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                                <button class="p-btn active" data-pin="false" title="Fades after 3 seconds">Fade</button>
+                                <button class="p-btn" data-pin="true" title="Stays permanently">Pin</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
             <div id="context-side-panel" style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
                 <h3 style="margin-top:0; color:white; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:12px; margin-bottom:20px;">Edit Play</h3>
@@ -1902,7 +1936,12 @@
                 this.isDrawing = false;
                 this.mode = 'view';
                 this.strokes = [];
-                this.currentPath = [];
+                this.liveStroke = null;
+                
+                // Broadcaster State
+                this.currentShape = 'freehand';
+                this.currentColor = '#fbbf24';
+                this.isPinned = false;
 
                 this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
                 this.bindEvents();
@@ -1911,6 +1950,7 @@
             init(videoUrl) {
                 this.video.src = videoUrl;
                 this.strokes = [];
+                this.liveStroke = null;
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 this.resizeObserver.observe(this.video);
 
@@ -1925,32 +1965,34 @@
                 this.video.pause();
                 this.video.src = "";
                 this.resizeObserver.disconnect();
-                cancelAnimationFrame(this.animId);
+                if (this.animId) cancelAnimationFrame(this.animId);
+                
+                // Reset mode to view
+                if (this.mode === 'draw') this.toggleMode();
             }
 
             fitCanvas() {
                 const rect = this.video.getBoundingClientRect();
                 if (rect.width === 0) return;
-
                 this.canvas.width = rect.width;
                 this.canvas.height = rect.height;
                 this.canvas.style.width = `${rect.width}px`;
                 this.canvas.style.height = `${rect.height}px`;
                 this.canvas.style.top = `${this.video.offsetTop}px`;
                 this.canvas.style.left = `${this.video.offsetLeft}px`;
-
-                this.ctx.lineCap = 'round';
-                this.ctx.lineJoin = 'round';
             }
 
             bindEvents() {
+                // Keyboard Shortcuts
                 document.addEventListener('keydown', (e) => {
                     if (document.getElementById('analysis-overlay').style.display !== 'none') {
                         if (e.key === 'ArrowRight') this.video.currentTime += 0.033;
                         if (e.key === 'ArrowLeft') this.video.currentTime -= 0.033;
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); this.undoStroke(); }
                     }
                 });
 
+                // Canvas Drawing Listeners
                 this.canvas.addEventListener('pointerdown', (e) => {
                     if (this.mode !== 'draw') return;
                     e.preventDefault();
@@ -1958,52 +2000,80 @@
                     this.canvas.setPointerCapture(e.pointerId);
                     this.video.pause();
                     const { x, y } = this.getCoords(e);
-                    const pressure = e.pressure || 0.5;
-                    this.currentPath = [{ x, y, p: pressure }];
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, y);
-                    this.ctx.strokeStyle = "#fbbf24";
-                    this.ctx.lineWidth = 2 + (pressure * 6);
+                    
+                    this.liveStroke = {
+                        shape: this.currentShape,
+                        color: this.currentColor,
+                        pinned: this.isPinned,
+                        startTime: this.video.currentTime,
+                        duration: 3.0,
+                        path: [{ x, y }]
+                    };
                 });
 
                 this.canvas.addEventListener('pointermove', (e) => {
-                    if (!this.isDrawing) return;
+                    if (!this.isDrawing || !this.liveStroke) return;
                     if (e.pointerType === 'touch') e.preventDefault();
                     const { x, y } = this.getCoords(e);
-                    const pressure = e.pressure || 0.5;
-                    this.currentPath.push({ x, y, p: pressure });
-                    this.ctx.lineWidth = 2 + (pressure * 6);
-                    this.ctx.lineTo(x, y);
-                    this.ctx.stroke();
+                    
+                    if (this.currentShape === 'freehand') {
+                        this.liveStroke.path.push({ x, y });
+                    } else {
+                        // For shapes, we only need start [0] and end [1]
+                        if (this.liveStroke.path.length === 1) this.liveStroke.path.push({ x, y });
+                        else this.liveStroke.path[1] = { x, y };
+                    }
                 });
 
-                this.canvas.addEventListener('pointerup', (e) => {
+                const endStroke = (e) => {
+                    if (!this.isDrawing) return;
+                    this.isDrawing = false;
                     this.canvas.releasePointerCapture(e.pointerId);
-                    this.endStroke();
-                });
+                    if (this.liveStroke && this.liveStroke.path.length > 0) {
+                        this.strokes.push({ ...this.liveStroke });
+                    }
+                    this.liveStroke = null;
+                };
 
-                this.canvas.addEventListener('pointercancel', (e) => {
-                    this.canvas.releasePointerCapture(e.pointerId);
-                    this.endStroke();
-                });
+                this.canvas.addEventListener('pointerup', endStroke);
+                this.canvas.addEventListener('pointercancel', endStroke);
 
-                document.getElementById('draw-btn').onclick = () => this.toggleMode();
+                // UI Button Listeners
+                document.getElementById('draw-mode-btn').onclick = () => this.toggleMode();
+                document.getElementById('undo-btn').onclick = () => this.undoStroke();
                 document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
                 document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
 
-                // --- NEW: Advanced Video Controls Logic ---
-                document.getElementById('video-speed').onchange = (e) => { 
-                    this.video.playbackRate = parseFloat(e.target.value); 
-                };
-                document.getElementById('frame-back-btn').onclick = () => { 
-                    this.video.pause(); 
-                    this.video.currentTime = Math.max(0, this.video.currentTime - 0.033); 
-                };
-                document.getElementById('frame-fwd-btn').onclick = () => { 
-                    this.video.pause(); 
-                    this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 0.033); 
-                };
+                document.getElementById('video-speed').onchange = (e) => { this.video.playbackRate = parseFloat(e.target.value); };
+                document.getElementById('frame-back-btn').onclick = () => { this.video.pause(); this.video.currentTime = Math.max(0, this.video.currentTime - 0.033); };
+                document.getElementById('frame-fwd-btn').onclick = () => { this.video.pause(); this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 0.033); };
 
+                // Broadcaster UI Toggles
+                document.querySelectorAll('.t-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentShape = btn.dataset.shape;
+                    };
+                });
+                
+                document.querySelectorAll('.c-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.c-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentColor = btn.dataset.color;
+                    };
+                });
+                
+                document.querySelectorAll('.p-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.isPinned = btn.dataset.pin === "true";
+                    };
+                });
+
+                // Scrubber Sync
                 const scrubber = document.getElementById('video-scrubber');
                 this.video.ontimeupdate = () => {
                     if (!this.video.paused) {
@@ -2020,64 +2090,90 @@
                 return { x: e.clientX - rect.left, y: e.clientY - rect.top };
             }
 
-            endStroke() {
-                if (!this.isDrawing) return;
-                this.isDrawing = false;
-                if (this.currentPath.length > 0) {
-                    this.strokes.push({
-                        path: [...this.currentPath],
-                        startTime: this.video.currentTime,
-                        duration: 3.0
-                    });
-                }
-                this.currentPath = [];
+            undoStroke() {
+                if (this.strokes.length > 0) this.strokes.pop();
             }
 
             toggleMode() {
                 this.mode = this.mode === 'view' ? 'draw' : 'view';
-                const btn = document.getElementById('draw-btn');
+                const btn = document.getElementById('draw-mode-btn');
                 if (this.mode === 'draw') {
                     btn.classList.add('active');
-                    btn.innerText = "✏️ Drawing...";
+                    btn.innerText = "✏️ Drawing Active";
                     this.canvas.style.pointerEvents = 'auto';
                     this.canvas.style.cursor = 'crosshair';
                     this.video.pause();
                 } else {
                     btn.classList.remove('active');
-                    btn.innerText = "✏️ Draw";
+                    btn.innerText = "✏️ Enter Draw Mode";
                     this.canvas.style.pointerEvents = 'none';
                     this.canvas.style.cursor = 'default';
                 }
             }
 
-           startLoop() {
-                const loop = () => {
-                    if (!this.isDrawing && !this.video.paused) {
-                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                        const t = this.video.currentTime;
-                        this.strokes.forEach(s => {
-                            if (t >= s.startTime && t <= (s.startTime + s.duration)) {
-                                const age = t - s.startTime;
-                                const opacity = 1 - (age / s.duration);
-                                this.ctx.beginPath();
-                                this.ctx.strokeStyle = `rgba(251, 191, 36, ${opacity})`;
-                                if (s.path.length > 0) {
-                                    this.ctx.moveTo(s.path[0].x, s.path[0].y);
-                                    for (let i = 1; i < s.path.length; i++) {
-                                        this.ctx.lineWidth = 2 + (s.path[i].p * 4);
-                                        this.ctx.lineTo(s.path[i].x, s.path[i].y);
-                                    }
-                                }
-                                this.ctx.stroke();
-                            }
-                        });
+            startLoop() {
+                const renderStroke = (s, opacity) => {
+                    this.ctx.globalAlpha = opacity;
+                    this.ctx.strokeStyle = s.color;
+                    this.ctx.lineWidth = 4;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
+
+                    if (s.shape === 'freehand' && s.path.length > 0) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(s.path[0].x, s.path[0].y);
+                        for (let i = 1; i < s.path.length; i++) this.ctx.lineTo(s.path[i].x, s.path[i].y);
+                        this.ctx.stroke();
+                    } 
+                    else if (s.shape === 'arrow' && s.path.length === 2) {
+                        const startX = s.path[0].x, startY = s.path[0].y;
+                        const endX = s.path[1].x, endY = s.path[1].y;
+                        const headlen = 18; // size of arrowhead
+                        const angle = Math.atan2(endY - startY, endX - startX);
+                        
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(startX, startY);
+                        this.ctx.lineTo(endX, endY);
+                        this.ctx.lineTo(endX - headlen * Math.cos(angle - Math.PI / 6), endY - headlen * Math.sin(angle - Math.PI / 6));
+                        this.ctx.moveTo(endX, endY);
+                        this.ctx.lineTo(endX - headlen * Math.cos(angle + Math.PI / 6), endY - headlen * Math.sin(angle + Math.PI / 6));
+                        this.ctx.stroke();
+                    } 
+                    else if (s.shape === 'circle' && s.path.length === 2) {
+                        const startX = s.path[0].x, startY = s.path[0].y;
+                        const endX = s.path[1].x, endY = s.path[1].y;
+                        const radius = Math.hypot(endX - startX, endY - startY);
+                        
+                        this.ctx.beginPath();
+                        this.ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                        this.ctx.stroke();
                     }
+                    this.ctx.globalAlpha = 1.0; // Reset
+                };
+
+                const loop = () => {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    const t = this.video.currentTime;
+                    
+                    const toDraw = [...this.strokes];
+                    if (this.liveStroke) toDraw.push(this.liveStroke);
+
+                    toDraw.forEach(s => {
+                        let opacity = 1;
+                        if (!s.pinned && s !== this.liveStroke) {
+                            if (t < s.startTime || t > s.startTime + s.duration) return; // Expired or future
+                            opacity = 1 - ((t - s.startTime) / s.duration);
+                        } else if (s.pinned && s !== this.liveStroke) {
+                            if (t < s.startTime) return; // Don't show pinned shapes before they were drawn
+                        }
+                        renderStroke(s, opacity);
+                    });
+
                     this.animId = requestAnimationFrame(loop);
                 };
                 loop();
             }
 
-            
             formatTime(s) {
                 const m = Math.floor(s / 60);
                 const sec = Math.floor(s % 60).toString().padStart(2, '0');
@@ -2800,7 +2896,7 @@
                 Telestrator.init(clip.videoUrl);
             },
 
-            
+
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
                 const history = document.getElementById('overlay-chat-history');
