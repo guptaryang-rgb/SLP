@@ -2120,15 +2120,17 @@
                     if (data.newClip) {
                         const clip = data.newClip;
                         const scoutData = {
-                            id: clip._id,
-                            title: clip.title,
+                            id: clip._id || clip.id, 
+                            title: clip.title, 
                             formation: clip.formation,
-                            grade: clip.fullData?.scouting_report?.report_card?.overall || "N/A",
-                            iq: clip.fullData?.scouting_report?.report_card?.football_iq || "-",
-                            tech: clip.fullData?.scouting_report?.report_card?.technique || "-",
-                            effort: clip.fullData?.scouting_report?.report_card?.effort || "-",
-                            summary: clip.fullData?.scouting_report?.summary || "Analysis complete.",
-                            fix: clip.fullData?.scouting_report?.coaching_prescription?.fix || "See notes."
+                            grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
+                            iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
+                            tech: clip.fullData.scouting_report?.report_card?.technique || "-",
+                            effort: clip.fullData.scouting_report?.report_card?.effort || "-",
+                            summary: clip.fullData.scouting_report?.summary || "No summary available.",
+                            fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided.",
+                            // FIX: Now reading the REAL AI data instead of the fake mock data!
+                            positional: clip.fullData.positional || [] 
                         };
                         Store.addClip(clip);
                         setTimeout(() => UI.renderLibrary(), 100);
