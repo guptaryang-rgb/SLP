@@ -648,14 +648,15 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight): The 'scouting_report' and 'positional' breakdown must be elite.
        - You MUST analyze BOTH sides of the ball (Offense AND Defense).
-       - CRITICAL ANTI-LAZINESS RULE: You must provide completely UNIQUE and highly specific technical analysis for each of the 6 position groups listed in the JSON format. Do NOT repeat the overall summary in the positional breakdowns. If a position is out of frame, state "Out of frame - unable to grade."
+       - CRITICAL ANTI-LAZINESS RULE: You must provide completely UNIQUE and highly specific technical analysis for each of the 6 position groups listed in the JSON format. 
+       - DO NOT COPY THE PLACEHOLDER TEXT. You must generate NEW, ACCURATE TEXT based on the video. If a position is out of frame, state "Out of frame - unable to grade."
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
-        "title": "Descriptive Title (e.g. '3rd & Long - Dagger vs Cover 2')", 
+        "title": "[Generate Descriptive Title]", 
         "data": { 
-            "o_formation": "Formation", 
-            "d_formation": "Coverage Shell", 
+            "o_formation": "[Generate Formation]", 
+            "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
                 "play_type": "pass", 
                 "down": 1, 
@@ -669,20 +670,20 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             }
         }, 
         "tactical_breakdown": {
-            "concept": "Scheme Name"
+            "concept": "[Generate Scheme Name]"
         },
         "scouting_report": { 
-            "summary": "Detailed schematic analysis applying the coaching context.", 
-            "coaching_prescription": { "fix": "Technical Fix", "drill": "Specific Drill" },
+            "summary": "[Generate Detailed schematic analysis here]", 
+            "coaching_prescription": { "fix": "[Generate Technical Fix]", "drill": "[Generate Specific Drill]" },
             "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
         },
         "positional": [
-            { "group": "Quarterback (Offense)", "action": "Specific dropback/read execution", "analysis": "Unique mechanical critique of feet/eyes/release." },
-            { "group": "Offensive Line (Offense)", "action": "Specific protection/run block scheme", "analysis": "Unique critique of leverage, hand placement, or passed off stunts." },
-            { "group": "Skill Positions (Offense)", "action": "Specific route concepts or blocks run", "analysis": "Unique critique of route depth, stem, break, or catch point." },
-            { "group": "Defensive Line (Defense)", "action": "Specific rush lanes or gap fits", "analysis": "Unique critique of get-off, hand combat, or gap integrity." },
-            { "group": "Linebackers (Defense)", "action": "Specific drops or run fits", "analysis": "Unique critique of read steps, flow, or zone spacing." },
-            { "group": "Secondary (Defense)", "action": "Specific coverage responsibilities", "analysis": "Unique critique of backpedal, leverage, or pattern matching." }
+            { "group": "Quarterback", "action": "[Analyze QB action here]", "analysis": "[Provide QB critique here]" },
+            { "group": "Offensive Line", "action": "[Analyze OL action here]", "analysis": "[Provide OL critique here]" },
+            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze Skill action here]", "analysis": "[Provide Skill critique here]" },
+            { "group": "Defensive Line", "action": "[Analyze DL action here]", "analysis": "[Provide DL critique here]" },
+            { "group": "Linebackers", "action": "[Analyze LB action here]", "analysis": "[Provide LB critique here]" },
+            { "group": "Secondary (DB/S)", "action": "[Analyze DB action here]", "analysis": "[Provide DB critique here]" }
         ]
     }`;
 
