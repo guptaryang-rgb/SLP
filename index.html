@@ -1403,6 +1403,27 @@
 
                 <div class="lib-panel" id="right-panel">
                     <div class="panel-header">Film Library</div>
+                    
+                    <div style="padding:12px; background:#0a0a0a; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
+                        <input type="text" id="lib-search" class="input-box" placeholder="Search plays..." style="padding:6px 10px; font-size:0.8rem;" onkeyup="UI.renderLibrary()">
+                        <div style="display:flex; gap:4px;">
+                            <select id="lib-filter-off" class="input-box" style="padding:4px; font-size:0.7rem; flex:1;" onchange="UI.renderLibrary()">
+                                <option value="all">All Offense</option>
+                                <option value="spread">Spread</option>
+                                <option value="empty">Empty</option>
+                                <option value="bunch">Bunch</option>
+                            </select>
+                            <select id="lib-filter-def" class="input-box" style="padding:4px; font-size:0.7rem; flex:1;" onchange="UI.renderLibrary()">
+                                <option value="all">All Defense</option>
+                                <option value="cover 0">Cover 0</option>
+                                <option value="cover 1">Cover 1</option>
+                                <option value="cover 2">Cover 2</option>
+                                <option value="cover 3">Cover 3</option>
+                                <option value="cover 4">Cover 4</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;"></div>
                 </div>
             </div>
@@ -2395,11 +2416,24 @@
                 const list = document.getElementById('lib-grid');
                 if (!list) return;
                 list.innerHTML = '';
+                
                 const clips = Store.get('clips') || [];
-                const sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
+                let sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
+
+                // --- NEW: Apply Filters ---
+                const searchTerm = document.getElementById('lib-search')?.value.toLowerCase() || '';
+                const filterOff = document.getElementById('lib-filter-off')?.value.toLowerCase() || 'all';
+                const filterDef = document.getElementById('lib-filter-def')?.value.toLowerCase() || 'all';
+
+                sessionClips = sessionClips.filter(c => {
+                    const titleMatch = c.title.toLowerCase().includes(searchTerm);
+                    const offMatch = filterOff === 'all' || (c.o_formation && c.o_formation.toLowerCase().includes(filterOff));
+                    const defMatch = filterDef === 'all' || (c.d_formation && c.d_formation.toLowerCase().includes(filterDef));
+                    return titleMatch && offMatch && defMatch;
+                });
 
                 if (sessionClips.length === 0) {
-                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips.<br>Upload video to begin.</div>';
+                    list.innerHTML = '<div style="padding:20px; color:#666; text-align:center; font-size:0.8rem;">No clips match filters.</div>';
                     return;
                 }
 
@@ -2412,14 +2446,11 @@
 
                 for (const [name, groupClips] of Object.entries(folders)) {
                     if (groupClips.length === 0) continue;
-                    list.innerHTML += `<div class="folder-header">${name}</div>`;
+                    list.innerHTML += `<div class="folder-header" style="padding:4px 12px; font-size:0.7rem; color:#888; text-transform:uppercase;">${name}</div>`;
                     groupClips.forEach(c => {
                         list.innerHTML += `
-                        <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')">
-                            <button class="clip-menu-btn" onclick="event.stopPropagation(); UI.openContextEditor('${c._id || c.id}'); return false;">⋮</button>
-                            <div class="clip-thumb-mini" style="background:#000;">
-                                ${c.thumbnailUrl ? `<img src="${c.thumbnailUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">` : '▶'}
-                            </div>
+                        <div class="clip-card" onclick="UI.playClip('${c._id || c.id}')" style="padding:12px; margin:0 12px 12px; background:#141414; border:1px solid var(--border); border-radius:10px; cursor:pointer; display:flex; gap:12px; align-items:center;">
+                            <div class="clip-thumb-mini" style="width:60px; height:40px; background:#000; border-radius:6px; display:flex; align-items:center; justify-content:center; border:1px solid #333;">▶</div>
                             <div class="clip-info">
                                 <div style="font-weight:700; font-size:0.85rem; color:#e4e4e7;">${c.title}</div>
                                 <div style="font-size:0.75rem; color:#888;">${c.formation || 'Unknown'}</div>
@@ -2427,6 +2458,53 @@
                         </div>`;
                     });
                 }
+            },
+
+            // --- NEW: The Video-to-Playbook Bridge ---
+            sendToPlaybook: (clipId) => {
+                const clips = Store.get('clips') || [];
+                const clip = clips.find(c => (c._id || c.id) === clipId);
+                if (!clip || !clip.fullData) {
+                    alert("This clip hasn't been fully analyzed by Coach AI yet.");
+                    return;
+                }
+
+                // 1. Switch the UI to the Playbook Tab
+                UI.switchTab('playbook');
+
+                // 2. Open a fresh designer canvas
+                Playbook.openDesigner('draft_' + Date.now());
+
+                // 3. Give the UI 100ms to render the canvas, then map the AI data
+                setTimeout(() => {
+                    document.getElementById('play-name').value = clip.title + " (Auto-Draft)";
+                    
+                    const offForm = (clip.fullData.data.o_formation || "").toLowerCase();
+                    const defForm = (clip.fullData.data.d_formation || "").toLowerCase();
+
+                    // Parse Offense
+                    let personnel = '11';
+                    if (offForm.includes('empty')) personnel = '10';
+                    if (offForm.includes('bunch')) personnel = 'bunch';
+                    if (offForm.includes('heavy') || offForm.includes('jumbo')) personnel = '12';
+                    Playbook.setPersonnel(personnel);
+
+                    // Parse Defense
+                    let defCode = 'none';
+                    if (defForm.includes('cover 3')) defCode = 'cover3';
+                    else if (defForm.includes('cover 2')) defCode = 'cover2';
+                    else if (defForm.includes('cover 4') || defForm.includes('quarters')) defCode = 'cover4';
+                    else if (defForm.includes('zero') || defForm.includes('man')) defCode = 'manfree';
+                    else if (defForm.includes('fire') || defForm.includes('blitz')) defCode = 'fire_zone';
+                    
+                    if (defCode !== 'none') {
+                        Playbook.toggleDefense(defCode);
+                        const defSelect = document.getElementById('defense-select');
+                        if (defSelect) defSelect.value = defCode;
+                    }
+
+                    Playbook.showToast("Play Auto-Drafted from AI Analysis!");
+                }, 150);
             },
 
             showTeamStats: () => {
@@ -2800,6 +2878,9 @@
                         <div>
                             <div class="tag-row"><span class="formation-tag">${data.formation}</span></div>
                             <div class="play-title">${data.title}</div>
+                            <button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                🪄 Send to Playbook
+                            </button>
                         </div>
                         <div class="exec-badge">
                             <div style="font-size:0.6rem; color:#888; font-weight:700;">GRADE</div>
