@@ -1645,19 +1645,31 @@
                         style="position:absolute; top:0; left:0; pointer-events:none; z-index:10;"></canvas>
                 </div>
                 <div class="video-controls">
-                    <button class="v-btn" id="play-pause-btn">⏯</button>
+                    <select id="video-speed" style="background:rgba(0,0,0,0.5); border:1px solid var(--border); color:white; border-radius:4px; font-size:0.8rem; padding:4px 8px; cursor:pointer; outline:none;">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.5">1.5x</option>
+                    </select>
+                    
+                    <div style="display:flex; gap:4px; align-items:center; border-left:1px solid #333; border-right:1px solid #333; padding:0 12px; margin-left:8px;">
+                        <button class="v-btn" id="frame-back-btn" title="-1 Frame (Left Arrow)" style="min-width:30px;">⏮</button>
+                        <button class="v-btn" id="play-pause-btn" style="color:var(--accent);">⏯</button>
+                        <button class="v-btn" id="frame-fwd-btn" title="+1 Frame (Right Arrow)" style="min-width:30px;">⏭</button>
+                    </div>
+
                     <div class="scrubber-container">
                         <input type="range" id="video-scrubber" class="scrubber" min="0" value="0" step="0.01">
                         <div id="video-time"
                             style="font-family:var(--font-mono); font-size:0.8rem; color:#aaa; min-width:40px;">0:00
                         </div>
                     </div>
+                    
                     <div class="tele-tools">
                         <button id="draw-btn" class="tool-btn">✏️ Draw</button>
                         <button id="clear-btn" class="tool-btn">Clear</button>
                     </div>
                 </div>
-            </div>
 
             <div id="context-side-panel"
                 style="display:none; width:340px; background:#111; border-left:1px solid var(--border); flex-direction:column; padding:20px; overflow-y:auto; z-index:50;">
@@ -2005,6 +2017,19 @@
                 document.getElementById('clear-btn').onclick = () => { this.strokes = []; this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); };
                 document.getElementById('play-pause-btn').onclick = () => this.video.paused ? this.video.play() : this.video.pause();
 
+                // --- NEW: Advanced Video Controls Logic ---
+                document.getElementById('video-speed').onchange = (e) => { 
+                    this.video.playbackRate = parseFloat(e.target.value); 
+                };
+                document.getElementById('frame-back-btn').onclick = () => { 
+                    this.video.pause(); 
+                    this.video.currentTime = Math.max(0, this.video.currentTime - 0.033); 
+                };
+                document.getElementById('frame-fwd-btn').onclick = () => { 
+                    this.video.pause(); 
+                    this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 0.033); 
+                };
+                
                 const scrubber = document.getElementById('video-scrubber');
                 this.video.ontimeupdate = () => {
                     if (!this.video.paused) {
