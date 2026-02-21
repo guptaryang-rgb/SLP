@@ -1921,7 +1921,8 @@
                 this.bindEvents();
             }
 
-            init(videoUrl) {
+            init(videoUrl, aiTelestration = null) {
+                this.aiTelestration = aiTelestration; // Save the AI data!
                 this.video.src = videoUrl;
                 this.strokes = [];
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -2050,11 +2051,13 @@
                 }
             }
 
-            startLoop() {
+           startLoop() {
                 const loop = () => {
                     if (!this.isDrawing && !this.video.paused) {
                         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                         const t = this.video.currentTime;
+                        
+                        // 1. Draw User's Manual Strokes
                         this.strokes.forEach(s => {
                             if (t >= s.startTime && t <= (s.startTime + s.duration)) {
                                 const age = t - s.startTime;
@@ -2071,6 +2074,41 @@
                                 this.ctx.stroke();
                             }
                         });
+
+                        // 2. Draw the AI "Ghost Marker"
+                        if (this.aiTelestration && this.aiTelestration.highlight_x != null && this.aiTelestration.highlight_y != null) {
+                            // Map 0-100 scale to the actual pixel width/height of the video player
+                            const x = (this.aiTelestration.highlight_x / 100) * this.canvas.width;
+                            const y = (this.aiTelestration.highlight_y / 100) * this.canvas.height;
+                            
+                            // Create a smooth, continuous pulse effect using math
+                            const pulse = Math.abs(Math.sin(Date.now() / 300));
+                            const radius = 25 + (pulse * 10);
+                            
+                            // Draw the outer pulsing ring
+                            this.ctx.beginPath();
+                            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                            this.ctx.lineWidth = 3;
+                            this.ctx.strokeStyle = `rgba(239, 68, 68, ${0.5 + (pulse * 0.5)})`; // Red danger color
+                            this.ctx.stroke();
+                            
+                            // Draw the center anchor dot
+                            this.ctx.beginPath();
+                            this.ctx.arc(x, y, 4, 0, Math.PI * 2);
+                            this.ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+                            this.ctx.fill();
+                            
+                            // Draw the target player's name label underneath the circle
+                            if (this.aiTelestration.target_player) {
+                                this.ctx.fillStyle = 'white';
+                                this.ctx.font = 'bold 12px Inter';
+                                this.ctx.textAlign = 'center';
+                                this.ctx.shadowColor = 'black';
+                                this.ctx.shadowBlur = 4;
+                                this.ctx.fillText(this.aiTelestration.target_player, x, y + radius + 15);
+                                this.ctx.shadowBlur = 0; // Reset shadow for other drawings
+                            }
+                        }
                     }
                     this.animId = requestAnimationFrame(loop);
                 };
@@ -2795,8 +2833,9 @@
                     } else {
                         reportContainer.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">Processing analysis...<br>Check back in a moment.</div>';
                     }
-                }
-                Telestrator.init(clip.videoUrl);
+               }
+                // PASS THE AI TELESTRATION DATA TO THE ENGINE!
+                Telestrator.init(clip.videoUrl, clip.fullData?.telestration);
             },
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
