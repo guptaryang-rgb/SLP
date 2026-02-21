@@ -3882,11 +3882,26 @@ deleteSession: async (id) => {
             
             handleStart: (e) => { 
                 e.preventDefault(); 
-                const r = Playbook.canvas.getBoundingClientRect(); const x = e.clientX - r.left; const y = e.clientY - r.top; 
+                const r = Playbook.canvas.getBoundingClientRect(); 
+                const x = e.clientX - r.left; 
+                const y = e.clientY - r.top; 
                 
+                // 1. Double Tap Detection
                 let now = Date.now();
-                if (now - Playbook.lastTapTime < 300) { Playbook.handleDoubleClick(e); Playbook.lastTapTime = 0; return; }
+                if (now - Playbook.lastTapTime < 300) { 
+                    Playbook.lastTapTime = 0; // Reset
+                    Playbook.handleDoubleClick(e); 
+                    return; // Stop here, don't start drawing or moving
+                }
                 Playbook.lastTapTime = now;
+
+                // 2. Close Menu on Single Tap (if it's open)
+                const menu = document.getElementById('route-menu');
+                if (menu && menu.style.display !== 'none') {
+                    menu.style.display = 'none';
+                    return; // Consume this click just to close the menu, do nothing else
+                }
+
                 if (document.getElementById('route-menu')) document.getElementById('route-menu').style.display = 'none'; 
                 if (Playbook.qbSimMode && Playbook.animating) { Playbook.throwPass(x, y); return; } 
                 if (Playbook.activeTool === 'eraser') { Playbook.isDrawing = true; Playbook.eraseAt(x, y); return; } 
