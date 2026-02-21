@@ -407,10 +407,10 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
   try {
     const { message, imageBase64 } = req.body;
     
-    // Extract just the raw base64 data (remove the data:image/jpeg;base64, prefix)
+    // Extract raw base64 data
     const base64Data = imageBase64.replace(/^data:image\/jpeg;base64,/, "");
 
-    const prompt = `
+    const promptText = `
     ROLE: Elite NFL Coordinator.
     CONTEXT: I have drawn a football play on the whiteboard. 
     TASK: Look at the provided image of the play and answer the user's question directly.
@@ -421,18 +421,19 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     USER QUESTION: ${message}
     `;
 
-    // Initialize the Vision-capable model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    
-    const result = await model.generateContent([
-      prompt,
-      { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
-    ]);
+    // Package the prompt text and the image together
+    const promptParts = [
+        { text: promptText },
+        { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
+    ];
+
+    // Use our custom fallback function to guarantee a response
+    const result = await generateWithFallback(promptParts);
 
     res.json({ reply: result.response.text() });
   } catch (e) {
     console.error("Chalk Talk Error:", e);
-    res.status(500).json({ error: "Failed to analyze the drawing." });
+    res.status(500).json({ error: e.message || "Failed to analyze the drawing." });
   }
 });
 
