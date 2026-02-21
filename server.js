@@ -642,14 +642,15 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     ROSTER: ${rosterContext}
 
     YOUR DUAL OBJECTIVE:
-    1. THE ANALYST (Data): Extract precise coordinates for the 2D Playbook Simulator.
-       - Estimate X/Y coordinates on a 0-100 scale (X: 0=Left Sideline, 50=Middle, 100=Right Sideline. Y: 75=Line of Scrimmage).
+    1. THE ANALYST (Data & Telestration): 
+       - Estimate X/Y coordinates on a 0-100 scale (X: 0=Left Sideline, 50=Middle, 100=Right Sideline. Y: 0=Deep, 75=LOS, 100=Behind QB).
        - You MUST provide plot_startX, plot_startY, plot_catchX, plot_catchY, plot_endX, plot_endY.
+       - TELESTRATION: Identify the single most important player who made a mistake or a great play. Provide their estimated X/Y coordinates at the snap so the app can draw a red circle around them.
     
-    2. THE COACH (Insight): The 'scouting_report' and 'positional' breakdown must be elite.
+    2. THE COACH (Insight & Personnel): 
        - You MUST analyze BOTH sides of the ball (Offense AND Defense).
-       - CRITICAL ANTI-LAZINESS RULE: You must provide completely UNIQUE and highly specific technical analysis for each of the 6 position groups listed in the JSON format. 
-       - DO NOT COPY THE PLACEHOLDER TEXT. You must generate NEW, ACCURATE TEXT based on the video. If a position is out of frame, state "Out of frame - unable to grade."
+       - Provide completely UNIQUE and highly specific technical analysis for all 6 position groups.
+       - AUTO-ROSTER: Identify specific players (by jersey number or position, e.g., '#11' or 'LT') and log their exact weaknesses or tendencies so the database can build a scouting profile on them.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -659,31 +660,33 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
                 "play_type": "pass", 
-                "down": 1, 
-                "distance_togo": 10,
-                "plot_startX": 50,
-                "plot_startY": 80,
-                "plot_catchX": 30,
-                "plot_catchY": 60,
-                "plot_endX": 30,
-                "plot_endY": 50
+                "down": 1, "distance_togo": 10,
+                "plot_startX": 50, "plot_startY": 80,
+                "plot_catchX": 30, "plot_catchY": 60,
+                "plot_endX": 30, "plot_endY": 50
             }
-        }, 
-        "tactical_breakdown": {
-            "concept": "[Generate Scheme Name]"
         },
+        "telestration": {
+            "target_player": "[e.g., Left Cornerback]",
+            "highlight_x": 15,
+            "highlight_y": 70,
+            "reason": "[Why are we highlighting them?]"
+        },
+        "players_detected": [
+            { "identifier": "[e.g., #11 or RT]", "position": "[e.g., WR, OL]", "grade": "[A-F]", "observation": "[Specific action]", "weakness": "[Log a specific tendency or flaw here to save to the database]" }
+        ],
         "scouting_report": { 
             "summary": "[Generate Detailed schematic analysis here]", 
             "coaching_prescription": { "fix": "[Generate Technical Fix]", "drill": "[Generate Specific Drill]" },
             "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
         },
         "positional": [
-            { "group": "Quarterback", "action": "[Analyze QB action here]", "analysis": "[Provide QB critique here]" },
-            { "group": "Offensive Line", "action": "[Analyze OL action here]", "analysis": "[Provide OL critique here]" },
-            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze Skill action here]", "analysis": "[Provide Skill critique here]" },
-            { "group": "Defensive Line", "action": "[Analyze DL action here]", "analysis": "[Provide DL critique here]" },
-            { "group": "Linebackers", "action": "[Analyze LB action here]", "analysis": "[Provide LB critique here]" },
-            { "group": "Secondary (DB/S)", "action": "[Analyze DB action here]", "analysis": "[Provide DB critique here]" }
+            { "group": "Quarterback", "action": "[Analyze QB action]", "analysis": "[Provide QB critique]" },
+            { "group": "Offensive Line", "action": "[Analyze OL action]", "analysis": "[Provide OL critique]" },
+            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze Skill action]", "analysis": "[Provide Skill critique]" },
+            { "group": "Defensive Line", "action": "[Analyze DL action]", "analysis": "[Provide DL critique]" },
+            { "group": "Linebackers", "action": "[Analyze LB action]", "analysis": "[Provide LB critique]" },
+            { "group": "Secondary (DB/S)", "action": "[Analyze DB action]", "analysis": "[Provide DB critique]" }
         ]
     }`;
 
