@@ -317,7 +317,6 @@ const Session = mongoose.model("Session", new mongoose.Schema({
 }));
 
 
-// NEW: Schema for Playbook Concepts (Updated for V6)
 const PlaySchema = new mongoose.Schema({
     owner: String,              // User ID
     playId: String,             // Unique ID
@@ -326,8 +325,9 @@ const PlaySchema = new mongoose.Schema({
     
     // The "Drawing" Data
     elements: Array,            // Offensive Players (O)
-    defense: Array,             // Defensive Players (D) - NEW
-    routes: Array,              // Vector/Freehand Lines - NEW
+    defense: Array,             // Defensive Players (D)
+    routes: Array,              // Vector/Freehand Lines
+    chalkTalkHistory: Array,    // NEW: Saves isolated chat per play!
     
     aiAnalysis: {               
         formation: String,
@@ -416,7 +416,12 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     TASK: Look at the provided image of the play and answer the user's question directly.
     - Yellow dots/lines = Offense.
     - Red dots/areas = Defense.
-    - Focus heavily on leverage, spacing, and structural vulnerabilities.
+    
+    FORMATTING RULES (CRITICAL):
+    1. Use short, punchy bullet points.
+    2. Bold key concepts, player positions, and technical terms.
+    3. DO NOT use brackets [ ] or raw JSON. Write like a clean, readable coaching report.
+    4. Keep it concise. No long walls of text.
     
     USER QUESTION: ${message}
     `;
@@ -792,26 +797,16 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 // 11. Save a Play Design (Pro Version)
 app.post("/api/save-play", requireAuth, async (req, res) => {
     try {
-        // We now destructure 'defense' and 'routes' from the request
-        const { playId, title, elements, defense, routes, linkedSessionId, aiAnalysis } = req.body;
+        const { playId, title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis } = req.body;
         
-        // Upsert: Update if exists, Create if new
         const play = await Play.findOneAndUpdate(
             { playId, owner: req.auth.userId },
             { 
-                title, 
-                elements, 
-                defense,  // <--- Saving Defense
-                routes,   // <--- Saving Curves/Lines
-                linkedSessionId,
-                aiAnalysis,
+                title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis,
                 $setOnInsert: { owner: req.auth.userId } 
             },
             { new: true, upsert: true }
         );
-
-        
-
         res.json({ success: true, play });
     } catch (e) {
         console.error("Save Play Error:", e);
