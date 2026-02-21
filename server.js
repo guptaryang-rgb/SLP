@@ -388,6 +388,20 @@ app.post("/api/create-session", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// NEW: Update Session Roster (PASTED HERE)
+app.post("/api/update-roster", requireAuth, async (req, res) => {
+  try {
+    const { sessionId, roster } = req.body;
+    await Session.findOneAndUpdate(
+        { sessionId, owner: req.auth.userId },
+        { $set: { roster: roster } }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "Roster update failed" });
+  }
+});
+
 // 2. Get All Sessions (Filtered by Type)
 app.get("/api/sessions", requireAuth, async (req, res) => {
   try {
