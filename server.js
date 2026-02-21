@@ -388,7 +388,7 @@ app.post("/api/create-session", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NEW: Update Session Roster (PASTED HERE)
+// Update Session Roster
 app.post("/api/update-roster", requireAuth, async (req, res) => {
   try {
     const { sessionId, roster } = req.body;
@@ -399,6 +399,40 @@ app.post("/api/update-roster", requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: "Roster update failed" });
+  }
+});
+
+// NEW: Multimodal Chalk Talk (Playbook Vision)
+app.post("/api/chalk-talk", requireAuth, async (req, res) => {
+  try {
+    const { message, imageBase64 } = req.body;
+    
+    // Extract just the raw base64 data (remove the data:image/jpeg;base64, prefix)
+    const base64Data = imageBase64.replace(/^data:image\/jpeg;base64,/, "");
+
+    const prompt = `
+    ROLE: Elite NFL Coordinator.
+    CONTEXT: I have drawn a football play on the whiteboard. 
+    TASK: Look at the provided image of the play and answer the user's question directly.
+    - Yellow dots/lines = Offense.
+    - Red dots/areas = Defense.
+    - Focus heavily on leverage, spacing, and structural vulnerabilities.
+    
+    USER QUESTION: ${message}
+    `;
+
+    // Initialize the Vision-capable model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
+    ]);
+
+    res.json({ reply: result.response.text() });
+  } catch (e) {
+    console.error("Chalk Talk Error:", e);
+    res.status(500).json({ error: "Failed to analyze the drawing." });
   }
 });
 
