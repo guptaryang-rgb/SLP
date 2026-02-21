@@ -809,12 +809,26 @@ app.post("/api/save-play", requireAuth, async (req, res) => {
             { new: true, upsert: true }
         );
 
+        
+
         res.json({ success: true, play });
     } catch (e) {
         console.error("Save Play Error:", e);
         res.status(500).json({ error: "Failed to save play." });
     }
 });
+
+
+// 11.5 Delete a Play
+app.post("/api/delete-play", requireAuth, async (req, res) => {
+    try {
+        await Play.findOneAndDelete({ playId: req.body.playId, owner: req.auth.userId });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to delete play." });
+    }
+});
+
 
 // 12. Get All Plays (Library Load)
 app.get("/api/get-plays", requireAuth, async (req, res) => {
