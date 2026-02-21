@@ -3215,6 +3215,7 @@ deleteSession: async (id) => {
             defense: [], 
             routes: [], 
             aiRoutes: [], 
+            chalkTalkHistory: [], // NEW: Chat history state 
 
             activePlayId: null, 
             isDragging: false, 
@@ -3263,6 +3264,7 @@ deleteSession: async (id) => {
                 Playbook.defense = []; 
                 Playbook.routes = []; 
                 Playbook.aiRoutes = [];
+                Playbook.chalkTalkHistory = [];
                 Playbook.setTool('move');
 
                 requestAnimationFrame(() => {
@@ -3288,12 +3290,14 @@ deleteSession: async (id) => {
                         Playbook.elements = savedPlay.elements; 
                         Playbook.defense = savedPlay.defense || []; 
                         Playbook.routes = savedPlay.routes || [];
+                        Playbook.chalkTalkHistory = savedPlay.chalkTalkHistory || []; // Load history
                     } else { 
                         Playbook.setPersonnel('11'); 
                     }
                     
                     Playbook.drawAll(); 
                     Playbook.updateFormationHUD();
+                    Playbook.renderChalkTalkHistory(); // Render the history to UI
                 });
             },
 
@@ -3372,12 +3376,11 @@ deleteSession: async (id) => {
                 return 120; 
             },
 
-            handleDoubleClick: (e) => {
+            handleDoubleClick: (coords) => {
                 if (Playbook.activeTool !== 'move') return;
-                
                 const r = Playbook.canvas.getBoundingClientRect();
-                const x = e.clientX - r.left; 
-                const y = e.clientY - r.top;
+                const x = coords.clientX - r.left; 
+                const y = coords.clientY - r.top;
                 const target = Playbook.hitTest(x, y);
                 
                 if (target && target.type === 'O' && target.label !== 'Q' && target.label !== 'C') { 
@@ -3883,26 +3886,30 @@ deleteSession: async (id) => {
             handleStart: (e) => { 
                 e.preventDefault(); 
                 const r = Playbook.canvas.getBoundingClientRect(); 
-                const x = e.clientX - r.left; 
-                const y = e.clientY - r.top; 
                 
-                // 1. Double Tap Detection
+                // Fallback to explicitly support touch screens
+                const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+                
+                const x = clientX - r.left; 
+                const y = clientY - r.top; 
+                
+                // 1. Double Tap Detection (Widened to 450ms for mobile)
                 let now = Date.now();
-                if (now - Playbook.lastTapTime < 300) { 
-                    Playbook.lastTapTime = 0; // Reset
-                    Playbook.handleDoubleClick(e); 
-                    return; // Stop here, don't start drawing or moving
+                if (now - Playbook.lastTapTime < 450) { 
+                    Playbook.lastTapTime = 0; 
+                    Playbook.handleDoubleClick({ clientX, clientY }); 
+                    return; 
                 }
                 Playbook.lastTapTime = now;
 
-                // 2. Close Menu on Single Tap (if it's open)
+                // 2. Close Menu on Single Tap
                 const menu = document.getElementById('route-menu');
                 if (menu && menu.style.display !== 'none') {
                     menu.style.display = 'none';
-                    return; // Consume this click just to close the menu, do nothing else
+                    return; 
                 }
 
-                if (document.getElementById('route-menu')) document.getElementById('route-menu').style.display = 'none'; 
                 if (Playbook.qbSimMode && Playbook.animating) { Playbook.throwPass(x, y); return; } 
                 if (Playbook.activeTool === 'eraser') { Playbook.isDrawing = true; Playbook.eraseAt(x, y); return; } 
 
@@ -4113,14 +4120,40 @@ deleteSession: async (id) => {
             },
 
             savePlay: async () => { 
-                const payload = { playId: Playbook.activePlayId || 'play_' + Date.now(), title: document.getElementById('play-name').value, elements: Playbook.elements, defense: Playbook.defense, routes: Playbook.routes, linkedSessionId: UI.activeSessionId, aiAnalysis: { formation: Playbook.generateFormationReport().name, summary: "Saved" } }; 
-                const plays = Store.get('playbook') || []; const idx = plays.findIndex(p => p.playId === payload.playId); 
-                if (idx > -1) { plays[idx] = payload; } else { plays.unshift(payload); }
-                Store.set('playbook', plays); Playbook.renderGrid(); document.getElementById('designer-modal').style.display = 'none'; 
+                const payload = { 
+                    playId: Playbook.activePlayId || 'play_' + Date.now(),
+                    title: document.getElementById('play-name').value, 
+                    elements: Playbook.elements, 
+                    defense: Playbook.defense, 
+                    routes: Playbook.routes, 
+                    chalkTalkHistory: Playbook.chalkTalkHistory, // <--- NEW: Injected chat history here!
+                    linkedSessionId: UI.activeSessionId, 
+                    aiAnalysis: { formation: Playbook.generateFormationReport().name, summary: "Saved" } 
+                }; 
+                
+                const plays = Store.get('playbook') || []; 
+                const idx = plays.findIndex(p => p.playId === payload.playId); 
+                
+                if (idx > -1) { 
+                    plays[idx] = payload; 
+                } else { 
+                    plays.unshift(payload); 
+                }
+                
+                Store.set('playbook', plays); 
+                Playbook.renderGrid(); 
+                document.getElementById('designer-modal').style.display = 'none'; 
+                
                 try { 
                     const token = await window.Clerk.session.getToken(); 
-                    await fetch('/api/save-play', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) }); 
-                } catch (e) { console.log("Failed to save to server", e); } 
+                    await fetch('/api/save-play', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                        body: JSON.stringify(payload) 
+                    }); 
+                } catch (e) { 
+                    console.log("Failed to save to server", e); 
+                } 
             },
 
             renderGrid: () => { 
