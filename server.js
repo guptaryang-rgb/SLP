@@ -417,11 +417,11 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     - Yellow dots/lines = Offense.
     - Red dots/areas = Defense.
     
-    FORMATTING RULES (CRITICAL):
-    1. Use short, punchy bullet points.
-    2. Bold key concepts, player positions, and technical terms.
-    3. DO NOT use brackets [ ] or raw JSON. Write like a clean, readable coaching report.
-    4. Keep it concise. No long walls of text.
+    CRITICAL FORMATTING RULES:
+    1. ABSOLUTELY NO JSON. NEVER output { } or brackets. 
+    2. Write in plain, highly-readable text.
+    3. Use short, punchy bullet points.
+    4. Bold key concepts using **text**.
     
     USER QUESTION: ${message}
     `;
