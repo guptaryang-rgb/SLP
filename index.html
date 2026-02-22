@@ -1495,8 +1495,13 @@
                             <select id="sim-hash" class="input-box" style="width:75px; font-size:0.75rem; height:32px; padding:0 4px;" onchange="Playbook.setPersonnel(document.getElementById('personnel-select').value)">
                                 <option value="mid">Middle</option><option value="left">L Hash</option><option value="right">R Hash</option>
                             </select>
-                            <select id="personnel-select" class="input-box" style="width:80px; font-size:0.75rem; height:32px; padding:0 4px;" onchange="Playbook.setPersonnel(this.value)">
-                                <option value="11">11 (1RB)</option><option value="12">12 (2TE)</option><option value="10">10 (MT)</option><option value="bunch">Bunch</option>
+                            <select id="personnel-select" class="input-box" style="width:100px; font-size:0.75rem; height:32px; padding:0 4px;" onchange="Playbook.setPersonnel(this.value)">
+                                <option value="11">11 (2x2)</option>
+                                <option value="trips_right">Trips Right</option>
+                                <option value="trips_left">Trips Left</option>
+                                <option value="12">12 (Heavy)</option>
+                                <option value="10">10 (Empty)</option>
+                                <option value="bunch">Bunch</option>
                             </select>
                         </div>
                     </div>
@@ -2642,22 +2647,30 @@
                     const offForm = (clip.fullData.data.o_formation || "").toLowerCase();
                     const defForm = (clip.fullData.data.d_formation || "").toLowerCase();
 
-                    // Parse Offense
+                    // Super-Parser: Offense
                     let personnel = '11';
-                    if (offForm.includes('empty')) personnel = '10';
-                    if (offForm.includes('bunch')) personnel = 'bunch';
-                    if (offForm.includes('heavy') || offForm.includes('jumbo') || offForm.includes('tight')) personnel = '12';
+                    if (offForm.includes('trips') && offForm.includes('right')) personnel = 'trips_right';
+                    else if (offForm.includes('trips') && offForm.includes('left')) personnel = 'trips_left';
+                    else if (offForm.includes('trips')) personnel = 'trips_right'; // Default trips
+                    else if (offForm.includes('empty')) personnel = '10';
+                    else if (offForm.includes('bunch')) personnel = 'bunch';
+                    else if (offForm.includes('heavy') || offForm.includes('jumbo') || offForm.includes('tight')) personnel = '12';
                     
                     const persSelect = document.getElementById('personnel-select');
                     if(persSelect) persSelect.value = personnel;
                     Playbook.setPersonnel(personnel);
 
-                    // Parse Defense
+                    // Super-Parser: Defense
                     let defCode = 'none';
-                    if (defForm.includes('cover 3')) defCode = 'cover3';
+                    if (defForm.includes('cover 3') && defForm.includes('mable')) defCode = 'cover3_mable';
+                    else if (defForm.includes('cover 3') && defForm.includes('buzz')) defCode = 'cover3_buzz';
+                    else if (defForm.includes('cover 3')) defCode = 'cover3';
+                    else if (defForm.includes('tampa')) defCode = 'tampa_2';
                     else if (defForm.includes('cover 2')) defCode = 'cover2';
                     else if (defForm.includes('cover 4') || defForm.includes('quarters')) defCode = 'cover4';
-                    else if (defForm.includes('zero') || defForm.includes('man free') || defForm.includes('cover 1')) defCode = 'manfree';
+                    else if (defForm.includes('cover 6')) defCode = 'cover6';
+                    else if (defForm.includes('cover 1')) defCode = 'cover1'; // Fixes your Man Free bug
+                    else if (defForm.includes('zero') || defForm.includes('man free') || defForm.includes('max')) defCode = 'manfree';
                     else if (defForm.includes('fire') || defForm.includes('blitz')) defCode = 'fire_zone';
                     
                     if (defCode !== 'none') {
@@ -2984,7 +2997,7 @@
                     }
 
                 } catch (e) {
-                    
+
                     const loader = document.getElementById(loadingId); if (loader) loader.remove();
                     history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                 }
@@ -4093,17 +4106,89 @@ deleteSession: async (id) => {
             
             setPersonnel: (pers) => { 
                 if (!Playbook.canvas) return; 
-                const w = Playbook.canvas.width; const h = Playbook.canvas.height; 
-                const hashEl = document.getElementById('sim-hash'); const hash = hashEl ? hashEl.value : 'mid';
-                let c = w / 2; if (hash === 'left') c -= 100; if (hash === 'right') c += 100;
-                const los = h * 0.75; Playbook.elements = []; Playbook.routes = [];
-                ['L', 'G', 'C', 'G', 'T'].forEach((p, i) => { Playbook.elements.push({ id: `ol_${i}`, type: 'O', label: p, x: c + (i - 2) * 30, y: los }); }); 
+                
+                const w = Playbook.canvas.width; 
+                const h = Playbook.canvas.height; 
+                
+                const hashEl = document.getElementById('sim-hash'); 
+                const hash = hashEl ? hashEl.value : 'mid';
+                
+                let c = w / 2; 
+                if (hash === 'left') c -= 100; 
+                if (hash === 'right') c += 100;
+                
+                const los = h * 0.75; 
+                
+                // Clear the field
+                Playbook.elements = []; 
+                Playbook.routes = [];
+                
+                // 1. Draw Offensive Line
+                ['L', 'G', 'C', 'G', 'T'].forEach((p, i) => { 
+                    Playbook.elements.push({ id: `ol_${i}`, type: 'O', label: p, x: c + (i - 2) * 30, y: los }); 
+                }); 
+                
+                // 2. Draw Quarterback
                 Playbook.elements.push({ id: 'qb', type: 'O', label: 'Q', x: c, y: los + 40 }); 
-                if (pers === '11') Playbook.elements.push({ id: 'rb', type: 'O', label: 'R', x: c - 50, y: los + 40 }, { id: 'te', type: 'O', label: 'Y', x: c + 90, y: los }, { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }); 
-                else if (pers === '10') Playbook.elements.push({ id: 'rb', type: 'O', label: 'R', x: c - 60, y: los + 10 }, { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }, { id: 'wr4', type: 'O', label: 'Y', x: c + 100, y: los }); 
-                else if (pers === 'bunch') Playbook.elements.push({ id: 'rb', type: 'O', label: 'R', x: c, y: los + 60 }, { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, { id: 'te', type: 'O', label: 'Y', x: c + 100, y: los }, { id: 'wr2', type: 'O', label: 'Z', x: c + 120, y: los + 20 }, { id: 'wr3', type: 'O', label: 'H', x: c + 80, y: los + 20 }); 
-                else if (pers === '12') Playbook.elements.push({ id: 'rb', type: 'O', label: 'R', x: c, y: los + 80 }, { id: 'te1', type: 'O', label: 'Y', x: c + 90, y: los }, { id: 'te2', type: 'O', label: 'U', x: c - 90, y: los }, { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }); 
-                Playbook.drawAll(); Playbook.updateFormationHUD(); 
+                
+                // 3. Draw Skill Players based on selected personnel
+                if (pers === '11') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c - 50, y: los + 40 }, 
+                        { id: 'te', type: 'O', label: 'Y', x: c + 90, y: los }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }
+                    );
+                } 
+                else if (pers === 'trips_right') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c - 50, y: los + 40 }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'te', type: 'O', label: 'Y', x: c + 60, y: los }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c + 110, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 170, y: los }
+                    );
+                } 
+                else if (pers === 'trips_left') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c + 50, y: los + 40 }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, 
+                        { id: 'te', type: 'O', label: 'Y', x: c - 60, y: los }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c - 110, y: los }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 170, y: los }
+                    );
+                } 
+                else if (pers === '10') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c - 60, y: los + 10 }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c - 100, y: los }, 
+                        { id: 'wr4', type: 'O', label: 'Y', x: c + 100, y: los }
+                    );
+                } 
+                else if (pers === 'bunch') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c, y: los + 60 }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'te', type: 'O', label: 'Y', x: c + 100, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 120, y: los + 20 }, 
+                        { id: 'wr3', type: 'O', label: 'H', x: c + 80, y: los + 20 }
+                    );
+                } 
+                else if (pers === '12') {
+                    Playbook.elements.push(
+                        { id: 'rb', type: 'O', label: 'R', x: c, y: los + 80 }, 
+                        { id: 'te1', type: 'O', label: 'Y', x: c + 90, y: los }, 
+                        { id: 'te2', type: 'O', label: 'U', x: c - 90, y: los }, 
+                        { id: 'wr1', type: 'O', label: 'X', x: c - 160, y: los }, 
+                        { id: 'wr2', type: 'O', label: 'Z', x: c + 160, y: los }
+                    );
+                } 
+                
+                Playbook.drawAll(); 
+                Playbook.updateFormationHUD(); 
             },
 
             applyProtection: (scheme) => { 
