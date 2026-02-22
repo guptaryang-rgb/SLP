@@ -6,7 +6,34 @@ const fs = require("fs/promises");
 const path = require("path");
 
 // Third Party SDKs
-const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
+// --- ADMIN SECURITY (THE VAULT DOOR) ---
+const ADMIN_EMAILS = ["arhamgupta09@gmail.com"]; // Your Master Key
+
+const requireAdmin = async (req, res, next) => {
+    if (!req.auth?.userId) return res.status(401).json({ error: "Unauthorized access." });
+    
+    try {
+        // Look up the user's email via Clerk
+        const user = await clerkClient.users.getUser(req.auth.userId);
+        const email = user.emailAddresses[0]?.emailAddress;
+        
+        if (!ADMIN_EMAILS.includes(email)) {
+            console.warn(`🛑 Unauthorized Admin Access Attempt by: ${email}`);
+            return res.status(403).json({ error: "Forbidden: God Mode access denied." });
+        }
+        next(); // Let them pass
+    } catch (e) {
+        console.error("Admin verification failed:", e);
+        return res.status(500).json({ error: "Security validation failed." });
+    }
+};
+
+// Phase 1 Test Endpoint
+app.get("/api/admin/ping", requireAdmin, async (req, res) => {
+    res.json({ success: true, message: "Welcome to God Mode, Boss." });
+});
+
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
 const cloudinary = require("cloudinary").v2;
