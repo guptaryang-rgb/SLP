@@ -1704,7 +1704,8 @@
                     
                     <div style="position:absolute; bottom:16px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); padding:8px 16px; border-radius:20px; border:1px solid var(--border); display:flex; gap:12px; align-items:center; z-index:10; white-space:nowrap;">
                         
-                        <button id="run-motion-btn" onclick="Playbook.runMotion()" style="background:transparent; border:1px solid #06b6d4; color:#06b6d4; border-radius:15px; padding:4px 12px; font-size:0.75rem; font-weight:bold; cursor:pointer; transition:0.2s;" title="Execute Motion">🏃 Shift</button>
+                        <button id="run-motion-btn" onclick="Playbook.runMotion()" style="background:transparent; border:1px solid #06b6d4; color:#06b6d4; border-radius:15px 0 0 15px; padding:4px 12px; font-size:0.75rem; font-weight:bold; cursor:pointer; transition:0.2s;" title="Execute Motion">🏃 Shift</button>
+                        <button onclick="Playbook.openMotionRules()" style="background:#06b6d4; color:black; border:1px solid #06b6d4; border-radius:0 15px 15px 0; padding:4px 8px; margin-left:-13px; font-size:0.75rem; font-weight:bold; cursor:pointer;" title="Defensive Motion Rules">⚙️</button>
 
                         <div style="width:1px; height:20px; background:#444;"></div>
 
@@ -1717,6 +1718,30 @@
                         <button id="qb-sim-btn" onclick="Playbook.toggleQBSim()" style="background:transparent; border:1px solid #10b981; color:#10b981; border-radius:15px; padding:4px 12px; font-size:0.8rem; font-weight:bold; cursor:pointer; transition:0.2s;">🏈 QB Sim</button>
                     </div>
 
+                   <div id="motion-rules-modal" style="display:none; position:absolute; bottom:60px; left:50%; transform:translateX(-50%); background:#111; border:1px solid var(--accent); padding:16px; border-radius:8px; z-index:100; box-shadow:0 10px 30px rgba(0,0,0,0.8); width:350px;">
+                        <h4 style="margin:0 0 12px 0; color:white; font-size:0.9rem;">⚙️ Defensive Assignments</h4>
+                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+                            <span style="color:#888; font-size:0.75rem;">If</span>
+                            <select id="rule-off" class="input-box" style="width:60px; padding:4px; height:28px; font-size:0.75rem;"></select>
+                            <span style="color:#888; font-size:0.75rem;">motions,</span>
+                            <select id="rule-def" class="input-box" style="width:60px; padding:4px; height:28px; font-size:0.75rem;"></select>
+                            <span style="color:#888; font-size:0.75rem;">will</span>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <select id="rule-act" class="input-box" style="flex:1; padding:4px; height:28px; font-size:0.75rem;">
+                                <option value="follow">Follow (Man)</option>
+                                <option value="bump">Bump (Zone Slide)</option>
+                                <option value="drop">Roll Deep Third</option>
+                                <option value="spin_down">Spin Down (Box)</option>
+                            </select>
+                            <button class="tool-btn" style="height:28px; padding:4px 12px; font-size:0.75rem; background:var(--accent); color:black;" onclick="Playbook.addMotionRule()">Add</button>
+                        </div>
+                        <div id="motion-rules-list" style="margin-top:12px; font-size:0.8rem; color:#ccc; max-height:100px; overflow-y:auto;"></div>
+                        <button class="tool-btn" style="width:100%; justify-content:center; margin-top:12px; border:none;" onclick="document.getElementById('motion-rules-modal').style.display='none'">Done</button>
+                    </div>
+                   
+                   
+                   
                     <div id="toast-notification" style="position:absolute; top:20px; right:20px; background:var(--success); color:black; font-weight:bold; font-size:0.85rem; padding:10px 20px; border-radius:8px; opacity:0; pointer-events:none; transition:opacity 0.3s; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
                         Notification
                     </div>
@@ -2614,7 +2639,28 @@
                 if (msg.type === 'user') {
                     feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
                 } else {
-                    // Uses the new beautiful formatter for base chat
+                    // 1. Intercept Raw JSON Video Analysis Data
+                    try {
+                        const parsed = JSON.parse(msg.content);
+                        if (parsed.scouting_report && parsed.data) {
+                            const scoutData = {
+                                id: parsed.id || 'recent', 
+                                title: parsed.title || "Uploaded Video Analysis", 
+                                formation: (parsed.data.o_formation + " vs " + parsed.data.d_formation) || "Unknown",
+                                grade: parsed.scouting_report?.report_card?.overall || "N/A",
+                                iq: parsed.scouting_report?.report_card?.football_iq || "-",
+                                tech: parsed.scouting_report?.report_card?.technique || "-",
+                                effort: parsed.scouting_report?.report_card?.effort || "-",
+                                summary: parsed.scouting_report?.summary || "No summary available.",
+                                fix: parsed.scouting_report?.coaching_prescription?.fix || "No fix provided.",
+                                positional: parsed.positional || [] 
+                            };
+                            feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">Analysis Complete:<br>${UI.buildScoutCardHTML(scoutData, false)}</div>`;
+                            return; // Exit early to prevent text rendering!
+                        }
+                    } catch(e) {} // If it fails, it's just normal text, so continue down.
+
+                    // 2. Format Normal Chat Text
                     const cleanMsg = UI.parseAIMessage(msg.content);
                     feed.innerHTML += `<div style="align-self:flex-start; background:#1a1a1a; padding:16px; border-radius:8px; border:1px solid var(--border); border-left:3px solid var(--accent); color:#ccc; max-width:90%; margin-bottom:20px; line-height:1.6; font-size:0.9rem;"><strong style="color:var(--accent); display:block; margin-bottom:6px;">COACH AI:</strong> ${cleanMsg}</div>`;
                 }
@@ -3401,7 +3447,8 @@ deleteSession: async (id) => {
             defense: [], 
             routes: [], 
             aiRoutes: [], 
-            chalkTalkHistory: [], // NEW: Chat history state 
+            chalkTalkHistory: [], // NEW: Chat history state
+            motionRules: [], 
 
             activePlayId: null, 
             isDragging: false, 
@@ -3436,6 +3483,50 @@ deleteSession: async (id) => {
                     }
                 });
             },
+
+            // --- NEW: MOTION RULES BUILDER ---
+            openMotionRules: () => {
+                const m = document.getElementById('motion-rules-modal');
+                m.style.display = m.style.display === 'block' ? 'none' : 'block';
+                
+                // Populate dropdowns with current players on the field
+                const oSel = document.getElementById('rule-off');
+                const dSel = document.getElementById('rule-def');
+                oSel.innerHTML = Playbook.elements.filter(e => e.label !== 'Q' && e.label !== 'C' && !e.label.includes('ol_')).map(e => `<option value="${e.label}">${e.label}</option>`).join('');
+                dSel.innerHTML = Playbook.defense.map(e => `<option value="${e.label}">${e.label}</option>`).join('');
+                
+                Playbook.renderMotionRules();
+            },
+
+            addMotionRule: () => {
+                const o = document.getElementById('rule-off').value;
+                const d = document.getElementById('rule-def').value;
+                const a = document.getElementById('rule-act').value;
+                if (!o || !d) return;
+                
+                // Overwrite rule if assigning a new action to the same defender for the same motion
+                Playbook.motionRules = Playbook.motionRules.filter(r => !(r.oLabel === o && r.dLabel === d)); 
+                Playbook.motionRules.push({ oLabel: o, dLabel: d, action: a });
+                Playbook.renderMotionRules();
+            },
+
+            removeMotionRule: (idx) => {
+                Playbook.motionRules.splice(idx, 1);
+                Playbook.renderMotionRules();
+            },
+
+            renderMotionRules: () => {
+                const list = document.getElementById('motion-rules-list');
+                if (Playbook.motionRules.length === 0) { list.innerHTML = '<div style="font-style:italic; color:#666;">No custom rules. AI will use default logic.</div>'; return; }
+                
+                const actionText = { 'follow': 'Follow', 'bump': 'Bump over', 'drop': 'Roll deep', 'spin_down': 'Spin down' };
+                list.innerHTML = Playbook.motionRules.map((r, i) => `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px; padding:6px; background:#222; border-radius:4px; border-left:2px solid var(--accent);">
+                        <span>If <b>${r.oLabel}</b> motions, <b>${r.dLabel}</b> will ${actionText[r.action]}</span> 
+                        <span style="color:#ef4444; cursor:pointer; font-weight:bold; padding:0 4px;" onclick="Playbook.removeMotionRule(${i})">✕</span>
+                    </div>`).join('');
+            },
+
 
             openDesigner: (playId = null) => {
                 Playbook.activePlayId = playId;
@@ -3514,25 +3605,55 @@ deleteSession: async (id) => {
 
             // --- V18 PRE-SNAP MOTION ENGINE ---
             // --- V18 PRE-SNAP MOTION ENGINE ---
+            // --- V18 PRE-SNAP MOTION ENGINE (WITH CUSTOM ASSIGNMENTS) ---
+            // --- V18 PRE-SNAP MOTION ENGINE (FOLLOWS EXACT PATH) ---
             runMotion: () => {
                 const mRoutes = Playbook.routes.filter(r => r.type === 'motion');
                 if (mRoutes.length === 0) { Playbook.showToast("No motion paths drawn. Use the running man tool.", 'var(--warning)'); return; }
                 
                 let frames = 0; const duration = 40; 
+
+                // Helper to track the exact curve of the drawn line
+                const getPointOnPath = (points, progress) => {
+                    if (progress <= 0) return points[0];
+                    if (progress >= 1) return points[points.length - 1];
+                    let totalLen = 0; let lengths = [0];
+                    for (let i = 0; i < points.length - 1; i++) {
+                        totalLen += Math.hypot(points[i+1].x - points[i].x, points[i+1].y - points[i].y);
+                        lengths.push(totalLen);
+                    }
+                    let targetLen = progress * totalLen;
+                    for (let i = 0; i < points.length - 1; i++) {
+                        if (targetLen <= lengths[i+1]) {
+                            let segProg = (targetLen - lengths[i]) / (lengths[i+1] - lengths[i]);
+                            return { x: points[i].x + (points[i+1].x - points[i].x) * segProg, y: points[i].y + (points[i+1].y - points[i].y) * segProg };
+                        }
+                    }
+                    return points[points.length - 1];
+                };
                 
                 const loop = () => {
                     frames++; 
+                    let progress = frames / duration;
+
                     mRoutes.forEach(r => {
                         const el = Playbook.elements.find(e => e.id === r.ownerId);
                         if (el && r.points.length > 1) {
-                            const start = r.points[0]; const end = r.points[r.points.length - 1];
-                            const dx = (end.x - start.x) / duration; const dy = (end.y - start.y) / duration;
-                            el.x += dx; el.y += dy;
+                            let oldX = el.x; let oldY = el.y;
+                            let newPos = getPointOnPath(r.points, progress);
+                            let dx = newPos.x - oldX; let dy = newPos.y - oldY;
+                            
+                            el.x = newPos.x; el.y = newPos.y;
 
                             const defShiftX = dx * 0.4; 
                             Playbook.defense.forEach(d => {
-                                // FIX 1: Removed 'FS' and 'SS'. Only Box Linebackers shift now! Safeties stay anchored.
-                                if (['W', 'M', 'S'].includes(d.label)) {
+                                const isManCoverage = ['cover1', 'manfree'].includes(Playbook.activeDefenseType);
+                                const isClosest = isManCoverage && Math.hypot(d.x - r.points[0].x, d.y - r.points[0].y) < 100;
+                                
+                                if (isClosest) {
+                                    d.x += dx; d.y += dy; 
+                                } 
+                                else if (['W', 'M', 'S'].includes(d.label)) {
                                     d.x += defShiftX;
                                     const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
                                     if (z) z.points.forEach(zp => zp.x += defShiftX);
@@ -3645,6 +3766,9 @@ deleteSession: async (id) => {
                 const isRun = simType === 'run'; 
                 const isPA = simType === 'pa';
                 const defType = Playbook.activeDefenseType || 'none';
+
+                // Simulate Time Forward in 0.1s increments
+                for (let t = 0.1; t <= 6.0; t += 0.1) 
 
                 Playbook.defense.forEach(d => {
                                 // 1. Man Coverage Follow
@@ -4405,6 +4529,7 @@ deleteSession: async (id) => {
                     defense: Playbook.defense, 
                     routes: Playbook.routes, 
                     chalkTalkHistory: Playbook.chalkTalkHistory, // <--- NEW: Injected chat history here!
+                    motionRules: Playbook.motionRules,
                     linkedSessionId: UI.activeSessionId, 
                     aiAnalysis: { formation: Playbook.generateFormationReport().name, summary: "Saved" } 
                 }; 
