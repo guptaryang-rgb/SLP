@@ -426,11 +426,12 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     - Yellow dots/lines = Offense.
     - Red dots/areas = Defense.
     
-    CRITICAL FORMATTING RULES:
-    1. ABSOLUTELY NO JSON. NEVER output { } or brackets. 
-    2. Write in plain, highly-readable text.
-    3. Use short, punchy bullet points.
-    4. Bold key concepts using **text**.
+    CRITICAL FORMATTING RULES (STRICT):
+    1. ABSOLUTELY NO JSON. NEVER output { } or brackets.
+    2. Start with a bold title like "**PLAY ANALYSIS**"
+    3. Break EVERYTHING into short paragraphs. YOU MUST USE BLANK LINES between thoughts to make it readable.
+    4. Use heavily bulleted lists for reads, vulnerabilities, and adjustments. 
+    5. Bold key concepts, player positions, and technical terms using **text**.
     
     USER QUESTION: ${message}
     `;
