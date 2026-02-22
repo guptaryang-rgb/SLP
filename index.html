@@ -2615,7 +2615,7 @@
                 // 2. Open a fresh designer canvas
                 Playbook.openDesigner('draft_' + Date.now());
 
-                // 3. Give the UI 150ms to render the canvas, then map the AI data
+                // 3. Give the UI 350ms to completely render the canvas, then map the AI data
                 setTimeout(() => {
                     document.getElementById('play-name').value = clip.title + " (Auto-Draft)";
                     
@@ -2626,7 +2626,10 @@
                     let personnel = '11';
                     if (offForm.includes('empty')) personnel = '10';
                     if (offForm.includes('bunch')) personnel = 'bunch';
-                    if (offForm.includes('heavy') || offForm.includes('jumbo')) personnel = '12';
+                    if (offForm.includes('heavy') || offForm.includes('jumbo') || offForm.includes('tight')) personnel = '12';
+                    
+                    const persSelect = document.getElementById('personnel-select');
+                    if(persSelect) persSelect.value = personnel;
                     Playbook.setPersonnel(personnel);
 
                     // Parse Defense
@@ -2634,17 +2637,17 @@
                     if (defForm.includes('cover 3')) defCode = 'cover3';
                     else if (defForm.includes('cover 2')) defCode = 'cover2';
                     else if (defForm.includes('cover 4') || defForm.includes('quarters')) defCode = 'cover4';
-                    else if (defForm.includes('zero') || defForm.includes('man')) defCode = 'manfree';
+                    else if (defForm.includes('zero') || defForm.includes('man free') || defForm.includes('cover 1')) defCode = 'manfree';
                     else if (defForm.includes('fire') || defForm.includes('blitz')) defCode = 'fire_zone';
                     
                     if (defCode !== 'none') {
-                        Playbook.toggleDefense(defCode);
                         const defSelect = document.getElementById('defense-select');
                         if (defSelect) defSelect.value = defCode;
+                        Playbook.toggleDefense(defCode);
                     }
 
                     Playbook.showToast("Play Auto-Drafted from AI Analysis!");
-                }, 150);
+                }, 350);
             },
 
             showTeamStats: () => {
@@ -3553,7 +3556,25 @@ deleteSession: async (id) => {
                                         targetX = zCenter.x; targetY = zCenter.y;
                                     }
                                 } else {
-                                    targetX = zCenter.x; targetY = zCenter.y; // Rest in zone
+                                    // --- HUMAN BEHAVIOR ENGINE ---
+                                    const qb = Playbook.elements.find(o => o.label === 'Q');
+                                    const qbPos = qb ? Playbook.getAnimPosAtTime(qb, t) : { x: Playbook.canvas.width / 2, y: Playbook.losY + 40 };
+                                    
+                                    if (t < 1.5) {
+                                        // 1. THE DROP: Smooth pedal to depth instead of sprinting instantly
+                                        targetX = currentPos.x;
+                                        targetY = currentPos.y + ((zCenter.y - currentPos.y) * 0.1); 
+                                    } else {
+                                        // 2. THE QB MIRROR: Slide laterally with the QB's eyes/scramble
+                                        const qbOffset = qbPos.x - (Playbook.canvas.width / 2);
+                                        let mirrorShift = qbOffset * 0.3; // Mirror 30% of QB's movement
+                                        
+                                        // 3. THE SQUEEZE: Drift 15% towards the nearest receiving threat
+                                        let squeezeX = nearestWrPos ? (nearestWrPos.x - zCenter.x) * 0.15 : 0;
+                                        
+                                        targetX = zCenter.x + mirrorShift + squeezeX;
+                                        targetY = zCenter.y;
+                                    }
                                 }
                             }
                         } 
@@ -4197,6 +4218,55 @@ deleteSession: async (id) => {
                 return null; 
             },
 
+
+
+
+            // ... (previous playbook functions like getLinkedContext)
+
+            renderChalkTalkHistory: () => {
+                const history = document.getElementById('designer-chat-history');
+                if (!history) return;
+                history.innerHTML = '';
+                
+                // If there's no history yet, show the default empty state
+                if (!Playbook.chalkTalkHistory || Playbook.chalkTalkHistory.length === 0) {
+                    history.innerHTML = '<div id="chalk-talk-hint" style="color:#666; font-style:italic; text-align:center; margin-top:20px;">Analysis Bridge Active.</div>';
+                    return;
+                }
+
+                // Loop through the saved history and format it
+                Playbook.chalkTalkHistory.forEach(msg => {
+                    if (msg.role === 'user') {
+                        history.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:8px; font-weight:700;">${msg.text}</div>`;
+                    } else {
+                        // Custom HTML Parser for beautiful responses
+                        let rawText = msg.text;
+                        
+                        // Failsafe: If the AI hallucinates JSON, rip the text out of it
+                        try {
+                            const parsed = JSON.parse(rawText);
+                            rawText = parsed.play_analysis || parsed.reply || rawText;
+                        } catch(e) {}
+
+                        // Clean and format the text
+                        let cleanText = rawText
+                            .replace(/\\n/g, '\n') // Fix literal \n strings
+                            .replace(/\*\*(.*?)\*\*/g, '<strong style="color:white; font-weight:800;">$1</strong>') // Make bold text white
+                            .replace(/^[•\-*]\s*(.*)/gm, '<li style="margin-left:16px; margin-bottom:6px;">$1</li>') // Turn bullets into HTML lists
+                            .replace(/\n/g, '<br>'); // Turn line breaks into HTML line breaks
+                            
+                        if (cleanText.includes('<li>')) cleanText = `<ul style="padding-left:0; margin-top:8px; margin-bottom:0;">${cleanText}</ul>`;
+
+                        history.innerHTML += `
+                        <div style="background:#1a1a1a; border:1px solid var(--border); border-left:3px solid var(--accent); padding:16px; border-radius:6px; margin-bottom:12px; color:#ccc; font-size:0.85rem; line-height:1.6; box-shadow:0 4px 10px rgba(0,0,0,0.5);">
+                            <strong style="color:var(--accent); font-size:0.75rem; letter-spacing:1px; display:block; margin-bottom:8px;">COACH AI:</strong>${cleanText}
+                        </div>`;
+                    }
+                });
+                history.scrollTop = history.scrollHeight;
+            },
+
+            
             handleChalkTalk: async () => { 
                 const input = document.getElementById('designer-chat-input'); 
                 const msg = input.value; 
