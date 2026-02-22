@@ -428,8 +428,8 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     
     CRITICAL FORMATTING RULES (STRICT):
     1. ABSOLUTELY NO JSON. NEVER output { } or brackets.
-    2. Start with a bold title like "**PLAY ANALYSIS**"
-    3. Break EVERYTHING into short paragraphs. YOU MUST USE BLANK LINES between thoughts to make it readable.
+    2. Start with a bold title like "**PLAY ANALYSIS**".
+    3. SPACING IS CRITICAL: You MUST use double line breaks (press enter twice) between every single thought, paragraph, or concept to create visual space. Do NOT output a giant wall of text.
     4. Use heavily bulleted lists for reads, vulnerabilities, and adjustments. 
     5. Bold key concepts, player positions, and technical terms using **text**.
     
