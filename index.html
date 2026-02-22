@@ -3603,17 +3603,13 @@ deleteSession: async (id) => {
                 Playbook.showToast(`Logged to Analytics: ${res.status}`);
             },
 
-            // --- V18 PRE-SNAP MOTION ENGINE ---
-            // --- V18 PRE-SNAP MOTION ENGINE ---
-            // --- V18 PRE-SNAP MOTION ENGINE (WITH CUSTOM ASSIGNMENTS) ---
-            // --- V18 PRE-SNAP MOTION ENGINE (FOLLOWS EXACT PATH) ---
+            // --- V18 PRE-SNAP MOTION ENGINE (FOLLOWS EXACT PATH & RULES) ---
             runMotion: () => {
                 const mRoutes = Playbook.routes.filter(r => r.type === 'motion');
-                if (mRoutes.length === 0) { Playbook.showToast("No motion paths drawn. Use the running man tool.", 'var(--warning)'); return; }
+                if (mRoutes.length === 0) { Playbook.showToast("No motion paths drawn.", 'var(--warning)'); return; }
                 
                 let frames = 0; const duration = 40; 
 
-                // Helper to track the exact curve of the drawn line
                 const getPointOnPath = (points, progress) => {
                     if (progress <= 0) return points[0];
                     if (progress >= 1) return points[points.length - 1];
@@ -3642,23 +3638,42 @@ deleteSession: async (id) => {
                             let oldX = el.x; let oldY = el.y;
                             let newPos = getPointOnPath(r.points, progress);
                             let dx = newPos.x - oldX; let dy = newPos.y - oldY;
-                            
                             el.x = newPos.x; el.y = newPos.y;
 
-                            const defShiftX = dx * 0.4; 
-                            Playbook.defense.forEach(d => {
-                                const isManCoverage = ['cover1', 'manfree'].includes(Playbook.activeDefenseType);
-                                const isClosest = isManCoverage && Math.hypot(d.x - r.points[0].x, d.y - r.points[0].y) < 100;
-                                
-                                if (isClosest) {
-                                    d.x += dx; d.y += dy; 
-                                } 
-                                else if (['W', 'M', 'S'].includes(d.label)) {
-                                    d.x += defShiftX;
-                                    const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
-                                    if (z) z.points.forEach(zp => zp.x += defShiftX);
-                                }
-                            });
+                            const activeRules = Playbook.motionRules ? Playbook.motionRules.filter(rule => rule.oLabel === el.label) : [];
+                            
+                            if (activeRules.length > 0) {
+                                activeRules.forEach(rule => {
+                                    const d = Playbook.defense.find(def => def.label === rule.dLabel);
+                                    if (d) {
+                                        if (rule.action === 'follow') { d.x += dx; d.y += dy; }
+                                        else if (rule.action === 'bump') { d.x += dx * 0.75; } 
+                                        else if (rule.action === 'drop') { d.y -= 1.5; d.x += dx * 0.2; } 
+                                        else if (rule.action === 'spin_down') { d.y += 1.5; d.x += dx * 0.3; } 
+                                        
+                                        const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
+                                        if (z) z.points.forEach(zp => {
+                                            if (rule.action === 'follow') { zp.x += dx; zp.y += dy; }
+                                            else if (rule.action === 'bump') { zp.x += dx * 0.75; }
+                                            else if (rule.action === 'drop') { zp.y -= 1.5; zp.x += dx * 0.2; }
+                                            else if (rule.action === 'spin_down') { zp.y += 1.5; zp.x += dx * 0.3; }
+                                        });
+                                    }
+                                });
+                            } else {
+                                const defShiftX = dx * 0.4; 
+                                Playbook.defense.forEach(d => {
+                                    const isManCoverage = ['cover1', 'manfree'].includes(Playbook.activeDefenseType);
+                                    const isClosest = isManCoverage && Math.hypot(d.x - r.points[0].x, d.y - r.points[0].y) < 100;
+                                    
+                                    if (isClosest) { d.x += dx; d.y += dy; } 
+                                    else if (['W', 'M', 'S'].includes(d.label)) {
+                                        d.x += defShiftX;
+                                        const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
+                                        if (z) z.points.forEach(zp => zp.x += defShiftX);
+                                    }
+                                });
+                            }
 
                             const pRoute = Playbook.routes.find(pr => pr.ownerId === el.id && pr.type === 'draw');
                             if (pRoute) pRoute.points.forEach(pt => { pt.x += dx; pt.y += dy; });
@@ -3669,13 +3684,14 @@ deleteSession: async (id) => {
                     if (frames < duration) { requestAnimationFrame(loop); } 
                     else {
                         Playbook.routes = Playbook.routes.filter(r => r.type !== 'motion');
-                        Playbook.showToast("Motion Complete. Defense Adjusted!");
+                        Playbook.showToast("Motion Complete!");
                         Playbook.drawAll();
                     }
                 };
                 loop();
             },
 
+            
             getSpeed: (label) => {
                 if (['X', 'Z', 'H', 'Y', 'CB', 'FS', 'SS'].includes(label)) return 140; 
                 if (['R', 'W', 'M', 'S'].includes(label)) return 115; 
@@ -3768,26 +3784,6 @@ deleteSession: async (id) => {
                 const defType = Playbook.activeDefenseType || 'none';
 
                 // Simulate Time Forward in 0.1s increments
-                for (let t = 0.1; t <= 6.0; t += 0.1) 
-
-                Playbook.defense.forEach(d => {
-                                // 1. Man Coverage Follow
-                                const isManCoverage = ['cover1', 'manfree'].includes(Playbook.activeDefenseType);
-                                // If defender is within 100px of the motioning player, they follow him perfectly across the formation
-                                const isClosest = isManCoverage && Math.hypot(d.x - start.x, d.y - start.y) < 100;
-                                
-                                if (isClosest) {
-                                    d.x += dx;
-                                    d.y += dy; 
-                                } 
-                                // 2. Zone Coverage Bump (Only Box LBs shift slightly)
-                                else if (['W', 'M', 'S'].includes(d.label)) {
-                                    d.x += defShiftX;
-                                    const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
-                                    if (z) z.points.forEach(zp => zp.x += defShiftX);
-                                }
-                            });
-                // Simulate Time Forward in 0.1s increments
                 for (let t = 0.1; t <= 6.0; t += 0.1) {
                     Playbook.defense.forEach(d => {
                         const routeObj = Playbook.aiRoutes.find(r => r.ownerId === d.id);
@@ -3796,7 +3792,7 @@ deleteSession: async (id) => {
                         const speed = Playbook.getSpeed(d.label);
                         const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
 
-                        if (['E', 'T', 'N'].includes(d.label)) {
+                        if (['DE1', 'DE2', 'DT1', 'DT2', 'N', 'E', 'T'].includes(d.label)) {
                             const qb = Playbook.elements.find(o => o.label === 'Q');
                             if (qb) { targetX = qb.x; targetY = qb.y; }
                         } 
@@ -3826,7 +3822,7 @@ deleteSession: async (id) => {
                             let nearestWrPos = null;
 
                             Playbook.elements.forEach(o => {
-                                if (['C', 'Q', 'L', 'G', 'T'].includes(o.label)) return;
+                                if (['C', 'Q', 'L', 'G', 'T'].includes(o.label) || o.label.includes('ol_')) return;
                                 const oPos = Playbook.getAnimPosAtTime(o, t);
                                 
                                 const distToCenter = Math.hypot((oPos.x - zCenter.x)/rX, (oPos.y - zCenter.y)/rY);
@@ -4102,7 +4098,6 @@ deleteSession: async (id) => {
                 return Playbook.getAnimPosAtTime(player, Playbook.animTime);
             },
 
-            // --- DEFENSE FORMATIONS & UI ---
             toggleDefense: (val) => {
                 Playbook.defense = []; Playbook.activeDefenseType = val; Playbook.clearRoutes('D'); 
                 if (val === 'none') { Playbook.drawAll(); return; }
@@ -4123,13 +4118,13 @@ deleteSession: async (id) => {
                     }
                 };
 
-                if (val === 'bear_46') { createD('E', c - 70, los - 20); createD('T', c - 30, los - 20); createD('N', c, los - 20); createD('T', c + 30, los - 20); createD('E', c + 70, los - 20); createD('M', c - 100, los - 50); createD('S', c + 100, los - 50); createD('CB', 40, los - 40); createD('CB', w - 40, los - 40); createD('FS', c, los - 200); createD('SS', c + 140, los - 40); } 
-                else if (val === 'base43') { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 80); createD('M', c, los - 80); createD('S', c + 120, los - 80); createD('CB', 40, los - 40); createD('CB', w - 40, los - 40); createD('FS', c - 60, los - 200); createD('SS', c + 60, los - 200); } 
-                else if (val === 'fire_zone') { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-flat', 40, 20); createD('M', c, los - 60, 'zone-hook', 0, 40); createD('S', c + 120, los - 20); createD('CB', 40, los - 180, 'zone-deep', 0, 80); createD('CB', w - 40, los - 180, 'zone-deep', 0, 80); createD('FS', c, los - 220, 'zone-deep', 0, 80); createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); } 
-                else if (val.includes('cover3')) { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 60, 'zone-hook', 0, 40); if (val === 'cover3_buzz') { createD('S', c + 120, los - 60, 'zone-flat', 40, 20); createD('SS', c, los - 100, 'zone-hook', 0, 40); } else { createD('S', c + 120, los - 60, 'zone-flat', 40, 20); createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); } createD('CB', 40, los - 180, 'zone-deep', 0, 80); createD('CB', w - 40, los - 180, 'zone-deep', 0, 80); createD('FS', c, los - 220, 'zone-deep', 0, 80); } 
-                else if (val === 'cover2' || val === 'tampa_2') { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 80, val === 'tampa_2' ? 'zone-deep' : 'zone-hook', 0, val === 'tampa_2' ? 100 : 40); createD('S', c + 120, los - 60, 'zone-hook', 0, 40); createD('CB', 40, los - 40, 'zone-flat', 0, 40); createD('CB', w - 40, los - 40, 'zone-flat', 0, 40); createD('FS', c - 80, los - 220, 'zone-deep', 0, 100); createD('SS', c + 80, los - 220, 'zone-deep', 0, 100); } 
-                else if (val === 'cover4' || val === 'cover6') { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 60, 'zone-hook', 0, 40); createD('S', c + 120, los - 60, 'zone-hook', 0, 40); if (val === 'cover6') { createD('CB', 40, los - 40, 'zone-flat', 0, 40); createD('FS', c - 60, los - 220, 'zone-deep', 0, 100); } else { createD('CB', 40, los - 120, 'zone-deep', 0, 80); createD('FS', c - 60, los - 220, 'zone-deep', 0, 80); } createD('CB', w - 40, los - 120, 'zone-deep', 0, 80); createD('SS', c + 60, los - 220, 'zone-deep', 0, 80); } 
-                else { createD('E', c - 90, los - 20); createD('T', c - 30, los - 20); createD('T', c + 30, los - 20); createD('E', c + 90, los - 20); createD('W', c - 120, los - 80); createD('M', c, los - 80); createD('S', c + 120, los - 80); createD('CB', 40, los - 40); createD('CB', w - 40, los - 40); createD('FS', c - 60, los - 200); createD('SS', c + 60, los - 200); } 
+                if (val === 'bear_46') { createD('DE1', c - 70, los - 20); createD('DT1', c - 30, los - 20); createD('N', c, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 70, los - 20); createD('M', c - 100, los - 50); createD('S', c + 100, los - 50); createD('CB1', 40, los - 40); createD('CB2', w - 40, los - 40); createD('FS', c, los - 200); createD('SS', c + 140, los - 40); } 
+                else if (val === 'base43') { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 80); createD('M', c, los - 80); createD('S', c + 120, los - 80); createD('CB1', 40, los - 40); createD('CB2', w - 40, los - 40); createD('FS', c - 60, los - 200); createD('SS', c + 60, los - 200); } 
+                else if (val === 'fire_zone') { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-flat', 40, 20); createD('M', c, los - 60, 'zone-hook', 0, 40); createD('S', c + 120, los - 20); createD('CB1', 40, los - 180, 'zone-deep', 0, 80); createD('CB2', w - 40, los - 180, 'zone-deep', 0, 80); createD('FS', c, los - 220, 'zone-deep', 0, 80); createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); } 
+                else if (val.includes('cover3')) { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 60, 'zone-hook', 0, 40); if (val === 'cover3_buzz') { createD('S', c + 120, los - 60, 'zone-flat', 40, 20); createD('SS', c, los - 100, 'zone-hook', 0, 40); } else { createD('S', c + 120, los - 60, 'zone-flat', 40, 20); createD('SS', c + 60, los - 60, 'zone-flat', 50, 20); } createD('CB1', 40, los - 180, 'zone-deep', 0, 80); createD('CB2', w - 40, los - 180, 'zone-deep', 0, 80); createD('FS', c, los - 220, 'zone-deep', 0, 80); } 
+                else if (val === 'cover2' || val === 'tampa_2') { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 80, val === 'tampa_2' ? 'zone-deep' : 'zone-hook', 0, val === 'tampa_2' ? 100 : 40); createD('S', c + 120, los - 60, 'zone-hook', 0, 40); createD('CB1', 40, los - 40, 'zone-flat', 0, 40); createD('CB2', w - 40, los - 40, 'zone-flat', 0, 40); createD('FS', c - 80, los - 220, 'zone-deep', 0, 100); createD('SS', c + 80, los - 220, 'zone-deep', 0, 100); } 
+                else if (val === 'cover4' || val === 'cover6') { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 60, 'zone-hook', 0, 40); createD('M', c, los - 60, 'zone-hook', 0, 40); createD('S', c + 120, los - 60, 'zone-hook', 0, 40); if (val === 'cover6') { createD('CB1', 40, los - 40, 'zone-flat', 0, 40); createD('FS', c - 60, los - 220, 'zone-deep', 0, 100); } else { createD('CB1', 40, los - 120, 'zone-deep', 0, 80); createD('FS', c - 60, los - 220, 'zone-deep', 0, 80); } createD('CB2', w - 40, los - 120, 'zone-deep', 0, 80); createD('SS', c + 60, los - 220, 'zone-deep', 0, 80); } 
+                else { createD('DE1', c - 90, los - 20); createD('DT1', c - 30, los - 20); createD('DT2', c + 30, los - 20); createD('DE2', c + 90, los - 20); createD('W', c - 120, los - 80); createD('M', c, los - 80); createD('S', c + 120, los - 80); createD('CB1', 40, los - 40); createD('CB2', w - 40, los - 40); createD('FS', c - 60, los - 200); createD('SS', c + 60, los - 200); } 
                 Playbook.drawAll();
             },
 
