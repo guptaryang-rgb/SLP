@@ -1500,10 +1500,31 @@
                             <div style="color:#888; font-family:var(--font-mono); margin-top:8px;">STATUS: <span id="admin-status" style="color:var(--success);">Authenticating...</span></div>
                         </div>
                     </div>
-                    <div id="admin-content" style="color:#ccc; font-size:1.1rem;">
-                        Awaiting Phase 2 Data Aggregation...
+                    <div id="admin-content" style="width:100%;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:24px; margin-bottom:40px;">
+                            
+                            <div style="background:#111; border:1px solid var(--accent); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                                <h4 style="color:var(--accent); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Active Users</h4>
+                                <div id="admin-stat-users" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
+                            </div>
+
+                            <div style="background:#111; border:1px solid #a855f7; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                                <h4 style="color:#a855f7; margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Total Sessions</h4>
+                                <div id="admin-stat-sessions" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
+                            </div>
+
+                            <div style="background:#111; border:1px solid var(--danger); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                                <h4 style="color:var(--danger); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Hosted Video Clips</h4>
+                                <div id="admin-stat-clips" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
+                            </div>
+
+                            <div style="background:#111; border:1px solid var(--success); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                                <h4 style="color:var(--success); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Playbook Concepts</h4>
+                                <div id="admin-stat-plays" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
+                            </div>
+
+                        </div>
                     </div>
-                </div>
             </div>
         </div>
 
@@ -2541,6 +2562,41 @@
             }
         };
 
+const Admin = {
+            loadStats: async () => {
+                const statusEl = document.getElementById('admin-status');
+                statusEl.innerText = "Fetching Live Data...";
+                statusEl.style.color = "var(--warning)";
+
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/admin/stats', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        // Animate the numbers in
+                        document.getElementById('admin-stat-users').innerText = data.stats.users;
+                        document.getElementById('admin-stat-sessions').innerText = data.stats.sessions;
+                        document.getElementById('admin-stat-clips').innerText = data.stats.clips;
+                        document.getElementById('admin-stat-plays').innerText = data.stats.plays;
+                        
+                        statusEl.innerText = "System Online & Secure";
+                        statusEl.style.color = "var(--success)";
+                    } else {
+                        throw new Error(data.error || "Unauthorized");
+                    }
+                } catch (e) {
+                    console.error(e);
+                    statusEl.innerText = "Access Denied / Offline";
+                    statusEl.style.color = "var(--danger)";
+                }
+            }
+        };
+
+
         const UI = {
             currentMode: 'about',
             activeSessionId: null,
@@ -2616,6 +2672,10 @@
                         document.getElementById('auth-modal').style.display = 'flex';
                         return;
                     }
+                    
+                    // --- NEW: TRIGGER ADMIN LOAD ---
+                    if (tab === 'admin') Admin.loadStats(); 
+                    
                     const posSelect = document.getElementById('pos-select');
                     if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
 
