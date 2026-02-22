@@ -1449,6 +1449,7 @@
             <div class="nav-tab" data-tab="self">Self Analysis</div>
             <div class="nav-tab" data-tab="team">Team Analysis</div>
             <div class="nav-tab" data-tab="playbook">Playbook</div>
+            <div class="nav-tab" id="admin-tab" data-tab="admin" style="display:none; color:var(--warning); font-weight:800;">🛡️ Command Center</div>
         </div>
         <div id="user-button"></div>
     </div>
@@ -1486,6 +1487,22 @@
                 <div class="legal-footer">
                     <a href="privacy.html" target="_blank">Privacy Policy</a>
                     <a href="terms.html" target="_blank">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-view" class="view">
+            <div class="app-body" style="padding: 40px; overflow-y:auto; flex-direction:column; align-items:center; background:#050505;">
+                <div style="width:100%; max-width:1200px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:20px; margin-bottom:30px;">
+                        <div>
+                            <h2 style="margin:0; color:var(--warning); font-size:2rem; font-weight:900;">Command Center</h2>
+                            <div style="color:#888; font-family:var(--font-mono); margin-top:8px;">STATUS: <span id="admin-status" style="color:var(--success);">Authenticating...</span></div>
+                        </div>
+                    </div>
+                    <div id="admin-content" style="color:#ccc; font-size:1.1rem;">
+                        Awaiting Phase 2 Data Aggregation...
+                    </div>
                 </div>
             </div>
         </div>
@@ -2586,6 +2603,7 @@
                 let targetViewId = 'landing-view';
                 if (tab === 'self' || tab === 'team') targetViewId = 'war-room-view';
                 else if (tab === 'playbook') targetViewId = 'playbook-view';
+                else if (tab === 'admin') targetViewId = 'admin-view'; // <--- NEW RULE
 
                 const viewEl = document.getElementById(targetViewId);
                 if (viewEl) {
@@ -4712,11 +4730,18 @@ deleteSession: async (id) => {
                         Clerk.load()
                             .then(() => {
                                 if (!Clerk.user) {
-                                document.getElementById('auth-modal').style.display = 'flex'; // SURGICAL FIX: Un-hide if needed
-                                Clerk.mountSignIn(document.getElementById('sign-in'));
-                            } else {
+                                    document.getElementById('auth-modal').style.display = 'flex';
+                                    Clerk.mountSignIn(document.getElementById('sign-in'));
+                                } else {
                                     document.getElementById('auth-modal').style.display = 'none';
                                     Clerk.mountUserButton(document.getElementById('user-button'));
+                                    
+                                    // --- NEW: THE ADMIN CHECK ---
+                                    const userEmail = Clerk.user.primaryEmailAddress?.emailAddress;
+                                    if (userEmail === "arhamgupta09@gmail.com") {
+                                        document.getElementById('admin-tab').style.display = 'block';
+                                    }
+
                                     UI.init();
                                     Playbook.init();
                                 }
