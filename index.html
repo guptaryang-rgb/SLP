@@ -1326,6 +1326,114 @@
                 opacity: 1;
             }
         }
+
+        /* ==========================================================================
+           UNIVERSAL ANTI-SQUISH & RESPONSIVE DISPLAY (Any Native Resolution)
+           ========================================================================== */
+           
+        /* 1. Global App Body */
+        .app-body {
+            flex: 1;
+            display: flex;
+            width: 100vw;
+            height: calc(100vh - var(--nav-height)); /* Ensure it never pushes past the screen bottom */
+            overflow: hidden;
+        }
+
+        /* 2. Lock the Sidebars (They will NEVER shrink or grow) */
+        .sidebar {
+            flex: 0 0 var(--sidebar-width) !important;
+            max-width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            height: 100%;
+        }
+
+        .lib-panel {
+            flex: 0 0 var(--lib-width) !important;
+            max-width: var(--lib-width);
+            min-width: var(--lib-width);
+            height: 100%;
+        }
+
+        /* 3. Free the Main View (Allows it to scale dynamically without breaking) */
+        .main {
+            flex: 1 1 auto !important;
+            min-width: 0 !important; /* CRITICAL: Stops inner content from pushing sidebars off screen */
+            min-height: 0 !important; /* CRITICAL: Allows vertical scrolling inside */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
+
+        #chat-feed {
+            flex: 1 1 auto !important;
+            min-height: 0 !important; /* Keeps the input bar locked to the bottom */
+            overflow-y: auto;
+        }
+
+        /* 4. Playbook Designer Layout Locks */
+        .modal-content {
+            max-height: 95vh; /* Prevents huge modals from bleeding off the screen */
+            max-width: 95vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #designer-container {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+        }
+
+        /* Lock the Playbook tools & chat so the green field gets all the space */
+        #designer-modal > .modal-content > div:nth-child(2) > div:first-child {
+            flex: 0 0 60px !important; /* Tool bar */
+        }
+        #designer-modal > .modal-content > div:nth-child(2) > div:last-child {
+            flex: 0 0 320px !important; /* Chalk talk */
+            max-width: 320px;
+        }
+
+        /* 5. VCM Video Player Layout */
+        #workspace-split {
+            display: flex;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 70vh !important; /* Keeps video dominant */
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        #popup-video-container {
+            flex: 1 1 auto !important; 
+            min-width: 0 !important; 
+            display: flex;
+            flex-direction: column;
+            background: #050505;
+        }
+
+        #telestrator-view {
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            position: relative;
+            background: #000;
+        }
+
+        #main-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Perfect letterboxing */
+            display: block;
+        }
+        
+        #context-side-panel {
+            flex: 0 0 340px !important; 
+            max-width: 340px;
+            height: 100%;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -1458,10 +1566,8 @@
                     <div class="panel-header">Install & Concepts</div>
                     <div style="padding:16px;">
                         <div class="session-item active">Pass Concepts</div>
-                        <div class="session-item">Run Concepts</div>
-                        <div class="session-item">Protections</div>
-                        <div class="session-item">Specials</div>
                     </div>
+                </div>
                 </div>
 
                 <div class="main" style="padding: 24px; overflow-y:auto; background:#050505;">
@@ -2398,6 +2504,18 @@
             activeSessionId: null,
             overlayClipId: null,
 
+            // NEW: Universal Chat Formatter
+            parseAIMessage: (rawText) => {
+                try { const parsed = JSON.parse(rawText); rawText = parsed.play_analysis || parsed.reply || rawText; } catch(e) {}
+                let cleanText = rawText
+                    .replace(/\\n/g, '\n') 
+                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:white; font-weight:800;">$1</strong>')
+                    .replace(/^[•\-*]\s*(.*)/gm, '<li style="margin-left:16px; margin-bottom:6px;">$1</li>')
+                    .replace(/\n/g, '<br>');
+                if (cleanText.includes('<li>')) cleanText = `<ul style="padding-left:0; margin-top:8px; margin-bottom:0;">${cleanText}</ul>`;
+                return cleanText;
+            },
+
             gradeToNum: (g) => {
                 if (!g) return 0;
                 const m = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0 };
@@ -2496,7 +2614,9 @@
                 if (msg.type === 'user') {
                     feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
                 } else {
-                    feed.innerHTML += `<div style="align-self:flex-start; color:#ddd; max-width:90%; margin-bottom:20px; line-height:1.6;"><strong style="color:var(--accent);">Coach AI:</strong> ${msg.content}</div>`;
+                    // Uses the new beautiful formatter for base chat
+                    const cleanMsg = UI.parseAIMessage(msg.content);
+                    feed.innerHTML += `<div style="align-self:flex-start; background:#1a1a1a; padding:16px; border-radius:8px; border:1px solid var(--border); border-left:3px solid var(--accent); color:#ccc; max-width:90%; margin-bottom:20px; line-height:1.6; font-size:0.9rem;"><strong style="color:var(--accent); display:block; margin-bottom:6px;">COACH AI:</strong> ${cleanMsg}</div>`;
                 }
             },
 
@@ -2948,8 +3068,8 @@
                             if (msg.role === 'user') {
                                 historyContainer.innerHTML += `<div style="align-self:flex-end; background:var(--accent); color:black; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:80%; margin-bottom:8px;">${msg.text}</div>`;
                             } else {
-                                const cleanMsg = msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                                historyContainer.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanMsg}</div>`;
+                                const cleanMsg = UI.parseAIMessage(msg.text);
+                                historyContainer.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px; line-height:1.5;"><span style="color:var(--accent); font-weight:700; display:block; margin-bottom:4px;">COACH AI:</span> ${cleanMsg}</div>`;
                             }
                         });
                         historyContainer.scrollTop = historyContainer.scrollHeight;
@@ -3443,7 +3563,7 @@ deleteSession: async (id) => {
             },
 
             handleDoubleClick: (coords) => {
-                if (Playbook.activeTool !== 'move') return;
+                if (Playbook.activeTool !== 'move' && Playbook.activeTool !== 'draw') return; // Now works in both modes!
                 const r = Playbook.canvas.getBoundingClientRect();
                 const x = coords.clientX - r.left; 
                 const y = coords.clientY - r.top;
@@ -3526,21 +3646,23 @@ deleteSession: async (id) => {
                 const isPA = simType === 'pa';
                 const defType = Playbook.activeDefenseType || 'none';
 
-                // Initialize locked targets (memory for the simulation)
                 Playbook.defense.forEach(d => {
-                    d.lockedTargetId = null;
-                    const zone = Playbook.routes.find(r => r.ownerId === d.id && r.type.includes('zone'));
-                    if (!zone && !['E','T','N'].includes(d.label)) {
-                        let closest = null; let minDist = 999;
-                        Playbook.elements.forEach(o => {
-                            if (['C', 'Q', 'L', 'G', 'T'].includes(o.label)) return;
-                            let dist = Math.hypot(o.x - d.x, o.y - d.y);
-                            if (dist < minDist) { minDist = dist; closest = o; }
-                        });
-                        if (closest) { d.manTargetId = closest.id; }
-                    }
-                });
-
+                                // 1. Man Coverage Follow
+                                const isManCoverage = ['cover1', 'manfree'].includes(Playbook.activeDefenseType);
+                                // If defender is within 100px of the motioning player, they follow him perfectly across the formation
+                                const isClosest = isManCoverage && Math.hypot(d.x - start.x, d.y - start.y) < 100;
+                                
+                                if (isClosest) {
+                                    d.x += dx;
+                                    d.y += dy; 
+                                } 
+                                // 2. Zone Coverage Bump (Only Box LBs shift slightly)
+                                else if (['W', 'M', 'S'].includes(d.label)) {
+                                    d.x += defShiftX;
+                                    const z = Playbook.routes.find(zr => zr.ownerId === d.id && zr.type.includes('zone'));
+                                    if (z) z.points.forEach(zp => zp.x += defShiftX);
+                                }
+                            });
                 // Simulate Time Forward in 0.1s increments
                 for (let t = 0.1; t <= 6.0; t += 0.1) {
                     Playbook.defense.forEach(d => {
