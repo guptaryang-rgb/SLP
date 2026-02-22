@@ -33,6 +33,31 @@ app.get("/api/admin/ping", requireAdmin, async (req, res) => {
     res.json({ success: true, message: "Welcome to God Mode, Boss." });
 });
 
+// Phase 2: Global Data Aggregation
+app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+        // Run all 4 database queries simultaneously for maximum speed
+        const [totalSessions, totalClips, totalPlays, uniqueUsers] = await Promise.all([
+            Session.countDocuments(),
+            Clip.countDocuments(),
+            Play.countDocuments(),
+            Session.distinct("owner") // Gets an array of unique User IDs
+        ]);
+
+        res.json({
+            success: true,
+            stats: {
+                users: uniqueUsers.length,
+                sessions: totalSessions,
+                clips: totalClips,
+                plays: totalPlays
+            }
+        });
+    } catch (e) {
+        console.error("Admin Stats Error:", e);
+        res.status(500).json({ error: "Failed to fetch global stats." });
+    }
+});
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
