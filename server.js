@@ -52,20 +52,29 @@ const MODEL_FALLBACK_LIST = [
 ];
 
 // Helper: AI Execution Wrapper
-async function generateWithFallback(promptParts) {
+// Helper: AI Execution Wrapper
+async function generateWithFallback(promptParts, asText = false) {
     let lastError = null;
     for (const modelName of MODEL_FALLBACK_LIST) {
         try {
             console.log(`🤖 Analyzing with ${modelName}...`);
+            
+            const generationConfig = { 
+                temperature: 0.2, 
+                topP: 0.95, 
+                topK: 40 
+            };
+            
+            // PRO FIX: Only force JSON if we aren't specifically asking for text!
+            if (!asText) {
+                generationConfig.responseMimeType = "application/json";
+            }
+
             const model = genAI.getGenerativeModel({ 
                 model: modelName,
-                generationConfig: { 
-                    temperature: 0.2, // Low temperature for factual analysis
-                    topP: 0.95, 
-                    topK: 40, 
-                    responseMimeType: "application/json" 
-                }
+                generationConfig: generationConfig
             });
+            
             const result = await model.generateContent({ contents: [{ role: "user", parts: promptParts }] });
             console.log(`✅ Success using ${modelName}`);
             return result; 
@@ -433,7 +442,7 @@ app.post("/api/chalk-talk", requireAuth, async (req, res) => {
     ];
 
     // Use our custom fallback function to guarantee a response
-    const result = await generateWithFallback(promptParts);
+const result = await generateWithFallback(promptParts, true);
 
     res.json({ reply: result.response.text() });
   } catch (e) {
@@ -610,7 +619,7 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
     INSTRUCTION: Answer specifically based on the clip data. Use **bold** for key stats or players. Keep it professional and concise.
     `;
     
-    const result = await generateWithFallback([{ text: prompt }]);
+    const result = await generateWithFallback([{ text: prompt }], true);
     const reply = result.response.text();
 
     await Clip.updateOne(
@@ -631,7 +640,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     // A. Text Only Chat (General Session Chat)
     if (!fileData) {
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
-        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }]);
+        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }], true);
         const reply = result.response.text();
         await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
         return res.json({ reply });
