@@ -684,22 +684,44 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
     const specificFocus = RUBRICS[position] || RUBRICS["team"];
 
+   const isTeam = position === 'team';
+    const groupName = position === 'qb' ? "Quarterback" : 
+                      position === 'wr' ? "Wide Receiver" : 
+                      position === 'rb' ? "Running Back" : 
+                      position === 'ol' ? "Offensive Line" : 
+                      position === 'dl' ? "Defensive Line" : 
+                      position === 'lb' ? "Linebackers" : 
+                      position === 'db' ? "Secondary (DB/S)" : "Specific Position";
+
+    // Dynamic JSON generation
+    const positionalJSON = isTeam 
+        ? `[
+            { "group": "Quarterback", "action": "[Analyze action]", "analysis": "[Critique]" },
+            { "group": "Offensive Line", "action": "[Analyze action]", "analysis": "[Critique]" },
+            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze action]", "analysis": "[Critique]" },
+            { "group": "Defensive Line", "action": "[Analyze action]", "analysis": "[Critique]" },
+            { "group": "Linebackers", "action": "[Analyze action]", "analysis": "[Critique]" },
+            { "group": "Secondary (DB/S)", "action": "[Analyze action]", "analysis": "[Critique]" }
+        ]`
+        : `[
+            { "group": "${groupName}", "action": "[Analyze specific action]", "analysis": "[Provide specific critique]" }
+        ]`;
+
    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
-    ROLE: ${position === 'team' ? "NFL Head Coach & Coordinator" : "Elite Position Coach"}.
+    ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
     CONTEXT: ${specificFocus}
     ROSTER: ${rosterContext}
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data & Telestration): 
-       - Estimate X/Y coordinates on a 0-100 scale (X: 0=Left Sideline, 50=Middle, 100=Right Sideline. Y: 0=Deep, 75=LOS, 100=Behind QB).
+       - Estimate X/Y coordinates on a 0-100 scale.
        - You MUST provide plot_startX, plot_startY, plot_catchX, plot_catchY, plot_endX, plot_endY.
-       - TELESTRATION: Identify the single most important player who made a mistake or a great play. Provide their estimated X/Y coordinates at the snap so the app can draw a red circle around them.
+       - TELESTRATION: Identify the single most important player who made a mistake/great play. Provide X/Y.
     
     2. THE COACH (Insight & Personnel): 
-       - You MUST analyze BOTH sides of the ball (Offense AND Defense).
-       - Provide completely UNIQUE and highly specific technical analysis for all 6 position groups.
-       - AUTO-ROSTER: Identify specific players (by jersey number or position, e.g., '#11' or 'LT') and log their exact weaknesses or tendencies so the database can build a scouting profile on them.
+       - If Team mode, analyze both sides of the ball. If Position mode, analyze ONLY that position.
+       - AUTO-ROSTER: Identify specific players and log their exact weaknesses.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -708,35 +730,22 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "o_formation": "[Generate Formation]", 
             "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
-                "play_type": "pass", 
-                "down": 1, "distance_togo": 10,
-                "plot_startX": 50, "plot_startY": 80,
-                "plot_catchX": 30, "plot_catchY": 60,
-                "plot_endX": 30, "plot_endY": 50
+                "play_type": "pass", "down": 1, "distance_togo": 10,
+                "plot_startX": 50, "plot_startY": 80, "plot_catchX": 30, "plot_catchY": 60, "plot_endX": 30, "plot_endY": 50
             }
         },
         "telestration": {
-            "target_player": "[e.g., Left Cornerback]",
-            "highlight_x": 15,
-            "highlight_y": 70,
-            "reason": "[Why are we highlighting them?]"
+            "target_player": "[e.g., Left Cornerback]", "highlight_x": 15, "highlight_y": 70, "reason": "[Reason]"
         },
         "players_detected": [
-            { "identifier": "[e.g., #11 or RT]", "position": "[e.g., WR, OL]", "grade": "[A-F]", "observation": "[Specific action]", "weakness": "[Log a specific tendency or flaw here to save to the database]" }
+            { "identifier": "[e.g., #11]", "position": "[e.g., WR]", "grade": "[A-F]", "observation": "[Action]", "weakness": "[Flaw]" }
         ],
         "scouting_report": { 
             "summary": "[Generate Detailed schematic analysis here]", 
             "coaching_prescription": { "fix": "[Generate Technical Fix]", "drill": "[Generate Specific Drill]" },
             "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
         },
-        "positional": [
-            { "group": "Quarterback", "action": "[Analyze QB action]", "analysis": "[Provide QB critique]" },
-            { "group": "Offensive Line", "action": "[Analyze OL action]", "analysis": "[Provide OL critique]" },
-            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze Skill action]", "analysis": "[Provide Skill critique]" },
-            { "group": "Defensive Line", "action": "[Analyze DL action]", "analysis": "[Provide DL critique]" },
-            { "group": "Linebackers", "action": "[Analyze LB action]", "analysis": "[Provide LB critique]" },
-            { "group": "Secondary (DB/S)", "action": "[Analyze DB action]", "analysis": "[Provide DB critique]" }
-        ]
+        "positional": ${positionalJSON}
     }`;
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
