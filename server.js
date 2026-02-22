@@ -44,6 +44,33 @@ app.get("/api/admin/stats", requireAdmin, async (req, res) => {
             Session.distinct("owner") // Gets an array of unique User IDs
         ]);
 
+        // Phase 3: AI Prompt Engineering Hub
+app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
+    try {
+        const dbPrompts = await Prompt.find({});
+        const mergedPrompts = { ...RUBRICS }; // Start with factory defaults
+        // Overwrite with any custom database prompts
+        dbPrompts.forEach(p => { mergedPrompts[p.position] = p.promptText; });
+        res.json({ success: true, prompts: mergedPrompts });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to load prompts." });
+    }
+});
+
+app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
+    try {
+        const { position, promptText } = req.body;
+        await Prompt.findOneAndUpdate(
+            { position },
+            { promptText, lastUpdated: Date.now() },
+            { upsert: true, new: true } // Creates it if it doesn't exist
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to save prompt." });
+    }
+});
+
         res.json({
             success: true,
             stats: {
@@ -416,6 +443,12 @@ const Clip = mongoose.model("Clip", new mongoose.Schema({
   chatHistory: [{ role: String, text: String }], 
   snapshots: [String],
   createdAt: { type: Date, default: Date.now }
+  
+}));
+const Prompt = mongoose.model("Prompt", new mongoose.Schema({
+    position: { type: String, unique: true },
+    promptText: String,
+    lastUpdated: { type: Date, default: Date.now }
 }));
 
 // Middleware: Authentication Checker
@@ -735,9 +768,12 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     // Prepare Context
     const session = await Session.findOne({ sessionId, owner: req.auth.userId });
     const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
-    const specificFocus = RUBRICS[position] || RUBRICS["team"];
-
-   const isTeam = position === 'team';
+// Phase 3: Dynamic Prompt Injection
+    let targetPos = RUBRICS[position] ? position : "team";
+    const customPrompt = await Prompt.findOne({ position: targetPos });
+    const specificFocus = customPrompt ? customPrompt.promptText : RUBRICS[targetPos];
+   
+    const isTeam = position === 'team';
     const groupName = position === 'qb' ? "Quarterback" : 
                       position === 'wr' ? "Wide Receiver" : 
                       position === 'rb' ? "Running Back" : 
