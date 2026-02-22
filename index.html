@@ -1522,7 +1522,35 @@
                                 <h4 style="color:var(--success); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Playbook Concepts</h4>
                                 <div id="admin-stat-plays" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
                             </div>
+                            
+                        </div>
 
+                        <div style="background:#111; border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:16px;">
+                                <div>
+                                    <h3 style="margin:0; color:white;">🧠 AI Prompt Engineering</h3>
+                                    <div style="color:#888; font-size:0.8rem; margin-top:4px;">Live-edit the system instructions for Coach AI. Changes take effect instantly on the next analysis.</div>
+                                </div>
+                                <select id="admin-prompt-select" class="input-box" style="width:200px; font-weight:bold;" onchange="Admin.selectPrompt(this.value)">
+                                    <option value="team">Head Coach (Team)</option>
+                                    <option value="qb">QB Coach</option>
+                                    <option value="wr">WR Coach</option>
+                                    <option value="rb">RB Coach</option>
+                                    <option value="ol">OL Coach</option>
+                                    <option value="dl">DL Coach</option>
+                                    <option value="lb">Linebacker Coach</option>
+                                    <option value="db">Secondary Coach</option>
+                                    <option value="general">General AI Settings</option>
+                                </select>
+                            </div>
+                            
+                            <textarea id="admin-prompt-editor" style="width:100%; height:350px; background:#080808; border:1px solid #333; border-left:3px solid var(--accent); color:#e4e4e7; padding:16px; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; line-height:1.5; outline:none; resize:vertical;"></textarea>
+                            
+                            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:16px;">
+                                <span id="admin-prompt-status" style="align-self:center; font-size:0.8rem; color:var(--success); font-weight:bold; opacity:0; transition:0.3s;">Saved Successfully!</span>
+                                <button class="tool-btn" style="border:1px solid var(--border);" onclick="Admin.selectPrompt(document.getElementById('admin-prompt-select').value)">↺ Discard Changes</button>
+                                <button class="cta-btn" style="margin:0; padding:10px 24px; font-size:0.9rem;" onclick="Admin.savePrompt()">💾 Deploy to AI</button>
+                            </div>
                         </div>
                     </div>
             </div>
@@ -2563,6 +2591,8 @@
         };
 
 const Admin = {
+            loadedPrompts: {},
+
             loadStats: async () => {
                 const statusEl = document.getElementById('admin-status');
                 statusEl.innerText = "Fetching Live Data...";
@@ -2570,33 +2600,74 @@ const Admin = {
 
                 try {
                     const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/admin/stats', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
                     
-                    const data = await res.json();
+                    // Fetch Stats AND Prompts simultaneously
+                    const [statsRes, promptsRes] = await Promise.all([
+                        fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch('/api/admin/prompts', { headers: { 'Authorization': `Bearer ${token}` } })
+                    ]);
                     
-                    if (data.success) {
-                        // Animate the numbers in
-                        document.getElementById('admin-stat-users').innerText = data.stats.users;
-                        document.getElementById('admin-stat-sessions').innerText = data.stats.sessions;
-                        document.getElementById('admin-stat-clips').innerText = data.stats.clips;
-                        document.getElementById('admin-stat-plays').innerText = data.stats.plays;
+                    const statsData = await statsRes.json();
+                    const promptsData = await promptsRes.json();
+                    
+                    if (statsData.success && promptsData.success) {
+                        // Populate Stats
+                        document.getElementById('admin-stat-users').innerText = statsData.stats.users;
+                        document.getElementById('admin-stat-sessions').innerText = statsData.stats.sessions;
+                        document.getElementById('admin-stat-clips').innerText = statsData.stats.clips;
+                        document.getElementById('admin-stat-plays').innerText = statsData.stats.plays;
                         
+                        // Populate Prompts
+                        Admin.loadedPrompts = promptsData.prompts;
+                        Admin.selectPrompt(document.getElementById('admin-prompt-select').value);
+
                         statusEl.innerText = "System Online & Secure";
                         statusEl.style.color = "var(--success)";
-                    } else {
-                        throw new Error(data.error || "Unauthorized");
-                    }
+                    } else { throw new Error("Unauthorized"); }
                 } catch (e) {
                     console.error(e);
                     statusEl.innerText = "Access Denied / Offline";
                     statusEl.style.color = "var(--danger)";
                 }
+            },
+
+            selectPrompt: (position) => {
+                const editor = document.getElementById('admin-prompt-editor');
+                if (Admin.loadedPrompts[position]) {
+                    editor.value = Admin.loadedPrompts[position];
+                } else {
+                    editor.value = "No prompt found for this position.";
+                }
+            },
+
+            savePrompt: async () => {
+                const position = document.getElementById('admin-prompt-select').value;
+                const promptText = document.getElementById('admin-prompt-editor').value;
+                const statusTxt = document.getElementById('admin-prompt-status');
+
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/admin/prompts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ position, promptText })
+                    });
+                    
+                    if (res.ok) {
+                        Admin.loadedPrompts[position] = promptText; // Update local state
+                        statusTxt.innerText = "Deploying to Mainframe... ✅";
+                        statusTxt.style.color = "var(--success)";
+                        statusTxt.style.opacity = 1;
+                        setTimeout(() => statusTxt.style.opacity = 0, 3000);
+                    } else { throw new Error("Failed to save"); }
+                } catch (e) {
+                    statusTxt.innerText = "⚠️ Deployment Failed!";
+                    statusTxt.style.color = "var(--danger)";
+                    statusTxt.style.opacity = 1;
+                    setTimeout(() => statusTxt.style.opacity = 0, 4000);
+                }
             }
         };
-
-
         const UI = {
             currentMode: 'about',
             activeSessionId: null,
