@@ -6,86 +6,7 @@ const fs = require("fs/promises");
 const path = require("path");
 
 // Third Party SDKs
-// --- ADMIN SECURITY (THE VAULT DOOR) ---
-const ADMIN_EMAILS = ["arhamgupta09@gmail.com"]; // Your Master Key
-
-const requireAdmin = async (req, res, next) => {
-    if (!req.auth?.userId) return res.status(401).json({ error: "Unauthorized access." });
-    
-    try {
-        // Look up the user's email via Clerk
-        const user = await clerkClient.users.getUser(req.auth.userId);
-        const email = user.emailAddresses[0]?.emailAddress;
-        
-        if (!ADMIN_EMAILS.includes(email)) {
-            console.warn(`🛑 Unauthorized Admin Access Attempt by: ${email}`);
-            return res.status(403).json({ error: "Forbidden: God Mode access denied." });
-        }
-        next(); // Let them pass
-    } catch (e) {
-        console.error("Admin verification failed:", e);
-        return res.status(500).json({ error: "Security validation failed." });
-    }
-};
-
-// Phase 1 Test Endpoint
-app.get("/api/admin/ping", requireAdmin, async (req, res) => {
-    res.json({ success: true, message: "Welcome to God Mode, Boss." });
-});
-
-// Phase 2: Global Data Aggregation
-app.get("/api/admin/stats", requireAdmin, async (req, res) => {
-    try {
-        // Run all 4 database queries simultaneously for maximum speed
-        const [totalSessions, totalClips, totalPlays, uniqueUsers] = await Promise.all([
-            Session.countDocuments(),
-            Clip.countDocuments(),
-            Play.countDocuments(),
-            Session.distinct("owner") // Gets an array of unique User IDs
-        ]);
-
-        // Phase 3: AI Prompt Engineering Hub
-app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
-    try {
-        const dbPrompts = await Prompt.find({});
-        const mergedPrompts = { ...RUBRICS }; // Start with factory defaults
-        // Overwrite with any custom database prompts
-        dbPrompts.forEach(p => { mergedPrompts[p.position] = p.promptText; });
-        res.json({ success: true, prompts: mergedPrompts });
-    } catch (e) {
-        res.status(500).json({ error: "Failed to load prompts." });
-    }
-});
-
-app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
-    try {
-        const { position, promptText } = req.body;
-        await Prompt.findOneAndUpdate(
-            { position },
-            { promptText, lastUpdated: Date.now() },
-            { upsert: true, new: true } // Creates it if it doesn't exist
-        );
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: "Failed to save prompt." });
-    }
-});
-
-        res.json({
-            success: true,
-            stats: {
-                users: uniqueUsers.length,
-                sessions: totalSessions,
-                clips: totalClips,
-                plays: totalPlays
-            }
-        });
-    } catch (e) {
-        console.error("Admin Stats Error:", e);
-        res.status(500).json({ error: "Failed to fetch global stats." });
-    }
-});
-
+const { ClerkExpressWithAuth, clerkClient } = require("@clerk/clerk-sdk-node");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
 const cloudinary = require("cloudinary").v2;
@@ -458,6 +379,77 @@ const requireAuth = (req, res, next) => {
   }
   next();
 };
+
+// ====================================================================
+// --- ADMIN COMMAND CENTER (PHASES 1, 2, & 3) ---
+// ====================================================================
+const ADMIN_EMAILS = ["arhamgupta09@gmail.com"]; // Your Master Key
+
+// PHASE 1: The Vault Door (Security Middleware)
+const requireAdmin = async (req, res, next) => {
+    if (!req.auth?.userId) return res.status(401).json({ error: "Unauthorized access." });
+    try {
+        const user = await clerkClient.users.getUser(req.auth.userId);
+        const email = user.emailAddresses[0]?.emailAddress;
+        
+        if (!ADMIN_EMAILS.includes(email)) {
+            console.warn(`🛑 Unauthorized Admin Access Attempt by: ${email}`);
+            return res.status(403).json({ error: "Forbidden: God Mode access denied." });
+        }
+        next(); 
+    } catch (e) {
+        console.error("Admin verification failed:", e);
+        return res.status(500).json({ error: "Security validation failed." });
+    }
+};
+
+app.get("/api/admin/ping", requireAdmin, async (req, res) => {
+    res.json({ success: true, message: "Welcome to God Mode, Boss." });
+});
+
+// PHASE 2: Global Data Aggregation (Dashboard Stats)
+app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+        const [totalSessions, totalClips, totalPlays, uniqueUsers] = await Promise.all([
+            Session.countDocuments(),
+            Clip.countDocuments(),
+            Play.countDocuments(),
+            Session.distinct("owner")
+        ]);
+        res.json({ 
+            success: true, 
+            stats: { users: uniqueUsers.length, sessions: totalSessions, clips: totalClips, plays: totalPlays } 
+        });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to fetch global stats." });
+    }
+});
+
+// PHASE 3: AI Prompt Engineering Hub (Database Prompts)
+app.get("/api/admin/prompts", requireAdmin, async (req, res) => {
+    try {
+        const dbPrompts = await Prompt.find({});
+        const mergedPrompts = { ...RUBRICS }; // Start with hardcoded defaults
+        dbPrompts.forEach(p => { mergedPrompts[p.position] = p.promptText; }); // Overwrite with DB versions
+        res.json({ success: true, prompts: mergedPrompts });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to load prompts." });
+    }
+});
+
+app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
+    try {
+        const { position, promptText } = req.body;
+        await Prompt.findOneAndUpdate(
+            { position },
+            { promptText, lastUpdated: Date.now() },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to save prompt." });
+    }
+});
 
 /* ---------------- API ROUTES ---------------- */
 
