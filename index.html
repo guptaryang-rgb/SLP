@@ -2744,27 +2744,7 @@ const Admin = {
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                    let sessions = await res.json();
-                    
-                    // --- NEW: THE AHA! MOMENT TRIGGER ---
-                    if (sessions.length === 0) {
-                        Playbook.showToast("First Login Detected: Building your Demo War Room...", "var(--warning)");
-                        const feed = document.getElementById('chat-feed');
-                        if (feed) feed.innerHTML = `<div style="text-align:center; padding:60px; color:var(--accent);"><div style="font-size:3rem; margin-bottom:16px;">🪄</div><h2 style="color:white;">Generating your Demo Environment...</h2><p style="color:#888;">Coach AI is drawing plays and analyzing film.</p><div class="thinking-bar" style="max-width:300px; margin:20px auto;"></div></div>`;
-                        
-                        // Call backend to inject demo data
-                        const seedRes = await fetch('/api/seed-demo', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
-                        if (seedRes.ok) {
-                            // Re-fetch the newly populated sessions
-                            const reFetch = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                            sessions = await reFetch.json();
-                            Playbook.showToast("Demo Environment Ready!", "var(--success)");
-                            
-                            // Re-fetch Playbook so the demo play shows up
-                            if (Playbook && Playbook.loadLibrary) await Playbook.loadLibrary(); 
-                        }
-                    }
-
+                    const sessions = await res.json();
                     Store.set('sessions', sessions);
                     if (sessions.length > 0 && !UI.activeSessionId) {
                         const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
@@ -4790,24 +4770,14 @@ deleteSession: async (id) => {
                 if (!grid) return; 
                 const plays = Store.get('playbook') || []; 
                 if (plays.length === 0) { grid.innerHTML = '<div style="color:#666;">No plays installed yet.</div>'; return; } 
-                
-                grid.innerHTML = plays.map(p => {
-                    // NEW: Check if there's a thumbnail. If not, fallback to the green box.
-                    const imageHTML = p.thumbnail 
-                        ? `<img src="${p.thumbnail}" style="width:100%; height:100%; object-fit:cover; display:block; opacity:0.9;">` 
-                        : ``;
-
-                    return ` 
-                    <div class="scout-card" style="position:relative; cursor:pointer; overflow:hidden; transition:transform 0.2s; border:1px solid #333;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"> 
-                        <div class="scout-header" onclick="Playbook.openDesigner('${p.playId || p.id}')" style="background:rgba(10,10,10,0.9); z-index:5; position:relative; border-bottom:1px solid #333;"> 
-                            <div> <div class="play-title" style="font-size:1rem;">${p.title}</div> </div> 
-                        </div> 
-                        <div onclick="Playbook.openDesigner('${p.playId || p.id}')" style="height:140px; background:#355e3b; position:relative;">
-                            ${imageHTML}
-                        </div> 
-                        <button onclick="event.stopPropagation(); Playbook.deletePlay('${p.playId || p.id}')" style="position:absolute; top:12px; right:12px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#ef4444; border-radius:6px; cursor:pointer; width:28px; height:28px; font-weight:bold; display:flex; align-items:center; justify-content:center; z-index:10; transition:0.2s;">✕</button>
-                    </div> `;
-                }).join(''); 
+                grid.innerHTML = plays.map(p => ` 
+                <div class="scout-card" style="position:relative; cursor:pointer;"> 
+                    <div class="scout-header" onclick="Playbook.openDesigner('${p.playId || p.id}')"> 
+                        <div> <div class="play-title">${p.title}</div> </div> 
+                    </div> 
+                    <div onclick="Playbook.openDesigner('${p.playId || p.id}')" style="height:120px; background:#355e3b;"></div> 
+                    <button onclick="event.stopPropagation(); Playbook.deletePlay('${p.playId || p.id}')" style="position:absolute; top:16px; right:16px; background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#ef4444; border-radius:6px; cursor:pointer; width:32px; height:32px; font-weight:bold; display:flex; align-items:center; justify-content:center; z-index:10; transition:0.2s;">✕</button>
+                </div> `).join(''); 
             },
 
             deletePlay: async (id) => {
