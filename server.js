@@ -336,7 +336,8 @@ const PlaySchema = new mongoose.Schema({
     elements: Array,            // Offensive Players (O)
     defense: Array,             // Defensive Players (D)
     routes: Array,              // Vector/Freehand Lines
-    chalkTalkHistory: Array,    // NEW: Saves isolated chat per play!
+    chalkTalkHistory: Array,    // Saves isolated chat per play
+    thumbnail: String,          // <--- NEW: Stores the image data!
     
     aiAnalysis: {               
         formation: String,
@@ -896,12 +897,12 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 // 11. Save a Play Design (Pro Version)
 app.post("/api/save-play", requireAuth, async (req, res) => {
     try {
-        const { playId, title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis } = req.body;
+        const { playId, title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis, thumbnail } = req.body;
         
         const play = await Play.findOneAndUpdate(
             { playId, owner: req.auth.userId },
             { 
-                title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis,
+                title, elements, defense, routes, chalkTalkHistory, linkedSessionId, aiAnalysis, thumbnail,
                 $setOnInsert: { owner: req.auth.userId } 
             },
             { new: true, upsert: true }
