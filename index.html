@@ -338,6 +338,23 @@
             color: var(--accent);
         }
 
+/* --- WAR ROOM VISUAL POLISH --- */
+        .room-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; transition: color 0.3s; }
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.3; text-align: center; margin-top: 10vh; }
+        .empty-icon { font-size: 4rem; margin-bottom: 16px; filter: grayscale(1); }
+        .empty-text { font-size: 1.2rem; color: white; font-weight: bold; }
+        .empty-sub { font-size: 0.9rem; color: #888; margin-top: 8px; max-width: 300px; line-height: 1.4; }
+
+        /* --- 6-POSITIONAL GRADING GRID --- */
+        .scout-card-wrapper { background: #0a0a0a; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 20px; }
+        .scout-header-title { font-size: 1.4rem; font-weight: 900; color: white; margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px; }
+        .pos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+        .pos-card { background: #111; border: 1px solid #222; border-left: 3px solid var(--accent); border-radius: 8px; padding: 16px; transition: 0.2s; }
+        .pos-card:hover { border-color: #444; transform: translateY(-2px); }
+        .pos-title { font-weight: 800; color: white; margin-bottom: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .pos-action { font-size: 0.75rem; color: #a855f7; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        .pos-analysis { font-size: 0.85rem; color: #ccc; line-height: 1.5; }
+
         /* ==========================================================================
            4. WORKSPACE LAYOUT (Sidebars & Main)
            ========================================================================== */
@@ -1628,8 +1645,14 @@
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
                 </div>
 
-                <div class="main">
-                    <div class="dashboard-header">
+                <div class="dashboard-header" style="justify-content: flex-start; gap: 16px;">
+                        <div style="margin-right:auto; display:flex; align-items:center; gap:12px;">
+                            <div id="room-icon" style="font-size: 1.8rem;">🏈</div>
+                            <div>
+                                <div id="room-title" class="room-title">War Room</div>
+                                <div id="room-subtitle" style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">Select a mode</div>
+                            </div>
+                        </div>
                         <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
                         <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
                         <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
@@ -2864,6 +2887,48 @@ const Admin = {
                 }
             }
         };
+
+        // --- NEW: Converts raw AI JSON into a sleek Coach's Grading Sheet ---
+        const Formatter = {
+            parseScoutCard: (text) => {
+                try {
+                    const data = JSON.parse(text);
+                    if (!data.title || !data.positional) throw new Error("Not a scout card");
+
+                    let gridHtml = `<div class="pos-grid">`;
+                    data.positional.forEach(pos => {
+                        gridHtml += `
+                            <div class="pos-card">
+                                <div class="pos-title">${pos.group}</div>
+                                <div class="pos-action">READ: ${pos.action}</div>
+                                <div class="pos-analysis">${pos.analysis}</div>
+                            </div>
+                        `;
+                    });
+                    gridHtml += `</div>`;
+
+                    return `
+                    <div class="scout-card-wrapper">
+                        <div class="scout-header-title">📋 ${data.title}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; font-size:0.8rem; font-weight:bold;">
+                            <span style="background:rgba(56, 189, 248, 0.1); padding:6px 12px; border-radius:6px; color:var(--accent); border:1px solid rgba(56,189,248,0.2);">OFF: ${data.data?.o_formation || 'N/A'}</span>
+                            <span style="background:rgba(239, 68, 68, 0.1); padding:6px 12px; border-radius:6px; color:var(--danger); border:1px solid rgba(239,68,68,0.2);">DEF: ${data.data?.d_formation || 'N/A'}</span>
+                            <span style="background:rgba(245, 158, 11, 0.1); padding:6px 12px; border-radius:6px; color:var(--warning); border:1px solid rgba(245,158,11,0.2);">GRADE: ${data.scouting_report?.report_card?.overall || 'N/A'}</span>
+                        </div>
+                        <div style="color:#ccc; font-size:0.9rem; margin-bottom:16px; line-height:1.6; background:#111; padding:16px; border-radius:8px; border:1px solid #222;">
+                            <strong style="color:white;">Scout Summary:</strong> ${data.scouting_report?.summary || 'No summary provided.'}
+                        </div>
+                        <div style="font-size:0.85rem; color:#a855f7; font-weight:bold; margin-bottom:8px;">POSITIONAL BREAKDOWN:</div>
+                        ${gridHtml}
+                    </div>
+                    `;
+                } catch(e) {
+                    // If it's just regular conversational text, format it as a normal chat bubble
+                    return `<div style="background:#111; border:1px solid #333; padding:12px 16px; border-radius:12px; color:#e4e4e7; max-width:90%; line-height:1.5;">${text}</div>`;
+                }
+            }
+        };
+        
         const UI = {
             currentMode: 'about',
             activeSessionId: null,
@@ -2944,8 +3009,21 @@ const Admin = {
                         document.getElementById('auth-modal').style.display = 'flex';
                         return;
                     }
-                    const posSelect = document.getElementById('pos-select');
-                    if (posSelect) posSelect.style.display = (tab === 'self') ? 'block' : 'none';
+
+                    // --- NEW: Visual Separation for Self vs Team ---
+                    if (tab === 'self') {
+                        document.getElementById('room-title').innerText = "Player Technique Lab";
+                        document.getElementById('room-title').style.color = "var(--accent)";
+                        document.getElementById('room-icon').innerText = "🔬";
+                        document.getElementById('room-subtitle').innerText = "Individual Biomechanics & Execution";
+                        document.getElementById('pos-select').style.display = 'block';
+                    } else if (tab === 'team') {
+                        document.getElementById('room-title').innerText = "Team Strategy Hub";
+                        document.getElementById('room-title').style.color = "var(--warning)";
+                        document.getElementById('room-icon').innerText = "📋";
+                        document.getElementById('room-subtitle').innerText = "Schematic Breakdown & Positional Grading";
+                        document.getElementById('pos-select').style.display = 'none';
+                    }
 
                     if (targetViewId === 'war-room-view') {
                         const sessions = Store.get('sessions') || [];
@@ -2953,7 +3031,18 @@ const Admin = {
                         if (!currentSess || currentSess.type !== tab) {
                             UI.activeSessionId = null;
                             const feed = document.getElementById('chat-feed');
-                            if (feed) feed.innerHTML = '';
+                            
+                            // --- NEW: Beautiful Empty State ---
+                            if (feed) {
+                                feed.innerHTML = `
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📼</div>
+                                        <div class="empty-text">Awaiting Game Film</div>
+                                        <div class="empty-sub">Upload a video clip below to generate a ${tab === 'team' ? 'Team Scout Card' : 'Player Technique Grade'} and begin telestration.</div>
+                                    </div>
+                                `;
+                            }
+                            
                             const lastValid = sessions.find(s => s.type === tab);
                             if (lastValid) UI.selectSession(lastValid.sessionId || lastValid.id);
                             else UI.renderSessionList();
@@ -3616,8 +3705,7 @@ const Admin = {
                     } else {
                         // Regular text response from AI
                         feed.innerHTML += `<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">
-                            <div style="background:#111; border:1px solid #333; padding:12px 16px; border-radius:12px; color:#e4e4e7; max-width:90%; line-height:1.5;">${data.reply}</div>
-                        </div>`;
+                            feed.innerHTML += \<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">${Formatter.parseScoutCard(data.reply)}</div>`;
                     }
                 } catch (e) {
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
