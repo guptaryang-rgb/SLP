@@ -2744,7 +2744,27 @@ const Admin = {
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                    const sessions = await res.json();
+                    let sessions = await res.json();
+                    
+                    // --- NEW: THE AHA! MOMENT TRIGGER ---
+                    if (sessions.length === 0) {
+                        Playbook.showToast("First Login Detected: Building your Demo War Room...", "var(--warning)");
+                        const feed = document.getElementById('chat-feed');
+                        if (feed) feed.innerHTML = `<div style="text-align:center; padding:60px; color:var(--accent);"><div style="font-size:3rem; margin-bottom:16px;">🪄</div><h2 style="color:white;">Generating your Demo Environment...</h2><p style="color:#888;">Coach AI is drawing plays and analyzing film.</p><div class="thinking-bar" style="max-width:300px; margin:20px auto;"></div></div>`;
+                        
+                        // Call backend to inject demo data
+                        const seedRes = await fetch('/api/seed-demo', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }});
+                        if (seedRes.ok) {
+                            // Re-fetch the newly populated sessions
+                            const reFetch = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
+                            sessions = await reFetch.json();
+                            Playbook.showToast("Demo Environment Ready!", "var(--success)");
+                            
+                            // Re-fetch Playbook so the demo play shows up
+                            if (Playbook && Playbook.loadLibrary) await Playbook.loadLibrary(); 
+                        }
+                    }
+
                     Store.set('sessions', sessions);
                     if (sessions.length > 0 && !UI.activeSessionId) {
                         const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
