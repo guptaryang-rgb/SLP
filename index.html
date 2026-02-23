@@ -1434,6 +1434,37 @@
             height: 100%;
             overflow-y: auto;
         }
+
+/* --- LANDING PAGE GLOW UP --- */
+        .hero-mockup {
+            width: 100%; max-width: 900px; height: 400px; background: #080808; border: 1px solid #222;
+            border-radius: 12px; margin: 40px auto; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 60px rgba(56, 189, 248, 0.1);
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+        .m-header { height: 32px; background: #111; border-bottom: 1px solid #222; display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+        .m-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .m-body { display: flex; flex: 1; }
+        .m-sidebar { width: 200px; border-right: 1px solid #222; padding: 16px; display:flex; flex-direction:column; gap:12px; }
+        .m-main { flex: 1; padding: 20px; display:flex; flex-direction:column; gap:20px; background: #050505; }
+        .m-box { background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .landing-section-title { font-size: 2rem; font-weight: 900; color: white; margin: 80px 0 30px; text-align: center; letter-spacing: -1px; }
+        
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; width: 100%; max-width: 1000px; margin: 0 auto 40px; }
+        .pricing-card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 32px; text-align: left; position: relative; transition: 0.3s; display: flex; flex-direction: column; }
+        .pricing-card:hover { transform: translateY(-5px); border-color: #444; }
+        .pricing-card.pro { border-color: var(--accent); box-shadow: 0 0 30px rgba(56, 189, 248, 0.1); background: rgba(56, 189, 248, 0.03); }
+        .pricing-card.addon { border-style: dashed; }
+        
+        .pricing-title { font-size: 1.2rem; font-weight: 800; color: white; margin-bottom: 8px; }
+        .pricing-price { font-size: 2.5rem; font-weight: 900; color: white; margin-bottom: 24px; line-height: 1; }
+        .pricing-price span { font-size: 1rem; color: #888; font-weight: 500; }
+        
+        .pricing-list { list-style: none; padding: 0; margin: 0 0 30px 0; color: #ccc; font-size: 0.9rem; flex: 1; }
+        .pricing-list li { margin-bottom: 12px; display: flex; gap: 10px; align-items: flex-start; }
+        .pricing-list li::before { content: '✓'; color: var(--accent); font-weight: bold; }
+        .pricing-card.addon .pricing-list li::before { content: '+'; color: #a855f7; }
+
     </style>
 </head>
 
@@ -1456,18 +1487,101 @@
 
     <div class="view-container">
 
-        <div id="landing-view" class="view active-view">
-            <div class="hero-wrapper">
+        <div id="landing-view" class="view active-view" style="overflow-y:auto; padding-bottom:60px;">
+            <div class="hero-wrapper" style="max-width: 1200px;">
+                
                 <div class="hero-badge">Pro Suite v3.2 (Stable)</div>
                 <h1 class="hero-title">Win The Game<br>Before the Snap.</h1>
                 <p class="hero-subtitle">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
-                <div class="onboarding-grid">
-                    <div class="step-card"><div class="step-num">01</div><div class="step-title">Upload</div><div class="step-desc">Upload raw MP4 footage directly. Local processing ensures privacy.</div></div>
-                    <div class="step-card"><div class="step-num">02</div><div class="step-title">Select Mode</div><div class="step-desc">Choose <strong>Self</strong> for technique, <strong>Team</strong> for scheme.</div></div>
-                    <div class="step-card"><div class="step-num">03</div><div class="step-title">Execute</div><div class="step-desc">Use the Telestrator engine to draw over film in real-time.</div></div>
+                <button class="cta-btn" onclick="UI.switchTab('self')" style="margin-top:10px; margin-bottom:40px;">Enter War Room</button>
+
+                <div class="hero-mockup">
+                    <div class="m-header">
+                        <div class="m-dot" style="background:#ef4444;"></div>
+                        <div class="m-dot" style="background:#f59e0b;"></div>
+                        <div class="m-dot" style="background:#10b981;"></div>
+                    </div>
+                    <div class="m-body">
+                        <div class="m-sidebar">
+                            <div class="m-box" style="height:20px; width:60%; border:none;"></div>
+                            <div class="m-box" style="height:40px; width:100%;"></div>
+                            <div class="m-box" style="height:40px; width:100%;"></div>
+                        </div>
+                        <div class="m-main">
+                            <div class="m-box" style="flex:1; width:100%; display:flex; align-items:center; justify-content:center; border:1px solid #333; font-size:4rem; color:#222;">
+                                ▶
+                            </div>
+                            <div style="display:flex; gap:20px; height:35%;">
+                                <div class="m-box" style="flex:1;"></div>
+                                <div class="m-box" style="flex:1;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, var(--bg-deep) 100%); pointer-events:none;"></div>
                 </div>
-                <button class="cta-btn" onclick="UI.switchTab('self')">Enter War Room</button>
-                <div class="legal-footer">
+
+                <div class="landing-section-title">Elite Intelligence Tools</div>
+                <div class="onboarding-grid" style="margin-top:0;">
+                    <div class="step-card">
+                        <div class="step-num">🧠</div>
+                        <div class="step-title">AI Scout Cards</div>
+                        <div class="step-desc">Upload raw game film and let Coach AI instantly generate technique grading and schematic breakdowns.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">📊</div>
+                        <div class="step-title">Tendency Heatmaps</div>
+                        <div class="step-desc">Auto-track opponent formations, blitz frequencies, and target distributions based on down and distance.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-num">✏️</div>
+                        <div class="step-title">Pro Telestration</div>
+                        <div class="step-desc">Draw routes, highlight coverages, and isolate key match-ups directly over your video clips in real-time.</div>
+                    </div>
+                </div>
+
+                <div class="landing-section-title">Select Your Edge</div>
+                <div class="pricing-grid">
+                    
+                    <div class="pricing-card">
+                        <div class="pricing-title">Player Tier</div>
+                        <div class="pricing-price">Free</div>
+                        <ul class="pricing-list">
+                            <li>3 AI Video Analyses / mo</li>
+                            <li>Self-Analysis Hub Access</li>
+                            <li>Basic Technique Grading</li>
+                            <li>Standard Video Storage</li>
+                        </ul>
+                        <button class="tool-btn" style="width:100%; justify-content:center; background:#222; border-color:#444;" onclick="UI.switchTab('self')">Start Free</button>
+                    </div>
+
+                    <div class="pricing-card pro">
+                        <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--accent); color:black; font-weight:900; font-size:0.75rem; padding:4px 16px; border-radius:12px; letter-spacing:1px;">COACH FAVORITE</div>
+                        <div class="pricing-title">Team Tier</div>
+                        <div class="pricing-price">$29<span>/mo</span></div>
+                        <ul class="pricing-list">
+                            <li><strong>50 AI Video Analyses / mo</strong></li>
+                            <li>Team Strategy Hub Access</li>
+                            <li>Opponent Tendency Heatmaps</li>
+                            <li>Roster & Weakness Tracking</li>
+                        </ul>
+                        <button class="cta-btn" style="width:100%; margin-top:0; padding:12px;" onclick="UI.switchTab('team')">Upgrade to Team</button>
+                    </div>
+
+                    <div class="pricing-card addon">
+                        <div class="pricing-title" style="color:#a855f7;">Playbook Add-On</div>
+                        <div class="pricing-price">+$10<span>/mo</span></div>
+                        <ul class="pricing-list">
+                            <li>Unlimited Concept Designs</li>
+                            <li>Pre-Snap Motion Simulator</li>
+                            <li>Interactive Coach AI Chalk Talk</li>
+                            <li>1-Click PDF Export</li>
+                        </ul>
+                        <button class="tool-btn" style="width:100%; justify-content:center; color:#a855f7; border-color:rgba(168, 85, 247, 0.3);" onclick="UI.switchTab('playbook')">Explore Playbook</button>
+                    </div>
+
+                </div>
+
+                <div class="legal-footer" style="margin-top: 20px;">
                     <a href="privacy.html" target="_blank">Privacy Policy</a>
                     <a href="terms.html" target="_blank">Terms of Service</a>
                 </div>
