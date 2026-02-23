@@ -1661,159 +1661,16 @@
             </div>
         </div>
 
-        <div id="war-room-view" class="view">
-            <div class="app-body">
-                <div class="sidebar" id="left-panel">
-                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
-                    <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
-                </div>
-
-                <div class="main">
-                    <div class="dashboard-header" style="justify-content: flex-start; gap: 16px;">
-                        <div style="margin-right:auto; display:flex; align-items:center; gap:12px;">
-                            <div id="room-icon" style="font-size: 1.8rem;">🏈</div>
-                            <div>
-                                <div id="room-title" class="room-title">War Room</div>
-                                <div id="room-subtitle" style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; font-weight:bold;">Select a mode</div>
-                            </div>
-                        </div>
-                        <button class="tool-btn" onclick="UI.toggleSidebar()">☰ Sessions</button>
-                        <button class="dash-btn" onclick="UI.toggleModal('strategy-modal')">📘 Strategy Rules</button>
-                        <button class="dash-btn" onclick="UI.showTeamStats()">📊 Team Stats</button>
-                        <button class="dash-btn" onclick="UI.showRoster()">👥 Roster</button>
-                    </div>
-
-                    <div id="chat-feed" style="flex:1; overflow-y:auto; padding:32px; background:#0a0a0a; display:flex; flex-direction:column; gap:24px;"></div>
-
-                    <div class="input-bar">
-                        <select id="pos-select" class="pos-select">
-                            <option value="general">Select Focus...</option>
-                            <option value="qb">Quarterback</option>
-                            <option value="wr">Receiver</option>
-                            <option value="rb">Running Back</option>
-                            <option value="db">Defensive Back</option>
-                            <option value="ol">Offensive Line</option>
-                        </select>
-
-                        <input type="file" id="file-input" hidden accept="video/*">
-                        <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
-
-                        <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
-                        <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
-
-                        <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
-                    </div>
-                </div>
-
-                <div class="lib-panel" id="right-panel">
-                    <div class="panel-header">Film Library</div>
-                    <div style="padding:12px; background:#0a0a0a; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
-                        <input type="text" id="lib-search" class="input-box" placeholder="Search plays..." style="padding:6px 10px; font-size:0.8rem;" onkeyup="UI.renderLibrary()">
-                        <div style="display:flex; gap:4px;">
-                            <select id="lib-filter-off" class="input-box" style="padding:4px; font-size:0.7rem; flex:1;" onchange="UI.renderLibrary()">
-                                <option value="all">All Offense</option>
-                                <option value="spread">Spread</option>
-                                <option value="empty">Empty</option>
-                                <option value="bunch">Bunch</option>
-                            </select>
-                            <select id="lib-filter-def" class="input-box" style="padding:4px; font-size:0.7rem; flex:1;" onchange="UI.renderLibrary()">
-                                <option value="all">All Defense</option>
-                                <option value="cover 0">Cover 0</option>
-                                <option value="cover 1">Cover 1</option>
-                                <option value="cover 2">Cover 2</option>
-                                <option value="cover 3">Cover 3</option>
-                                <option value="cover 4">Cover 4</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="lib-grid" style="padding:10px 0; overflow-y:auto; flex:1;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="playbook-view" class="view">
-            <div class="app-body">
-                <div class="sidebar">
-                    <div class="panel-header">Install & Concepts</div>
-                    <div style="padding:16px;">
-                        <div class="session-item active">Pass Concepts</div>
-                    </div>
-                </div>
-                
-                <div class="main" style="padding: 24px; overflow-y:auto; background:#050505;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                        <div>
-                            <h2 style="margin:0; color:white; font-size:1.8rem;">Offensive Install</h2>
-                            <div style="color:#666;">AI-Linked Concept Library</div>
-                        </div>
-                        <button class="cta-btn" style="margin:0; padding:12px 24px; font-size:0.9rem;" onclick="Playbook.openDesigner()">+ New Concept</button>
-                    </div>
-                    <div id="playbook-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="admin-view" class="view">
-            <div class="app-body" style="padding: 40px; overflow-y:auto; flex-direction:column; align-items:center; background:#050505;">
-                <div style="width:100%; max-width:1200px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:20px; margin-bottom:30px;">
-                        <div>
-                            <h2 style="margin:0; color:var(--warning); font-size:2rem; font-weight:900;">Command Center</h2>
-                            <div style="color:#888; font-family:var(--font-mono); margin-top:8px;">STATUS: <span id="admin-status" style="color:var(--success);">Authenticating...</span></div>
-                        </div>
-                    </div>
-                    
-                    <div id="admin-content" style="width:100%;">
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:24px; margin-bottom:40px;">
-                            <div style="background:#111; border:1px solid var(--accent); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                                <h4 style="color:var(--accent); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Active Users</h4>
-                                <div id="admin-stat-users" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
-                            </div>
-                            <div style="background:#111; border:1px solid #a855f7; padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                                <h4 style="color:#a855f7; margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Total Sessions</h4>
-                                <div id="admin-stat-sessions" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
-                            </div>
-                            <div style="background:#111; border:1px solid var(--danger); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                                <h4 style="color:var(--danger); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Hosted Video Clips</h4>
-                                <div id="admin-stat-clips" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
-                            </div>
-                            <div style="background:#111; border:1px solid var(--success); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                                <h4 style="color:var(--success); margin:0 0 12px 0; font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Playbook Concepts</h4>
-                                <div id="admin-stat-plays" style="font-size:3rem; font-weight:900; color:white; font-family:var(--font-mono); line-height:1;">-</div>
-                            </div>
-                        </div>
-
-                        <div style="background:#111; border:1px solid var(--border); border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:16px;">
-                                <div>
-                                    <h3 style="margin:0; color:white;">🧠 AI Prompt Engineering</h3>
-                                    <div style="color:#888; font-size:0.8rem; margin-top:4px;">Live-edit the system instructions for Coach AI.</div>
-                                </div>
-                                <select id="admin-prompt-select" class="input-box" style="width:200px; font-weight:bold;" onchange="Admin.selectPrompt(this.value)">
-                                    <option value="team">Head Coach (Team)</option>
-                                    <option value="qb">QB Coach</option>
-                                    <option value="wr">WR Coach</option>
-                                    <option value="rb">RB Coach</option>
-                                    <option value="ol">OL Coach</option>
-                                    <option value="dl">DL Coach</option>
-                                    <option value="lb">Linebacker Coach</option>
-                                    <option value="db">Secondary Coach</option>
-                                    <option value="general">General AI Settings</option>
-                                </select>
-                            </div>
-                            <textarea id="admin-prompt-editor" style="width:100%; height:350px; background:#080808; border:1px solid #333; border-left:3px solid var(--accent); color:#e4e4e7; padding:16px; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; line-height:1.5; outline:none; resize:vertical;"></textarea>
-                            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:16px;">
-                                <span id="admin-prompt-status" style="align-self:center; font-size:0.8rem; color:var(--success); font-weight:bold; opacity:0; transition:0.3s;">Saved Successfully!</span>
-                                <button class="tool-btn" style="border:1px solid var(--border);" onclick="Admin.selectPrompt(document.getElementById('admin-prompt-select').value)">↺ Discard Changes</button>
+        <button class="tool-btn" style="border:1px solid var(--border);" onclick="Admin.selectPrompt(document.getElementById('admin-prompt-select').value)">↺ Discard Changes</button>
                                 <button class="cta-btn" style="margin:0; padding:10px 24px; font-size:0.9rem;" onclick="Admin.savePrompt()">💾 Deploy to AI</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-    <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div class="modal-content" style="max-width:1200px; width:95vw; height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">
-            
+        </div>
+    </div> <div id="designer-modal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="max-width:1200px; width:95vw; height:90vh; display:flex; flex-direction:column; padding:0; overflow:hidden; background:#1a1a1a; border:1px solid var(--border);">    
             <div style="padding:12px 24px; background:#080808; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; gap:12px; align-items:center;">
                     <input type="text" id="play-name" class="input-box" placeholder="Concept Name" style="width:160px; font-weight:700; background:#111;">
@@ -3642,8 +3499,7 @@ const Admin = {
                         if(typeof Playbook !== 'undefined') Playbook.showToast("Analysis Complete!", "var(--success)");
                     } else {
                         // Regular text response from AI
-                        feed.innerHTML += `<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">
-                            feed.innerHTML += \<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">${Formatter.parseScoutCard(data.reply)}</div>`;
+                        feed.innerHTML += `<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">${Formatter.parseScoutCard(data.reply)}</div>`;
                     }
                 } catch (e) {
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
