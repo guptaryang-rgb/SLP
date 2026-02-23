@@ -105,6 +105,10 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* ==========================================================================
            2. NAVIGATION COMPONENTS
@@ -1540,7 +1544,7 @@
                 </div>
 
                 <div class="landing-section-title">Select Your Edge</div>
-                <div class="pricing-grid">
+                <div class="pricing-grid" style="max-width: 1200px;">
                     
                     <div class="pricing-card">
                         <div class="pricing-title">Player Tier</div>
@@ -1562,18 +1566,35 @@
                             <li><strong>50 AI Video Analyses / mo</strong></li>
                             <li>Team Strategy Hub Access</li>
                             <li>Opponent Tendency Heatmaps</li>
-                            <li>Roster & Weakness Tracking</li>
+                            <li style="margin-top:16px;">
+                                <div style="background:rgba(251, 191, 36, 0.1); border:1px solid rgba(251, 191, 36, 0.3); padding:8px 12px; border-radius:6px; width:100%;">
+                                    <span style="color:var(--warning); font-size:0.75rem; font-weight:bold;">⚡ RUNNING LOW?</span><br>
+                                    <span style="color:#ccc; font-size:0.75rem;">Refill +20 Analyses for $10</span>
+                                </div>
+                            </li>
                         </ul>
                         <button class="cta-btn" style="width:100%; margin-top:0; padding:12px;" onclick="UI.switchTab('team')">Upgrade to Team</button>
                     </div>
 
+                    <div class="pricing-card" style="border-color: #f59e0b; background: rgba(245, 158, 11, 0.02);">
+                        <div class="pricing-title" style="color:#f59e0b;">Program Tier</div>
+                        <div class="pricing-price">$99<span>/mo</span></div>
+                        <ul class="pricing-list">
+                            <li><strong>500 AI Video Analyses / mo</strong></li>
+                            <li>Full Roster & Weakness Tracking</li>
+                            <li>Unlimited Storage Limits</li>
+                            <li>Priority AI Processing</li>
+                        </ul>
+                        <button class="tool-btn" style="width:100%; justify-content:center; border-color:rgba(245, 158, 11, 0.4); color:#f59e0b;" onclick="UI.switchTab('team')">Get Program</button>
+                    </div>
+
                     <div class="pricing-card addon">
                         <div class="pricing-title" style="color:#a855f7;">Playbook Add-On</div>
-                        <div class="pricing-price">+$10<span>/mo</span></div>
+                        <div class="pricing-price">+$4.99<span>/mo</span></div>
                         <ul class="pricing-list">
                             <li>Unlimited Concept Designs</li>
                             <li>Pre-Snap Motion Simulator</li>
-                            <li>Interactive Coach AI Chalk Talk</li>
+                            <li>Interactive AI Chalk Talk</li>
                             <li>1-Click PDF Export</li>
                         </ul>
                         <button class="tool-btn" style="width:100%; justify-content:center; color:#a855f7; border-color:rgba(168, 85, 247, 0.3);" onclick="UI.switchTab('playbook')">Explore Playbook</button>
@@ -3490,49 +3511,107 @@ const Admin = {
                 const input = document.getElementById('user-input');
                 const fileInput = document.getElementById('file-input');
                 const feed = document.getElementById('chat-feed');
+                const posSelect = document.getElementById('pos-select');
+                
+                const message = input.value.trim();
+                const file = fileInput ? fileInput.files[0] : null;
+                
+                if (!message && !file) return;
 
-                if (!input.value && !fileInput.files.length) return;
-                if (!UI.activeSessionId) { alert("⚠️ Please Create or Select a Session from the left panel first!"); return; }
-                if (document.getElementById('empty-state')) document.getElementById('empty-state').remove();
-
-                const userText = input.value || (fileInput.files.length ? "Analyzed uploaded footage." : "");
-                const sessions = Store.get('sessions');
-                const sessIdx = sessions.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx > -1) {
-                    if (!sessions[sessIdx].history) sessions[sessIdx].history = [];
-                    sessions[sessIdx].history.push({ role: 'user', text: userText });
-                    Store.set('sessions', sessions);
+                // 1. Post User Message to Feed instantly
+                if (message) {
+                    feed.innerHTML += `<div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+                        <div style="background:var(--accent); color:black; padding:12px 16px; border-radius:12px; font-weight:bold; max-width:80%;">${message}</div>
+                    </div>`;
                 }
-
-                UI.renderMessageHTML({ type: 'user', content: userText });
                 input.value = '';
-                const file = fileInput.files[0];
-                fileInput.value = '';
-                document.getElementById('file-btn').innerHTML = '📎 Upload Film';
-                document.getElementById('file-btn').style.background = '#222';
-                document.getElementById('file-btn').style.color = '#ccc';
 
-                const loadId = 'load_' + Date.now();
-                feed.innerHTML += `<div id="${loadId}" style="color:#666; font-size:0.9rem; margin-bottom:12px;">Analyzing...</div>`;
+                let loaderId = 'loader_' + Date.now();
+                let fileData = null;
+                let mimeType = null;
+
+                // 2. The Dynamic AI Loading State (For Videos)
+                if (file) {
+                    // Reset File UI Button
+                    const fBtn = document.getElementById('file-btn');
+                    if(fBtn) {
+                        fBtn.style.background = 'transparent';
+                        fBtn.style.color = 'white';
+                        fBtn.innerHTML = '📎 Upload Film';
+                    }
+
+                    // Convert video for the server
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    await new Promise(r => reader.onload = r);
+                    fileData = reader.result.split(',')[1];
+                    mimeType = file.type;
+
+                    // Inject Animated UI
+                    feed.innerHTML += `
+                    <div id="${loaderId}" style="display:flex; align-items:center; gap:16px; margin-bottom:16px; background:#111; padding:16px; border-radius:12px; border:1px solid #333;">
+                        <div style="width:24px; height:24px; border:3px solid #222; border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite;"></div>
+                        <div id="${loaderId}_text" style="color:var(--accent); font-family:var(--font-mono); font-size:0.9rem; font-weight:bold;">Uploading secure video...</div>
+                    </div>`;
+                    
+                    // Start Text Cycler
+                    const phrases = [
+                        "Uploading secure video...",
+                        "Coach AI is mapping player coordinates...",
+                        "Analyzing defensive shell...",
+                        "Calculating speed and leverage...",
+                        "Generating final Scout Card..."
+                    ];
+                    let pIdx = 0;
+                    window.aiThinkTimer = setInterval(() => {
+                        pIdx = (pIdx + 1) % phrases.length;
+                        const txt = document.getElementById(`${loaderId}_text`);
+                        if (txt) txt.innerText = phrases[pIdx];
+                        else clearInterval(window.aiThinkTimer);
+                    }, 3500); // Changes text every 3.5 seconds
+
+                } else {
+                    // Basic text loader for simple chat
+                    feed.innerHTML += `<div id="${loaderId}" style="margin-bottom:16px; color:#888; font-style:italic;">Coach AI is reviewing the playbook...</div>`;
+                }
+
                 feed.scrollTop = feed.scrollHeight;
+                if(fileInput) fileInput.value = ''; // clear hidden input
 
-                const res = await CoachAI.analyze(userText, file);
-                document.getElementById(loadId).remove();
+                // 3. Send Payload to Backend
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                            message: message || "Analyze this video.",
+                            sessionId: UI.activeSessionId,
+                            fileData, mimeType, sport: "football",
+                            position: posSelect ? posSelect.value : 'team'
+                        })
+                    });
 
-                let aiContent = res.text;
-                if (res.type === 'card') {
-                    UI.renderLibrary();
-                    aiContent = `Analysis Complete:<br>` + UI.buildScoutCardHTML(res.data, true);
+                    // Stop the animation timer
+                    if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
+                    document.getElementById(loaderId)?.remove();
+
+                    const data = await res.json();
+                    
+                    if (file) {
+                        UI.renderSessionList(); // Refresh sidebar to show the new video clip
+                        if(typeof Playbook !== 'undefined') Playbook.showToast("Analysis Complete!", "var(--success)");
+                    } else {
+                        // Regular text response from AI
+                        feed.innerHTML += `<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">
+                            <div style="background:#111; border:1px solid #333; padding:12px 16px; border-radius:12px; color:#e4e4e7; max-width:90%; line-height:1.5;">${data.reply}</div>
+                        </div>`;
+                    }
+                } catch (e) {
+                    if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
+                    const errEl = document.getElementById(loaderId);
+                    if(errEl) errEl.innerHTML = `<span style="color:var(--danger);">⚠️ Connection to Coach AI lost.</span>`;
                 }
-
-                const sessions2 = Store.get('sessions');
-                const sessIdx2 = sessions2.findIndex(s => (s.sessionId || s.id) === UI.activeSessionId);
-                if (sessIdx2 > -1) {
-                    sessions2[sessIdx2].history.push({ role: 'model', text: aiContent });
-                    Store.set('sessions', sessions2);
-                }
-
-                feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">${res.type === 'card' ? aiContent : `<strong style="color:var(--accent);">Coach AI:</strong> ${res.text}`}</div>`;
                 feed.scrollTop = feed.scrollHeight;
             },
 
