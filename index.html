@@ -3650,11 +3650,30 @@ const Admin = {
                     const data = await res.json();
                     
                     if (file) {
-                        UI.renderSessionList(); // Refresh sidebar to show the new video clip
+                        // 1. Instantly add the new video to local storage so buttons work
+                        if (data.newClip) {
+                            const clips = Store.get('clips') || [];
+                            clips.unshift(data.newClip);
+                            Store.set('clips', clips);
+                        }
+
+                        // 2. Refresh BOTH sidebars instantly
+                        UI.renderSessionList(); 
+                        UI.renderLibrary(); 
+                        
+                        // 3. Inject the clip ID into the AI's reply and print the Scout Card instantly!
+                        try {
+                            let replyObj = JSON.parse(data.reply);
+                            replyObj.id = data.newClip._id || data.newClip.id; 
+                            UI.renderMessageHTML({ type: 'ai', content: JSON.stringify(replyObj) });
+                        } catch(parseErr) {
+                            UI.renderMessageHTML({ type: 'ai', content: data.reply });
+                        }
+
                         if(typeof Playbook !== 'undefined') Playbook.showToast("Analysis Complete!", "var(--success)");
                     } else {
                         // Regular text response from AI
-                        feed.innerHTML += `<div style="display:flex; justify-content:flex-start; margin-bottom:16px;">${Formatter.parseScoutCard(data.reply)}</div>`;
+                        UI.renderMessageHTML({ type: 'ai', content: data.reply });
                     }
                 } catch (e) {
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
