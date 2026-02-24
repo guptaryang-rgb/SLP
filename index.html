@@ -1702,6 +1702,7 @@
                         <button id="file-btn" class="tool-btn" style="height:44px; border:1px dashed var(--border);" onclick="document.getElementById('file-input').click()">📎 Upload Film</button>
 
                         <input type="text" id="user-input" class="input-box" placeholder="Ask coach or upload video...">
+                        <button id="mic-btn-main" class="tool-btn" style="padding:10px; font-size:1.2rem; transition:0.2s;" title="Click to Speak">🎙️</button>
                         <button id="send-btn" class="tool-btn" style="background:white; color:black;">SEND</button>
 
                         <button class="tool-btn" onclick="UI.toggleLibrary()" style="margin-left:8px;">Library ☰</button>
@@ -2119,6 +2120,7 @@
                 <div id="overlay-chat-history" style="max-height:150px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;"></div>
                 <div style="display:flex; gap:8px;">
                     <input id="overlay-chat-input" type="text" placeholder="Ask about this specific clip..." style="flex:1; background:#222; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:6px;">
+                    <button id="mic-btn-overlay" class="tool-btn" style="padding:8px 10px; font-size:1.1rem; border:none; background:transparent;" title="Click to Speak">🎙️</button>
                     <button id="overlay-chat-btn" class="tool-btn" onclick="UI.handleOverlayChat()">Ask</button>
                 </div>
             </div>
@@ -2292,6 +2294,69 @@
             }
         };
 
+        /**
+         * 2. VOICE-TO-TEXT ENGINE (Sideline Dictation)
+         */
+        const VoiceEngine = {
+            init: (inputId, btnId) => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const btn = document.getElementById(btnId);
+                const input = document.getElementById(inputId);
+                
+                if (!SpeechRecognition || !btn || !input) {
+                    if (btn) btn.style.display = 'none'; // Hide if browser doesn't support it
+                    return;
+                }
+
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true; // Shows text as they speak
+
+                let isRecording = false;
+                const originalPlaceholder = input.placeholder;
+
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    if (isRecording) {
+                        recognition.stop();
+                        return;
+                    }
+
+                    isRecording = true;
+                    btn.style.background = 'var(--danger)';
+                    btn.style.borderColor = 'var(--danger)';
+                    input.placeholder = "Listening (Speak now)...";
+                    input.value = ""; // clear previous
+                    
+                    try { recognition.start(); } catch(err) {}
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = 0; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    input.value = transcript;
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    btn.style.background = '';
+                    btn.style.borderColor = 'var(--border)';
+                    input.placeholder = originalPlaceholder;
+                };
+                
+                recognition.onerror = () => {
+                    isRecording = false;
+                    btn.style.background = '';
+                    input.placeholder = "Mic error. Try typing.";
+                }
+            }
+        };
+        
+        
+        
+        
         class TelestratorEngine {
             constructor() {
                 this.video = document.getElementById('main-video');
@@ -5198,6 +5263,9 @@ deleteSession: async (id) => {
 
                                     UI.init();
                                     Playbook.init();
+
+                                    VoiceEngine.init('user-input', 'mic-btn-main');
+                                    VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
                                 }
                             })
                             .catch(err => {
