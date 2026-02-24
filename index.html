@@ -1688,11 +1688,14 @@
                     <div class="input-bar">
                         <select id="pos-select" class="pos-select">
                             <option value="general">Select Focus...</option>
-                            <option value="qb">Quarterback</option>
-                            <option value="wr">Receiver</option>
-                            <option value="rb">Running Back</option>
-                            <option value="db">Defensive Back</option>
-                            <option value="ol">Offensive Line</option>
+                            <option value="qb">Quarterback (QB)</option>
+                            <option value="rb">Running Back (RB)</option>
+                            <option value="wr">Wide Receiver (WR)</option>
+                            <option value="te">Tight End (TE)</option>
+                            <option value="ol">Offensive Line (OL)</option>
+                            <option value="dl">Defensive Line (DL)</option>
+                            <option value="lb">Linebacker (LB)</option>
+                            <option value="db">Defensive Back (DB/S)</option>
                         </select>
 
                         <input type="file" id="file-input" hidden accept="video/*">
@@ -2833,13 +2836,22 @@ const Admin = {
                     const data = JSON.parse(text);
                     if (!data.title || !data.positional) throw new Error("Not a scout card");
 
-                    let gridHtml = `<div class="pos-grid">`;
-                    data.positional.forEach(pos => {
+                    // Build Accordion Layout for Positions
+                    let gridHtml = `<div class="pos-breakdown-container">`;
+                    data.positional.forEach((pos, idx) => {
+                        const activeClass = idx === 0 ? 'active' : ''; // Opens the first tab automatically
                         gridHtml += `
-                            <div class="pos-card">
-                                <div class="pos-title">${pos.group}</div>
-                                <div class="pos-action">READ: ${pos.action}</div>
-                                <div class="pos-analysis">${pos.analysis}</div>
+                            <div class="accordion-item ${activeClass}">
+                                <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
+                                    <span>${pos.group}</span>
+                                    <span class="accordion-icon">+</span>
+                                </div>
+                                <div class="accordion-content">
+                                    <div class="pos-action">ACTION:</div>
+                                    <div style="margin-bottom:12px;">${pos.action}</div>
+                                    <div class="pos-problem">ANALYSIS:</div>
+                                    <div>${pos.analysis}</div>
+                                </div>
                             </div>
                         `;
                     });
@@ -2856,7 +2868,7 @@ const Admin = {
                         <div style="color:#ccc; font-size:0.9rem; margin-bottom:16px; line-height:1.6; background:#111; padding:16px; border-radius:8px; border:1px solid #222;">
                             <strong style="color:white;">Scout Summary:</strong> ${data.scouting_report?.summary || 'No summary provided.'}
                         </div>
-                        <div style="font-size:0.85rem; color:#a855f7; font-weight:bold; margin-bottom:8px;">POSITIONAL BREAKDOWN:</div>
+                        <div style="font-size:0.85rem; color:#a855f7; font-weight:bold; margin-bottom:8px;">${data.positional.length > 3 ? 'TEAM IN-DEPTH BREAKDOWN:' : 'PLAYER TECHNIQUE BREAKDOWN:'}</div>
                         ${gridHtml}
                     </div>
                     `;
