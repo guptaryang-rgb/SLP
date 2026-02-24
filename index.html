@@ -1663,9 +1663,24 @@
 
         <div id="war-room-view" class="view">
             <div class="app-body">
+
                 <div class="sidebar" id="left-panel">
                     <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
                     <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
+                </div>
+                <div class="sidebar" id="left-panel">
+                    <div class="panel-header">Sessions <button class="panel-btn" onclick="App.createNewSession()">+</button></div>
+                    <div id="session-list" style="overflow-y:auto; flex:1; padding:12px 0;"></div>
+                    
+                    <div style="padding:16px; border-top:1px solid var(--border); background:rgba(0,0,0,0.3); flex-shrink:0;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:#888; margin-bottom:8px; font-weight:800; letter-spacing:1px; text-transform:uppercase;">
+                            <span>Cloud Storage</span>
+                            <span id="storage-text">0.0 GB / 5.0 GB</span>
+                        </div>
+                        <div style="width:100%; height:6px; background:#222; border-radius:3px; overflow:hidden;">
+                            <div id="storage-fill" style="width:0%; height:100%; background:var(--success); transition:width 0.5s ease, background 0.3s ease;"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="main">
@@ -2974,14 +2989,21 @@ const Admin = {
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
                     const sessions = await res.json();
                     Store.set('sessions', sessions);
-                    if (sessions.length > 0 && !UI.activeSessionId) {
-                        const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
-                        if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
-                    }
-                } catch (e) { console.error("Session Load Failed", e); }
+                    // EXACT CODE RIGHT BEFORE
+                            if (sessions.length > 0 && !UI.activeSessionId) {
+                                const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
+                                if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
+                            }
+                            
+                            // PASTE THIS LINE HERE
+                            UI.updateStorageMeter();
 
-                document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
+                        // EXACT CODE RIGHT AFTER
+                        } catch (e) { console.error("Session Load Failed", e); }
 
+                        document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
+
+                // EXACT CODE RIGHT BEFORE
                 const fInput = document.getElementById('file-input');
                 if (fInput) fInput.onchange = (e) => {
                     if (e.target.files[0]) {
@@ -2996,6 +3018,39 @@ const Admin = {
                 if (sBtn) sBtn.onclick = UI.handleSend;
             },
 
+            // ==========================================
+            // PASTE THIS NEW FUNCTION EXACTLY HERE
+            // ==========================================
+            updateStorageMeter: async () => {
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/storage-stats', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!res.ok) return;
+                    
+                    const data = await res.json();
+                    
+                    // Convert bytes to GB
+                    const usedGB = (data.usedBytes / (1024 * 1024 * 1024)).toFixed(2);
+                    const limitGB = 5.0; // 5 GB limit for the standard tier
+                    const percent = Math.min((usedGB / limitGB) * 100, 100);
+
+                    const fill = document.getElementById('storage-fill');
+                    const txt = document.getElementById('storage-text');
+                    
+                    if (fill && txt) {
+                        fill.style.width = percent + '%';
+                        txt.innerText = `${usedGB} GB / ${limitGB} GB`;
+                        
+                        // Change color based on danger level
+                        if (percent > 90) fill.style.background = 'var(--danger)';
+                        else if (percent > 75) fill.style.background = 'var(--warning)';
+                        else fill.style.background = 'var(--success)';
+                    }
+                } catch (e) { console.error("Failed to load storage stats"); }
+            },
+            // ==========================================
+
+            // EXACT CODE RIGHT AFTER
             switchTab: (tab) => {
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
@@ -3774,6 +3829,8 @@ exportStatsCSV: () => {
                         // 2. Refresh BOTH sidebars instantly
                         UI.renderSessionList(); 
                         UI.renderLibrary(); 
+
+                        UI.updateStorageMeter();
                         
                         // 3. Inject the clip ID into the AI's reply and print the Scout Card instantly!
                         try {
