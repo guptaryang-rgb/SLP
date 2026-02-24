@@ -771,27 +771,34 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const customPrompt = await Prompt.findOne({ position: targetPos });
     const specificFocus = customPrompt ? customPrompt.promptText : RUBRICS[targetPos];
    
-    const isTeam = position === 'team';
+    const isTeam = position === 'team' || position === 'general';
     const groupName = position === 'qb' ? "Quarterback" : 
                       position === 'wr' ? "Wide Receiver" : 
                       position === 'rb' ? "Running Back" : 
+                      position === 'te' ? "Tight End" : 
                       position === 'ol' ? "Offensive Line" : 
                       position === 'dl' ? "Defensive Line" : 
                       position === 'lb' ? "Linebackers" : 
                       position === 'db' ? "Secondary (DB/S)" : "Specific Position";
 
-    // Dynamic JSON generation
+    // Dynamic JSON generation: Forces extreme detail and isolation
     const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[Analyze action]", "analysis": "[Critique]" },
-            { "group": "Offensive Line", "action": "[Analyze action]", "analysis": "[Critique]" },
-            { "group": "Skill Positions (WR/RB/TE)", "action": "[Analyze action]", "analysis": "[Critique]" },
-            { "group": "Defensive Line", "action": "[Analyze action]", "analysis": "[Critique]" },
-            { "group": "Linebackers", "action": "[Analyze action]", "analysis": "[Critique]" },
-            { "group": "Secondary (DB/S)", "action": "[Analyze action]", "analysis": "[Critique]" }
+            { "group": "Quarterback", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss mechanics, eyes, processing, and footwork. Minimum 4 sentences.]" },
+            { "group": "Running Backs", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss vision, pad level, cut timing. Minimum 4 sentences.]" },
+            { "group": "Wide Receivers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss release, stem, break point. Minimum 4 sentences.]" },
+            { "group": "Tight Ends", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss leverage, blocking, or route. Minimum 4 sentences.]" },
+            { "group": "Offensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss steps, hand placement, anchor. Minimum 4 sentences.]" },
+            { "group": "Defensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss get-off, hand combat, gap control. Minimum 4 sentences.]" },
+            { "group": "Linebackers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss reads, flow, block shedding. Minimum 4 sentences.]" },
+            { "group": "Secondary (DB/S)", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss pedal, phase, leverage, eyes. Minimum 4 sentences.]" }
         ]`
         : `[
-            { "group": "${groupName}", "action": "[Analyze specific action]", "analysis": "[Provide specific critique]" }
+            { "group": "1. Pre-Snap Alignment & Stance", "action": "[Exact alignment details]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of their stance, weight distribution, and leverage choices.]" },
+            { "group": "2. First Step & Processing", "action": "[First movement details]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of their get-off, false steps, eye discipline, and processing speed.]" },
+            { "group": "3. Technique & Execution", "action": "[Primary assignment execution]", "analysis": "[Provide a massive 4-5 sentence pro-level biomechanical breakdown. Hand placement, hip sink, pad level, route stem, or phase.]" },
+            { "group": "4. Finish & Result", "action": "[How did the rep end]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of the finish. Contact balance, tackling form, or catch-point dominance.]" },
+            { "group": "5. Coach's Final Verdict", "action": "[Overall assessment]", "analysis": "[Summarize the exact technical flaws and recommend specific drills to fix them.]" }
         ]`;
 
    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
@@ -807,8 +814,11 @@ app.post("/api/chat", requireAuth, async (req, res) => {
        - TELESTRATION: Identify the single most important player who made a mistake/great play. Provide X/Y.
     
     2. THE COACH (Insight & Personnel): 
-       - If Team mode, analyze both sides of the ball. If Position mode, analyze ONLY that position.
+       ${isTeam 
+         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group on BOTH offense and defense in the 'positional' array. Leave NO group blank. Output massive amounts of pro-level information." 
+         : "- SELF ANALYSIS: You MUST focus SOLELY and EXCLUSIVELY on the " + groupName + ". IGNORE ALL OTHER POSITIONS on the field. Provide a massive, hyper-detailed biomechanical and processing breakdown of the " + groupName + "'s exact rep using the 5-phase structure."}
        - AUTO-ROSTER: Identify specific players and log their exact weaknesses.
+       - TONE: Use heavy NFL-level terminology (e.g., U-Turn, Speed Turn, Rip/Swim, Bucket Step, High-Low read, Apex defender). DO NOT BE GENERIC. The user demands extreme, professional detail.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
