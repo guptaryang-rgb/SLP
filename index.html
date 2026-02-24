@@ -2175,14 +2175,15 @@
     <div id="stats-modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
         <div class="modal-content"
             style="max-width:1400px; width:95vw; height:90vh; display:flex; flex-direction:column; background:#080808;">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border);">
                 <div>
                     <h2 style="margin:0; color:white;">Team Intelligence Hub</h2>
                     <div style="color:#666; font-size:0.8rem;">Opponent Scout & Tendency Report</div>
                 </div>
-                <button class="tool-btn"
-                    onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+                <div style="display:flex; gap:12px;">
+                    <button class="tool-btn" style="border-color:var(--success); color:var(--success); background:rgba(16, 185, 129, 0.1);" onclick="UI.exportStatsCSV()">📥 Download CSV</button>
+                    <button class="tool-btn" onclick="document.getElementById('stats-modal').style.display='none'">✕ Close</button>
+                </div>
             </div>
             <div class="situation-bar">
                 <select id="filter-down" class="sit-select" onchange="UI.refreshStats()">
@@ -3033,7 +3034,7 @@ const Admin = {
                         document.getElementById('room-subtitle').innerText = "Individual Biomechanics & Execution";
                         document.getElementById('pos-select').style.display = 'block';
                     } else if (tab === 'team') {
-                        document.getElementById('room-title').innerText = "Team Strategy Hub";
+                        document.getElementById('room-title').innerText = "Team Strategy ";
                         document.getElementById('room-title').style.color = "var(--warning)";
                         document.getElementById('room-icon').innerText = "📋";
                         document.getElementById('room-subtitle').innerText = "Schematic Breakdown & Positional Grading";
@@ -3436,6 +3437,54 @@ const Admin = {
                 new Chart(document.getElementById('chart-field-run'), { type: 'scatter', data: { datasets: [{ label: 'Run', data: runShots, pointStyle: 'rectRot', radius: 0 }] }, options: opts, plugins: [footballFieldPlugin, vectorPlugin] });
             },
 
+exportStatsCSV: () => {
+                const allClips = Store.get('clips') || [];
+                // Only export clips that have been successfully analyzed by AI
+                const clips = allClips.filter(c => c.fullData?.data?.situation);
+                
+                if (clips.length === 0) {
+                    alert("No analyzed clips available to export. Upload film first!");
+                    return;
+                }
+
+                // 1. Define Spreadsheet Headers
+                const headers = ["Play Title", "Down", "Distance", "Play Type", "Offensive Formation", "Defensive Shell", "AI Grade"];
+                let csvContent = headers.join(",") + "\n";
+
+                // 2. Loop through clips and build rows
+                clips.forEach(c => {
+                    const d = c.fullData;
+                    const sit = d.data.situation || {};
+                    
+                    // We wrap strings in quotes so commas inside titles don't break the CSV columns
+                    const row = [
+                        `"${(c.title || 'Untitled').replace(/"/g, '""')}"`,
+                        sit.down || 'N/A',
+                        sit.distance_togo || 'N/A',
+                        (sit.play_type || 'N/A').toUpperCase(),
+                        `"${(d.data.o_formation || c.formation || 'Unknown').replace(/"/g, '""')}"`,
+                        `"${(d.data.d_formation || 'Unknown').replace(/"/g, '""')}"`,
+                        `"${(d.scouting_report?.report_card?.overall || 'N/A').replace(/"/g, '""')}"`
+                    ];
+                    csvContent += row.join(",") + "\n";
+                });
+
+                // 3. Create invisible link to trigger native browser download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                
+                // Name the file based on today's date
+                const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
+                link.setAttribute("download", `Vantage_Team_Stats_${dateStr}.csv`);
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            },
+
+            
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
                 if (show) {
