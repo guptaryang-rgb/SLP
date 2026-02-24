@@ -361,6 +361,7 @@ const Clip = mongoose.model("Clip", new mongoose.Schema({
   videoUrl: String, 
   publicId: String, 
   geminiFileUri: String, 
+  sizeBytes: { type: Number, default: 0 }, // <--- NEW: Tracks file size
   fullData: Object, // Stores the raw JSON analysis
   chatHistory: [{ role: String, text: String }], 
   snapshots: [String],
@@ -748,6 +749,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
       sport, 
       videoUrl: cloud.secure_url, 
       publicId: cloud.public_id,
+      sizeBytes: cloud.bytes, // <--- NEW: Grab exact bytes from Cloudinary
       title: "Analyzing...", 
       formation: "...", 
       section: "Inbox", 
@@ -908,6 +910,21 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     res.status(500).json({ error: e.message || "Analysis failed." });
   }
 });
+
+
+// --- NEW: Calculate Total User Storage ---
+app.get("/api/storage-stats", requireAuth, async (req, res) => {
+    try {
+        const clips = await Clip.find({ owner: req.auth.userId }, 'sizeBytes');
+        const totalBytes = clips.reduce((sum, clip) => sum + (clip.sizeBytes || 0), 0);
+        res.json({ usedBytes: totalBytes });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to calculate storage." });
+    }
+});
+
+
+
 
 // 11. Save a Play Design (Pro Version)
 app.post("/api/save-play", requireAuth, async (req, res) => {
