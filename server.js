@@ -374,6 +374,11 @@ const Prompt = mongoose.model("Prompt", new mongoose.Schema({
     lastUpdated: { type: Date, default: Date.now }
 }));
 
+const FeatureFlag = mongoose.model("FeatureFlag", new mongoose.Schema({
+    name: { type: String, unique: true },
+    isEnabled: { type: Boolean, default: true }
+}));
+
 // Middleware: Authentication Checker
 const requireAuth = (req, res, next) => {
   if (!req.auth?.userId) {
@@ -453,6 +458,22 @@ app.post("/api/admin/prompts", requireAdmin, async (req, res) => {
     }
 });
 
+app.get("/api/features", async (req, res) => {
+    try {
+        const flags = await FeatureFlag.find({});
+        const featureMap = {};
+        flags.forEach(f => featureMap[f.name] = f.isEnabled);
+        res.json(featureMap);
+    } catch(e) { res.json({}); }
+});
+
+app.post("/api/admin/features", requireAdmin, async (req, res) => {
+    try {
+        const { name, isEnabled } = req.body;
+        await FeatureFlag.findOneAndUpdate({ name }, { isEnabled }, { upsert: true });
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ error: "Failed to toggle feature." }); }
+});
 /* ---------------- API ROUTES ---------------- */
 
 // Static Files
