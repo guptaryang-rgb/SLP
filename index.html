@@ -3385,6 +3385,17 @@
                         Admin.loadedPrompts = promptsData.prompts;
                         Admin.selectPrompt(document.getElementById('admin-prompt-select').value);
 
+                        // --- NEW: Sync Feature Flags to Admin UI ---
+                        const featureRes = await fetch('/api/features');
+                        const features = await featureRes.json();
+                        const pbBtn = document.getElementById('toggle-playbook-btn');
+                        if (pbBtn) {
+                            const isOnline = features.playbook !== false;
+                            pbBtn.innerText = isOnline ? '🟢 ONLINE (Click to Disable)' : '🔴 OFFLINE (Click to Enable)';
+                            pbBtn.style.color = isOnline ? 'var(--accent)' : 'var(--danger)';
+                            pbBtn.style.borderColor = isOnline ? 'var(--accent)' : 'var(--danger)';
+                        }
+
                         statusEl.innerText = "System Online & Secure";
                         statusEl.style.color = "var(--success)";
                     } else { throw new Error("Unauthorized"); }
@@ -4575,10 +4586,12 @@
                             <div class="tag-row"><span class="formation-tag">${data.formation}</span></div>
                             <div class="play-title">${data.title}</div>
 
-<div class="play-title">${data.title}</div>
+<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                🪄 Send to Playbook
+                            </button>
 
-                            ${(!window.FeatureFlags || window.FeatureFlags.playbook !== false) ? 
-                            `<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+${(!window.FeatureFlags || window.FeatureFlags.playbook !== false) ?
+                        `<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
                                 🪄 Send to Playbook
                             </button>` : ''}
                             
