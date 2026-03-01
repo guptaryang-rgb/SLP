@@ -738,62 +738,19 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
 });
 
 /* ---- MAIN ANALYSIS ENGINE ---- */
+// ==========================================
+// 6. MAIN CHAT & ANALYSIS ENDPOINT
+// ==========================================
 app.post("/api/chat", requireAuth, async (req, res) => {
-  const { message, sessionId, fileData, mimeType, sport, position } = req.body;
-  let tempPath = null;
-
   try {
-    // A. Text Only Chat (General Session Chat)
-    if (!fileData) {
-        await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
-        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }], true);
-        const reply = result.response.text();
-        await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
-        return res.json({ reply });
-    }
+    const { message, sessionId, fileData, mimeType, sport, position, focusArea, assignment } = req.body;
+    
+    // Load Custom Prompts from Database
+    const customPrompts = await Prompt.find({});
+    let promptOverrides = {};
+    customPrompts.forEach(p => promptOverrides[p.position] = p.promptText);
 
-    // B. Video Analysis Request
-    const buffer = Buffer.from(fileData, "base64");
-    tempPath = path.join(UPLOAD_DIR, `upload_${Date.now()}.mp4`);
-    await fs.writeFile(tempPath, buffer);
-
-    // Upload to Cloudinary (for persistence) and Gemini (for analysis)
-    const [cloud, uploaded] = await Promise.all([
-        cloudinary.uploader.upload(tempPath, { resource_type: "video", folder: "vantage_vision" }),
-        fileManager.uploadFile(tempPath, { mimeType, displayName: "Video" })
-    ]);
-
-    // Create "Processing" Clip entry
-    let savedClip = await Clip.create({
-      owner: req.auth.userId, 
-      sessionId, 
-      sport, 
-      videoUrl: cloud.secure_url, 
-      publicId: cloud.public_id,
-      sizeBytes: cloud.bytes, // <--- NEW: Grab exact bytes from Cloudinary
-      title: "Analyzing...", 
-      formation: "...", 
-      section: "Inbox", 
-      chatHistory: [], 
-      snapshots: []
-    });
-
-    // Wait for Gemini to process video
-    let file = await fileManager.getFile(uploaded.file.name);
-    while (file.state === FileState.PROCESSING) {
-        await new Promise(r => setTimeout(r, 2000));
-        file = await fileManager.getFile(uploaded.file.name);
-    }
-    if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
-
-    // Prepare Context
-    const session = await Session.findOne({ sessionId, owner: req.auth.userId });
-    const rosterContext = session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n');
-// Phase 3: Dynamic Prompt Injection
-    let targetPos = RUBRICS[position] ? position : "team";
-    const customPrompt = await Prompt.findOne({ position: targetPos });
-    const specificFocus = customPrompt ? customPrompt.promptText : RUBRICS[targetPos];
-   
+    // AI Logic Pathing
     const isTeam = position === 'team' || position === 'general';
     const groupName = position === 'qb' ? "Quarterback" : 
                       position === 'wr' ? "Wide Receiver" : 
@@ -803,6 +760,16 @@ app.post("/api/chat", requireAuth, async (req, res) => {
                       position === 'dl' ? "Defensive Line" : 
                       position === 'lb' ? "Linebackers" : 
                       position === 'db' ? "Secondary (DB/S)" : "Specific Position";
+
+    // Build Focus Mapping
+    const focusMap = {
+        'general': 'Full Field Analysis',
+        'pass_pro': 'Pass Protection Scheme & Blitz Pickup',
+        'run_fit': 'Defensive Run Fits & Gap Integrity',
+        'coverage': 'Secondary Coverage Shell & Route Handoffs',
+        'route_combos': 'Offensive Route Concepts & Spacing'
+    };
+    const focusText = isTeam ? (focusMap[focusArea] || 'Full Field Analysis') : (groupName + " Execution");
 
     // Dynamic JSON generation: Forces extreme detail and isolation
     const positionalJSON = isTeam 
@@ -827,8 +794,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
     ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
-    CONTEXT: ${specificFocus}
-    ROSTER: ${rosterContext}
+    CONTEXT: ${promptOverrides[position] || "Analyze the fundamentals."}
+    EXPECTED PLAY CALL / ASSIGNMENT: ${assignment ? assignment : "Unknown. Infer based purely on observed movement."}
+    FOCUS AREA: ${focusText}
+    ROSTER: "Use numbers if visible, else generic positions."
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data & Telestration): 
@@ -838,10 +807,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group on BOTH offense and defense in the 'positional' array. Leave NO group blank. Output massive amounts of pro-level information." 
+         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group on BOTH offense and defense in the 'positional' array. Prioritize the FOCUS AREA mentioned above. Output massive amounts of pro-level information." 
          : "- SELF ANALYSIS: You MUST focus SOLELY and EXCLUSIVELY on the " + groupName + ". IGNORE ALL OTHER POSITIONS on the field. Provide a massive, hyper-detailed biomechanical and processing breakdown of the " + groupName + "'s exact rep using the 5-phase structure."}
        - AUTO-ROSTER: Identify specific players and log their exact weaknesses.
-       - TONE: Use heavy NFL-level terminology (e.g., U-Turn, Speed Turn, Rip/Swim, Bucket Step, High-Low read, Apex defender). DO NOT BE GENERIC. The user demands extreme, professional detail.
+       - TONE (CONFIDENCE FRAMING): Use heavy NFL-level terminology. However, use "Coach-Speak Confidence" (e.g., "appears to", "likely", "shows signs of"). Do NOT state assumptions as absolute facts unless 100% visible on film. Act as a trusted advisor, not an omniscient machine.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
