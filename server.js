@@ -741,16 +741,65 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
 // ==========================================
 // 6. MAIN CHAT & ANALYSIS ENDPOINT
 // ==========================================
+/* ---- MAIN ANALYSIS ENGINE ---- */
 app.post("/api/chat", requireAuth, async (req, res) => {
+  // NEW: Added focusArea and assignment to the destructuring!
+  const { message, sessionId, fileData, mimeType, sport, position, focusArea, assignment } = req.body;
+  let tempPath = null;
+
   try {
-    const { message, sessionId, fileData, mimeType, sport, position, focusArea, assignment } = req.body;
-    
-    // Load Custom Prompts from Database
+    // A. Text Only Chat (General Session Chat)
+    if (!fileData) {
+        await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
+        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }], true);
+        const reply = result.response.text();
+        await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
+        return res.json({ reply });
+    }
+
+    // B. Video Analysis Request
+    const buffer = Buffer.from(fileData, "base64");
+    tempPath = path.join(UPLOAD_DIR, `upload_${Date.now()}.mp4`);
+    await fs.writeFile(tempPath, buffer);
+
+    // Upload to Cloudinary (for persistence) and Gemini (for analysis)
+    const [cloud, uploaded] = await Promise.all([
+        cloudinary.uploader.upload(tempPath, { resource_type: "video", folder: "vantage_vision" }),
+        fileManager.uploadFile(tempPath, { mimeType, displayName: "Video" })
+    ]);
+
+    // Create "Processing" Clip entry
+    let savedClip = await Clip.create({
+      owner: req.auth.userId, 
+      sessionId, 
+      sport, 
+      videoUrl: cloud.secure_url, 
+      publicId: cloud.public_id,
+      sizeBytes: cloud.bytes, 
+      title: "Analyzing...", 
+      formation: "...", 
+      section: "Inbox", 
+      chatHistory: [], 
+      snapshots: []
+    });
+
+    // Wait for Gemini to process video
+    let file = await fileManager.getFile(uploaded.file.name);
+    while (file.state === FileState.PROCESSING) {
+        await new Promise(r => setTimeout(r, 2000));
+        file = await fileManager.getFile(uploaded.file.name);
+    }
+    if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
+
+    // FIX: Safely Prepare Context without crashing if session is missing!
+    const session = await Session.findOne({ sessionId, owner: req.auth.userId });
+    const rosterContext = (session && session.roster) ? session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n') : "No specific roster data.";
+
+    // --- NEW: STRATEGIC UPGRADES (Focus & Assignment) ---
     const customPrompts = await Prompt.find({});
     let promptOverrides = {};
     customPrompts.forEach(p => promptOverrides[p.position] = p.promptText);
 
-    // AI Logic Pathing
     const isTeam = position === 'team' || position === 'general';
     const groupName = position === 'qb' ? "Quarterback" : 
                       position === 'wr' ? "Wide Receiver" : 
@@ -791,13 +840,13 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             { "group": "5. Coach's Final Verdict", "action": "[Overall assessment]", "analysis": "[Summarize the exact technical flaws and recommend specific drills to fix them.]" }
         ]`;
 
-   // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
+    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
     ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
     CONTEXT: ${promptOverrides[position] || "Analyze the fundamentals."}
     EXPECTED PLAY CALL / ASSIGNMENT: ${assignment ? assignment : "Unknown. Infer based purely on observed movement."}
     FOCUS AREA: ${focusText}
-    ROSTER: "Use numbers if visible, else generic positions."
+    ROSTER: ${rosterContext}
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data & Telestration): 
@@ -841,23 +890,23 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     const result = await generateWithFallback(prompt);
     
     // Parse JSON safely
-    let text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    let text = result.response.text().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
     let json;
     try {
         json = JSON.parse(text);
         if (!json.data) json.data = { o_formation: "Unknown", d_formation: "Unknown" };
     } catch (e) {
         console.error("AI JSON Parse Error:", text);
-        // Fallback JSON to prevent crash
         json = {
             title: "Analysis Completed",
             data: { o_formation: "N/A", d_formation: "N/A" },
-            scouting_report: { summary: "Video processed, but structural data parsing failed. Review video manually." }
+            scouting_report: { summary: "Video processed, but structural data parsing failed. Review video manually." },
+            positional: []
         };
     }
 
     // Update Roster if players detected
-    if (json.players_detected && json.players_detected.length > 0) {
+    if (session && json.players_detected && json.players_detected.length > 0) {
         for (const p of json.players_detected) {
             const idx = session.roster.findIndex(r => r.identifier === p.identifier);
             if (idx > -1) {
