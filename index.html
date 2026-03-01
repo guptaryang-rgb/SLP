@@ -4354,12 +4354,24 @@
                         })
                     });
 
+                    // Catch Server Errors BEFORE deleting the loader!
+                    if (!res.ok) {
+                        let errTxt = "Server Error";
+                        try { const errData = await res.json(); errTxt = errData.error || errTxt; } catch(e){}
+                        throw new Error(errTxt);
+                    }
+
+                    const data = await res.json();
+                    
+                    // Safely delete the loader ONLY if it succeeded
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
                     document.getElementById(loaderId)?.remove();
 
-                    const data = await res.json();
-
+                   
+                   
+                   
                     if (file) {
+
                         if (data.newClip) {
                             const clips = Store.get('clips') || [];
                             clips.unshift(data.newClip);
@@ -4385,7 +4397,11 @@
                 } catch (e) {
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
                     const errEl = document.getElementById(loaderId);
-                    if (errEl) errEl.innerHTML = `<span style="color:var(--danger);">⚠️ Connection to Coach AI lost.</span>`;
+                    if (errEl) {
+                        errEl.innerHTML = `<span style="color:var(--danger); font-weight:bold;">⚠️ Error: ${e.message}</span>`;
+                    } else {
+                        feed.innerHTML += `<div style="color:var(--danger); font-weight:bold; margin-bottom:16px;">⚠️ Error: ${e.message}</div>`;
+                    }
                 }
                 feed.scrollTop = feed.scrollHeight;
             },
