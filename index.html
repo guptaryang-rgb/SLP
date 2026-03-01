@@ -3442,13 +3442,14 @@
                     setTimeout(() => statusTxt.style.opacity = 0, 4000);
                 }
             },
+            
             toggleFeature: async (name) => {
                 const btn = document.getElementById(`toggle-${name}-btn`);
                 const isCurrentlyEnabled = btn.innerText.includes('ONLINE');
                 const newState = !isCurrentlyEnabled;
 
                 // Optimistic UI Update
-                btn.innerText = newState ? '🟢 ONLINE' : '🔴 OFFLINE';
+                btn.innerText = newState ? '🟢 ONLINE (Click to Disable)' : '🔴 OFFLINE (Click to Enable)';
                 btn.style.color = newState ? 'var(--accent)' : 'var(--danger)';
                 btn.style.borderColor = newState ? 'var(--accent)' : 'var(--danger)';
 
@@ -3461,7 +3462,7 @@
                     });
                     alert("Feature toggled. Changes are live for all users.");
                 } catch (e) { console.error("Failed to toggle feature"); }
-            },
+            }
         };
 
         // --- NEW: Converts raw AI JSON into a sleek Coach's Grading Sheet ---
@@ -3519,7 +3520,6 @@
             activeSessionId: null,
             overlayClipId: null,
 
-            // NEW: Universal Chat Formatter
             parseAIMessage: (rawText) => {
                 try { const parsed = JSON.parse(rawText); rawText = parsed.play_analysis || parsed.reply || rawText; } catch (e) { }
                 let cleanText = rawText
@@ -3543,21 +3543,16 @@
                     const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
                     const sessions = await res.json();
                     Store.set('sessions', sessions);
-                    // EXACT CODE RIGHT BEFORE
+                    
                     if (sessions.length > 0 && !UI.activeSessionId) {
                         const firstSession = sessions.find(s => s.type === UI.currentMode) || sessions[0];
                         if (firstSession) UI.selectSession(firstSession.sessionId || firstSession.id);
                     }
-
-                    // PASTE THIS LINE HERE
                     UI.updateStorageMeter();
-
-                    // EXACT CODE RIGHT AFTER
                 } catch (e) { console.error("Session Load Failed", e); }
 
                 document.querySelectorAll('.nav-tab').forEach(t => t.onclick = () => UI.switchTab(t.dataset.tab));
 
-                // EXACT CODE RIGHT BEFORE
                 const fInput = document.getElementById('file-input');
                 if (fInput) fInput.onchange = (e) => {
                     if (e.target.files[0]) {
@@ -3572,9 +3567,6 @@
                 if (sBtn) sBtn.onclick = UI.handleSend;
             },
 
-            // ==========================================
-            // PASTE THIS NEW FUNCTION EXACTLY HERE
-            // ==========================================
             updateStorageMeter: async () => {
                 try {
                     const token = await window.Clerk.session.getToken();
@@ -3582,10 +3574,8 @@
                     if (!res.ok) return;
 
                     const data = await res.json();
-
-                    // Convert bytes to GB
                     const usedGB = (data.usedBytes / (1024 * 1024 * 1024)).toFixed(2);
-                    const limitGB = 5.0; // 5 GB limit for the standard tier
+                    const limitGB = 5.0; 
                     const percent = Math.min((usedGB / limitGB) * 100, 100);
 
                     const fill = document.getElementById('storage-fill');
@@ -3594,48 +3584,39 @@
                     if (fill && txt) {
                         fill.style.width = percent + '%';
                         txt.innerText = `${usedGB} GB / ${limitGB} GB`;
-
-                        // Change color based on danger level
                         if (percent > 90) fill.style.background = 'var(--danger)';
                         else if (percent > 75) fill.style.background = 'var(--warning)';
                         else fill.style.background = 'var(--success)';
                     }
                 } catch (e) { console.error("Failed to load storage stats"); }
             },
-            // ==========================================
 
-            // EXACT CODE RIGHT AFTER
             switchTab: (tab) => {
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
-                // Hide all views
                 document.querySelectorAll('.view').forEach(v => {
                     v.classList.remove('active-view');
                     v.style.opacity = 0;
                 });
 
-                // Determine which View ID to show
                 let targetViewId = 'landing-view';
                 if (tab === 'self' || tab === 'team') targetViewId = 'war-room-view';
                 else if (tab === 'playbook') targetViewId = 'playbook-view';
                 else if (tab === 'admin') targetViewId = 'admin-view';
 
-                // Display the selected View
                 const viewEl = document.getElementById(targetViewId);
                 if (viewEl) {
                     viewEl.classList.add('active-view');
                     setTimeout(() => viewEl.style.opacity = 1, 50);
                 }
 
-                // Handle Sub-Logic for the tabs
                 if (tab !== 'about') {
                     if (window.Clerk && !window.Clerk.user) {
                         document.getElementById('auth-modal').style.display = 'flex';
                         return;
                     }
 
-                    // --- NEW: Visual Separation for Self vs Team ---
                     if (tab === 'self') {
                         document.getElementById('room-title').innerText = "Player Technique Lab";
                         document.getElementById('room-title').style.color = "var(--accent)";
@@ -3657,7 +3638,6 @@
                             UI.activeSessionId = null;
                             const feed = document.getElementById('chat-feed');
 
-                            // --- NEW: Beautiful Empty State ---
                             if (feed) {
                                 feed.innerHTML = `
                                     <div class="empty-state">
@@ -3703,7 +3683,6 @@
                 if (msg.type === 'user') {
                     feed.innerHTML += `<div style="align-self:flex-end; background:#222; padding:12px 16px; border-radius:12px; max-width:85%; color:white; margin-bottom:12px; border:1px solid var(--border);">${msg.content}</div>`;
                 } else {
-                    // 1. Intercept Raw JSON Video Analysis Data
                     try {
                         const parsed = JSON.parse(msg.content);
                         if (parsed.scouting_report && parsed.data) {
@@ -3720,11 +3699,10 @@
                                 positional: parsed.positional || []
                             };
                             feed.innerHTML += `<div style="align-self:flex-start; width:100%; margin-bottom:20px;">Analysis Complete:<br>${UI.buildScoutCardHTML(scoutData, false)}</div>`;
-                            return; // Exit early to prevent text rendering!
+                            return; 
                         }
-                    } catch (e) { } // If it fails, it's just normal text, so continue down.
+                    } catch (e) { } 
 
-                    // 2. Format Normal Chat Text
                     const cleanMsg = UI.parseAIMessage(msg.content);
                     feed.innerHTML += `<div style="align-self:flex-start; background:#1a1a1a; padding:16px; border-radius:8px; border:1px solid var(--border); border-left:3px solid var(--accent); color:#ccc; max-width:90%; margin-bottom:20px; line-height:1.6; font-size:0.9rem;"><strong style="color:var(--accent); display:block; margin-bottom:6px;">COACH AI:</strong> ${cleanMsg}</div>`;
                 }
@@ -3740,13 +3718,11 @@
                 const feed = document.getElementById('chat-feed');
                 feed.innerHTML = '';
 
-                // 1. Fetch the latest history & roster directly from the database
                 try {
                     const token = await window.Clerk.session.getToken();
                     const sessionRes = await fetch(`/api/session/${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
                     if (sessionRes.ok) {
                         const sessionData = await sessionRes.json();
-                        // Update local store with the fresh history
                         let sessions = Store.get('sessions') || [];
                         const idx = sessions.findIndex(s => (s.sessionId || s.id) === sessId);
                         if (idx > -1) {
@@ -3757,7 +3733,6 @@
                     }
                 } catch (e) { console.warn("Could not fetch latest session history."); }
 
-                // 2. Render the history to the screen
                 const sessions = Store.get('sessions') || [];
                 const currentSession = sessions.find(s => (s.sessionId || s.id) === sessId);
 
@@ -3770,7 +3745,6 @@
                     feed.innerHTML = `<div id="empty-state" style="text-align:center; opacity:0.4; margin-top:100px;"><div style="font-size:3rem; margin-bottom:16px;">${icon}</div><h3>${mode === 'self' ? 'Self Analysis' : 'Team Strategy'}</h3><p style="color:#666; max-width:300px; margin:0 auto;">Session Ready. Upload film or ask a question.</p></div>`;
                 }
 
-                // 3. Load the video clips for this session
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch(`/api/search?sessionId=${sessId}`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -3811,7 +3785,6 @@
                 const clips = Store.get('clips') || [];
                 let sessionClips = clips.filter(c => c.sessionId === UI.activeSessionId);
 
-                // --- NEW: Apply Filters ---
                 const searchTerm = document.getElementById('lib-search')?.value.toLowerCase() || '';
                 const filterOff = document.getElementById('lib-filter-off')?.value.toLowerCase() || 'all';
                 const filterDef = document.getElementById('lib-filter-def')?.value.toLowerCase() || 'all';
@@ -3852,7 +3825,6 @@
                 }
             },
 
-            // --- NEW: The Video-to-Playbook Bridge ---
             sendToPlaybook: (clipId) => {
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === clipId);
@@ -3861,27 +3833,20 @@
                     return;
                 }
 
-                // FIX: Close the video popup before transitioning!
                 UI.closeOverlay();
-
-                // 1. Switch the UI to the Playbook Tab
                 UI.switchTab('playbook');
-
-                // 2. Open a fresh designer canvas
                 Playbook.openDesigner('draft_' + Date.now());
 
-                // 3. Give the UI 350ms to completely render the canvas, then map the AI data
                 setTimeout(() => {
                     document.getElementById('play-name').value = clip.title + " (Auto-Draft)";
 
                     const offForm = (clip.fullData.data.o_formation || "").toLowerCase();
                     const defForm = (clip.fullData.data.d_formation || "").toLowerCase();
 
-                    // Super-Parser: Offense
                     let personnel = '11';
                     if (offForm.includes('trips') && offForm.includes('right')) personnel = 'trips_right';
                     else if (offForm.includes('trips') && offForm.includes('left')) personnel = 'trips_left';
-                    else if (offForm.includes('trips')) personnel = 'trips_right'; // Default trips
+                    else if (offForm.includes('trips')) personnel = 'trips_right'; 
                     else if (offForm.includes('empty')) personnel = '10';
                     else if (offForm.includes('bunch')) personnel = 'bunch';
                     else if (offForm.includes('heavy') || offForm.includes('jumbo') || offForm.includes('tight')) personnel = '12';
@@ -3890,7 +3855,6 @@
                     if (persSelect) persSelect.value = personnel;
                     Playbook.setPersonnel(personnel);
 
-                    // Super-Parser: Defense
                     let defCode = 'none';
                     if (defForm.includes('cover 3') && defForm.includes('mable')) defCode = 'cover3_mable';
                     else if (defForm.includes('cover 3') && defForm.includes('buzz')) defCode = 'cover3_buzz';
@@ -3899,7 +3863,7 @@
                     else if (defForm.includes('cover 2')) defCode = 'cover2';
                     else if (defForm.includes('cover 4') || defForm.includes('quarters')) defCode = 'cover4';
                     else if (defForm.includes('cover 6')) defCode = 'cover6';
-                    else if (defForm.includes('cover 1')) defCode = 'cover1'; // Fixes your Man Free bug
+                    else if (defForm.includes('cover 1')) defCode = 'cover1'; 
                     else if (defForm.includes('zero') || defForm.includes('man free') || defForm.includes('max')) defCode = 'manfree';
                     else if (defForm.includes('fire') || defForm.includes('blitz')) defCode = 'fire_zone';
 
@@ -4048,32 +4012,56 @@
 
             exportStatsCSV: () => {
                 const allClips = Store.get('clips') || [];
-                // Only export clips that have been successfully analyzed by AI
                 const clips = allClips.filter(c => c.fullData?.data?.situation);
-
+                
                 if (clips.length === 0) {
-                    alert("No analyzed clips available to export. Upload film first!");
+                    alert("No analyzed clips with situation data available to export.");
                     return;
                 }
 
-                // 1. Define Spreadsheet Headers
-                const headers = ["Play Title", "Down", "Distance", "Play Type", "Offensive Formation", "Defensive Shell", "AI Grade"];
+                // 1. Define Advanced Hudl-Ready Headers
+                const headers = [
+                    "Play Title", "Down", "Distance", "Hash", "Field Zone", 
+                    "Play Type", "Offensive Formation", "Defensive Shell", 
+                    "Yards Gained", "Overall Grade", "Technique Fix"
+                ];
+                
                 let csvContent = headers.join(",") + "\n";
 
-                // 2. Loop through clips and build rows
+                // 2. Loop and Extract Deep Analytics
                 clips.forEach(c => {
                     const d = c.fullData;
-                    const sit = d.data.situation || {};
+                    const sit = d.data?.situation || {};
+                    
+                    // Calculate Hash based on Plotter Data
+                    let hash = "Middle";
+                    if (sit.plot_startX < 40) hash = "Left";
+                    if (sit.plot_startX > 60) hash = "Right";
+                    
+                    // Calculate Field Zone
+                    let zone = "Open Field";
+                    if (sit.plot_startY > 80) zone = "Backed Up";
+                    if (sit.plot_startY < 20) zone = "Red Zone";
+                    
+                    // Calculate Yards Gained
+                    let yards = "N/A";
+                    if (sit.plot_startY !== undefined && sit.plot_endY !== undefined) {
+                        yards = Math.round(sit.plot_startY - sit.plot_endY);
+                    }
 
-                    // We wrap strings in quotes so commas inside titles don't break the CSV columns
+                    // Format Row (Wrap strings in quotes to prevent comma breaks)
                     const row = [
                         `"${(c.title || 'Untitled').replace(/"/g, '""')}"`,
                         sit.down || 'N/A',
                         sit.distance_togo || 'N/A',
+                        hash,
+                        zone,
                         (sit.play_type || 'N/A').toUpperCase(),
-                        `"${(d.data.o_formation || c.formation || 'Unknown').replace(/"/g, '""')}"`,
-                        `"${(d.data.d_formation || 'Unknown').replace(/"/g, '""')}"`,
-                        `"${(d.scouting_report?.report_card?.overall || 'N/A').replace(/"/g, '""')}"`
+                        `"${(d.data?.o_formation || c.formation || 'Unknown').replace(/"/g, '""')}"`,
+                        `"${(d.data?.d_formation || 'Unknown').replace(/"/g, '""')}"`,
+                        yards,
+                        `"${(d.scouting_report?.report_card?.overall || 'N/A').replace(/"/g, '""')}"`,
+                        `"${(d.scouting_report?.coaching_prescription?.fix || 'N/A').replace(/"/g, '""')}"`
                     ];
                     csvContent += row.join(",") + "\n";
                 });
@@ -4083,16 +4071,14 @@
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
-
-                // Name the file based on today's date
+                
                 const dateStr = new Date().toLocaleDateString().replace(/\//g, '-');
-                link.setAttribute("download", `Vantage_Team_Stats_${dateStr}.csv`);
-
+                link.setAttribute("download", `Vantage_Scout_Report_${dateStr}.csv`);
+                
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             },
-
 
             toggleContextPanel: (show) => {
                 const panel = document.getElementById('context-side-panel');
@@ -4187,6 +4173,7 @@
 
             openContextEditor: () => { UI.toggleContextPanel(true); },
             toggleMirror: () => { },
+            
             playClip: (id) => {
                 const clips = Store.get('clips') || [];
                 const clip = clips.find(c => (c._id || c.id) === id);
@@ -4197,19 +4184,17 @@
                 if (reportContainer) {
                     if (clip.fullData) {
                         const scoutData = {
-                            id: clip._id, title: clip.title, formation: clip.formation,
+                            id: clip._id || clip.id, 
+                            title: clip.title, 
+                            formation: clip.formation,
                             grade: clip.fullData.scouting_report?.report_card?.overall || "N/A",
                             iq: clip.fullData.scouting_report?.report_card?.football_iq || "-",
                             tech: clip.fullData.scouting_report?.report_card?.technique || "-",
                             effort: clip.fullData.scouting_report?.report_card?.effort || "-",
                             summary: clip.fullData.scouting_report?.summary || "No summary available.",
                             fix: clip.fullData.scouting_report?.coaching_prescription?.fix || "No fix provided.",
-                            // MOCK DATA TO TEST THE NEW ACCORDION UI
-                            positional: [
-                                { group: "Quarterback (QB)", action: "3-step drop, read high-low on the flat defender.", analysis: "Footwork was sloppy on the plant foot. Stared down the primary read, allowing the safety to close the gap." },
-                                { group: "Offensive Line (OL)", action: "Half-slide protection to the strong side.", analysis: "Left Tackle got beat on an inside counter move. Failed to keep pad level low." },
-                                { group: "Receivers (WR/TE)", action: "Mesh concept underneath with a vertical clear out.", analysis: "The 'Z' receiver rounded off his Dig route. Needs to plant hard and flatten out horizontally to avoid the undercutting Linebacker." }
-                            ]
+                            // ✅ Pulls the real AI data instead of the mock data!
+                            positional: clip.fullData.positional || []
                         };
                         reportContainer.innerHTML = UI.buildScoutCardHTML(scoutData, false);
                     } else {
@@ -4217,7 +4202,6 @@
                     }
                 }
 
-                // --- NEW: Load specific Clip Chat History ---
                 const historyContainer = document.getElementById('overlay-chat-history');
                 if (historyContainer) {
                     historyContainer.innerHTML = '';
@@ -4235,7 +4219,6 @@
                 }
                 Telestrator.init(clip.videoUrl);
             },
-
 
             handleOverlayChat: async () => {
                 const input = document.getElementById('overlay-chat-input');
@@ -4264,7 +4247,6 @@
                     const cleanReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                     history.innerHTML += `<div style="align-self:flex-start; background:#222; border:1px solid var(--border); color:#ddd; padding:8px 12px; border-radius:8px; font-size:0.85rem; max-width:90%; margin-bottom:12px;"><span style="color:var(--accent); font-weight:700;">Coach:</span> ${cleanReply}</div>`;
 
-                    // --- NEW: Update Local Storage instantly so it persists on close/open ---
                     let clips = Store.get('clips') || [];
                     let clipIdx = clips.findIndex(c => (c._id || c.id) === UI.overlayClipId);
                     if (clipIdx > -1) {
@@ -4275,12 +4257,12 @@
                     }
 
                 } catch (e) {
-
                     const loader = document.getElementById(loadingId); if (loader) loader.remove();
                     history.innerHTML += `<div style="color:var(--danger); font-size:0.7rem; margin-bottom:10px;">⚠️ ${e.message || "Connection Failed"}</div>`;
                 }
                 history.scrollTop = history.scrollHeight;
             },
+            
             handleSend: async () => {
                 const input = document.getElementById('user-input');
                 const fileInput = document.getElementById('file-input');
@@ -4292,7 +4274,6 @@
 
                 if (!message && !file) return;
 
-                // 1. Post User Message to Feed instantly
                 if (message) {
                     feed.innerHTML += `<div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
                         <div style="background:var(--accent); color:black; padding:12px 16px; border-radius:12px; font-weight:bold; max-width:80%;">${message}</div>
@@ -4304,9 +4285,7 @@
                 let fileData = null;
                 let mimeType = null;
 
-                // 2. The Dynamic AI Loading State (For Videos)
                 if (file) {
-                    // Reset File UI Button
                     const fBtn = document.getElementById('file-btn');
                     if (fBtn) {
                         fBtn.style.background = 'transparent';
@@ -4314,21 +4293,18 @@
                         fBtn.innerHTML = '📎 Upload Film';
                     }
 
-                    // Convert video for the server
                     const reader = new FileReader();
                     reader.readAsDataURL(file);
                     await new Promise(r => reader.onload = r);
                     fileData = reader.result.split(',')[1];
                     mimeType = file.type;
 
-                    // Inject Animated UI
                     feed.innerHTML += `
                     <div id="${loaderId}" style="display:flex; align-items:center; gap:16px; margin-bottom:16px; background:#111; padding:16px; border-radius:12px; border:1px solid #333;">
                         <div style="width:24px; height:24px; border:3px solid #222; border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite;"></div>
                         <div id="${loaderId}_text" style="color:var(--accent); font-family:var(--font-mono); font-size:0.9rem; font-weight:bold;">Uploading secure video...</div>
                     </div>`;
 
-                    // Start Text Cycler
                     const phrases = [
                         "Uploading secure video...",
                         "Coach AI is mapping player coordinates...",
@@ -4342,17 +4318,14 @@
                         const txt = document.getElementById(`${loaderId}_text`);
                         if (txt) txt.innerText = phrases[pIdx];
                         else clearInterval(window.aiThinkTimer);
-                    }, 3500); // Changes text every 3.5 seconds
-
+                    }, 3500); 
                 } else {
-                    // Basic text loader for simple chat
                     feed.innerHTML += `<div id="${loaderId}" style="margin-bottom:16px; color:#888; font-style:italic;">Coach AI is reviewing the playbook...</div>`;
                 }
 
                 feed.scrollTop = feed.scrollHeight;
-                if (fileInput) fileInput.value = ''; // clear hidden input
+                if (fileInput) fileInput.value = ''; 
 
-                // 3. Send Payload to Backend
                 try {
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/chat', {
@@ -4366,27 +4339,22 @@
                         })
                     });
 
-                    // Stop the animation timer
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
                     document.getElementById(loaderId)?.remove();
 
                     const data = await res.json();
 
                     if (file) {
-                        // 1. Instantly add the new video to local storage so buttons work
                         if (data.newClip) {
                             const clips = Store.get('clips') || [];
                             clips.unshift(data.newClip);
                             Store.set('clips', clips);
                         }
 
-                        // 2. Refresh BOTH sidebars instantly
                         UI.renderSessionList();
                         UI.renderLibrary();
-
                         UI.updateStorageMeter();
 
-                        // 3. Inject the clip ID into the AI's reply and print the Scout Card instantly!
                         try {
                             let replyObj = JSON.parse(data.reply);
                             replyObj.id = data.newClip._id || data.newClip.id;
@@ -4397,7 +4365,6 @@
 
                         if (typeof Playbook !== 'undefined') Playbook.showToast("Analysis Complete!", "var(--success)");
                     } else {
-                        // Regular text response from AI
                         UI.renderMessageHTML({ type: 'ai', content: data.reply });
                     }
                 } catch (e) {
@@ -4408,10 +4375,7 @@
                 feed.scrollTop = feed.scrollHeight;
             },
 
-            // --- ROSTER MANAGEMENT ---
-            // --- ROSTER MANAGEMENT ---
             showRoster: () => {
-                // PRO FIX: Removed the alert block. It opens smoothly now.
                 document.getElementById('roster-modal').style.display = 'flex';
                 UI.renderRoster();
             },
@@ -4419,7 +4383,6 @@
             renderRoster: () => {
                 const list = document.getElementById('roster-list');
                 const sessions = Store.get('sessions') || [];
-                // Fallback to the first available session if one isn't actively clicked
                 const sess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId) || sessions[0];
 
                 if (!sess || !sess.roster || sess.roster.length === 0) {
@@ -4463,21 +4426,18 @@
                 };
 
                 if (!sessions[sessIdx].roster) sessions[sessIdx].roster = [];
-                // Check if player exists, overwrite if they do
                 const existingIdx = sessions[sessIdx].roster.findIndex(p => p.identifier === id);
                 if (existingIdx > -1) sessions[sessIdx].roster[existingIdx] = newPlayer;
                 else sessions[sessIdx].roster.push(newPlayer);
 
                 Store.set('sessions', sessions);
 
-                // Clear inputs
                 document.getElementById('roster-id').value = '';
                 document.getElementById('roster-speed').value = '';
                 document.getElementById('roster-notes').value = '';
 
                 UI.renderRoster();
 
-                // Sync to Server
                 try {
                     const token = await window.Clerk.session.getToken();
                     await fetch('/api/update-roster', {
@@ -4497,7 +4457,6 @@
                 Store.set('sessions', sessions);
                 UI.renderRoster();
 
-                // Sync to Server
                 try {
                     const token = await window.Clerk.session.getToken();
                     await fetch('/api/update-roster', {
@@ -4511,13 +4470,12 @@
             deleteSession: async (id) => {
                 if (!confirm("Are you sure? This will delete the session and ALL video clips inside it permanently.")) return;
 
-                // Optimistic UI update
                 let sessions = Store.get('sessions') || [];
                 sessions = sessions.filter(s => (s.sessionId || s.id) !== id);
                 Store.set('sessions', sessions);
 
                 if (UI.activeSessionId === id) UI.activeSessionId = null;
-                UI.switchTab(UI.currentMode); // Refresh UI
+                UI.switchTab(UI.currentMode); 
 
                 try {
                     const token = await window.Clerk.session.getToken();
@@ -4532,7 +4490,6 @@
             deleteClip: async (id) => {
                 if (!confirm("Are you sure you want to delete this clip permanently?")) return;
 
-                // Optimistic UI update
                 let clips = Store.get('clips') || [];
                 clips = clips.filter(c => (c._id || c.id) !== id);
                 Store.set('clips', clips);
@@ -4548,33 +4505,32 @@
                 } catch (e) { console.error("Failed to delete clip on server."); }
             },
 
-
-
-
             buildScoutCardHTML: (data, isChatPreview = false) => {
                 const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
                 const cursor = isChatPreview ? 'cursor:pointer;' : '';
 
-                // Build Positional Breakdown HTML if data exists
                 let positionalHTML = '';
                 if (data.positional && data.positional.length > 0) {
                     positionalHTML = `
                         <div class="pos-breakdown-container" onclick="event.stopPropagation();">
                             <div class="pos-section-title">POSITIONAL AI BREAKDOWN</div>
-                            ${data.positional.map(pos => `
-                                <div class="accordion-item">
+                            ${data.positional.map((pos, idx) => {
+                                const activeClass = idx === 0 ? 'active' : '';
+                                return `
+                                <div class="accordion-item ${activeClass}">
                                     <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
                                         <span>${pos.group}</span>
                                         <span class="accordion-icon">+</span>
                                     </div>
                                     <div class="accordion-content">
                                         <div class="pos-action">ACTION:</div>
-                                        <div>${pos.action}</div>
+                                        <div style="margin-bottom:12px;">${pos.action}</div>
                                         <div class="pos-problem">ANALYSIS:</div>
                                         <div>${pos.analysis}</div>
                                     </div>
                                 </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     `;
                 }
@@ -4585,13 +4541,9 @@
                         <div>
                             <div class="tag-row"><span class="formation-tag">${data.formation}</span></div>
                             <div class="play-title">${data.title}</div>
-
-<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                                🪄 Send to Playbook
-                            </button>
-
-${(!window.FeatureFlags || window.FeatureFlags.playbook !== false) ?
-                        `<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            
+                            ${(!window.FeatureFlags || window.FeatureFlags.playbook !== false) ? 
+                            `<button onclick="event.stopPropagation(); UI.sendToPlaybook('${data.id}')" style="margin-top:8px; background:rgba(56,189,248,0.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:6px;">
                                 🪄 Send to Playbook
                             </button>` : ''}
                             
