@@ -841,6 +841,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         ]`;
 
     // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
+        // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
     ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
     CONTEXT: ${promptOverrides[position] || "Analyze the fundamentals."}
@@ -858,8 +859,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
        ${isTeam 
          ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group on BOTH offense and defense in the 'positional' array. Prioritize the FOCUS AREA mentioned above. Output massive amounts of pro-level information." 
          : "- SELF ANALYSIS: You MUST focus SOLELY and EXCLUSIVELY on the " + groupName + ". IGNORE ALL OTHER POSITIONS on the field. Provide a massive, hyper-detailed biomechanical and processing breakdown of the " + groupName + "'s exact rep using the 5-phase structure."}
-       - AUTO-ROSTER: Identify specific players and log their exact weaknesses.
-       - TONE (CONFIDENCE FRAMING): Use heavy NFL-level terminology. However, use "Coach-Speak Confidence" (e.g., "appears to", "likely", "shows signs of"). Do NOT state assumptions as absolute facts unless 100% visible on film. Act as a trusted advisor, not an omniscient machine.
+       
+       - 🛑 PLAYER IDENTIFICATION RULE (CRITICAL) 🛑: NEVER guess a player's jersey number. Wide-angle film is too blurry and guessing destroys your credibility. You MUST identify players by their exact tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT", "Field-side Safety", "Right Guard"). 
+       
+       - TONE (CONFIDENCE FRAMING): Use heavy NFL-level terminology. However, use "Coach-Speak Confidence" (e.g., "appears to", "likely", "shows signs of"). Do NOT state assumptions as absolute facts unless 100% visible on film. Act as a trusted advisor.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -873,10 +876,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             }
         },
         "telestration": {
-            "target_player": "[e.g., Left Cornerback]", "highlight_x": 15, "highlight_y": 70, "reason": "[Reason]"
+            "target_player": "[e.g., Boundary Cornerback]", "highlight_x": 15, "highlight_y": 70, "reason": "[Reason]"
         },
         "players_detected": [
-            { "identifier": "[e.g., #11]", "position": "[e.g., WR]", "grade": "[A-F]", "observation": "[Action]", "weakness": "[Flaw]" }
+            { "identifier": "[e.g., Field-side Z-Receiver]", "position": "[e.g., WR]", "grade": "[A-F]", "observation": "[Action]", "weakness": "[Flaw]" }
         ],
         "scouting_report": { 
             "summary": "[Generate Detailed schematic analysis here]", 
@@ -885,6 +888,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         },
         "positional": ${positionalJSON}
     }`;
+
 
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
     const result = await generateWithFallback(prompt);
