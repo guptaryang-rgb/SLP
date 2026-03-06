@@ -791,11 +791,11 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     }
     if (file.state === FileState.FAILED) throw new Error("Video processing failed at Google.");
 
-    // FIX: Safely Prepare Context without crashing if session is missing!
     const session = await Session.findOne({ sessionId, owner: req.auth.userId });
-    const rosterContext = (session && session.roster) ? session.roster.map(p => `${p.identifier}: ${p.weaknesses.join(', ')}`).join('\n') : "No specific roster data.";
+    const rosterContext = (session && session.roster && session.roster.length > 0) 
+        ? session.roster.map(p => `${p.identifier}: ${(p.weaknesses || []).join(', ')}`).join('\n') 
+        : "No specific roster data.";
 
-    // --- NEW: STRATEGIC UPGRADES (Focus & Assignment) ---
     const customPrompts = await Prompt.find({});
     let promptOverrides = {};
     customPrompts.forEach(p => promptOverrides[p.position] = p.promptText);
@@ -810,7 +810,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
                       position === 'lb' ? "Linebackers" : 
                       position === 'db' ? "Secondary (DB/S)" : "Specific Position";
 
-    // Build Focus Mapping
     const focusMap = {
         'general': 'Full Field Analysis',
         'pass_pro': 'Pass Protection Scheme & Blitz Pickup',
@@ -820,7 +819,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     };
     const focusText = isTeam ? (focusMap[focusArea] || 'Full Field Analysis') : (groupName + " Execution");
 
-    // Dynamic JSON generation: Forces extreme detail and isolation
     const positionalJSON = isTeam 
         ? `[
             { "group": "Quarterback", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss mechanics, eyes, processing, and footwork. Minimum 4 sentences.]" },
@@ -840,8 +838,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             { "group": "5. Coach's Final Verdict", "action": "[Overall assessment]", "analysis": "[Summarize the exact technical flaws and recommend specific drills to fix them.]" }
         ]`;
 
-    // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
-        // --- [HYBRID PROMPT: STRICT DATA + ELITE COACHING] ---
     let systemInstruction = `
     ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
     CONTEXT: ${promptOverrides[position] || "Analyze the fundamentals."}
@@ -851,8 +847,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data & Telestration): 
-       - Estimate X/Y coordinates on a 0-100 scale.
-       - You MUST provide plot_startX, plot_startY, plot_catchX, plot_catchY, plot_endX, plot_endY.
+       - 🛑 DO NOT GUESS OR INVENT PLAY PLOTTING COORDINATES. The human coach will plot the passing/rushing distribution manually. Leave plot coordinates as null.
        - TELESTRATION: Identify the single most important player who made a mistake/great play. Provide X/Y.
     
     2. THE COACH (Insight & Personnel): 
@@ -872,7 +867,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
                 "play_type": "pass", "down": 1, "distance_togo": 10,
-                "plot_startX": 50, "plot_startY": 80, "plot_catchX": 30, "plot_catchY": 60, "plot_endX": 30, "plot_endY": 50
+                "plot_startX": null, "plot_startY": null, "plot_catchX": null, "plot_catchY": null, "plot_endX": null, "plot_endY": null
             }
         },
         "telestration": {
@@ -889,11 +884,9 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         "positional": ${positionalJSON}
     }`;
 
-
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
     const result = await generateWithFallback(prompt);
     
-    // Parse JSON safely
     let text = result.response.text().replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
     let json;
     try {
@@ -909,26 +902,33 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         };
     }
 
-    // Update Roster if players detected
+    // FIX 2: Safely update Roster arrays without crashing!
     if (session && json.players_detected && json.players_detected.length > 0) {
+        if (!session.roster) session.roster = []; 
         for (const p of json.players_detected) {
             const idx = session.roster.findIndex(r => r.identifier === p.identifier);
             if (idx > -1) {
-                session.roster[idx].grade = p.grade;
-                session.roster[idx].notes.push(p.observation);
-                if(p.weakness) session.roster[idx].weaknesses.push(p.weakness);
+                session.roster[idx].grade = p.grade || "N/A";
+                if (!session.roster[idx].notes) session.roster[idx].notes = [];
+                if (p.observation) session.roster[idx].notes.push(p.observation);
+                
+                if (!session.roster[idx].weaknesses) session.roster[idx].weaknesses = [];
+                if (p.weakness) session.roster[idx].weaknesses.push(p.weakness);
+                
                 session.roster[idx].last_updated = new Date();
             } else {
                 session.roster.push({
-                    identifier: p.identifier, position: p.position, grade: p.grade,
-                    notes: [p.observation], weaknesses: p.weakness ? [p.weakness] : []
+                    identifier: p.identifier, 
+                    position: p.position || "Unknown", 
+                    grade: p.grade || "N/A",
+                    notes: p.observation ? [p.observation] : [], 
+                    weaknesses: p.weakness ? [p.weakness] : []
                 });
             }
         }
-        await session.save();
+        await session.save().catch(err => console.error("Roster Save Error:", err));
     }
 
-    // Update Clip with Analysis
     savedClip.title = json.title || "Untitled Clip";
     savedClip.o_formation = json.data.o_formation;
     savedClip.d_formation = json.data.d_formation;
