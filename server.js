@@ -722,11 +722,44 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
     
     USER QUESTION: "${req.body.message}"
     
-    INSTRUCTION: Answer specifically based on the clip data. Use **bold** for key stats or players. Keep it professional and concise.
+    INSTRUCTION: Answer specifically based on the clip data. Use **bold** for key stats.
+    
+    🛑 MEMORY ENGINE RULE (CRITICAL) 🛑:
+    If the user CORRECTS your analysis (e.g., "No, that was Cover 4" or "The concept is Mesh"), you MUST acknowledge the correction in your text, and then append a SECRET JSON block at the very end of your response to update the database. 
+    FORMAT EXACTLY LIKE THIS at the bottom of your reply:
+    __DB_UPDATE__: {"d_formation": "Cover 4", "situation": {"defensive_shell": "Cover 4", "offensive_concept": "Mesh"}}
     `;
     
     const result = await generateWithFallback([{ text: prompt }], true);
-    const reply = result.response.text();
+    let reply = result.response.text();
+
+    // MEMORY ENGINE: Intercept and apply database corrections
+    const updateMatch = reply.match(/__DB_UPDATE__:\s*({.*})/);
+    if (updateMatch) {
+        try {
+            const updates = JSON.parse(updateMatch[1]);
+            
+            // Apply Top-Level Updates
+            if (updates.d_formation) clip.d_formation = updates.d_formation;
+            if (updates.o_formation) clip.o_formation = updates.o_formation;
+            if (updates.o_formation || updates.d_formation) clip.formation = `${clip.o_formation || clip.fullData.data.o_formation} vs ${clip.d_formation || clip.fullData.data.d_formation}`;
+            
+            // Apply Deep JSON Updates
+            if (updates.d_formation) clip.fullData.data.d_formation = updates.d_formation;
+            if (updates.o_formation) clip.fullData.data.o_formation = updates.o_formation;
+            if (updates.situation) {
+                clip.fullData.data.situation = { ...clip.fullData.data.situation, ...updates.situation };
+            }
+            
+            // Save to MongoDB
+            clip.markModified('fullData');
+            await clip.save();
+            
+            // Strip the secret code so the user doesn't see it
+            reply = reply.replace(updateMatch[0], "").trim();
+            reply += "\n\n*(✅ Database successfully updated. Dashboard refreshed.)*";
+        } catch(e) { console.error("Memory Engine Parse Error:", e); }
+    }
 
     await Clip.updateOne(
         { _id: req.body.clipId }, 
@@ -821,21 +854,21 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss mechanics, eyes, processing, and footwork. Minimum 4 sentences.]" },
-            { "group": "Running Backs", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss vision, pad level, cut timing. Minimum 4 sentences.]" },
-            { "group": "Wide Receivers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss release, stem, break point. Minimum 4 sentences.]" },
-            { "group": "Tight Ends", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss leverage, blocking, or route. Minimum 4 sentences.]" },
-            { "group": "Offensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss steps, hand placement, anchor. Minimum 4 sentences.]" },
-            { "group": "Defensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss get-off, hand combat, gap control. Minimum 4 sentences.]" },
-            { "group": "Linebackers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss reads, flow, block shedding. Minimum 4 sentences.]" },
-            { "group": "Secondary (DB/S)", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique. Discuss pedal, phase, leverage, eyes. Minimum 4 sentences.]" }
+            { "group": "Quarterback", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Running Backs", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Wide Receivers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Tight Ends", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Offensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Defensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Linebackers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
+            { "group": "Secondary (DB/S)", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" }
         ]`
         : `[
-            { "group": "1. Pre-Snap Alignment & Stance", "action": "[Exact alignment details]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of their stance, weight distribution, and leverage choices.]" },
-            { "group": "2. First Step & Processing", "action": "[First movement details]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of their get-off, false steps, eye discipline, and processing speed.]" },
-            { "group": "3. Technique & Execution", "action": "[Primary assignment execution]", "analysis": "[Provide a massive 4-5 sentence pro-level biomechanical breakdown. Hand placement, hip sink, pad level, route stem, or phase.]" },
-            { "group": "4. Finish & Result", "action": "[How did the rep end]", "analysis": "[Provide a massive 4-5 sentence pro-level breakdown of the finish. Contact balance, tackling form, or catch-point dominance.]" },
-            { "group": "5. Coach's Final Verdict", "action": "[Overall assessment]", "analysis": "[Summarize the exact technical flaws and recommend specific drills to fix them.]" }
+            { "group": "1. Pre-Snap Alignment & Stance", "timestamp": "0:00", "action": "[Exact alignment]", "analysis": "[Pro-level breakdown of stance/leverage.]" },
+            { "group": "2. First Step & Processing", "timestamp": "[e.g. 0:01]", "action": "[First movement]", "analysis": "[Breakdown of get-off and eye discipline.]" },
+            { "group": "3. Technique & Execution", "timestamp": "[e.g. 0:03]", "action": "[Primary assignment]", "analysis": "[Biomechanical breakdown of the route/block/phase.]" },
+            { "group": "4. Finish & Result", "timestamp": "[e.g. 0:05]", "action": "[How it ended]", "analysis": "[Breakdown of contact, catch point, or tackle.]" },
+            { "group": "5. Coach's Final Verdict", "timestamp": "Overall", "action": "[Overall assessment]", "analysis": "[Technical flaws and drill recommendations.]" }
         ]`;
 
     let systemInstruction = `
@@ -852,12 +885,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group on BOTH offense and defense in the 'positional' array. Prioritize the FOCUS AREA mentioned above. Output massive amounts of pro-level information." 
-         : "- SELF ANALYSIS: You MUST focus SOLELY and EXCLUSIVELY on the " + groupName + ". IGNORE ALL OTHER POSITIONS on the field. Provide a massive, hyper-detailed biomechanical and processing breakdown of the " + groupName + "'s exact rep using the 5-phase structure."}
+         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group. Prioritize the FOCUS AREA." 
+         : "- SELF ANALYSIS: Focus EXCLUSIVELY on the " + groupName + ". Provide a massive biomechanical breakdown using the 5-phase structure. IMPORTANT: Accurately estimate the exact video 'timestamp' (e.g., '0:03') where each phase occurs."}
        
-       - 🛑 PLAYER IDENTIFICATION RULE (CRITICAL) 🛑: NEVER guess a player's jersey number. Wide-angle film is too blurry and guessing destroys your credibility. You MUST identify players by their exact tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT", "Field-side Safety", "Right Guard"). 
-       
-       - TONE (CONFIDENCE FRAMING): Use heavy NFL-level terminology. However, use "Coach-Speak Confidence" (e.g., "appears to", "likely", "shows signs of"). Do NOT state assumptions as absolute facts unless 100% visible on film. Act as a trusted advisor.
+       - 🛑 PLAYER IDENTIFICATION RULE: NEVER guess a jersey number. Identify players by tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT"). 
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -867,6 +898,9 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
                 "play_type": "pass", "down": 1, "distance_togo": 10,
+                "offensive_concept": "[e.g., Mesh, Inside Zone, Dagger]",
+                "defensive_shell": "[e.g., Cover 3 Match, Quarters, Tampa 2]",
+                "blitz_family": "[e.g., Fire Zone, Zero, None]",
                 "plot_startX": null, "plot_startY": null, "plot_catchX": null, "plot_catchY": null, "plot_endX": null, "plot_endY": null
             }
         },
@@ -883,7 +917,6 @@ app.post("/api/chat", requireAuth, async (req, res) => {
         },
         "positional": ${positionalJSON}
     }`;
-
     const prompt = [ { fileData: { mimeType, fileUri: file.uri } }, { text: systemInstruction } ];
     const result = await generateWithFallback(prompt);
     
