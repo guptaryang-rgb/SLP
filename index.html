@@ -3631,14 +3631,14 @@
                         document.getElementById('room-icon').innerText = "🔬";
                         document.getElementById('room-subtitle').innerText = "Individual Biomechanics & Execution";
                         document.getElementById('pos-select').style.display = 'block';
-                        const fSel = document.getElementById('focus-select'); if(fSel) fSel.style.display = 'none';
+                        const fSel = document.getElementById('focus-select'); if (fSel) fSel.style.display = 'none';
                     } else if (tab === 'team') {
                         document.getElementById('room-title').innerText = "Team Strategy Hub";
                         document.getElementById('room-title').style.color = "var(--warning)";
                         document.getElementById('room-icon').innerText = "📋";
                         document.getElementById('room-subtitle').innerText = "Schematic Breakdown & Positional Grading";
                         document.getElementById('pos-select').style.display = 'none';
-                        const fSel = document.getElementById('focus-select'); if(fSel) fSel.style.display = 'block';
+                        const fSel = document.getElementById('focus-select'); if (fSel) fSel.style.display = 'block';
                     }
 
                     if (targetViewId === 'war-room-view') {
@@ -4357,19 +4357,19 @@
                     // Catch Server Errors BEFORE deleting the loader!
                     if (!res.ok) {
                         let errTxt = "Server Error";
-                        try { const errData = await res.json(); errTxt = errData.error || errTxt; } catch(e){}
+                        try { const errData = await res.json(); errTxt = errData.error || errTxt; } catch (e) { }
                         throw new Error(errTxt);
                     }
 
                     const data = await res.json();
-                    
+
                     // Safely delete the loader ONLY if it succeeded
                     if (window.aiThinkTimer) clearInterval(window.aiThinkTimer);
                     document.getElementById(loaderId)?.remove();
 
-                   
-                   
-                   
+
+
+
                     if (file) {
 
                         if (data.newClip) {
@@ -4536,6 +4536,22 @@
                 } catch (e) { console.error("Failed to delete clip on server."); }
             },
 
+            seekVideo: (timeStr) => {
+                if (!timeStr || timeStr === 'Overall' || timeStr.includes('N/A')) return;
+                const parts = timeStr.replace(/[^0-9:]/g, '').split(':');
+                let secs = 0;
+                if (parts.length === 2) secs = parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+                else secs = parseFloat(parts[0] || 0);
+
+                // Find the telestrator video element
+                const vid = document.querySelector('video');
+                if (vid) {
+                    vid.currentTime = secs;
+                    vid.play().catch(e => { }); // Auto-play on skip
+                }
+            },
+
+
             buildScoutCardHTML: (data, isChatPreview = false) => {
                 const onclick = isChatPreview ? `onclick="UI.playClip('${data.id}')"` : '';
                 const cursor = isChatPreview ? 'cursor:pointer;' : '';
@@ -4554,6 +4570,7 @@
                                         <span class="accordion-icon">+</span>
                                     </div>
                                     <div class="accordion-content">
+                                        ${pos.timestamp && pos.timestamp !== 'Overall' ? `<div onclick="event.stopPropagation(); UI.seekVideo('${pos.timestamp}')" style="display:inline-block; background:rgba(56,189,248,0.2); color:var(--accent); padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold; font-family:var(--font-mono); margin-bottom:12px; cursor:pointer; border: 1px solid rgba(56,189,248,0.4);">⏱️ Jump to ${pos.timestamp}</div>` : ''}
                                         <div class="pos-action">ACTION:</div>
                                         <div style="margin-bottom:12px;">${pos.action}</div>
                                         <div class="pos-problem">ANALYSIS:</div>
