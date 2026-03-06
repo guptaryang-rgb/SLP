@@ -5990,6 +5990,20 @@
         };
 
         window.onload = App.init;
+        window.addEventListener("load", () => {
+            // Check every 100 milliseconds to see if Clerk has loaded yet
+            const clerkCheck = setInterval(() => {
+                if (window.Clerk && window.Clerk.isReady) {
+                    clearInterval(clerkCheck); // Stop checking!
+                    
+                    // If the user is logged in, nuke the dark background
+                    if (window.Clerk.user) {
+                        const authModal = document.getElementById('auth-modal');
+                        if (authModal) authModal.style.display = 'none';
+                    }
+                }
+            }, 100);
+        });
 
     </script>
 
