@@ -3600,6 +3600,20 @@
             },
 
             switchTab: (tab) => {
+                // 🛑 1. THE IRON WALL: Protect the War Room 🛑
+                if (tab !== 'about') {
+                    // If iPad is loading slowly, wait a fraction of a second and try again
+                    if (!window.Clerk || !window.Clerk.isReady) {
+                        setTimeout(() => UI.switchTab(tab), 200);
+                        return;
+                    }
+                    // If they are logged out, STOP them and force the login screen
+                    if (!window.Clerk.user) {
+                        if (typeof App !== 'undefined') App.forceLogin();
+                        return; // Do not switch tabs. Do not show the upload button.
+                    }
+                }
+
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
@@ -3620,20 +3634,6 @@
                 }
 
                 if (tab !== 'about') {
-                    // 🛑 THE BULLETPROOF AUTH FIX: Wait for Clerk to actually finish loading! 🛑
-                    if (window.Clerk && window.Clerk.isReady) {
-                        if (!window.Clerk.user) {
-                            document.getElementById('auth-modal').style.display = 'flex';
-                            window.Clerk.mountSignIn(document.getElementById('sign-in'));
-                            return;
-                        } else {
-                            document.getElementById('auth-modal').style.display = 'none';
-                        }
-                    } else if (window.Clerk && !window.Clerk.isReady) {
-                        // Clerk is still booting up. DO NOT throw a black screen! Just pass through quietly.
-                        console.log("Clerk is booting up, bypassing modal...");
-                    }
-
                     if (tab === 'self') {
                         document.getElementById('room-title').innerText = "Player Technique Lab";
                         document.getElementById('room-title').style.color = "var(--accent)";
@@ -5917,63 +5917,59 @@
 
         const App = {
             init: async () => {
-                // --- NEW: FETCH FEATURE FLAGS FIRST ---
+                // 1. Fetch Feature Flags
                 try {
                     const fRes = await fetch('/api/features');
                     window.FeatureFlags = await fRes.json();
-
                     if (window.FeatureFlags.playbook === false) {
-                        // 1. Hide the Navigation Tab
                         const pbTab = document.querySelector('.nav-tab[data-tab="playbook"]');
                         if (pbTab) pbTab.style.display = 'none';
-                        // 2. Hide the Pricing Card Add-on
                         const pbCard = document.querySelector('.pricing-card.addon');
                         if (pbCard) pbCard.style.display = 'none';
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
-                let attempts = 0;
-                const checkAuth = setInterval(() => {
-                    attempts++;
-                    if (window.Clerk) {
-                        clearInterval(checkAuth);
-                        Clerk.load()
-                            .then(() => {
-                                if (!Clerk.user) {
-                                    document.getElementById('auth-modal').style.display = 'flex';
-                                    Clerk.mountSignIn(document.getElementById('sign-in'));
-                                } else {
-                                    document.getElementById('auth-modal').style.display = 'none';
-                                    Clerk.mountUserButton(document.getElementById('user-button'));
+                // 2. Clean Clerk Initialization (Fixes iPad bug!)
+                if (window.Clerk) {
+                    await window.Clerk.load(); // Wait cleanly for Clerk to wake up
 
-                                    // --- NEW: THE ADMIN CHECK ---
-                                    const userEmail = Clerk.user.primaryEmailAddress?.emailAddress;
-                                    if (userEmail === "arhamgupta09@gmail.com") {
-                                        document.getElementById('admin-tab').style.display = 'block';
-                                    }
-
-                                    UI.init();
-                                    Playbook.init();
-
-                                    VoiceEngine.init('user-input', 'mic-btn-main');
-                                    VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Clerk Auth Failed:", err);
-                                document.getElementById('auth-modal').style.display = 'none';
-                                UI.init();
-                                Playbook.init();
-                            });
-                    } else if (attempts > 10) {
-                        clearInterval(checkAuth);
-                        console.warn("Clerk timeout - forcing init");
+                    if (window.Clerk.user) {
+                        // User is securely logged in
                         document.getElementById('auth-modal').style.display = 'none';
-                        UI.init();
-                        Playbook.init();
+                        window.Clerk.mountUserButton(document.getElementById('user-button'));
+
+                        // Admin Check
+                        const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
+                        if (userEmail === "arhamgupta09@gmail.com") {
+                            document.getElementById('admin-tab').style.display = 'block';
+                        }
+                    } else {
+                        // User is logged OUT. Show the Sign In button in the Navbar!
+                        document.getElementById('auth-modal').style.display = 'none';
+                        document.getElementById('user-button').innerHTML = `
+                            <button class="tool-btn" style="background:var(--accent); color:black; font-weight:bold; border:none;" onclick="App.forceLogin()">
+                                Sign In
+                            </button>
+                        `;
                     }
-                }, 300);
+
+                    // 3. Start the Engines
+                    UI.init();
+                    if (typeof Playbook !== 'undefined') Playbook.init();
+                    if (typeof VoiceEngine !== 'undefined') {
+                        VoiceEngine.init('user-input', 'mic-btn-main');
+                        VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                    }
+                } else {
+                    console.error("Clerk Authentication failed to load from CDN.");
+                }
             },
+
+            forceLogin: () => {
+                document.getElementById('auth-modal').style.display = 'flex';
+                window.Clerk.mountSignIn(document.getElementById('sign-in'));
+            },
+
             createNewSession: async () => {
                 const title = prompt("New Session Name:");
                 if (title) {
@@ -5998,21 +5994,8 @@
             }
         };
 
+        // Start the app natively when the window loads
         window.onload = App.init;
-        window.addEventListener("load", () => {
-            // Check every 100 milliseconds to see if Clerk has loaded yet
-            const clerkCheck = setInterval(() => {
-                if (window.Clerk && window.Clerk.isReady) {
-                    clearInterval(clerkCheck); // Stop checking!
-                    
-                    // If the user is logged in, nuke the dark background
-                    if (window.Clerk.user) {
-                        const authModal = document.getElementById('auth-modal');
-                        if (authModal) authModal.style.display = 'none';
-                    }
-                }
-            }, 100);
-        });
 
     </script>
 
