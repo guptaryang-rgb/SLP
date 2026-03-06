@@ -3600,12 +3600,6 @@
             },
 
             switchTab: (tab) => {
-                // 🛑 NEW: PREVENT RACE CONDITION CRASH 🛑
-                if (tab !== 'about' && window.Clerk && !window.Clerk.isReady) {
-                    console.log("Waiting for secure connection...");
-                    return; // Ignore tab clicks until the server confirms your login status!
-                }
-
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
@@ -3626,11 +3620,18 @@
                 }
 
                 if (tab !== 'about') {
-                    // 🛑 NEW: BULLETPROOF AUTH CHECK 🛑
-                    if (window.Clerk && window.Clerk.isReady && !window.Clerk.user) {
-                        document.getElementById('auth-modal').style.display = 'flex';
-                        window.Clerk.mountSignIn(document.getElementById('sign-in'));
-                        return;
+                    // 🛑 THE BULLETPROOF AUTH FIX: Wait for Clerk to actually finish loading! 🛑
+                    if (window.Clerk && window.Clerk.isReady) {
+                        if (!window.Clerk.user) {
+                            document.getElementById('auth-modal').style.display = 'flex';
+                            window.Clerk.mountSignIn(document.getElementById('sign-in'));
+                            return;
+                        } else {
+                            document.getElementById('auth-modal').style.display = 'none';
+                        }
+                    } else if (window.Clerk && !window.Clerk.isReady) {
+                        // Clerk is still booting up. DO NOT throw a black screen! Just pass through quietly.
+                        console.log("Clerk is booting up, bypassing modal...");
                     }
 
                     if (tab === 'self') {
