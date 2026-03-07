@@ -3597,17 +3597,16 @@
             },
 
             switchTab: (tab) => {
-                // 🛑 1. THE IRON WALL: Protect the War Room 🛑
+                // 🛑 PROTECT THE WAR ROOM USING NATIVE CLERK 🛑
                 if (tab !== 'about') {
-                    // If iPad is loading slowly, wait a fraction of a second and try again
                     if (!window.Clerk || !window.Clerk.isReady) {
                         setTimeout(() => UI.switchTab(tab), 200);
                         return;
                     }
-                    // If they are logged out, STOP them and force the login screen
                     if (!window.Clerk.user) {
-                        if (typeof App !== 'undefined') App.forceLogin();
-                        return; // Do not switch tabs. Do not show the upload button.
+                        // User is not logged in. Use Clerk's perfect native popup!
+                        window.Clerk.openSignIn();
+                        return; 
                     }
                 }
 
@@ -5926,59 +5925,40 @@
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
-                // 2. Safe Clerk Initialization
-                let attempts = 0;
-                const checkAuth = setInterval(() => {
-                    attempts++;
-                    if (window.Clerk) {
-                        clearInterval(checkAuth);
+                // 2. Clean Clerk Initialization
+                if (window.Clerk) {
+                    window.Clerk.load().then(() => {
+                        const userBtnContainer = document.getElementById('user-button');
                         
-                        window.Clerk.load().then(() => {
-                            const userBtnContainer = document.getElementById('user-button');
-                            
-                            if (window.Clerk.user) {
-                                // USER IS LOGGED IN: Show the Google Profile Bubble!
-                                document.getElementById('auth-modal').style.display = 'none';
-                                window.Clerk.mountUserButton(userBtnContainer);
+                        if (window.Clerk.user) {
+                            // User is logged in! Mount profile bubble.
+                            window.Clerk.mountUserButton(userBtnContainer);
 
-                                // Admin Check
-                                const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
-                                if (userEmail === "arhamgupta09@gmail.com") {
-                                    document.getElementById('admin-tab').style.display = 'block';
-                                }
-                            } else {
-                                // USER IS LOGGED OUT: Show the "Sign In" button!
-                                document.getElementById('auth-modal').style.display = 'none';
-                                userBtnContainer.innerHTML = `
-                                    <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
-                                        Sign In
-                                    </button>
-                                `;
+                            // Admin Check
+                            const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
+                            if (userEmail === "arhamgupta09@gmail.com") {
+                                const adminTab = document.getElementById('admin-tab');
+                                if (adminTab) adminTab.style.display = 'block';
                             }
+                        } else {
+                            // User is logged out! Show the Sign In button.
+                            userBtnContainer.innerHTML = `
+                                <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="window.Clerk.openSignIn()">
+                                    Sign In
+                                </button>
+                            `;
+                        }
 
-                            // 3. Start the Engines
-                            UI.init();
-                            if (typeof Playbook !== 'undefined') Playbook.init();
-                            if (typeof VoiceEngine !== 'undefined') {
-                                VoiceEngine.init('user-input', 'mic-btn-main');
-                                VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
-                            }
-                        }).catch(err => console.error("Clerk Auth Failed:", err));
-                        
-                    } else if (attempts > 20) {
-                        clearInterval(checkAuth);
-                        console.error("Clerk failed to load from CDN.");
-                    }
-                }, 100);
-            },
-
-            forceLogin: () => {
-                // Opens the Dark Background and injects the Google Sign In Box
-                const modal = document.getElementById('auth-modal');
-                const signInBox = document.getElementById('sign-in');
-                if (modal && signInBox && window.Clerk) {
-                    modal.style.display = 'flex';
-                    window.Clerk.mountSignIn(signInBox);
+                        // 3. Start the Engines
+                        UI.init();
+                        if (typeof Playbook !== 'undefined') Playbook.init();
+                        if (typeof VoiceEngine !== 'undefined') {
+                            VoiceEngine.init('user-input', 'mic-btn-main');
+                            VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                        }
+                    }).catch(err => console.error("Clerk Auth Failed:", err));
+                } else {
+                    console.error("Clerk Authentication failed to load from CDN.");
                 }
             },
 
@@ -6006,7 +5986,6 @@
             }
         };
 
-        // Start the app natively when the window loads
         window.onload = App.init;
 
     </script>
