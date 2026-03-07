@@ -2701,7 +2701,10 @@
     
 <div id="auth-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 100000; justify-content: center; align-items: center;">
         <div style="position: absolute; top: 20px; right: 30px; font-size: 2rem; color: white; cursor: pointer;" onclick="document.getElementById('auth-modal').style.display='none'">✕</div>
-        <div id="sign-in"></div>
+        
+        <div id="sign-in" style="min-width: 400px; min-height: 500px; background: white; border-radius: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <div style="color: black; font-family: var(--font-mono); font-weight: bold;">Loading secure login...</div>
+        </div>
     </div>
 
 
@@ -5970,7 +5973,12 @@
                 const signInBox = document.getElementById('sign-in');
                 if (modal && signInBox && window.Clerk) {
                     modal.style.display = 'flex';
-                    window.Clerk.mountSignIn(signInBox);
+                    
+                    // Give the desktop browser exactly 50ms to draw the white box, THEN inject the login form
+                    setTimeout(() => {
+                        signInBox.innerHTML = ''; // Clear the "Loading..." text
+                        window.Clerk.mountSignIn(signInBox);
+                    }, 50);
                 }
             },
 
