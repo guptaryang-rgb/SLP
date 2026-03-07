@@ -13,7 +13,7 @@
         rel="stylesheet">
 
     <script crossorigin="anonymous"
-        data-clerk-publishable-key="pk_live_Y2xlcmsudmFudGFnZS12aXNpb24ub3JnJA  "
+        data-clerk-publishable-key="pk_test_YXNzdXJlZC1iYWJvb24tNTkuY2xlcmsuYW"
         src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -3606,25 +3606,31 @@
             },
 
             switchTab: (tab) => {
-                // 🛑 THE IRON WALL: Prevent premature clicks and enforce login 🛑
+                // 🛑 1. THE IRON WALL: Production-Safe Auth Check 🛑
                 if (tab !== 'about') {
-                    if (!window.isClerkReady) {
-                        return; // Ignore clicks while Clerk is still booting up!
+                    // Check if Clerk exists and is fully booted
+                    if (!window.Clerk || !window.Clerk.isReady) {
+                        console.log("Clerk is still booting...");
+                        return; 
                     }
+                    // If Clerk is ready but no user is found, force the login
                     if (!window.Clerk.user) {
                         if (typeof App !== 'undefined') App.forceLogin();
-                        return; // Stop the click, force them to log in
+                        return; 
                     }
                 }
 
+                // 🟢 2. UI STATE UPDATES
                 UI.currentMode = tab;
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
 
+                // Clear views with transition
                 document.querySelectorAll('.view').forEach(v => {
                     v.classList.remove('active-view');
                     v.style.opacity = 0;
                 });
 
+                // Determine target view
                 let targetViewId = 'landing-view';
                 if (tab === 'self' || tab === 'team') targetViewId = 'war-room-view';
                 else if (tab === 'playbook') targetViewId = 'playbook-view';
@@ -3636,6 +3642,7 @@
                     setTimeout(() => viewEl.style.opacity = 1, 50);
                 }
 
+                // 🟢 3. MODE-SPECIFIC LOGIC (Self, Team, Playbook, Admin)
                 if (tab !== 'about') {
                     if (tab === 'self') {
                         document.getElementById('room-title').innerText = "Player Technique Lab";
@@ -3653,9 +3660,11 @@
                         const fSel = document.getElementById('focus-select'); if (fSel) fSel.style.display = 'block';
                     }
 
+                    // Session & Feed Logic
                     if (targetViewId === 'war-room-view') {
                         const sessions = Store.get('sessions') || [];
                         const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
+                        
                         if (!currentSess || currentSess.type !== tab) {
                             UI.activeSessionId = null;
                             const feed = document.getElementById('chat-feed');
@@ -3677,6 +3686,8 @@
                             UI.renderSessionList();
                         }
                     }
+
+                    // Engine Re-renders
                     if (targetViewId === 'playbook-view') {
                         if (typeof Playbook !== 'undefined') Playbook.renderGrid();
                     }
