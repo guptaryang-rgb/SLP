@@ -3606,11 +3606,11 @@
             },
 
             switchTab: (tab) => {
-                // 🛑 IRON WALL: Safe, loop-free authentication check 🛑
+                // 🛑 THE TRUE IRON WALL: No loops, just immediate security 🛑
                 if (tab !== 'about') {
                     if (window.Clerk && !window.Clerk.user) {
                         if (typeof App !== 'undefined') App.forceLogin();
-                        return; // Stop the click, force them to log in
+                        return; // Stop the click instantly
                     }
                 }
 
@@ -5929,40 +5929,41 @@
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
-                // 2. Safe Clerk Initialization
+                // 2. REACTIVE Clerk Initialization
                 if (window.Clerk) {
-                    window.Clerk.load().then(() => {
-                        const userBtnContainer = document.getElementById('user-button');
-                        
-                        if (window.Clerk.user) {
-                            // User is logged in! Hide modal and mount profile bubble.
-                            document.getElementById('auth-modal').style.display = 'none';
+                    await window.Clerk.load(); 
+
+                    const userBtnContainer = document.getElementById('user-button');
+                    
+                    // 🛑 NEW: This listens continuously. The millisecond Clerk finds your session, it updates the UI.
+                    window.Clerk.addListener(({ user }) => {
+                        if (user) {
+                            // You are Logged In! Mount the profile bubble.
+                            userBtnContainer.innerHTML = ''; // Clear the text
                             window.Clerk.mountUserButton(userBtnContainer);
 
-                            // Admin Check
-                            const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
+                            const userEmail = user.primaryEmailAddress?.emailAddress;
                             if (userEmail === "arhamgupta09@gmail.com") {
                                 const adminTab = document.getElementById('admin-tab');
                                 if (adminTab) adminTab.style.display = 'block';
                             }
                         } else {
-                            // User is logged out! Show the Sign In button.
-                            document.getElementById('auth-modal').style.display = 'none';
+                            // You are Logged Out! Show Sign In button.
                             userBtnContainer.innerHTML = `
                                 <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
                                     Sign In
                                 </button>
                             `;
                         }
+                    });
 
-                        // 3. Start the Engines
-                        UI.init();
-                        if (typeof Playbook !== 'undefined') Playbook.init();
-                        if (typeof VoiceEngine !== 'undefined') {
-                            VoiceEngine.init('user-input', 'mic-btn-main');
-                            VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
-                        }
-                    }).catch(err => console.error("Clerk Auth Failed:", err));
+                    // 3. Start the Engines
+                    UI.init();
+                    if (typeof Playbook !== 'undefined') Playbook.init();
+                    if (typeof VoiceEngine !== 'undefined') {
+                        VoiceEngine.init('user-input', 'mic-btn-main');
+                        VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                    }
                 } else {
                     console.error("Clerk Authentication failed to load from CDN.");
                 }
