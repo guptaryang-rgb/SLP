@@ -5969,16 +5969,18 @@
             },
 
             forceLogin: () => {
+                // 1. Hide our custom dark background so it doesn't get stuck
                 const modal = document.getElementById('auth-modal');
-                const signInBox = document.getElementById('sign-in');
-                if (modal && signInBox && window.Clerk) {
-                    modal.style.display = 'flex';
-                    
-                    // Give the desktop browser exactly 50ms to draw the white box, THEN inject the login form
-                    setTimeout(() => {
-                        signInBox.innerHTML = ''; // Clear the "Loading..." text
-                        window.Clerk.mountSignIn(signInBox);
-                    }, 50);
+                if (modal) modal.style.display = 'none';
+
+                // 2. The Coach-Proof Method: 
+                // We use Clerk's native redirect. This is immune to Adblockers, 
+                // Brave Shields, and Incognito mode limitations.
+                if (window.Clerk) {
+                    window.Clerk.redirectToSignIn({
+                        afterSignInUrl: window.location.href, // Brings them right back here
+                        afterSignUpUrl: window.location.href
+                    });
                 }
             },
 
