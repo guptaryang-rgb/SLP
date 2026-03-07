@@ -1754,7 +1754,9 @@
             <div class="nav-tab" id="admin-tab" data-tab="admin"
                 style="display:none; color:var(--warning); font-weight:800; border:1px solid rgba(245, 158, 11, 0.4); background:rgba(245, 158, 11, 0.05); border-radius:20px; padding:6px 16px;">
                 🛡️ Command Center</div>
-            <div id="user-button"></div>
+            
+            <div id="user-button" style="min-width: 80px; min-height: 40px; display: flex; justify-content: flex-end;"></div>
+            
         </div>
     </div>
 
@@ -5929,7 +5931,7 @@
             }
         };
 
-        const App = {
+            const App = {
             init: async () => {
                 // 1. Fetch Feature Flags
                 try {
@@ -5951,11 +5953,18 @@
 
                         const userBtnContainer = document.getElementById('user-button');
                         
+                        // 🛑 SAFETY CHECK: Stop if the HTML box is missing
+                        if (!userBtnContainer) {
+                            console.error("Missing <div id='user-button'> in HTML!");
+                            return; 
+                        }
+
                         const updateAuthUI = (user) => {
                             if (user) {
                                 // User is logged in! Mount profile bubble.
                                 const authModal = document.getElementById('auth-modal');
                                 if (authModal) authModal.style.display = 'none';
+                                
                                 userBtnContainer.innerHTML = ''; 
                                 window.Clerk.mountUserButton(userBtnContainer);
 
@@ -5968,7 +5977,7 @@
                             } else {
                                 // User is logged out! Show the Sign In button.
                                 userBtnContainer.innerHTML = `
-                                    <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
+                                    <button class="tool-btn" style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" onclick="App.forceLogin()">
                                         Sign In
                                     </button>
                                 `;
@@ -5995,17 +6004,16 @@
                     console.error("Clerk Authentication failed to load from CDN.");
                 }
             },
+            
             forceLogin: () => {
                 // 1. Hide our custom dark background so it doesn't get stuck
                 const modal = document.getElementById('auth-modal');
                 if (modal) modal.style.display = 'none';
 
                 // 2. The Coach-Proof Method: 
-                // We use Clerk's native redirect. This is immune to Adblockers, 
-                // Brave Shields, and Incognito mode limitations.
                 if (window.Clerk) {
                     window.Clerk.redirectToSignIn({
-                        afterSignInUrl: window.location.href, // Brings them right back here
+                        afterSignInUrl: window.location.href, 
                         afterSignUpUrl: window.location.href
                     });
                 }
