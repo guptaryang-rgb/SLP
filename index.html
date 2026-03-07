@@ -3606,11 +3606,14 @@
             },
 
             switchTab: (tab) => {
-                // 🛑 THE TRUE IRON WALL: No loops, just immediate security 🛑
+                // 🛑 THE IRON WALL: Prevent premature clicks and enforce login 🛑
                 if (tab !== 'about') {
-                    if (window.Clerk && !window.Clerk.user) {
+                    if (!window.isClerkReady) {
+                        return; // Ignore clicks while Clerk is still booting up!
+                    }
+                    if (!window.Clerk.user) {
                         if (typeof App !== 'undefined') App.forceLogin();
-                        return; // Stop the click instantly
+                        return; // Stop the click, force them to log in
                     }
                 }
 
@@ -5929,46 +5932,58 @@
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
-                // 2. REACTIVE Clerk Initialization
+                // 2. Safe Clerk Initialization
                 if (window.Clerk) {
-                    await window.Clerk.load(); 
+                    try {
+                        await window.Clerk.load(); 
+                        window.isClerkReady = true; // ✅ Unlocks the tabs!
 
-                    const userBtnContainer = document.getElementById('user-button');
-                    
-                    // 🛑 NEW: This listens continuously. The millisecond Clerk finds your session, it updates the UI.
-                    window.Clerk.addListener(({ user }) => {
-                        if (user) {
-                            // You are Logged In! Mount the profile bubble.
-                            userBtnContainer.innerHTML = ''; // Clear the text
-                            window.Clerk.mountUserButton(userBtnContainer);
+                        const userBtnContainer = document.getElementById('user-button');
+                        
+                        const updateAuthUI = (user) => {
+                            if (user) {
+                                // User is logged in! Mount profile bubble.
+                                const authModal = document.getElementById('auth-modal');
+                                if (authModal) authModal.style.display = 'none';
+                                userBtnContainer.innerHTML = ''; 
+                                window.Clerk.mountUserButton(userBtnContainer);
 
-                            const userEmail = user.primaryEmailAddress?.emailAddress;
-                            if (userEmail === "arhamgupta09@gmail.com") {
-                                const adminTab = document.getElementById('admin-tab');
-                                if (adminTab) adminTab.style.display = 'block';
+                                // Admin Check
+                                const userEmail = user.primaryEmailAddress?.emailAddress;
+                                if (userEmail === "arhamgupta09@gmail.com") {
+                                    const adminTab = document.getElementById('admin-tab');
+                                    if (adminTab) adminTab.style.display = 'block';
+                                }
+                            } else {
+                                // User is logged out! Show the Sign In button.
+                                userBtnContainer.innerHTML = `
+                                    <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
+                                        Sign In
+                                    </button>
+                                `;
                             }
-                        } else {
-                            // You are Logged Out! Show Sign In button.
-                            userBtnContainer.innerHTML = `
-                                <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
-                                    Sign In
-                                </button>
-                            `;
-                        }
-                    });
+                        };
 
-                    // 3. Start the Engines
-                    UI.init();
-                    if (typeof Playbook !== 'undefined') Playbook.init();
-                    if (typeof VoiceEngine !== 'undefined') {
-                        VoiceEngine.init('user-input', 'mic-btn-main');
-                        VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                        // Run once on load
+                        updateAuthUI(window.Clerk.user);
+
+                        // Listen for changes (like logging out)
+                        window.Clerk.addListener(({ user }) => updateAuthUI(user));
+
+                        // 3. Start the Engines
+                        UI.init();
+                        if (typeof Playbook !== 'undefined') Playbook.init();
+                        if (typeof VoiceEngine !== 'undefined') {
+                            VoiceEngine.init('user-input', 'mic-btn-main');
+                            VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                        }
+                    } catch (err) {
+                        console.error("Clerk Auth Failed to Load:", err);
                     }
                 } else {
                     console.error("Clerk Authentication failed to load from CDN.");
                 }
             },
-
             forceLogin: () => {
                 // 1. Hide our custom dark background so it doesn't get stuck
                 const modal = document.getElementById('auth-modal');
