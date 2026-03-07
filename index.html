@@ -12,9 +12,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
 
-    <script crossorigin="anonymous"
-    data-clerk-publishable-key="pk_live_Y2xlcmsudmFudGFnZS12aXNpb24ub3JnJA"
-    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script crossorigin="anonymous" data-clerk-publishable-key="pk_live_Y2xlcmsudmFudGFnZS12aXNpb24ub3JnJA"
+        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1754,9 +1753,10 @@
             <div class="nav-tab" id="admin-tab" data-tab="admin"
                 style="display:none; color:var(--warning); font-weight:800; border:1px solid rgba(245, 158, 11, 0.4); background:rgba(245, 158, 11, 0.05); border-radius:20px; padding:6px 16px;">
                 🛡️ Command Center</div>
-            
-            <div id="user-button" style="min-width: 80px; min-height: 40px; display: flex; justify-content: flex-end;"></div>
-            
+
+            <div id="user-button" style="min-width: 80px; min-height: 40px; display: flex; justify-content: flex-end;">
+            </div>
+
         </div>
     </div>
 
@@ -2700,11 +2700,14 @@
         </div>
     </div>
 
-    
-<div id="auth-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 100000; justify-content: center; align-items: center;">
-        <div style="position: absolute; top: 20px; right: 30px; font-size: 2rem; color: white; cursor: pointer;" onclick="document.getElementById('auth-modal').style.display='none'">✕</div>
-        
-        <div id="sign-in" style="min-width: 400px; min-height: 500px; background: white; border-radius: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+
+    <div id="auth-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 100000; justify-content: center; align-items: center;">
+        <div style="position: absolute; top: 20px; right: 30px; font-size: 2rem; color: white; cursor: pointer;"
+            onclick="document.getElementById('auth-modal').style.display='none'">✕</div>
+
+        <div id="sign-in"
+            style="min-width: 400px; min-height: 500px; background: white; border-radius: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div style="color: black; font-family: var(--font-mono); font-weight: bold;">Loading secure login...</div>
         </div>
     </div>
@@ -3613,12 +3616,12 @@
                     // Check if Clerk exists and is fully booted
                     if (!window.Clerk || !window.Clerk.isReady) {
                         console.log("Clerk is still booting...");
-                        return; 
+                        return;
                     }
                     // If Clerk is ready but no user is found, force the login
                     if (!window.Clerk.user) {
                         if (typeof App !== 'undefined') App.forceLogin();
-                        return; 
+                        return;
                     }
                 }
 
@@ -3666,7 +3669,7 @@
                     if (targetViewId === 'war-room-view') {
                         const sessions = Store.get('sessions') || [];
                         const currentSess = sessions.find(s => (s.sessionId || s.id) === UI.activeSessionId);
-                        
+
                         if (!currentSess || currentSess.type !== tab) {
                             UI.activeSessionId = null;
                             const feed = document.getElementById('chat-feed');
@@ -5931,7 +5934,7 @@
             }
         };
 
-            const App = {
+        const App = {
             init: async () => {
                 // 1. Fetch Feature Flags
                 try {
@@ -5948,15 +5951,15 @@
                 // 2. Safe Clerk Initialization
                 if (window.Clerk) {
                     try {
-                        await window.Clerk.load(); 
+                        await window.Clerk.load();
                         window.isClerkReady = true; // ✅ Unlocks the tabs!
 
                         const userBtnContainer = document.getElementById('user-button');
-                        
+
                         // 🛑 SAFETY CHECK: Stop if the HTML box is missing
                         if (!userBtnContainer) {
                             console.error("Missing <div id='user-button'> in HTML!");
-                            return; 
+                            return;
                         }
 
                         const updateAuthUI = (user) => {
@@ -5964,8 +5967,8 @@
                                 // User is logged in! Mount profile bubble.
                                 const authModal = document.getElementById('auth-modal');
                                 if (authModal) authModal.style.display = 'none';
-                                
-                                userBtnContainer.innerHTML = ''; 
+
+                                userBtnContainer.innerHTML = '';
                                 window.Clerk.mountUserButton(userBtnContainer);
 
                                 // Admin Check
@@ -5977,10 +5980,12 @@
                             } else {
                                 // User is logged out! Show the Sign In button.
                                 userBtnContainer.innerHTML = `
-                                    <button class="tool-btn" style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" onclick="App.forceLogin()">
-                                        Sign In
-                                    </button>
-                                `;
+    <button class="tool-btn" 
+            style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
+            onclick="window.Clerk.redirectToSignIn()">
+        Sign In
+    </button>
+`;
                             }
                         };
 
@@ -6004,7 +6009,7 @@
                     console.error("Clerk Authentication failed to load from CDN.");
                 }
             },
-            
+
             forceLogin: () => {
                 // 1. Hide our custom dark background so it doesn't get stuck
                 const modal = document.getElementById('auth-modal');
@@ -6013,7 +6018,7 @@
                 // 2. The Coach-Proof Method: 
                 if (window.Clerk) {
                     window.Clerk.redirectToSignIn({
-                        afterSignInUrl: window.location.href, 
+                        afterSignInUrl: window.location.href,
                         afterSignUpUrl: window.location.href
                     });
                 }
