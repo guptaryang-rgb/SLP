@@ -5926,44 +5926,54 @@
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
-                // 2. Clean Clerk Initialization
-                if (window.Clerk) {
-                    await window.Clerk.load(); // Wait cleanly for Clerk to wake up
+                // 2. Safe Clerk Initialization
+                let attempts = 0;
+                const checkAuth = setInterval(() => {
+                    attempts++;
+                    if (window.Clerk) {
+                        clearInterval(checkAuth);
+                        
+                        window.Clerk.load().then(() => {
+                            const userBtnContainer = document.getElementById('user-button');
+                            
+                            if (window.Clerk.user) {
+                                // USER IS LOGGED IN: Show the Google Profile Bubble!
+                                document.getElementById('auth-modal').style.display = 'none';
+                                window.Clerk.mountUserButton(userBtnContainer);
 
-                    if (window.Clerk.user) {
-                        // User is securely logged in
-                        document.getElementById('auth-modal').style.display = 'none';
-                        window.Clerk.mountUserButton(document.getElementById('user-button'));
+                                // Admin Check
+                                const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
+                                if (userEmail === "arhamgupta09@gmail.com") {
+                                    document.getElementById('admin-tab').style.display = 'block';
+                                }
+                            } else {
+                                // USER IS LOGGED OUT: Show the "Sign In" button!
+                                document.getElementById('auth-modal').style.display = 'none';
+                                userBtnContainer.innerHTML = `
+                                    <button class="tool-btn" style="background:white; color:black; font-weight:bold; border:none; padding:8px 16px;" onclick="App.forceLogin()">
+                                        Sign In
+                                    </button>
+                                `;
+                            }
 
-                        // Admin Check
-                        const userEmail = window.Clerk.user.primaryEmailAddress?.emailAddress;
-                        if (userEmail === "arhamgupta09@gmail.com") {
-                            document.getElementById('admin-tab').style.display = 'block';
-                        }
-                    } else {
-                        // User is logged OUT. Show the Sign In button in the Navbar!
-                        document.getElementById('auth-modal').style.display = 'none';
-                        document.getElementById('user-button').innerHTML = `
-                            <button class="tool-btn" style="background:var(--accent); color:black; font-weight:bold; border:none;" onclick="App.forceLogin()">
-                                Sign In
-                            </button>
-                        `;
+                            // 3. Start the Engines
+                            UI.init();
+                            if (typeof Playbook !== 'undefined') Playbook.init();
+                            if (typeof VoiceEngine !== 'undefined') {
+                                VoiceEngine.init('user-input', 'mic-btn-main');
+                                VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
+                            }
+                        }).catch(err => console.error("Clerk Auth Failed:", err));
+                        
+                    } else if (attempts > 20) {
+                        clearInterval(checkAuth);
+                        console.error("Clerk failed to load from CDN.");
                     }
-
-                    // 3. Start the Engines
-                    UI.init();
-                    if (typeof Playbook !== 'undefined') Playbook.init();
-                    if (typeof VoiceEngine !== 'undefined') {
-                        VoiceEngine.init('user-input', 'mic-btn-main');
-                        VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
-                    }
-                } else {
-                    console.error("Clerk Authentication failed to load from CDN.");
-                }
+                }, 100);
             },
 
-            // We only need ONE forceLogin function!
             forceLogin: () => {
+                // Opens the Dark Background and injects the Google Sign In Box
                 const modal = document.getElementById('auth-modal');
                 const signInBox = document.getElementById('sign-in');
                 if (modal && signInBox && window.Clerk) {
