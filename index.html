@@ -3375,115 +3375,79 @@
         };
 
         const Admin = {
-            loadedPrompts: {},
-
-            loadStats: async () => {
-                const statusEl = document.getElementById('admin-status');
-                statusEl.innerText = "Fetching Live Data...";
-                statusEl.style.color = "var(--warning)";
-
-                try {
-                    const token = await window.Clerk.session.getToken();
-
-                    // Fetch Stats AND Prompts simultaneously
-                    const [statsRes, promptsRes] = await Promise.all([
-                        fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch('/api/admin/prompts', { headers: { 'Authorization': `Bearer ${token}` } })
-                    ]);
-
-                    const statsData = await statsRes.json();
-                    const promptsData = await promptsRes.json();
-
-                    if (statsData.success && promptsData.success) {
-                        // Populate Stats
-                        document.getElementById('admin-stat-users').innerText = statsData.stats.users;
-                        document.getElementById('admin-stat-sessions').innerText = statsData.stats.sessions;
-                        document.getElementById('admin-stat-clips').innerText = statsData.stats.clips;
-                        document.getElementById('admin-stat-plays').innerText = statsData.stats.plays;
-
-                        // Populate Prompts
-                        Admin.loadedPrompts = promptsData.prompts;
-                        Admin.selectPrompt(document.getElementById('admin-prompt-select').value);
-
-                        // --- NEW: Sync Feature Flags to Admin UI ---
-                        const featureRes = await fetch('/api/features');
-                        const features = await featureRes.json();
-                        const pbBtn = document.getElementById('toggle-playbook-btn');
-                        if (pbBtn) {
-                            const isOnline = features.playbook !== false;
-                            pbBtn.innerText = isOnline ? '🟢 ONLINE (Click to Disable)' : '🔴 OFFLINE (Click to Enable)';
-                            pbBtn.style.color = isOnline ? 'var(--accent)' : 'var(--danger)';
-                            pbBtn.style.borderColor = isOnline ? 'var(--accent)' : 'var(--danger)';
-                        }
-
-                        statusEl.innerText = "System Online & Secure";
-                        statusEl.style.color = "var(--success)";
-                    } else { throw new Error("Unauthorized"); }
-                } catch (e) {
-                    console.error(e);
-                    statusEl.innerText = "Access Denied / Offline";
-                    statusEl.style.color = "var(--danger)";
+    // 1. Load the Dashboard Stats
+    loadStats: async () => {
+        try {
+            // 🛑 THE FIX: Grab the live Clerk token
+            const token = await window.Clerk.session.getToken();
+            
+            const res = await fetch('/api/admin/stats', {
+                headers: { 
+                    'Authorization': `Bearer ${token}` // Show the VIP Badge
                 }
-            },
-
-            selectPrompt: (position) => {
-                const editor = document.getElementById('admin-prompt-editor');
-                if (Admin.loadedPrompts[position]) {
-                    editor.value = Admin.loadedPrompts[position];
-                } else {
-                    editor.value = "No prompt found for this position.";
-                }
-            },
-
-            savePrompt: async () => {
-                const position = document.getElementById('admin-prompt-select').value;
-                const promptText = document.getElementById('admin-prompt-editor').value;
-                const statusTxt = document.getElementById('admin-prompt-status');
-
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    const res = await fetch('/api/admin/prompts', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ position, promptText })
-                    });
-
-                    if (res.ok) {
-                        Admin.loadedPrompts[position] = promptText; // Update local state
-                        statusTxt.innerText = "Deploying to Mainframe... ✅";
-                        statusTxt.style.color = "var(--success)";
-                        statusTxt.style.opacity = 1;
-                        setTimeout(() => statusTxt.style.opacity = 0, 3000);
-                    } else { throw new Error("Failed to save"); }
-                } catch (e) {
-                    statusTxt.innerText = "⚠️ Deployment Failed!";
-                    statusTxt.style.color = "var(--danger)";
-                    statusTxt.style.opacity = 1;
-                    setTimeout(() => statusTxt.style.opacity = 0, 4000);
-                }
-            },
-
-            toggleFeature: async (name) => {
-                const btn = document.getElementById(`toggle-${name}-btn`);
-                const isCurrentlyEnabled = btn.innerText.includes('ONLINE');
-                const newState = !isCurrentlyEnabled;
-
-                // Optimistic UI Update
-                btn.innerText = newState ? '🟢 ONLINE (Click to Disable)' : '🔴 OFFLINE (Click to Enable)';
-                btn.style.color = newState ? 'var(--accent)' : 'var(--danger)';
-                btn.style.borderColor = newState ? 'var(--accent)' : 'var(--danger)';
-
-                try {
-                    const token = await window.Clerk.session.getToken();
-                    await fetch('/api/admin/features', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ name, isEnabled: newState })
-                    });
-                    alert("Feature toggled. Changes are live for all users.");
-                } catch (e) { console.error("Failed to toggle feature"); }
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                console.log("God Mode Stats Loaded:", data.stats);
+                // Update your HTML elements here (example below)
+                // document.getElementById('stat-users').innerText = data.stats.users;
             }
-        };
+        } catch (e) { 
+            console.error("Admin stats failed to load", e); 
+        }
+    },
+
+    // 2. Save a new AI Prompt
+    updatePrompt: async (position, promptText) => {
+        try {
+            // 🛑 THE FIX: Grab the live Clerk token
+            const token = await window.Clerk.session.getToken();
+            
+            const res = await fetch('/api/admin/prompts', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Show the VIP Badge
+                },
+                body: JSON.stringify({ position, promptText })
+            });
+            
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${position.toUpperCase()} prompt updated successfully!`);
+            } else {
+                alert("❌ Failed to update prompt.");
+            }
+        } catch (e) { 
+            console.error("Prompt update failed", e); 
+        }
+    },
+
+    // 3. Toggle Global Feature Flags
+    toggleFeature: async (name, isEnabled) => {
+        try {
+            // 🛑 THE FIX: Grab the live Clerk token
+            const token = await window.Clerk.session.getToken();
+            
+            const res = await fetch('/api/admin/features', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Show the VIP Badge
+                },
+                body: JSON.stringify({ name, isEnabled })
+            });
+            
+            const data = await res.json();
+            if (data.success) {
+                console.log(`Feature '${name}' is now ${isEnabled ? 'ON' : 'OFF'}`);
+            }
+        } catch (e) { 
+            console.error("Feature toggle failed", e); 
+        }
+    }
+};
 
         // --- NEW: Converts raw AI JSON into a sleek Coach's Grading Sheet ---
         const Formatter = {
