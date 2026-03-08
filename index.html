@@ -3379,14 +3379,14 @@
 
             loadStats: async () => {
                 try {
-                    document.getElementById('admin-status').innerText = 'Authenticating...';
-                    document.getElementById('admin-status').style.color = 'var(--warning)';
-
-                    if (!window.Clerk || !window.Clerk.session) {
-                        document.getElementById('admin-status').innerText = 'Auth Syncing...';
-                        setTimeout(() => Admin.loadStats(), 1000); 
+                    // 🛑 IPAD FIX: Wait for Clerk to actually be ready
+                    if (!window.Clerk || !window.Clerk.loaded) {
+                        console.log("iPad: Clerk not ready, retrying in 1s...");
+                        setTimeout(() => Admin.loadStats(), 1000);
                         return;
                     }
+
+                    document.getElementById('admin-status').innerText = 'Authenticating...';
 
                     const token = await window.Clerk.session.getToken();
                     
