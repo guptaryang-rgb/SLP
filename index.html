@@ -3375,79 +3375,147 @@
         };
 
         const Admin = {
-    // 1. Load the Dashboard Stats
-    loadStats: async () => {
-        try {
-            // 🛑 THE FIX: Grab the live Clerk token
-            const token = await window.Clerk.session.getToken();
-            
-            const res = await fetch('/api/admin/stats', {
-                headers: { 
-                    'Authorization': `Bearer ${token}` // Show the VIP Badge
+            loadedPrompts: {},
+
+            // 1. Load the Dashboard Stats & the Prompts Database
+            loadStats: async () => {
+                try {
+                    document.getElementById('admin-status').innerText = 'Authenticating...';
+                    document.getElementById('admin-status').style.color = 'var(--warning)';
+
+                    // 🛑 THE BADGE: Get the live Clerk token
+                    const token = await window.Clerk.session.getToken();
+                    
+                    // Fetch Global Stats
+                    const res = await fetch('/api/admin/stats', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        document.getElementById('admin-stat-users').innerText = data.stats.users;
+                        document.getElementById('admin-stat-sessions').innerText = data.stats.sessions;
+                        document.getElementById('admin-stat-clips').innerText = data.stats.clips;
+                        document.getElementById('admin-stat-plays').innerText = data.stats.plays;
+                        
+                        document.getElementById('admin-status').innerText = 'Connected (Live)';
+                        document.getElementById('admin-status').style.color = 'var(--success)';
+                    }
+
+                    // Once stats load, automatically download the AI prompts!
+                    await Admin.loadPrompts(token);
+
+                } catch (e) { 
+                    console.error("Admin connection failed", e); 
+                    document.getElementById('admin-status').innerText = 'Connection Failed';
+                    document.getElementById('admin-status').style.color = 'var(--danger)';
                 }
-            });
-            const data = await res.json();
-            
-            if (data.success) {
-                console.log("God Mode Stats Loaded:", data.stats);
-                // Update your HTML elements here (example below)
-                // document.getElementById('stat-users').innerText = data.stats.users;
-            }
-        } catch (e) { 
-            console.error("Admin stats failed to load", e); 
-        }
-    },
+            },
 
-    // 2. Save a new AI Prompt
-    updatePrompt: async (position, promptText) => {
-        try {
-            // 🛑 THE FIX: Grab the live Clerk token
-            const token = await window.Clerk.session.getToken();
-            
-            const res = await fetch('/api/admin/prompts', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Show the VIP Badge
-                },
-                body: JSON.stringify({ position, promptText })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                alert(`✅ ${position.toUpperCase()} prompt updated successfully!`);
-            } else {
-                alert("❌ Failed to update prompt.");
-            }
-        } catch (e) { 
-            console.error("Prompt update failed", e); 
-        }
-    },
+            // 2. Download the AI Prompts
+            loadPrompts: async (token) => {
+                try {
+                    const res = await fetch('/api/admin/prompts', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        Admin.loadedPrompts = data.prompts; // Save to local memory
+                        
+                        // Force the text area to show the currently selected dropdown value
+                        const currentDropdownSelection = document.getElementById('admin-prompt-select').value;
+                        Admin.selectPrompt(currentDropdownSelection);
+                    }
+                } catch (e) {
+                    console.error("Failed to load prompts", e);
+                    document.getElementById('admin-prompt-editor').value = "Error loading prompts from the database.";
+                }
+            },
 
-    // 3. Toggle Global Feature Flags
-    toggleFeature: async (name, isEnabled) => {
-        try {
-            // 🛑 THE FIX: Grab the live Clerk token
-            const token = await window.Clerk.session.getToken();
-            
-            const res = await fetch('/api/admin/features', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Show the VIP Badge
-                },
-                body: JSON.stringify({ name, isEnabled })
-            });
-            
-            const data = await res.json();
-            if (data.success) {
-                console.log(`Feature '${name}' is now ${isEnabled ? 'ON' : 'OFF'}`);
+            // 3. Switch the Text Area (Fired when you change the dropdown)
+            selectPrompt: (position) => {
+                const editor = document.getElementById('admin-prompt-editor');
+                if (Admin.loadedPrompts && Admin.loadedPrompts[position]) {
+                    editor.value = Admin.loadedPrompts[position];
+                } else {
+                    editor.value = "No prompt found for this position. Type one here to create it!";
+                }
+            },
+
+            // 4. Save the edited prompt back to MongoDB
+            savePrompt: async () => {
+                const position = document.getElementById('admin-prompt-select').value;
+                const promptText = document.getElementById('admin-prompt-editor').value;
+                const statusText = document.getElementById('admin-prompt-status');
+
+                statusText.innerText = "Saving to Database...";
+                statusText.style.opacity = 1;
+                statusText.style.color = "var(--warning)";
+
+                try {
+                    const token = await window.Clerk.session.getToken(); // Get fresh badge
+                    const res = await fetch('/api/admin/prompts', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ position, promptText })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        Admin.loadedPrompts[position] = promptText; // Update local memory
+                        statusText.innerText = "Deployed to Coach AI!";
+                        statusText.style.color = "var(--success)";
+                        setTimeout(() => statusText.style.opacity = 0, 3000);
+                    } else {
+                        throw new Error("Failed to save.");
+                    }
+                } catch (e) { 
+                    console.error("Prompt update failed", e); 
+                    statusText.innerText = "Error Saving!";
+                    statusText.style.color = "var(--danger)";
+                }
+            },
+
+            // 5. Toggle Global Feature Flags (Kill Switches)
+            toggleFeature: async (name) => {
+                const btn = document.getElementById(`toggle-${name}-btn`);
+                const isCurrentlyOn = btn.innerText.includes('ONLINE');
+                const newState = !isCurrentlyOn; // Flip the switch
+
+                btn.innerText = "Syncing...";
+
+                try {
+                    const token = await window.Clerk.session.getToken();
+                    const res = await fetch('/api/admin/features', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ name, isEnabled: newState })
+                    });
+                    
+                    const data = await res.json();
+                    if (data.success) {
+                        if (newState) {
+                            btn.innerText = "🟢 ONLINE";
+                            btn.style.borderColor = "var(--success)";
+                            btn.style.color = "var(--success)";
+                        } else {
+                            btn.innerText = "🔴 OFFLINE";
+                            btn.style.borderColor = "var(--danger)";
+                            btn.style.color = "var(--danger)";
+                        }
+                    }
+                } catch (e) { 
+                    console.error("Feature toggle failed", e); 
+                    btn.innerText = "Error!";
+                }
             }
-        } catch (e) { 
-            console.error("Feature toggle failed", e); 
-        }
-    }
-};
+        };
 
         // --- NEW: Converts raw AI JSON into a sleek Coach's Grading Sheet ---
         const Formatter = {
