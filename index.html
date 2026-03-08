@@ -3383,7 +3383,7 @@
                     document.getElementById('admin-status').innerText = 'Authenticating...';
                     document.getElementById('admin-status').style.color = 'var(--warning)';
 
-                    // 🛑 THE BADGE: Get the live Clerk token
+                    // 🛑 Get the live Clerk token
                     const token = await window.Clerk.session.getToken();
                     
                     // Fetch Global Stats
@@ -3402,8 +3402,9 @@
                         document.getElementById('admin-status').style.color = 'var(--success)';
                     }
 
-                    // Once stats load, automatically download the AI prompts!
+                    // Download AI prompts and Feature Flags
                     await Admin.loadPrompts(token);
+                    await Admin.loadFeatures(); // 👈 NEW: Syncs the kill switches!
 
                 } catch (e) { 
                     console.error("Admin connection failed", e); 
@@ -3412,72 +3413,28 @@
                 }
             },
 
-            // 2. Download the AI Prompts
-            loadPrompts: async (token) => {
+            // 👈 NEW: Reads the database so the button doesn't lie to you
+            loadFeatures: async () => {
                 try {
-                    const res = await fetch('/api/admin/prompts', {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        Admin.loadedPrompts = data.prompts; // Save to local memory
-                        
-                        // Force the text area to show the currently selected dropdown value
-                        const currentDropdownSelection = document.getElementById('admin-prompt-select').value;
-                        Admin.selectPrompt(currentDropdownSelection);
-                    }
-                } catch (e) {
-                    console.error("Failed to load prompts", e);
-                    document.getElementById('admin-prompt-editor').value = "Error loading prompts from the database.";
-                }
-            },
-
-            // 3. Switch the Text Area (Fired when you change the dropdown)
-            selectPrompt: (position) => {
-                const editor = document.getElementById('admin-prompt-editor');
-                if (Admin.loadedPrompts && Admin.loadedPrompts[position]) {
-                    editor.value = Admin.loadedPrompts[position];
-                } else {
-                    editor.value = "No prompt found for this position. Type one here to create it!";
-                }
-            },
-
-            // 4. Save the edited prompt back to MongoDB
-            savePrompt: async () => {
-                const position = document.getElementById('admin-prompt-select').value;
-                const promptText = document.getElementById('admin-prompt-editor').value;
-                const statusText = document.getElementById('admin-prompt-status');
-
-                statusText.innerText = "Saving to Database...";
-                statusText.style.opacity = 1;
-                statusText.style.color = "var(--warning)";
-
-                try {
-                    const token = await window.Clerk.session.getToken(); // Get fresh badge
-                    const res = await fetch('/api/admin/prompts', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` 
-                        },
-                        body: JSON.stringify({ position, promptText })
-                    });
+                    const res = await fetch('/api/features');
+                    const flags = await res.json();
                     
-                    const data = await res.json();
-                    if (data.success) {
-                        Admin.loadedPrompts[position] = promptText; // Update local memory
-                        statusText.innerText = "Deployed to Coach AI!";
-                        statusText.style.color = "var(--success)";
-                        setTimeout(() => statusText.style.opacity = 0, 3000);
-                    } else {
-                        throw new Error("Failed to save.");
+                    const playbookBtn = document.getElementById('toggle-playbook-btn');
+                    if (playbookBtn) {
+                        if (flags.playbook === false) {
+                            playbookBtn.innerText = "🔴 OFFLINE";
+                            playbookBtn.style.borderColor = "var(--danger)";
+                            playbookBtn.style.color = "var(--danger)";
+                        } else {
+                            playbookBtn.innerText = "🟢 ONLINE";
+                            playbookBtn.style.borderColor = "var(--success)";
+                            playbookBtn.style.color = "var(--success)";
+                        }
                     }
-                } catch (e) { 
-                    console.error("Prompt update failed", e); 
-                    statusText.innerText = "Error Saving!";
-                    statusText.style.color = "var(--danger)";
-                }
+                } catch(e) { console.error("Failed to load feature flags."); }
             },
+
+            // ... (keep your existing loadPrompts, selectPrompt, and savePrompt here) ...
 
             // 5. Toggle Global Feature Flags (Kill Switches)
             toggleFeature: async (name) => {
@@ -3500,6 +3457,7 @@
                     
                     const data = await res.json();
                     if (data.success) {
+                        // 1. Update the Button UI
                         if (newState) {
                             btn.innerText = "🟢 ONLINE";
                             btn.style.borderColor = "var(--success)";
@@ -3508,6 +3466,22 @@
                             btn.innerText = "🔴 OFFLINE";
                             btn.style.borderColor = "var(--danger)";
                             btn.style.color = "var(--danger)";
+                        }
+
+                        // 2. INSTANT UI OVERRIDE (Magic trick!)
+                        if (name === 'playbook') {
+                            const pbTab = document.querySelector('.nav-tab[data-tab="playbook"]');
+                            const pbCard = document.querySelector('.pricing-card.addon');
+                            
+                            if (newState) {
+                                if (pbTab) pbTab.style.display = 'block'; 
+                                if (pbCard) pbCard.style.display = 'flex'; 
+                                alert("🟢 Playbook Engine is now ONLINE for all users.");
+                            } else {
+                                if (pbTab) pbTab.style.display = 'none'; 
+                                if (pbCard) pbCard.style.display = 'none'; 
+                                alert("🔴 Playbook Engine is now OFFLINE for all users.");
+                            }
                         }
                     }
                 } catch (e) { 
