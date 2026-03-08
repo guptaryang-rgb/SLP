@@ -1824,10 +1824,13 @@
                     </div>
                 </div>
 
-                <div class="landing-section-title">Select Your Edge</div>
-                <div class="pricing-grid"
-                    style="max-width: 1300px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-
+                <div id="pricing-section">
+                    <div class="landing-section-title">Select Your Edge</div>
+                    <div class="pricing-grid"
+                        style="max-width: 1300px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                        
+                        </div>
+                </div>
                     <div class="pricing-card">
                         <div class="pricing-title">Free Tier</div>
                         <div class="pricing-price" style="margin-top:20px;">$0</div>
@@ -2208,6 +2211,16 @@
                                     style="border-color:var(--accent); color:var(--accent); font-weight:bold; padding:10px 20px;"
                                     onclick="Admin.toggleFeature('playbook')">🟢 ONLINE</button>
                             </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:16px; border-radius:8px; border:1px solid #333; margin-top:12px;">
+                                    <div>
+                                        <strong style="color:white; font-size:1.1rem;">Pricing & Monetization</strong>
+                                        <div style="color:#888; font-size:0.85rem; margin-top:4px;">Hides the "Select Your Edge" tiers on the home page.</div>
+                                    </div>
+                                    <button id="toggle-pricing-btn" class="tool-btn"
+                                        style="border-color:var(--accent); color:var(--accent); font-weight:bold; padding:10px 20px;"
+                                        onclick="Admin.toggleFeature('pricing')">🟢 ONLINE</button>
+                                </div>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -3516,6 +3529,7 @@
                     const res = await fetch('/api/features', { cache: 'no-store' });
                     const flags = await res.json();
 
+                    // Load Playbook Button State
                     const playbookBtn = document.getElementById('toggle-playbook-btn');
                     if (playbookBtn) {
                         if (flags.playbook === false) {
@@ -3526,6 +3540,20 @@
                             playbookBtn.innerText = "🟢 ONLINE";
                             playbookBtn.style.borderColor = "var(--success)";
                             playbookBtn.style.color = "var(--success)";
+                        }
+                    }
+
+                    // 🛑 NEW: Load Pricing Button State
+                    const pricingBtn = document.getElementById('toggle-pricing-btn');
+                    if (pricingBtn) {
+                        if (flags.pricing === false) {
+                            pricingBtn.innerText = "🔴 OFFLINE";
+                            pricingBtn.style.borderColor = "var(--danger)";
+                            pricingBtn.style.color = "var(--danger)";
+                        } else {
+                            pricingBtn.innerText = "🟢 ONLINE";
+                            pricingBtn.style.borderColor = "var(--success)";
+                            pricingBtn.style.color = "var(--success)";
                         }
                     }
                 } catch (e) { console.error("Failed to load feature flags."); }
@@ -3551,6 +3579,7 @@
 
                     const data = await res.json();
                     if (data.success) {
+                        // Update Button UI
                         if (newState) {
                             btn.innerText = "🟢 ONLINE";
                             btn.style.borderColor = "var(--success)";
@@ -3561,6 +3590,7 @@
                             btn.style.color = "var(--danger)";
                         }
 
+                        // Apply Live Changes without refreshing
                         if (name === 'playbook') {
                             const pbTab = document.querySelector('.nav-tab[data-tab="playbook"]');
                             const pbCard = document.querySelector('.pricing-card.addon');
@@ -3573,6 +3603,18 @@
                                 if (pbTab) pbTab.style.display = 'none';
                                 if (pbCard) pbCard.style.display = 'none';
                                 alert("🔴 Playbook Engine is now OFFLINE for all users.");
+                            }
+                        }
+
+                        // 🛑 NEW: Apply Pricing Live Changes
+                        if (name === 'pricing') {
+                            const pricingSec = document.getElementById('pricing-section');
+                            if (newState) {
+                                if (pricingSec) pricingSec.style.display = 'block';
+                                alert("🟢 Pricing Section is now VISIBLE on the landing page.");
+                            } else {
+                                if (pricingSec) pricingSec.style.display = 'none';
+                                alert("🔴 Pricing Section is now HIDDEN from the landing page.");
                             }
                         }
                     }
@@ -6039,16 +6081,23 @@
         };
 
         const App = {
-            init: async () => {
+           init: async () => {
                 // 1. Fetch Feature Flags
                 try {
                     const fRes = await fetch('/api/features');
                     window.FeatureFlags = await fRes.json();
+                    
                     if (window.FeatureFlags.playbook === false) {
                         const pbTab = document.querySelector('.nav-tab[data-tab="playbook"]');
                         if (pbTab) pbTab.style.display = 'none';
                         const pbCard = document.querySelector('.pricing-card.addon');
                         if (pbCard) pbCard.style.display = 'none';
+                    }
+                    
+                    // 🛑 NEW: Check Pricing Flag on Load
+                    if (window.FeatureFlags.pricing === false) {
+                        const pricingSec = document.getElementById('pricing-section');
+                        if (pricingSec) pricingSec.style.display = 'none';
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
