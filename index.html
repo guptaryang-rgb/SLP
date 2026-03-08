@@ -6071,11 +6071,19 @@
                             return;
                         }
 
-                        const updateAuthUI = (user) => {
+                                                const updateAuthUI = (user) => {
                             if (user) {
-                                // User is logged in! Mount profile bubble.
+                                // User is logged in! 
                                 const authModal = document.getElementById('auth-modal');
-                                if (authModal) authModal.style.display = 'none';
+                                
+                                // 🛑 THE NEW AUTO-REDIRECT FIX 🛑
+                                // If the modal is currently open, it means they JUST logged in right now.
+                                if (authModal && authModal.style.display !== 'none') {
+                                    authModal.style.display = 'none';
+                                    UI.switchTab('self'); // Force them instantly into the War Room
+                                } else if (authModal) {
+                                    authModal.style.display = 'none';
+                                }
 
                                 userBtnContainer.innerHTML = '';
                                 window.Clerk.mountUserButton(userBtnContainer);
@@ -6088,7 +6096,6 @@
                                 }
                             } else {
                                 // User is logged out! Show the Sign In button.
-                                // 🛑 CHANGED: Now calls the Inline Mount instead of Popup
                                 userBtnContainer.innerHTML = `
                                     <button class="tool-btn" 
                                             style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
@@ -6098,6 +6105,7 @@
                                 `;
                             }
                         };
+
 
                         // Run once on load
                         updateAuthUI(window.Clerk.user);
