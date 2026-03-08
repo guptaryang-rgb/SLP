@@ -1825,9 +1825,9 @@
                 </div>
 
                 <div id="pricing-section">
-                    <div id="pricing-title" class="landing-section-title">Select Your Edge</div>
-                <div id="pricing-grid-container" class="pricing-grid"
-                    style="max-width: 1300px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                    <div id="pricing-section">
+                    <div class="landing-section-title">Select Your Edge</div>
+                    <div class="pricing-grid" style="display: grid; max-width: 1300px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
                         
                         </div>
                 </div>
@@ -1951,6 +1951,7 @@
 
                 </div>
 
+                </div>
                 <div class="legal-footer" style="margin-top: 20px;">
                     <a href="privacy.html" target="_blank">Privacy Policy</a>
                     <a href="terms.html" target="_blank">Terms of Service</a>
@@ -3606,19 +3607,15 @@
                             }
                         }
 
-                        // 🛑 FIXED: Apply Pricing Live Changes Safely
+                        // 🛑 Apply Pricing Live Changes safely via the Wrapper
                         if (name === 'pricing') {
-                            const pTitle = document.getElementById('pricing-title');
-                            const pGrid = document.getElementById('pricing-grid-container');
+                            const pricingSec = document.getElementById('pricing-section');
                             
                             if (newState) {
-                                // Using empty string '' removes the inline 'none', forcing it to restore your exact CSS layout!
-                                if (pTitle) pTitle.style.display = '';
-                                if (pGrid) pGrid.style.display = '';
+                                if (pricingSec) pricingSec.style.display = 'block';
                                 alert("🟢 Pricing Section is now VISIBLE on the landing page.");
                             } else {
-                                if (pTitle) pTitle.style.display = 'none';
-                                if (pGrid) pGrid.style.display = 'none';
+                                if (pricingSec) pricingSec.style.display = 'none';
                                 alert("🔴 Pricing Section is now HIDDEN from the landing page.");
                             }
                         }
@@ -6100,11 +6097,10 @@
                     }
                     
                     // 🛑 FIXED: Safely hide the pricing section without breaking layout
+                    // 🛑 Hide the entire wrapper box on load if offline
                     if (window.FeatureFlags.pricing === false) {
-                        const pTitle = document.getElementById('pricing-title');
-                        const pGrid = document.getElementById('pricing-grid-container');
-                        if (pTitle) pTitle.style.display = 'none';
-                        if (pGrid) pGrid.style.display = 'none';
+                        const pricingSec = document.getElementById('pricing-section');
+                        if (pricingSec) pricingSec.style.display = 'none';
                     }
                 } catch (e) { window.FeatureFlags = {}; }
 
