@@ -15,6 +15,8 @@ const cloudinary = require("cloudinary").v2;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log("🔑 SERVER KEY CHECK:", process.env.CLERK_SECRET_KEY ? process.env.CLERK_SECRET_KEY.substring(0, 15) + "..." : "MISSING!");
+
 // Middleware Configuration
 app.use(cors());
 // Increased limit for high-res game film
@@ -880,15 +882,17 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     YOUR DUAL OBJECTIVE:
     1. THE ANALYST (Data & Telestration): 
-       - 🛑 DO NOT GUESS OR INVENT PLAY PLOTTING COORDINATES. The human coach will plot the passing/rushing distribution manually. Leave plot coordinates as null.
+       - 🛑 DO NOT GUESS OR INVENT PLAY PLOTTING COORDINATES. Leave plot coordinates as null.
        - TELESTRATION: Identify the single most important player who made a mistake/great play. Provide X/Y.
+       - 🛑 PLAY RECOGNITION RULE (CRITICAL): NEVER try to track the football to determine Run vs. Pass vs. Play Action. Wide-angle film is too blurry. You MUST read the "Keys": Look at the Offensive Line's first step. "High Hat" (kicking back, chests up) = Pass. "Low Hat" (firing forward, run blocking) = Run. If the O-Line shows Low Hat run-blocking but receivers release on vertical routes, you MUST classify it as PLAY ACTION.
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
          ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group. Prioritize the FOCUS AREA." 
          : "- SELF ANALYSIS: Focus EXCLUSIVELY on the " + groupName + ". Provide a massive biomechanical breakdown using the 5-phase structure. IMPORTANT: Accurately estimate the exact video 'timestamp' (e.g., '0:03') where each phase occurs."}
        
-       - 🛑 PLAYER IDENTIFICATION RULE: NEVER guess a jersey number. Identify players by tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT"). 
+       - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT"). 
+       - 🛑 CONFIDENCE FRAMING (COACH-SPEAK): Do not state assumptions about the ball location as absolute facts. Use professional hedging. Say "The offense showed heavy run-action which appeared to freeze the Linebacker" instead of "It was a run play." Sound like a veteran coordinator evaluating tape.
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
@@ -897,8 +901,8 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             "o_formation": "[Generate Formation]", 
             "d_formation": "[Generate Coverage Shell]", 
             "situation": { 
-                "play_type": "pass", "down": 1, "distance_togo": 10,
-                "offensive_concept": "[e.g., Mesh, Inside Zone, Dagger]",
+                "play_type": "[pass, run, or pa]", "down": 1, "distance_togo": 10,
+                "offensive_concept": "[e.g., Mesh, Inside Zone, Play Action Boot]",
                 "defensive_shell": "[e.g., Cover 3 Match, Quarters, Tampa 2]",
                 "blitz_family": "[e.g., Fire Zone, Zero, None]",
                 "plot_startX": null, "plot_startY": null, "plot_catchX": null, "plot_catchY": null, "plot_endX": null, "plot_endY": null
@@ -911,7 +915,7 @@ app.post("/api/chat", requireAuth, async (req, res) => {
             { "identifier": "[e.g., Field-side Z-Receiver]", "position": "[e.g., WR]", "grade": "[A-F]", "observation": "[Action]", "weakness": "[Flaw]" }
         ],
         "scouting_report": { 
-            "summary": "[Generate Detailed schematic analysis here]", 
+            "summary": "[Generate Detailed schematic analysis here using Coach-Speak]", 
             "coaching_prescription": { "fix": "[Generate Technical Fix]", "drill": "[Generate Specific Drill]" },
             "report_card": { "overall": "A-", "football_iq": "B+", "technique": "B", "effort": 95 }
         },
