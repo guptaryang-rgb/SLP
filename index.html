@@ -6109,7 +6109,16 @@
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
-                        if (!res.ok) throw new Error("Server failed to create session");
+                        
+                        // 🛑 THE X-RAY CATCHER 🛑
+                        if (!res.ok) {
+                            const errData = await res.json();
+                            if (errData.error === "X-RAY") {
+                                alert("🛑 SERVER DIAGNOSTIC REPORT 🛑\n\n1. Server Key: " + errData.keyPrefix + "\n2. Host URL: " + errData.host + "\n3. Clerk Error: " + JSON.stringify(errData.clerkReason));
+                            }
+                            throw new Error("Server rejected session.");
+                        }
+                        
                         const newSession = await res.json();
                         const sessions = Store.get('sessions') || [];
                         sessions.unshift(newSession);
@@ -6117,7 +6126,6 @@
                         await UI.selectSession(newSession.sessionId);
                     } catch (e) {
                         console.error(e);
-                        alert("Failed to create session. Check server console.");
                     }
                 }
             }
