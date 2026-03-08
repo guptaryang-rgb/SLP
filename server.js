@@ -381,10 +381,16 @@ const FeatureFlag = mongoose.model("FeatureFlag", new mongoose.Schema({
     isEnabled: { type: Boolean, default: true }
 }));
 
-// Middleware: Authentication Checker
+// Middleware: Authentication Checker (X-RAY DIAGNOSTIC MODE)
 const requireAuth = (req, res, next) => {
   if (!req.auth?.userId) {
-      return res.status(401).json({ error: "Unauthorized access." });
+      // The Bouncer is rejecting the token. Force it to confess why!
+      return res.status(401).json({ 
+          error: "X-RAY", 
+          host: req.headers.host,
+          keyPrefix: process.env.CLERK_SECRET_KEY ? process.env.CLERK_SECRET_KEY.substring(0, 12) + "..." : "MISSING_KEY",
+          clerkReason: req.auth || "No auth object generated"
+      });
   }
   next();
 };
