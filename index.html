@@ -12,9 +12,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
 
-    <script crossorigin="anonymous"
-    data-clerk-publishable-key="pk_live_Y2xlcmsudmFudGFnZS12aXNpb24ub3JnJA"
-    src="https://clerk.vantage-vision.org/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    <script crossorigin="anonymous" data-clerk-publishable-key="pk_live_Y2xlcmsudmFudGFnZS12aXNpb24ub3JnJA"
+        src="https://clerk.vantage-vision.org/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2099,7 +2098,14 @@
                             </h2>
                             <div style="color:#888; font-family:var(--font-mono); margin-top:8px;">STATUS: <span
                                     id="admin-status" style="color:var(--success);">Authenticating...</span></div>
+                            <div id="mobile-debug-log"
+                                style="background: #1a1a1a; color: #ff5555; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 5px; margin-top: 10px; max-height: 150px; overflow-y: auto; display: none; border: 1px solid #333;">
+                                <strong>iPad Debug Logs:</strong><br>
+                            </div>
+
                         </div>
+
+
                     </div>
 
                     <div id="admin-content" style="width:100%;">
@@ -3377,11 +3383,23 @@
         const Admin = {
             loadedPrompts: {},
 
+            // 🛑 STEP 2: The iPad Debugger Helper
+            logMobileError: (msg) => {
+                const logBox = document.getElementById('mobile-debug-log');
+                if (logBox) {
+                    logBox.style.display = 'block';
+                    const entry = document.createElement('div');
+                    entry.innerText = `> ${new Date().toLocaleTimeString()}: ${msg}`;
+                    logBox.appendChild(entry);
+                }
+                console.log("iPad Debug:", msg);
+            },
+
             loadStats: async () => {
                 try {
                     // 🛑 IPAD FIX: Wait for Clerk to actually be ready
                     if (!window.Clerk || !window.Clerk.loaded) {
-                        console.log("iPad: Clerk not ready, retrying in 1s...");
+                        Admin.logMobileError("Clerk not ready, retrying in 1s...");
                         setTimeout(() => Admin.loadStats(), 1000);
                         return;
                     }
@@ -3389,21 +3407,31 @@
                     document.getElementById('admin-status').innerText = 'Authenticating...';
 
                     const token = await window.Clerk.session.getToken();
-                    
+                    Admin.logMobileError("Token acquired successfully.");
+
                     const res = await fetch('/api/admin/stats', {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${token}` },
-                        cache: 'no-store' 
+                        cache: 'no-store'
                     });
-                    
+
+                    // 🛑 Catch the 401 error before it crashes
+                    if (!res.ok) {
+                        const status = res.status;
+                        Admin.logMobileError(`Server rejected iPad: Status ${status}`);
+                        if (status === 401) Admin.logMobileError("iPad Token is being rejected as Unauthorized.");
+                        return;
+                    }
+
                     const data = await res.json();
-                    
+                    Admin.logMobileError("Data received from server.");
+
                     if (data.success) {
                         document.getElementById('admin-stat-users').innerText = data.stats.users;
                         document.getElementById('admin-stat-sessions').innerText = data.stats.sessions;
                         document.getElementById('admin-stat-clips').innerText = data.stats.clips;
                         document.getElementById('admin-stat-plays').innerText = data.stats.plays;
-                        
+
                         document.getElementById('admin-status').innerText = 'Connected (Live)';
                         document.getElementById('admin-status').style.color = 'var(--success)';
                     }
@@ -3411,8 +3439,10 @@
                     await Admin.loadPrompts(token);
                     await Admin.loadFeatures();
 
-                } catch (e) { 
-                    console.error("Admin connection failed", e); 
+                } catch (e) {
+                    // 🛑 Catch hardware/network crashes
+                    Admin.logMobileError(`CRASH: ${e.message}`);
+                    console.error("Admin connection failed", e);
                     document.getElementById('admin-status').innerText = 'Connection Failed';
                     document.getElementById('admin-status').style.color = 'var(--danger)';
                 }
@@ -3423,11 +3453,11 @@
                     const res = await fetch('/api/admin/prompts', {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${token}` },
-                        cache: 'no-store' 
+                        cache: 'no-store'
                     });
                     const data = await res.json();
                     if (data.success) {
-                        Admin.loadedPrompts = data.prompts; 
+                        Admin.loadedPrompts = data.prompts;
                         const currentDropdownSelection = document.getElementById('admin-prompt-select').value;
                         Admin.selectPrompt(currentDropdownSelection);
                     }
@@ -3459,24 +3489,24 @@
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/admin/prompts', {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` 
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ position, promptText })
                     });
-                    
+
                     const data = await res.json();
                     if (data.success) {
-                        Admin.loadedPrompts[position] = promptText; 
+                        Admin.loadedPrompts[position] = promptText;
                         statusText.innerText = "Deployed to Coach AI!";
                         statusText.style.color = "var(--success)";
                         setTimeout(() => statusText.style.opacity = 0, 3000);
                     } else {
                         throw new Error("Failed to save.");
                     }
-                } catch (e) { 
-                    console.error("Prompt update failed", e); 
+                } catch (e) {
+                    console.error("Prompt update failed", e);
                     statusText.innerText = "Error Saving!";
                     statusText.style.color = "var(--danger)";
                 }
@@ -3484,9 +3514,9 @@
 
             loadFeatures: async () => {
                 try {
-                    const res = await fetch('/api/features', { cache: 'no-store' }); 
+                    const res = await fetch('/api/features', { cache: 'no-store' });
                     const flags = await res.json();
-                    
+
                     const playbookBtn = document.getElementById('toggle-playbook-btn');
                     if (playbookBtn) {
                         if (flags.playbook === false) {
@@ -3499,13 +3529,13 @@
                             playbookBtn.style.color = "var(--success)";
                         }
                     }
-                } catch(e) { console.error("Failed to load feature flags."); }
+                } catch (e) { console.error("Failed to load feature flags."); }
             },
 
             toggleFeature: async (name) => {
                 const btn = document.getElementById(`toggle-${name}-btn`);
                 const isCurrentlyOn = btn.innerText.includes('ONLINE');
-                const newState = !isCurrentlyOn; 
+                const newState = !isCurrentlyOn;
 
                 btn.innerText = "Syncing...";
 
@@ -3513,13 +3543,13 @@
                     const token = await window.Clerk.session.getToken();
                     const res = await fetch('/api/admin/features', {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` 
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ name, isEnabled: newState })
                     });
-                    
+
                     const data = await res.json();
                     if (data.success) {
                         if (newState) {
@@ -3535,20 +3565,20 @@
                         if (name === 'playbook') {
                             const pbTab = document.querySelector('.nav-tab[data-tab="playbook"]');
                             const pbCard = document.querySelector('.pricing-card.addon');
-                            
+
                             if (newState) {
-                                if (pbTab) pbTab.style.display = 'block'; 
-                                if (pbCard) pbCard.style.display = 'flex'; 
+                                if (pbTab) pbTab.style.display = 'block';
+                                if (pbCard) pbCard.style.display = 'flex';
                                 alert("🟢 Playbook Engine is now ONLINE for all users.");
                             } else {
-                                if (pbTab) pbTab.style.display = 'none'; 
-                                if (pbCard) pbCard.style.display = 'none'; 
+                                if (pbTab) pbTab.style.display = 'none';
+                                if (pbCard) pbCard.style.display = 'none';
                                 alert("🔴 Playbook Engine is now OFFLINE for all users.");
                             }
                         }
                     }
-                } catch (e) { 
-                    console.error("Feature toggle failed", e); 
+                } catch (e) {
+                    console.error("Feature toggle failed", e);
                     btn.innerText = "Error!";
                 }
             }
@@ -3632,7 +3662,7 @@
                     try {
                         const token = await window.Clerk.session.getToken();
                         const res = await fetch('/api/sessions', { headers: { 'Authorization': `Bearer ${token}` } });
-                        if(res.ok) {
+                        if (res.ok) {
                             const sessions = await res.json();
                             Store.set('sessions', sessions);
 
@@ -6109,7 +6139,7 @@
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
-                        
+
                         // 🛑 THE X-RAY CATCHER 🛑
                         if (!res.ok) {
                             const errData = await res.json();
@@ -6118,7 +6148,7 @@
                             }
                             throw new Error("Server rejected session.");
                         }
-                        
+
                         const newSession = await res.json();
                         const sessions = Store.get('sessions') || [];
                         sessions.unshift(newSession);
