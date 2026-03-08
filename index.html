@@ -1736,9 +1736,8 @@
 
 <body>
 
-    <button onclick="window.Clerk.openSignIn()"
-        style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: red; color: white; padding: 20px 40px; font-weight: 900; font-size: 18px; border: 4px solid white; border-radius: 8px; z-index: 999999; box-shadow: 0px 10px 30px black; cursor: pointer;">
-        IPAD MODAL OVERRIDE
+    <button onclick="App.showLoginBox()" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: red; color: white; padding: 20px 40px; font-weight: 900; font-size: 18px; border: 4px solid white; border-radius: 8px; z-index: 999999; box-shadow: 0px 10px 30px black; cursor: pointer;">
+        IPAD INLINE OVERRIDE
     </button>
 
     <div class="navbar">
@@ -6089,14 +6088,14 @@
                                 }
                             } else {
                                 // User is logged out! Show the Sign In button.
+                                // 🛑 CHANGED: Now calls the Inline Mount instead of Popup
                                 userBtnContainer.innerHTML = `
-                                <button class="tool-btn" 
-            style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
-            onclick="window.Clerk.openSignIn()">
-        Sign In
-    </button>
-`;
-
+                                    <button class="tool-btn" 
+                                            style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
+                                            onclick="App.showLoginBox()">
+                                        Sign In
+                                    </button>
+                                `;
                             }
                         };
 
@@ -6121,18 +6120,27 @@
                 }
             },
 
-            forceLogin: () => {
-                // 1. Hide our custom dark background so it doesn't get stuck
-                const modal = document.getElementById('auth-modal');
-                if (modal) modal.style.display = 'none';
+            // 🛑 NEW: The Safari-Proof Inline Box Builder
+            showLoginBox: () => {
+                const authModal = document.getElementById('auth-modal');
+                const signInDiv = document.getElementById('sign-in');
+                
+                // Show your dark background modal
+                authModal.style.display = 'flex';
+                
+                // Clear the loading text
+                signInDiv.innerHTML = '';
+                
+                // Force Clerk to build the login form directly into your HTML
+                window.Clerk.mountSignIn(signInDiv, {
+                    afterSignInUrl: 'https://vantage-vision.org',
+                    afterSignUpUrl: 'https://vantage-vision.org'
+                });
+            },
 
-                // 2. The Coach-Proof Method: 
-                if (window.Clerk) {
-                    window.Clerk.redirectToSignIn({
-                        afterSignInUrl: window.location.href,
-                        afterSignUpUrl: window.location.href
-                    });
-                }
+            forceLogin: () => {
+                // 🛑 CHANGED: Use the inline mount directly
+                App.showLoginBox();
             },
 
             createNewSession: async () => {
