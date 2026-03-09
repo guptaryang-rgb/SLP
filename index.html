@@ -1765,20 +1765,20 @@
     <div class="view-container">
 
         <div id="landing-view" class="view active-view" style="overflow-y:auto; padding-bottom:60px;">
-            <div class="hero-wrapper" style="max-width: 1200px;">
+            <div class="hero-wrapper" style="max-width: 1200px; width: 100%; display: flex; flex-direction: column; align-items: center;">
 
-                <div style="position: relative; display: flex; flex-direction: column; align-items: center; margin-bottom: 16px;">
-                    <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 400px; background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 60%); z-index: 0; pointer-events: none;"></div>
+                <div class="hero-badge" style="margin-bottom: 30px;">Pro Suite v3.2 (Stable)</div>
+
+                <div style="position: relative; display: grid; place-items: center; width: 100%; max-width: 800px; margin: 0 auto;">
                     
-                    <div class="hero-badge" style="position: relative; z-index: 1; margin-bottom: 24px;">Pro Suite v3.2 (Stable)</div>
+                    <img src="logo.png" alt="" style="width: 300px; height: auto; grid-column: 1; grid-row: 1; filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.2));">
                     
-                    <img src="logo.png" alt="Vantage Vision" style="width: 140px; height: auto; position: relative; z-index: 2; margin-bottom: -10px; filter: drop-shadow(0px 15px 20px rgba(0,0,0,0.8));">
-                    
-                    <h1 class="hero-title" style="position: relative; z-index: 3; text-shadow: 0px 4px 30px rgba(0,0,0,0.9);">Win The Game<br>Before the Snap.</h1>
+                    <h1 class="hero-title" style="margin: 0; grid-column: 1; grid-row: 1; text-align: center; text-shadow: 0 0 20px black, 0 0 40px rgba(0,0,0,0.9);">Win The Game<br>Before the Snap.</h1>
+                
                 </div>
 
-                <p class="hero-subtitle" style="position: relative; z-index: 3;">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
-                    team strategy.</p>
+                <p class="hero-subtitle" style="margin-top: 30px; text-shadow: 0 0 10px black;">Professional-grade film analysis with isolated modes for personal technique and team strategy.</p>
+                    
                 <button class="cta-btn" onclick="UI.switchTab('self')"
                     style="margin-top:10px; margin-bottom:40px;">Enter War Room</button>
 
