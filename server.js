@@ -671,10 +671,13 @@ app.post("/api/update-clip-data", requireAuth, async (req, res) => {
                 };
             }
 
-            if (clip.fullData.scouting_report && summary) {
+           if (clip.fullData.scouting_report && summary) {
                 clip.fullData.scouting_report.summary = summary;
             }
         }
+        
+        // 🛑 FIX: Tell MongoDB that the nested JSON object was modified!
+        clip.markModified('fullData'); 
         
         await clip.save();
         res.json({ success: true });
