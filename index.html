@@ -4096,8 +4096,11 @@
                 };
 
                 const allClips = Store.get('clips') || [];
-                const clips = allClips.filter(c => c.fullData?.data?.situation);
-
+                const clips = allClips.filter(c => 
+                    c.fullData?.data?.situation && 
+                    c.fullData.data.situation.plot_startX !== null && 
+                    c.fullData.data.situation.plot_startX !== undefined
+                );
                 ['chart-off-form', 'chart-def-form', 'chart-coverage', 'chart-conflict', 'chart-field-pass', 'chart-field-run'].forEach(id => {
                     const el = document.getElementById(id); if (Chart.getChart(el)) Chart.getChart(el).destroy();
                 });
@@ -4166,8 +4169,11 @@
 
             exportStatsCSV: () => {
                 const allClips = Store.get('clips') || [];
-                const clips = allClips.filter(c => c.fullData?.data?.situation);
-
+                const clips = allClips.filter(c => 
+                    c.fullData?.data?.situation && 
+                    c.fullData.data.situation.plot_startX !== null && 
+                    c.fullData.data.situation.plot_startX !== undefined
+                );
                 if (clips.length === 0) {
                     alert("No analyzed clips with situation data available to export.");
                     return;
@@ -4535,6 +4541,14 @@
                         }
 
                         if (typeof Playbook !== 'undefined') Playbook.showToast("Analysis Complete!", "var(--success)");
+                        
+                        // 🛑 THE TOLLBOOTH UX: Automatically open the video and force them to add Context!
+                        if (data.newClip) {
+                            setTimeout(() => {
+                                UI.playClip(data.newClip._id || data.newClip.id);
+                                UI.toggleContextPanel(true);
+                            }, 500);
+                        }
                     } else {
                         UI.renderMessageHTML({ type: 'ai', content: data.reply });
                     }
