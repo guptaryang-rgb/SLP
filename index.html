@@ -3605,24 +3605,39 @@
                     // Build Accordion Layout for Positions
                     let gridHtml = `<div class="pos-breakdown-container">`;
                     data.positional.forEach((pos, idx) => {
-                        const activeClass = idx === 0 ? 'active' : ''; 
-                        const isAutopsy = pos.group.includes('Autopsy');
-                        const headerStyle = isAutopsy ? 'background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;' : '';
+                        const activeClass = idx === 0 ? 'active' : '';
+                        const isAutopsy = pos.group.includes('Domino') || pos.group.includes('Autopsy');
+                        const isOpponent = pos.group.includes('Opponent');
                         
-                        gridHtml += `
-                            <div class="accordion-item ${activeClass}" style="${isAutopsy ? 'border: 1px solid var(--danger);' : ''}">
-                                <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')" style="${headerStyle}">
-                                    <span style="${isAutopsy ? 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;' : ''}">${pos.group}</span>
-                                    <span class="accordion-icon">+</span>
+                        let headerStyle = '';
+                        let borderStyle = '';
+                        let titleStyle = '';
+                        
+                        if (isAutopsy) {
+                            headerStyle = 'background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;';
+                            borderStyle = 'border: 1px solid var(--danger);';
+                            titleStyle = 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;';
+                        } else if (isOpponent) {
+                            headerStyle = 'background: rgba(168, 85, 247, 0.15); border-bottom: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc;';
+                            borderStyle = 'border: 1px solid #a855f7;';
+                            titleStyle = 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;';
+                        }
+                        
+                        return `
+                                <div class="accordion-item ${activeClass}" style="${borderStyle}">
+                                    <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')" style="${headerStyle}">
+                                        <span style="${titleStyle}">${pos.group}</span>
+                                        <span class="accordion-icon">+</span>
+                                    </div>
+                                    <div class="accordion-content">
+                                        ${pos.timestamp && pos.timestamp !== 'Overall' ? `<div onclick="event.stopPropagation(); UI.seekVideo('${pos.timestamp}')" style="display:inline-block; background:rgba(56,189,248,0.2); color:var(--accent); padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold; font-family:var(--font-mono); margin-bottom:12px; cursor:pointer; border: 1px solid rgba(56,189,248,0.4);">⏱️ Jump to ${pos.timestamp}</div>` : ''}
+                                        <div class="pos-action">${isAutopsy || isOpponent ? 'TACTICAL DIAGNOSIS:' : 'ACTION:'}</div>
+                                        <div style="margin-bottom:12px;">${pos.action}</div>
+                                        <div class="pos-problem">ANALYSIS:</div>
+                                        <div>${pos.analysis}</div>
+                                    </div>
                                 </div>
-                                <div class="accordion-content">
-                                    <div class="pos-action">${isAutopsy ? 'DIAGNOSIS:' : 'ACTION:'}</div>
-                                    <div style="margin-bottom:12px;">${pos.action}</div>
-                                    <div class="pos-problem">ANALYSIS:</div>
-                                    <div>${pos.analysis}</div>
-                                </div>
-                            </div>
-                        `;
+                                `;
                     });
                     gridHtml += `</div>`;
 
@@ -4724,18 +4739,32 @@
                             <div class="pos-section-title">POSITIONAL AI BREAKDOWN</div>
                             ${data.positional.map((pos, idx) => {
                         const activeClass = idx === 0 ? 'active' : '';
-                        const isAutopsy = pos.group.includes('Autopsy');
-                        const headerStyle = isAutopsy ? 'background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;' : '';
+                        const isAutopsy = pos.group.includes('Domino') || pos.group.includes('Autopsy');
+                        const isOpponent = pos.group.includes('Opponent');
+                        
+                        let headerStyle = '';
+                        let borderStyle = '';
+                        let titleStyle = '';
+                        
+                        if (isAutopsy) {
+                            headerStyle = 'background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;';
+                            borderStyle = 'border: 1px solid var(--danger);';
+                            titleStyle = 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;';
+                        } else if (isOpponent) {
+                            headerStyle = 'background: rgba(168, 85, 247, 0.15); border-bottom: 1px solid rgba(168, 85, 247, 0.3); color: #c084fc;';
+                            borderStyle = 'border: 1px solid #a855f7;';
+                            titleStyle = 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;';
+                        }
                         
                         return `
-                                <div class="accordion-item ${activeClass}" style="${isAutopsy ? 'border: 1px solid var(--danger);' : ''}">
+                                <div class="accordion-item ${activeClass}" style="${borderStyle}">
                                     <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')" style="${headerStyle}">
-                                        <span style="${isAutopsy ? 'font-weight: 900; text-transform: uppercase; letter-spacing: 1px;' : ''}">${pos.group}</span>
+                                        <span style="${titleStyle}">${pos.group}</span>
                                         <span class="accordion-icon">+</span>
                                     </div>
                                     <div class="accordion-content">
                                         ${pos.timestamp && pos.timestamp !== 'Overall' ? `<div onclick="event.stopPropagation(); UI.seekVideo('${pos.timestamp}')" style="display:inline-block; background:rgba(56,189,248,0.2); color:var(--accent); padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:bold; font-family:var(--font-mono); margin-bottom:12px; cursor:pointer; border: 1px solid rgba(56,189,248,0.4);">⏱️ Jump to ${pos.timestamp}</div>` : ''}
-                                        <div class="pos-action">${isAutopsy ? 'DIAGNOSIS:' : 'ACTION:'}</div>
+                                        <div class="pos-action">${isAutopsy || isOpponent ? 'TACTICAL DIAGNOSIS:' : 'ACTION:'}</div>
                                         <div style="margin-bottom:12px;">${pos.action}</div>
                                         <div class="pos-problem">ANALYSIS:</div>
                                         <div>${pos.analysis}</div>
