@@ -865,25 +865,26 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Running Backs", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Wide Receivers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Tight Ends", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Offensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Defensive Line", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Linebackers", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" },
-            { "group": "Secondary (DB/S)", "action": "[Provide detailed 2-3 sentence action summary]", "analysis": "[Provide a massive, pro-level critique.]" }
+            { "group": "Quarterback", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Running Backs", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Wide Receivers", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Tight Ends", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Offensive Line", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Defensive Line", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Linebackers", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "Secondary (DB/S)", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
+            { "group": "🚨 Execution Autopsy", "action": "What Went Wrong", "analysis": "[Identify the specific scheme failure vs execution failure. Explain the domino effect of the breakdown across the unit.]" }
         ]`
         : `[
-            { "group": "1. Pre-Snap Alignment & Stance", "timestamp": "0:00", "action": "[Exact alignment]", "analysis": "[Pro-level breakdown of stance/leverage.]" },
-            { "group": "2. First Step & Processing", "timestamp": "[e.g. 0:01]", "action": "[First movement]", "analysis": "[Breakdown of get-off and eye discipline.]" },
-            { "group": "3. Technique & Execution", "timestamp": "[e.g. 0:03]", "action": "[Primary assignment]", "analysis": "[Biomechanical breakdown of the route/block/phase.]" },
-            { "group": "4. Finish & Result", "timestamp": "[e.g. 0:05]", "action": "[How it ended]", "analysis": "[Breakdown of contact, catch point, or tackle.]" },
-            { "group": "5. Coach's Final Verdict", "timestamp": "Overall", "action": "[Overall assessment]", "analysis": "[Technical flaws and drill recommendations.]" }
+            { "group": "Phase 1: Base & Posture", "timestamp": "0:00", "action": "[Pre-snap body alignment]", "analysis": "[Analyze weight distribution, spine alignment, foot width, and eye placement.]" },
+            { "group": "Phase 2: Get-Off & Explosion", "timestamp": "[0:01]", "action": "[First 0.5 seconds of movement]", "analysis": "[Analyze false steps, shin angles, arm drive sync, and kinetic power generation.]" },
+            { "group": "Phase 3: Point of Contact / Action", "timestamp": "[0:03]", "action": "[The Strike / Break / Execution]", "analysis": "[Analyze hand placement, elbow tightness, hip explosion, and center of gravity control.]" },
+            { "group": "Phase 4: Deceleration & Finish", "timestamp": "[0:05]", "action": "[Follow through / Recovery]", "analysis": "[Analyze hip sink, balance recovery, and body control through the whistle.]" },
+            { "group": "Kinetic Chain Verdict", "timestamp": "Overall", "action": "[Biomechanical Root Cause]", "analysis": "[Identify the core mechanical flaw causing inefficiencies and prescribe a specific body-mechanic drill.]" }
         ]`;
 
     let systemInstruction = `
-    ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Coach"}.
+    ROLE: ${isTeam ? "NFL Head Coach & Coordinator" : "Elite " + groupName + " Biomechanics Specialist"}.
     CONTEXT: ${promptOverrides[position] || "Analyze the fundamentals."}
     EXPECTED PLAY CALL / ASSIGNMENT: ${assignment ? assignment : "Unknown. Infer based purely on observed movement."}
     FOCUS AREA: ${focusText}
@@ -893,15 +894,15 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     1. THE ANALYST (Data & Telestration): 
        - 🛑 DO NOT GUESS OR INVENT PLAY PLOTTING COORDINATES. Leave plot coordinates as null.
        - TELESTRATION: Identify the single most important player who made a mistake/great play. Provide X/Y.
-       - 🛑 PLAY RECOGNITION RULE (CRITICAL): NEVER try to track the football to determine Run vs. Pass vs. Play Action. Wide-angle film is too blurry. You MUST read the "Keys": Look at the Offensive Line's first step. "High Hat" (kicking back, chests up) = Pass. "Low Hat" (firing forward, run blocking) = Run. If the O-Line shows Low Hat run-blocking but receivers release on vertical routes, you MUST classify it as PLAY ACTION.
+       - 🛑 PLAY RECOGNITION RULE: Read the "Keys". "High Hat" = Pass. "Low Hat" = Run. If Low Hat but vertical routes = PLAY ACTION.
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS: You MUST provide an excruciatingly detailed analysis for EVERY single position group. Prioritize the FOCUS AREA." 
-         : "- SELF ANALYSIS: Focus EXCLUSIVELY on the " + groupName + ". Provide a massive biomechanical breakdown using the 5-phase structure. IMPORTANT: Accurately estimate the exact video 'timestamp' (e.g., '0:03') where each phase occurs."}
+         ? "- TEAM ANALYSIS (MACRO): Provide detailed analysis for EVERY position group. You MUST include the final '🚨 Execution Autopsy' group explaining the domino effect of what went wrong conceptually and physically." 
+         : "- SELF ANALYSIS (MICRO): Focus EXCLUSIVELY on the " + groupName + " player's body physics. DO NOT discuss scheme, formations, or the opposing team. Break down their spine alignment, limb mechanics, center of gravity, and kinetic chain using the 4-Phase structure. Accurately estimate the video 'timestamp' (e.g., '0:03') for each phase."}
        
-       - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment (e.g., "Boundary X-Receiver", "3-Technique DT"). 
-       - 🛑 CONFIDENCE FRAMING (COACH-SPEAK): Do not state assumptions about the ball location as absolute facts. Use professional hedging. Say "The offense showed heavy run-action which appeared to freeze the Linebacker" instead of "It was a run play." Sound like a veteran coordinator evaluating tape.
+       - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment.
+       - 🛑 CONFIDENCE FRAMING: Use professional hedging (e.g., "The receiver appeared to lose balance" instead of absolute facts).
 
     OUTPUT JSON FORMAT (Strict JSON):
     { 
