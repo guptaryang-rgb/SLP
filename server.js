@@ -865,15 +865,16 @@ app.post("/api/chat", requireAuth, async (req, res) => {
 
     const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Running Backs", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Wide Receivers", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Tight Ends", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Offensive Line", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Defensive Line", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Linebackers", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "Secondary (DB/S)", "action": "[2-3 sentence action summary]", "analysis": "[Pro-level critique.]" },
-            { "group": "🚨 Execution Autopsy", "action": "What Went Wrong", "analysis": "[Identify the specific scheme failure vs execution failure. Explain the domino effect of the breakdown across the unit.]" }
+            { "group": "Quarterback", "action": "[Exact read, footwork, or throw decision]", "analysis": "[Hyper-specific: State exactly what mechanics, eye-discipline, or pocket movement impacted the play's outcome.]" },
+            { "group": "Running Backs", "action": "[Exact path, block, or route]", "analysis": "[Hyper-specific: State exact pad level, gap pressed, or pass-pro identification.]" },
+            { "group": "Wide Receivers", "action": "[Exact release and route stem]", "analysis": "[Hyper-specific: Detail leverage won/lost, break angles, or spacing issues.]" },
+            { "group": "Tight Ends", "action": "[Exact block or route]", "analysis": "[Hyper-specific: Detail hand placement, hip drop, or route execution.]" },
+            { "group": "Offensive Line", "action": "[Exact blocking scheme execution]", "analysis": "[Hyper-specific: Detail exactly who lost/won their 1v1, missed an assignment, or had poor footwork.]" },
+            { "group": "Defensive Line", "action": "[Exact stunt, rush, or gap control]", "analysis": "[Hyper-specific: Detail hand usage, gap integrity, or get-off speed.]" },
+            { "group": "Linebackers", "action": "[Exact read, drop, or run fit]", "analysis": "[Hyper-specific: Detail false steps, eye violations, or scrape angles.]" },
+            { "group": "Secondary (DB/S)", "action": "[Exact coverage technique]", "analysis": "[Hyper-specific: Detail cushion depth, phase maintenance, or leverage mistakes.]" },
+            { "group": "🚨 The Domino Effect", "action": "Play Success/Failure Chain", "analysis": "[Trace the EXACT chain of events. e.g., 'Because the LG opened his hips too early, the 3-tech generated immediate pressure, forcing the QB to drift right and ruin the spacing of the Dig route.']" },
+            { "group": "♟️ Opponent's Impact", "action": "Chaos & Window Creation", "analysis": "[Analyze exactly what the OTHER team did to force the error or create the window. e.g., 'The defense used a simulated pressure to force a 1v1 on the RT, while dropping the DE into the quick-slant window to create chaos.']" }
         ]`
         : `[
             { "group": "Phase 1: Base & Posture", "timestamp": "0:00", "action": "[Pre-snap body alignment]", "analysis": "[Analyze weight distribution, spine alignment, foot width, and eye placement.]" },
@@ -898,9 +899,9 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS (MACRO): Provide detailed analysis for EVERY position group. You MUST include the final '🚨 Execution Autopsy' group explaining the domino effect of what went wrong conceptually and physically." 
+         ? "- TEAM ANALYSIS (MACRO): Ban generalities. You MUST detail exactly what individual players did right or wrong physically and mentally. You MUST include '🚨 The Domino Effect' (how one player's action impacted the whole play) and '♟️ Opponent's Impact' (exactly what schematic or physical trait the other team used to create chaos or a window of opportunity)." 
          : "- SELF ANALYSIS (MICRO): Focus EXCLUSIVELY on the " + groupName + " player's body physics. DO NOT discuss scheme, formations, or the opposing team. Break down their spine alignment, limb mechanics, center of gravity, and kinetic chain using the 4-Phase structure. Accurately estimate the video 'timestamp' (e.g., '0:03') for each phase."}
-       
+                
        - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment.
        - 🛑 CONFIDENCE FRAMING: Use professional hedging (e.g., "The receiver appeared to lose balance" instead of absolute facts).
 
