@@ -863,18 +863,20 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     };
     const focusText = isTeam ? (focusMap[focusArea] || 'Full Field Analysis') : (groupName + " Execution");
 
-    const positionalJSON = isTeam 
+        const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[Exact read, footwork, or throw decision]", "analysis": "[Hyper-specific: State exactly what mechanics, eye-discipline, or pocket movement impacted the play's outcome.]" },
+            { "group": "Quarterback", "action": "[Exact read, footwork, or throw decision]", "analysis": "[Hyper-specific: State exactly what mechanics or decisions impacted the play.]" },
             { "group": "Running Backs", "action": "[Exact path, block, or route]", "analysis": "[Hyper-specific: State exact pad level, gap pressed, or pass-pro identification.]" },
             { "group": "Wide Receivers", "action": "[Exact release and route stem]", "analysis": "[Hyper-specific: Detail leverage won/lost, break angles, or spacing issues.]" },
             { "group": "Tight Ends", "action": "[Exact block or route]", "analysis": "[Hyper-specific: Detail hand placement, hip drop, or route execution.]" },
-            { "group": "Offensive Line", "action": "[Exact blocking scheme execution]", "analysis": "[Hyper-specific: Detail exactly who lost/won their 1v1, missed an assignment, or had poor footwork.]" },
-            { "group": "Defensive Line", "action": "[Exact stunt, rush, or gap control]", "analysis": "[Hyper-specific: Detail hand usage, gap integrity, or get-off speed.]" },
+            { "group": "Offensive Tackles (LT/RT)", "action": "[Pass set or run block execution]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Left Tackle and Right Tackle independently. Detail who won their 1v1, missed an assignment, or had poor footwork.]" },
+            { "group": "Interior O-Line (LG/C/RG)", "action": "[Combo blocks, pulls, or anchor]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Left Guard, Center, and Right Guard independently. Detail who gave up pressure or generated a push.]" },
+            { "group": "Edge Defenders (DE/Rush)", "action": "[Rush plan or edge setting]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Field and Boundary Edge rushers independently. Detail their get-off, hand usage, and contain principles.]" },
+            { "group": "Interior D-Line (DT/NT)", "action": "[Gap control or interior rush]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the 1-Tech, 3-Tech, etc., independently. Did they hold the point of attack or get washed out?]" },
             { "group": "Linebackers", "action": "[Exact read, drop, or run fit]", "analysis": "[Hyper-specific: Detail false steps, eye violations, or scrape angles.]" },
             { "group": "Secondary (DB/S)", "action": "[Exact coverage technique]", "analysis": "[Hyper-specific: Detail cushion depth, phase maintenance, or leverage mistakes.]" },
-            { "group": "🚨 The Domino Effect", "action": "Play Success/Failure Chain", "analysis": "[Trace the EXACT chain of events. e.g., 'Because the LG opened his hips too early, the 3-tech generated immediate pressure, forcing the QB to drift right and ruin the spacing of the Dig route.']" },
-            { "group": "♟️ Opponent's Impact", "action": "Chaos & Window Creation", "analysis": "[Analyze exactly what the OTHER team did to force the error or create the window. e.g., 'The defense used a simulated pressure to force a 1v1 on the RT, while dropping the DE into the quick-slant window to create chaos.']" }
+            { "group": "🚨 The Domino Effect", "action": "Play Success/Failure Chain", "analysis": "[Trace the EXACT chain of events. e.g., 'Because the LG opened his hips too early, the 3-tech generated immediate pressure, forcing the QB to drift...']" },
+            { "group": "♟️ Opponent's Impact", "action": "Chaos & Window Creation", "analysis": "[Analyze exactly what the OTHER team did to force the error or create the window.]" }
         ]`
         : `[
             { "group": "Phase 1: Base & Posture", "timestamp": "0:00", "action": "[Pre-snap body alignment]", "analysis": "[Analyze weight distribution, spine alignment, foot width, and eye placement.]" },
@@ -899,9 +901,9 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS (MACRO): Ban generalities. You MUST detail exactly what individual players did right or wrong physically and mentally. You MUST include '🚨 The Domino Effect' (how one player's action impacted the whole play) and '♟️ Opponent's Impact' (exactly what schematic or physical trait the other team used to create chaos or a window of opportunity)." 
+         ? "- TEAM ANALYSIS (MACRO): Ban generalities. You MUST detail exactly what individual players did right or wrong physically and mentally. For the offensive and defensive lines, you MUST break down specific players (e.g., Left Tackle, 3-Technique) independently. You MUST include '🚨 The Domino Effect' and '♟️ Opponent's Impact'." 
          : "- SELF ANALYSIS (MICRO): Focus EXCLUSIVELY on the " + groupName + " player's body physics. DO NOT discuss scheme, formations, or the opposing team. Break down their spine alignment, limb mechanics, center of gravity, and kinetic chain using the 4-Phase structure. Accurately estimate the video 'timestamp' (e.g., '0:03') for each phase."}
-                
+       
        - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment.
        - 🛑 CONFIDENCE FRAMING: Use professional hedging (e.g., "The receiver appeared to lose balance" instead of absolute facts).
 
