@@ -1736,60 +1736,78 @@
        🚨 MOBILE RESPONSIVE OVERRIDES 🚨
        ========================================= */
     @media (max-width: 768px) {
-        body {
-            overflow-x: hidden;
+            body { overflow-x: hidden; }
+            .main-wrapper, .app-container {
+                flex-direction: column !important;
+                height: 100vh;
+            }
+
+            /* Show hamburger only on mobile */
+            #mobile-menu-btn { display: inline-block !important; }
+            
+            /* Hide Sidebar completely, pop it over the screen when active */
+            .sidebar {
+                display: none !important;
+                position: absolute;
+                top: 70px; /* Push down below your logo */
+                left: 0;
+                width: 100% !important;
+                height: calc(100vh - 70px) !important;
+                background: #111; 
+                z-index: 9999;
+                padding: 20px;
+                border-right: none;
+            }
+            .sidebar.mobile-active {
+                display: flex !important;
+            }
+
+            /* Video size fix */
+            .video-container, video {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 35vh;
+            }
+
+            /* Shrink the massive input bar buttons side-by-side */
+            .input-bar {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px;
+            }
+            .input-bar select, .input-bar input[type="text"] {
+                flex: 1 1 45%; 
+                min-height: 44px;
+                font-size: 16px;
+                margin: 0 !important;
+            }
+            #send-button {
+                flex: 1 1 100%;
+                min-height: 48px;
+                margin-top: 5px;
+            }
+            .tool-btn, .upload-btn {
+                flex: 0 0 44px;
+                height: 44px;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
         }
-        .main-wrapper, .app-container {
-            flex-direction: column !important;
-            height: auto;
-        }
-        .sidebar {
-            width: 100% !important;
-            height: auto !important;
-            min-height: auto;
-            position: relative;
-            border-right: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .video-container, video {
-            width: 100% !important;
-            height: auto !important;
-            max-height: 40vh;
-            border-radius: 8px;
-        }
-        .scout-card-grid, .grid-container {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 15px;
-        }
-        button, .accordion-header, select, input {
-            min-height: 48px;
-            font-size: 16px;
-            padding: 12px;
-        }
-        .input-bar {
-            flex-direction: column;
-            width: 100%;
-        }
-        .input-bar select, .input-bar button {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-    }
     </style>
 </head>
 
 <body>
-
-    
+<div class="main-wrapper">
 
     <div class="navbar">
+        <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="display: none; background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px;">
+            ☰
+        </button>
+
         <div class="logo" onclick="window.location.reload()">
             <img src="logo.png" alt="Vantage Vision" style="width: 45px; height: 45px; object-fit: contain;">
             Vantage<span>Vision</span>
@@ -1801,7 +1819,7 @@
             <div class="nav-tab" data-tab="team">Team Analysis</div>
             <div class="nav-tab" data-tab="playbook">Playbook</div>
         </div>
-
+        
         <div style="display:flex; align-items:center; gap:20px;">
             <div class="nav-tab" id="admin-tab" data-tab="admin"
                 style="display:none; color:var(--warning); font-weight:800; border:1px solid rgba(245, 158, 11, 0.4); background:rgba(245, 158, 11, 0.05); border-radius:20px; padding:6px 16px;">
@@ -6151,7 +6169,17 @@
             }
         };
 
-        const App = {
+        let currentMode = 'team';
+
+        // 🛑 2. PASTE THE TOGGLE FUNCTION HERE 🛑
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-active');
+            }
+        }
+
+const App = {
             init: async () => {
                 // 1. Fetch Feature Flags
                 try {
@@ -6165,15 +6193,16 @@
                         if (pbCard) pbCard.style.display = 'none';
                     }
                     
-                    // 🛑 FIXED: Safely hide the pricing section without breaking layout
                     // 🛑 Hide the entire wrapper box on load if offline
                     if (window.FeatureFlags.pricing === false) {
                         const pricingSec = document.getElementById('pricing-section');
                         if (pricingSec) pricingSec.style.display = 'none';
                     }
-                } catch (e) { window.FeatureFlags = {}; }
+                } catch (e) { 
+                    window.FeatureFlags = {}; 
+                }
 
-                // 2. Safe Clerk Initialization
+                // 2. Safe Clerk Initialization & Auto-Login
                 if (window.Clerk) {
                     try {
                         await window.Clerk.load();
@@ -6189,7 +6218,7 @@
 
                         const updateAuthUI = (user) => {
                             if (user) {
-                                // User is logged in! Mount profile bubble.
+                                // User is logged in! Mount profile bubble and hide login screen.
                                 const authModal = document.getElementById('auth-modal');
                                 if (authModal) authModal.style.display = 'none';
 
@@ -6204,7 +6233,6 @@
                                 }
                             } else {
                                 // User is logged out! Show the Sign In button.
-                                // 🛑 CHANGED: Now calls the Inline Mount instead of Popup
                                 userBtnContainer.innerHTML = `
                                     <button class="tool-btn" 
                                             style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
@@ -6215,19 +6243,21 @@
                             }
                         };
 
-                        // Run once on load
+                        // 🛑 THE AUTO-LOGIN FIX
+                        // Run once immediately on load to check for the saved mobile cookie
                         updateAuthUI(window.Clerk.user);
 
                         // Listen for changes (like logging out)
                         window.Clerk.addListener(({ user }) => updateAuthUI(user));
 
-                        // 3. Start the Engines
+                        // 3. Start the Engines (Only happens after Auth is checked)
                         UI.init();
                         if (typeof Playbook !== 'undefined') Playbook.init();
                         if (typeof VoiceEngine !== 'undefined') {
                             VoiceEngine.init('user-input', 'mic-btn-main');
                             VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
                         }
+
                     } catch (err) {
                         console.error("Clerk Auth Failed to Load:", err);
                     }
@@ -6236,7 +6266,7 @@
                 }
             },
 
-            // 🛑 NEW: The Safari-Proof Inline Box Builder
+            // 🛑 THE SAFARI-PROOF INLINE BOX BUILDER
             showLoginBox: () => {
                 const authModal = document.getElementById('auth-modal');
                 const signInDiv = document.getElementById('sign-in');
@@ -6247,14 +6277,13 @@
                 // Clear the loading text
                 signInDiv.innerHTML = '';
                 
-                // 🛑 FIXED: Use Virtual Routing so Safari doesn't panic about redirects
+                // Use Virtual Routing so Safari doesn't panic about redirects
                 window.Clerk.mountSignIn(signInDiv, {
                     routing: "virtual"
                 });
             },
 
             forceLogin: () => {
-                // 🛑 CHANGED: Use the inline mount directly
                 App.showLoginBox();
             },
 
@@ -6269,7 +6298,7 @@
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
 
-                        // 🛑 THE X-RAY CATCHER 🛑
+                        // 🛑 THE X-RAY CATCHER
                         if (!res.ok) {
                             const errData = await res.json();
                             if (errData.error === "X-RAY") {
@@ -6289,7 +6318,6 @@
                 }
             }
         };
-
         window.onload = App.init;
 
     </script>
