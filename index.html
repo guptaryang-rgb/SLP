@@ -1736,67 +1736,81 @@
        🚨 MOBILE RESPONSIVE OVERRIDES 🚨
        ========================================= */
     @media (max-width: 768px) {
-            body { overflow-x: hidden; }
-            .main-wrapper, .app-container {
-                flex-direction: column !important;
-                height: 100vh;
-            }
+    body {
+        overflow-x: hidden;
+        overflow-y: auto !important; /* Force scrolling to return */
+    }
+    
+    .main-wrapper, .app-container {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important; /* FIXED: Removed the 100vh that collapsed the screen */
+        min-height: 100vh;
+    }
 
-            /* Show hamburger only on mobile */
-            #mobile-menu-btn { display: inline-block !important; }
-            
-            /* Hide Sidebar completely, pop it over the screen when active */
-            .sidebar {
-                display: none !important;
-                position: absolute;
-                top: 70px; /* Push down below your logo */
-                left: 0;
-                width: 100% !important;
-                height: calc(100vh - 70px) !important;
-                background: #111; 
-                z-index: 9999;
-                padding: 20px;
-                border-right: none;
-            }
-            .sidebar.mobile-active {
-                display: flex !important;
-            }
+    /* 🛑 NEW SAFETY NET: Force the main right-side content to expand */
+    .main-content, .content-area, .video-section {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        min-height: 60vh !important; /* Forces the video/chat to take up at least half the screen */
+    }
 
-            /* Video size fix */
-            .video-container, video {
-                width: 100% !important;
-                height: auto !important;
-                max-height: 35vh;
-            }
+    /* --- 1. THE HEADER & TABS --- */
+    #mobile-menu-btn {
+        display: inline-block !important;
+        margin-right: 15px;
+    }
+    .nav-tabs, .header-tabs, .tab-container {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch; /* Smooth horizontal scroll on iPhone */
+    }
 
-            /* Shrink the massive input bar buttons side-by-side */
-            .input-bar {
-                display: flex !important;
-                flex-direction: row !important;
-                flex-wrap: wrap;
-                gap: 8px;
-                padding: 10px;
-            }
-            .input-bar select, .input-bar input[type="text"] {
-                flex: 1 1 45%; 
-                min-height: 44px;
-                font-size: 16px;
-                margin: 0 !important;
-            }
-            #send-button {
-                flex: 1 1 100%;
-                min-height: 48px;
-                margin-top: 5px;
-            }
-            .tool-btn, .upload-btn {
-                flex: 0 0 44px;
-                height: 44px;
-                padding: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-        }
+    /* --- 2. HIDE THE SIDEBAR --- */
+    .sidebar {
+        display: none !important; 
+        position: absolute;
+        top: 60px; 
+        left: 0;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 80vh;
+        background: #111; /* Match your dark theme */
+        z-index: 9999;
+        padding: 20px;
+        box-shadow: 2px 5px 15px rgba(0,0,0,0.8); /* Adds a drop shadow so it looks like a menu overlay */
+    }
+    .sidebar.mobile-active {
+        display: flex !important; 
+        flex-direction: column;
+    }
+
+    /* --- 3. STREAMLINE THE INPUT BAR --- */
+    .input-bar, .bottom-bar {
+        display: flex !important;
+        flex-direction: row !important; 
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+        background: #1a1a1a;
+        width: 100% !important;
+        margin-top: auto;
+    }
+    
+    /* Make video player fit cleanly and never disappear */
+    .video-container, video {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 40vh !important;
+        min-height: 200px !important; /* Safety net so the video box always shows */
+        border-radius: 8px;
+    }
+}
     </style>
 </head>
 
