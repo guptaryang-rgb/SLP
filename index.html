@@ -1731,6 +1731,57 @@
             content: '+';
             color: #a855f7;
         }
+
+        /* =========================================
+       🚨 MOBILE RESPONSIVE OVERRIDES 🚨
+       ========================================= */
+    @media (max-width: 768px) {
+        body {
+            overflow-x: hidden;
+        }
+        .main-wrapper, .app-container {
+            flex-direction: column !important;
+            height: auto;
+        }
+        .sidebar {
+            width: 100% !important;
+            height: auto !important;
+            min-height: auto;
+            position: relative;
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .video-container, video {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 40vh;
+            border-radius: 8px;
+        }
+        .scout-card-grid, .grid-container {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px;
+        }
+        button, .accordion-header, select, input {
+            min-height: 48px;
+            font-size: 16px;
+            padding: 12px;
+        }
+        .input-bar {
+            flex-direction: column;
+            width: 100%;
+        }
+        .input-bar select, .input-bar button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
     </style>
 </head>
 
