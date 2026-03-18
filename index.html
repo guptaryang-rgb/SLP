@@ -1731,154 +1731,14 @@
             content: '+';
             color: #a855f7;
         }
-
-  /* =========================================
-   🖥️ GLOBAL DESKTOP FIX (SAFE VERSION) 🖥️
-   ========================================= */
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-}
-
-/* 1. Let the wrapper behave normally so the Landing Page isn't squished */
-.main-wrapper {
-    display: block; /* 🛑 FIXED: Removed the flex-row that broke the landing page */
-    width: 100vw !important;
-    max-width: 100% !important;
-    min-height: 100vh;
-    background-color: #0a0a0a; 
-}
-
-/* 2. Target ONLY the actual war room to be side-by-side */
-.app-container { 
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: calc(100vh - 70px); /* Subtracts the height of your top header */
-}
-
-/* 3. Force the War Room content to stretch */
-.main-content {
-    flex-grow: 1 !important; 
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto; 
-    position: relative;
-}
-
-/* =========================================
-   📱 TRUE NATIVE APP MOBILE LAYOUT 📱
-   (These sit INSIDE the media query!)
-   ========================================= */
-@media (max-width: 768px) {
-    /* 1. Lock the body so it doesn't bounce around */
-    body {
-        overflow: hidden !important; 
-    }
-
-    /* Override the Global wrapper to be stacked on phones */
-    .main-wrapper, .app-container {
-        display: flex !important;
-        flex-direction: column !important; /* Stacks everything vertically for phones */
-        height: 100vh !important; 
-        width: 100vw !important;
-    }
-
-    /* 2. Slide-Out Sidebar (Hidden by default) */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: -100%; /* Hides it off the left side of the screen */
-        width: 80% !important;
-        height: 100vh !important;
-        background: #111;
-        z-index: 9999;
-        transition: left 0.3s ease-in-out; 
-        box-shadow: 5px 0 15px rgba(0,0,0,0.9);
-        padding: 20px;
-    }
-    .sidebar.mobile-active {
-        left: 0; 
-    }
-
-    /* 3. Sticky Top Video Player */
-    .video-container {
-        flex-shrink: 0;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        width: 100% !important;
-        background: #000;
-        border-bottom: 1px solid #333;
-    }
-    video {
-        width: 100% !important;
-        max-height: 35vh !important; 
-        border-radius: 0 !important;
-    }
-    
-    /* 4. Scrollable Middle Area (The AI Report) */
-    .scout-card-grid, .grid-container, .main-content {
-        flex-grow: 1; 
-        overflow-y: auto !important; 
-        padding: 15px;
-        padding-bottom: 100px !important; /* Room for bottom bar */
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* 5. iMessage Style Bottom Bar */
-    .input-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100% !important;
-        background: rgba(20, 20, 20, 0.95);
-        backdrop-filter: blur(10px); 
-        border-top: 1px solid rgba(255,255,255,0.1);
-        padding: 10px 15px;
-        padding-bottom: env(safe-area-inset-bottom, 20px); 
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center;
-        gap: 10px;
-        z-index: 50;
-    }
-    
-    .input-bar select, .input-bar input {
-        flex-grow: 1;
-        height: 44px;
-        border-radius: 22px; 
-        padding: 0 15px;
-        margin: 0 !important;
-    }
-    .tool-btn, .upload-btn, .send-btn {
-        flex-shrink: 0;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 0;
-    }
-}
     </style>
 </head>
 
 <body>
-<div class="main-wrapper">
+
+    
 
     <div class="navbar">
-        <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="display: none; background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px;">
-            ☰
-        </button>
-
         <div class="logo" onclick="window.location.reload()">
             <img src="logo.png" alt="Vantage Vision" style="width: 45px; height: 45px; object-fit: contain;">
             Vantage<span>Vision</span>
@@ -1890,7 +1750,7 @@ html, body {
             <div class="nav-tab" data-tab="team">Team Analysis</div>
             <div class="nav-tab" data-tab="playbook">Playbook</div>
         </div>
-        
+
         <div style="display:flex; align-items:center; gap:20px;">
             <div class="nav-tab" id="admin-tab" data-tab="admin"
                 style="display:none; color:var(--warning); font-weight:800; border:1px solid rgba(245, 158, 11, 0.4); background:rgba(245, 158, 11, 0.05); border-radius:20px; padding:6px 16px;">
@@ -6240,17 +6100,7 @@ html, body {
             }
         };
 
-        let currentMode = 'team';
-
-        // 🛑 2. PASTE THE TOGGLE FUNCTION HERE 🛑
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('mobile-active');
-            }
-        }
-
-const App = {
+        const App = {
             init: async () => {
                 // 1. Fetch Feature Flags
                 try {
@@ -6264,16 +6114,15 @@ const App = {
                         if (pbCard) pbCard.style.display = 'none';
                     }
                     
+                    // 🛑 FIXED: Safely hide the pricing section without breaking layout
                     // 🛑 Hide the entire wrapper box on load if offline
                     if (window.FeatureFlags.pricing === false) {
                         const pricingSec = document.getElementById('pricing-section');
                         if (pricingSec) pricingSec.style.display = 'none';
                     }
-                } catch (e) { 
-                    window.FeatureFlags = {}; 
-                }
+                } catch (e) { window.FeatureFlags = {}; }
 
-                // 2. Safe Clerk Initialization & Auto-Login
+                // 2. Safe Clerk Initialization
                 if (window.Clerk) {
                     try {
                         await window.Clerk.load();
@@ -6289,26 +6138,22 @@ const App = {
 
                         const updateAuthUI = (user) => {
                             if (user) {
-                                // 1. Hide the login screen
+                                // User is logged in! Mount profile bubble.
                                 const authModal = document.getElementById('auth-modal');
                                 if (authModal) authModal.style.display = 'none';
 
-                                // 🛑 THE FIX: Check if Clerk is ALREADY mounted before touching the HTML
-                                // If our custom "clerk-mount-target" div doesn't exist yet, build it.
-                                if (!document.getElementById('clerk-mount-target')) {
-                                    userBtnContainer.innerHTML = '<div id="clerk-mount-target"></div>';
-                                    window.Clerk.mountUserButton(document.getElementById('clerk-mount-target'));
-                                }
+                                userBtnContainer.innerHTML = '';
+                                window.Clerk.mountUserButton(userBtnContainer);
 
-                                // 3. Admin Check
+                                // Admin Check
                                 const userEmail = user.primaryEmailAddress?.emailAddress;
                                 if (userEmail === "arhamgupta09@gmail.com") {
                                     const adminTab = document.getElementById('admin-tab');
                                     if (adminTab) adminTab.style.display = 'block';
                                 }
                             } else {
-                                // User is logged out! 
-                                // Because they are logged out, it is safe to overwrite the HTML with our Sign In button.
+                                // User is logged out! Show the Sign In button.
+                                // 🛑 CHANGED: Now calls the Inline Mount instead of Popup
                                 userBtnContainer.innerHTML = `
                                     <button class="tool-btn" 
                                             style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
@@ -6319,21 +6164,19 @@ const App = {
                             }
                         };
 
-                        // 🛑 THE AUTO-LOGIN FIX
-                        // Run once immediately on load to check for the saved mobile cookie
+                        // Run once on load
                         updateAuthUI(window.Clerk.user);
 
                         // Listen for changes (like logging out)
                         window.Clerk.addListener(({ user }) => updateAuthUI(user));
 
-                        // 3. Start the Engines (Only happens after Auth is checked)
+                        // 3. Start the Engines
                         UI.init();
                         if (typeof Playbook !== 'undefined') Playbook.init();
                         if (typeof VoiceEngine !== 'undefined') {
                             VoiceEngine.init('user-input', 'mic-btn-main');
                             VoiceEngine.init('overlay-chat-input', 'mic-btn-overlay');
                         }
-
                     } catch (err) {
                         console.error("Clerk Auth Failed to Load:", err);
                     }
@@ -6342,7 +6185,7 @@ const App = {
                 }
             },
 
-            // 🛑 THE SAFARI-PROOF INLINE BOX BUILDER
+            // 🛑 NEW: The Safari-Proof Inline Box Builder
             showLoginBox: () => {
                 const authModal = document.getElementById('auth-modal');
                 const signInDiv = document.getElementById('sign-in');
@@ -6353,13 +6196,14 @@ const App = {
                 // Clear the loading text
                 signInDiv.innerHTML = '';
                 
-                // Use Virtual Routing so Safari doesn't panic about redirects
+                // 🛑 FIXED: Use Virtual Routing so Safari doesn't panic about redirects
                 window.Clerk.mountSignIn(signInDiv, {
                     routing: "virtual"
                 });
             },
 
             forceLogin: () => {
+                // 🛑 CHANGED: Use the inline mount directly
                 App.showLoginBox();
             },
 
@@ -6374,7 +6218,7 @@ const App = {
                             body: JSON.stringify({ title, type: UI.currentMode })
                         });
 
-                        // 🛑 THE X-RAY CATCHER
+                        // 🛑 THE X-RAY CATCHER 🛑
                         if (!res.ok) {
                             const errData = await res.json();
                             if (errData.error === "X-RAY") {
@@ -6394,6 +6238,7 @@ const App = {
                 }
             }
         };
+
         window.onload = App.init;
 
     </script>
