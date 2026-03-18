@@ -1732,9 +1732,8 @@
             color: #a855f7;
         }
 
-    /* =========================================
-   🖥️ GLOBAL DESKTOP & iPAD FULL-SCREEN FIX 🖥️
-   (These sit OUTSIDE the media query!)
+  /* =========================================
+   🖥️ GLOBAL DESKTOP FIX (SAFE VERSION) 🖥️
    ========================================= */
 html, body {
     margin: 0;
@@ -1743,23 +1742,29 @@ html, body {
     height: 100%;
 }
 
+/* 1. Let the wrapper behave normally so the Landing Page isn't squished */
 .main-wrapper {
-    display: flex;
-    flex-direction: row; /* Puts sidebar and main content side-by-side on computers */
-    width: 100vw !important; /* Force to 100% of the screen width */
-    max-width: 100% !important; /* Kill any old hardcoded size limits */
-    height: 100vh !important; 
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden; 
+    display: block; /* 🛑 FIXED: Removed the flex-row that broke the landing page */
+    width: 100vw !important;
+    max-width: 100% !important;
+    min-height: 100vh;
     background-color: #0a0a0a; 
 }
 
+/* 2. Target ONLY the actual war room to be side-by-side */
+.app-container { 
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: calc(100vh - 70px); /* Subtracts the height of your top header */
+}
+
+/* 3. Force the War Room content to stretch */
 .main-content {
-    flex-grow: 1 !important; /* Expand to fill all leftover space on big screens! */
+    flex-grow: 1 !important; 
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
     overflow-y: auto; 
     position: relative;
 }
