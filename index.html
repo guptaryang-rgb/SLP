@@ -6232,21 +6232,26 @@ const App = {
 
                         const updateAuthUI = (user) => {
                             if (user) {
-                                // User is logged in! Mount profile bubble and hide login screen.
+                                // 1. Hide the login screen
                                 const authModal = document.getElementById('auth-modal');
                                 if (authModal) authModal.style.display = 'none';
 
-                                userBtnContainer.innerHTML = '';
-                                window.Clerk.mountUserButton(userBtnContainer);
+                                // 🛑 THE FIX: Check if Clerk is ALREADY mounted before touching the HTML
+                                // If our custom "clerk-mount-target" div doesn't exist yet, build it.
+                                if (!document.getElementById('clerk-mount-target')) {
+                                    userBtnContainer.innerHTML = '<div id="clerk-mount-target"></div>';
+                                    window.Clerk.mountUserButton(document.getElementById('clerk-mount-target'));
+                                }
 
-                                // Admin Check
+                                // 3. Admin Check
                                 const userEmail = user.primaryEmailAddress?.emailAddress;
                                 if (userEmail === "arhamgupta09@gmail.com") {
                                     const adminTab = document.getElementById('admin-tab');
                                     if (adminTab) adminTab.style.display = 'block';
                                 }
                             } else {
-                                // User is logged out! Show the Sign In button.
+                                // User is logged out! 
+                                // Because they are logged out, it is safe to overwrite the HTML with our Sign In button.
                                 userBtnContainer.innerHTML = `
                                     <button class="tool-btn" 
                                             style="background:var(--accent); color:white; font-weight:bold; border:none; padding:8px 16px; border-radius: 6px; cursor: pointer;" 
