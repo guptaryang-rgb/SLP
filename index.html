@@ -4464,9 +4464,6 @@
                 input.value = '';
 
                 let loaderId = 'loader_' + Date.now();
-                let fileData = null;
-                let mimeType = null;
-
                 if (file) {
                     const fBtn = document.getElementById('file-btn');
                     if (fBtn) {
@@ -4475,12 +4472,6 @@
                         fBtn.innerHTML = '📎 Upload Film';
                     }
 
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    await new Promise(r => reader.onload = r);
-                    fileData = reader.result.split(',')[1];
-                    mimeType = file.type;
-
                     feed.innerHTML += `
                     <div id="${loaderId}" style="display:flex; align-items:center; gap:16px; margin-bottom:16px; background:#111; padding:16px; border-radius:12px; border:1px solid #333;">
                         <div style="width:24px; height:24px; border:3px solid #222; border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite;"></div>
@@ -4488,7 +4479,7 @@
                     </div>`;
 
                     const phrases = [
-                        "Uploading secure video...",
+                        "Streaming raw video to cloud...",
                         "Coach AI is mapping player coordinates...",
                         "Analyzing defensive shell...",
                         "Calculating speed and leverage...",
@@ -4510,17 +4501,26 @@
 
                 try {
                     const token = await window.Clerk.session.getToken();
+                    
+                    // --- NEW: Use FormData instead of JSON ---
+                    const formData = new FormData();
+                    formData.append('message', message || "Analyze this video.");
+                    formData.append('sessionId', UI.activeSessionId || "");
+                    formData.append('sport', 'football');
+                    formData.append('position', UI.currentMode === 'self' && posSelect ? posSelect.value : 'team');
+                    formData.append('focusArea', UI.currentMode === 'team' && focusSelect ? focusSelect.value : 'general');
+                    formData.append('assignment', assignment || "");
+                    
+                    if (file) {
+                        formData.append('video', file); // Multer intercepts this 'video' field
+                        formData.append('mimeType', file.type);
+                    }
+
                     const res = await fetch('/api/chat', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({
-                            message: message || "Analyze this video.",
-                            sessionId: UI.activeSessionId,
-                            fileData, mimeType, sport: "football",
-                            position: UI.currentMode === 'self' && posSelect ? posSelect.value : 'team',
-                            focusArea: UI.currentMode === 'team' && focusSelect ? focusSelect.value : 'general',
-                            assignment: assignment
-                        })
+                        // DO NOT set 'Content-Type' here. The browser automatically sets it to 'multipart/form-data'
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
                     });
 
                     // Catch Server Errors BEFORE deleting the loader!
