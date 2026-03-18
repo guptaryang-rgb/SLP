@@ -10,10 +10,13 @@ const { ClerkExpressWithAuth, clerkClient } = require("@clerk/clerk-sdk-node");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server");
 const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 
 // Initialize App
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const upload = multer({ dest: 'temp_uploads/' });
 
 console.log("🔑 SERVER KEY CHECK:", process.env.CLERK_SECRET_KEY ? process.env.CLERK_SECRET_KEY.substring(0, 15) + "..." : "MISSING!");
 
@@ -781,36 +784,36 @@ app.post("/api/clip-chat", requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Chat failed" }); }
 });
 
-/* ---- MAIN ANALYSIS ENGINE ---- */
+
+// 6.
 // ==========================================
-// 6. MAIN CHAT & ANALYSIS ENDPOINT
-// ==========================================
 /* ---- MAIN ANALYSIS ENGINE ---- */
-app.post("/api/chat", requireAuth, async (req, res) => {
-  // NEW: Added focusArea and assignment to the destructuring!
-  const { message, sessionId, fileData, mimeType, sport, position, focusArea, assignment } = req.body;
+app.post("/api/chat", requireAuth, upload.single("video"), async (req, res) => {
+  // NEW: Pull text from req.body, and the physical video from req.file
+  const { message, sessionId, mimeType, sport, position, focusArea, assignment } = req.body;
+  const videoFile = req.file; // <--- This is the raw video file caught by multer
   let tempPath = null;
 
   try {
-    // A. Text Only Chat (General Session Chat)
-    if (!fileData) {
-        await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
-        const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }], true);
-        const reply = result.response.text();
-        await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
-        return res.json({ reply });
-    }
+        // A. Text Only Chat (General Session Chat)
+        if (!videoFile) {
+            await Session.updateOne({ sessionId }, { $push: { history: { role: 'user', text: message } } });
+            const result = await generateWithFallback([{ text: `ROLE: NFL Coach. USER: ${message}` }], true);
+            const reply = result.response.text();
+            await Session.updateOne({ sessionId }, { $push: { history: { role: 'model', text: reply } } });
+            return res.json({ reply });
+        }
 
-    // B. Video Analysis Request
-    const buffer = Buffer.from(fileData, "base64");
-    tempPath = path.join(UPLOAD_DIR, `upload_${Date.now()}.mp4`);
-    await fs.writeFile(tempPath, buffer);
+        // B. Video Analysis Request
+        tempPath = videoFile.path; // Multer already put the file on the hard drive!
+        
+        console.log(`Processing raw video: ${tempPath} (${(videoFile.size / 1024 / 1024).toFixed(2)} MB)`);
 
-    // Upload to Cloudinary (for persistence) and Gemini (for analysis)
-    const [cloud, uploaded] = await Promise.all([
-        cloudinary.uploader.upload(tempPath, { resource_type: "video", folder: "vantage_vision" }),
-        fileManager.uploadFile(tempPath, { mimeType, displayName: "Video" })
-    ]);
+        // Upload directly to Cloudinary and Gemini
+        const [cloud, uploaded] = await Promise.all([
+            cloudinary.uploader.upload(tempPath, { resource_type: "video", folder: "vantage_vision" }),
+            fileManager.uploadFile(tempPath, { mimeType: videoFile.mimetype || mimeType || "video/mp4", displayName: "Video" })
+        ]);
 
     // Create "Processing" Clip entry
     let savedClip = await Clip.create({
@@ -863,20 +866,18 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     };
     const focusText = isTeam ? (focusMap[focusArea] || 'Full Field Analysis') : (groupName + " Execution");
 
-        const positionalJSON = isTeam 
+    const positionalJSON = isTeam 
         ? `[
-            { "group": "Quarterback", "action": "[Exact read, footwork, or throw decision]", "analysis": "[Hyper-specific: State exactly what mechanics or decisions impacted the play.]" },
+            { "group": "Quarterback", "action": "[Exact read, footwork, or throw decision]", "analysis": "[Hyper-specific: State exactly what mechanics, eye-discipline, or pocket movement impacted the play's outcome.]" },
             { "group": "Running Backs", "action": "[Exact path, block, or route]", "analysis": "[Hyper-specific: State exact pad level, gap pressed, or pass-pro identification.]" },
             { "group": "Wide Receivers", "action": "[Exact release and route stem]", "analysis": "[Hyper-specific: Detail leverage won/lost, break angles, or spacing issues.]" },
             { "group": "Tight Ends", "action": "[Exact block or route]", "analysis": "[Hyper-specific: Detail hand placement, hip drop, or route execution.]" },
-            { "group": "Offensive Tackles (LT/RT)", "action": "[Pass set or run block execution]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Left Tackle and Right Tackle independently. Detail who won their 1v1, missed an assignment, or had poor footwork.]" },
-            { "group": "Interior O-Line (LG/C/RG)", "action": "[Combo blocks, pulls, or anchor]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Left Guard, Center, and Right Guard independently. Detail who gave up pressure or generated a push.]" },
-            { "group": "Edge Defenders (DE/Rush)", "action": "[Rush plan or edge setting]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the Field and Boundary Edge rushers independently. Detail their get-off, hand usage, and contain principles.]" },
-            { "group": "Interior D-Line (DT/NT)", "action": "[Gap control or interior rush]", "analysis": "[🛑 DO NOT GROUP THEM. Evaluate the 1-Tech, 3-Tech, etc., independently. Did they hold the point of attack or get washed out?]" },
+            { "group": "Offensive Line", "action": "[Exact blocking scheme execution]", "analysis": "[Hyper-specific: Detail exactly who lost/won their 1v1, missed an assignment, or had poor footwork.]" },
+            { "group": "Defensive Line", "action": "[Exact stunt, rush, or gap control]", "analysis": "[Hyper-specific: Detail hand usage, gap integrity, or get-off speed.]" },
             { "group": "Linebackers", "action": "[Exact read, drop, or run fit]", "analysis": "[Hyper-specific: Detail false steps, eye violations, or scrape angles.]" },
             { "group": "Secondary (DB/S)", "action": "[Exact coverage technique]", "analysis": "[Hyper-specific: Detail cushion depth, phase maintenance, or leverage mistakes.]" },
-            { "group": "🚨 The Domino Effect", "action": "Play Success/Failure Chain", "analysis": "[Trace the EXACT chain of events. e.g., 'Because the LG opened his hips too early, the 3-tech generated immediate pressure, forcing the QB to drift...']" },
-            { "group": "♟️ Opponent's Impact", "action": "Chaos & Window Creation", "analysis": "[Analyze exactly what the OTHER team did to force the error or create the window.]" }
+            { "group": "🚨 The Domino Effect", "action": "Play Success/Failure Chain", "analysis": "[Trace the EXACT chain of events. e.g., 'Because the LG opened his hips too early, the 3-tech generated immediate pressure, forcing the QB to drift right and ruin the spacing of the Dig route.']" },
+            { "group": "♟️ Opponent's Impact", "action": "Chaos & Window Creation", "analysis": "[Analyze exactly what the OTHER team did to force the error or create the window. e.g., 'The defense used a simulated pressure to force a 1v1 on the RT, while dropping the DE into the quick-slant window to create chaos.']" }
         ]`
         : `[
             { "group": "Phase 1: Base & Posture", "timestamp": "0:00", "action": "[Pre-snap body alignment]", "analysis": "[Analyze weight distribution, spine alignment, foot width, and eye placement.]" },
@@ -901,9 +902,9 @@ app.post("/api/chat", requireAuth, async (req, res) => {
     
     2. THE COACH (Insight & Personnel): 
        ${isTeam 
-         ? "- TEAM ANALYSIS (MACRO): Ban generalities. You MUST detail exactly what individual players did right or wrong physically and mentally. For the offensive and defensive lines, you MUST break down specific players (e.g., Left Tackle, 3-Technique) independently. You MUST include '🚨 The Domino Effect' and '♟️ Opponent's Impact'." 
+         ? "- TEAM ANALYSIS (MACRO): Ban generalities. You MUST detail exactly what individual players did right or wrong physically and mentally. You MUST include '🚨 The Domino Effect' (how one player's action impacted the whole play) and '♟️ Opponent's Impact' (exactly what schematic or physical trait the other team used to create chaos or a window of opportunity)." 
          : "- SELF ANALYSIS (MICRO): Focus EXCLUSIVELY on the " + groupName + " player's body physics. DO NOT discuss scheme, formations, or the opposing team. Break down their spine alignment, limb mechanics, center of gravity, and kinetic chain using the 4-Phase structure. Accurately estimate the video 'timestamp' (e.g., '0:03') for each phase."}
-       
+                
        - 🛑 PLAYER IDENTIFICATION: NEVER guess a jersey number. Identify players by tactical alignment.
        - 🛑 CONFIDENCE FRAMING: Use professional hedging (e.g., "The receiver appeared to lose balance" instead of absolute facts).
 
