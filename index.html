@@ -1736,79 +1736,97 @@
        🚨 MOBILE RESPONSIVE OVERRIDES 🚨
        ========================================= */
     @media (max-width: 768px) {
+    /* 1. Lock the body so it doesn't bounce around */
     body {
-        overflow-x: hidden;
-        overflow-y: auto !important; /* Force scrolling to return */
+        overflow: hidden !important; 
     }
-    
     .main-wrapper, .app-container {
         display: flex !important;
         flex-direction: column !important;
-        height: auto !important; /* FIXED: Removed the 100vh that collapsed the screen */
-        min-height: 100vh;
+        height: 100vh !important; /* Exactly the height of the phone */
+        width: 100vw !important;
     }
 
-    /* 🛑 NEW SAFETY NET: Force the main right-side content to expand */
-    .main-content, .content-area, .video-section {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        flex: 1 1 auto !important;
-        min-height: 60vh !important; /* Forces the video/chat to take up at least half the screen */
-    }
-
-    /* --- 1. THE HEADER & TABS --- */
-    #mobile-menu-btn {
-        display: inline-block !important;
-        margin-right: 15px;
-    }
-    .nav-tabs, .header-tabs, .tab-container {
-        display: flex;
-        overflow-x: auto;
-        white-space: nowrap;
-        width: 100%;
-        padding-bottom: 5px;
-        -webkit-overflow-scrolling: touch; /* Smooth horizontal scroll on iPhone */
-    }
-
-    /* --- 2. HIDE THE SIDEBAR --- */
+    /* 2. Slide-Out Sidebar (Hidden by default) */
     .sidebar {
-        display: none !important; 
-        position: absolute;
-        top: 60px; 
-        left: 0;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 80vh;
-        background: #111; /* Match your dark theme */
+        position: fixed;
+        top: 0;
+        left: -100%; /* Hides it off the left side of the screen */
+        width: 80% !important;
+        height: 100vh !important;
+        background: #111;
         z-index: 9999;
+        transition: left 0.3s ease-in-out; /* Smooth sliding animation */
+        box-shadow: 5px 0 15px rgba(0,0,0,0.9);
         padding: 20px;
-        box-shadow: 2px 5px 15px rgba(0,0,0,0.8); /* Adds a drop shadow so it looks like a menu overlay */
     }
     .sidebar.mobile-active {
-        display: flex !important; 
-        flex-direction: column;
+        left: 0; /* Slides it onto the screen */
     }
 
-    /* --- 3. STREAMLINE THE INPUT BAR --- */
-    .input-bar, .bottom-bar {
-        display: flex !important;
-        flex-direction: row !important; 
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px;
-        background: #1a1a1a;
+    /* 3. Sticky Top Video Player */
+    .video-container {
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
         width: 100% !important;
-        margin-top: auto;
+        background: #000;
+        border-bottom: 1px solid #333;
+    }
+    video {
+        width: 100% !important;
+        max-height: 35vh !important; /* Never takes up more than 1/3 of the phone */
+        border-radius: 0 !important;
+    }
+
+    /* 4. Scrollable Middle Area (The AI Report) */
+    .scout-card-grid, .grid-container, .main-content {
+        flex-grow: 1; /* Takes up all remaining space */
+        overflow-y: auto !important; /* Lets you scroll the report */
+        padding: 15px;
+        padding-bottom: 100px !important; /* Leaves room for the bottom bar */
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 5. iMessage Style Bottom Bar */
+    .input-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100% !important;
+        background: rgba(20, 20, 20, 0.95);
+        backdrop-filter: blur(10px); /* Apple-style frosted glass effect */
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding: 10px 15px;
+        padding-bottom: env(safe-area-inset-bottom, 20px); /* Prevents the iPhone home bar from covering buttons */
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center;
+        gap: 10px;
+        z-index: 50;
     }
     
-    /* Make video player fit cleanly and never disappear */
-    .video-container, video {
-        width: 100% !important;
-        height: auto !important;
-        max-height: 40vh !important;
-        min-height: 200px !important; /* Safety net so the video box always shows */
-        border-radius: 8px;
+    /* Make the bottom bar inputs fit nicely */
+    .input-bar select, .input-bar input {
+        flex-grow: 1;
+        height: 44px;
+        border-radius: 22px; /* Pill shape */
+        padding: 0 15px;
+        margin: 0 !important;
+    }
+    .tool-btn, .upload-btn, .send-btn {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%; /* Circle buttons */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
     }
 }
     </style>
