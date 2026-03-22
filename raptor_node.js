@@ -4,7 +4,7 @@ const chokidar = require("chokidar");
 const fs = require("fs");
 const path = require("path");
 
-const CLOUD_URL = "http://localhost:3000"; 
+const CLOUD_URL = "https://vantage-vision.onrender.com";
 const REPORTS_FOLDER = 'C:/COACH_OS/reports';
 
 console.log("🦅 Booting Raptor Edge Node...");
