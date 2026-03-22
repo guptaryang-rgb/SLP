@@ -2,8 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const fs = require("fs/promises");
+const fs = require("fs"); // Switched to standard fs for easier directory creation
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 
 // Third Party SDKs
 const { ClerkExpressWithAuth, clerkClient } = require("@clerk/clerk-sdk-node");
@@ -12,30 +14,48 @@ const { GoogleAIFileManager, FileState } = require("@google/generative-ai/server
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
-// Initialize App
+// Initialize App & Raptor WebSockets
 const app = express();
 const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
 
 const upload = multer({ dest: 'temp_uploads/' });
-
-console.log("🔑 SERVER KEY CHECK:", process.env.CLERK_SECRET_KEY ? process.env.CLERK_SECRET_KEY.substring(0, 15) + "..." : "MISSING!");
+const requireAuth = ClerkExpressWithAuth();
 
 // Middleware Configuration
 app.use(cors());
-// Increased limit for high-res game film
 app.use(express.json({ limit: "500mb" })); 
-app.use(ClerkExpressWithAuth());
 app.use(express.static(__dirname));
 
 // Upload Directory Setup
 const UPLOAD_DIR = path.join(__dirname, 'temp_uploads');
-fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(console.error);
+if (!fs.existsSync(UPLOAD_DIR)){
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 // Database Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ Vantage Vision Database Connected"))
-  .catch(err => console.error("❌ MongoDB Connection Error:", err));
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/vantage";
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ Vantage Database Connected"))
+    .catch(err => console.error("❌ Database Error:", err));
 
+// ==========================================
+// 🦅 RAPTOR CLOUD RELAY (Listens for your PC)
+// ==========================================
+io.on('connection', (socket) => {
+    socket.on('registerRaptorNode', () => {
+        console.log('🦅 LOCAL RAPTOR NODE CONNECTED!');
+        socket.join('raptor_workers');
+    });
+    socket.on('triggerRaptorScan', (targetFolder) => {
+        io.to('raptor_workers').emit('executeLocalScan', targetFolder);
+    });
+    socket.on('raptorLogUpload', (log) => io.emit('raptorLog', log));
+    socket.on('raptorDataUpload', (data) => io.emit('raptorData', data));
+});
+
+// Cloudinary Configuration (Video Storage)
 // Cloudinary Configuration (Video Storage)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -1063,5 +1083,39 @@ app.get("/api/get-plays", requireAuth, async (req, res) => {
     }
 });
 
-// Start Server
-app.listen(PORT, () => console.log(`🚀 Vantage Vision running on http://localhost:${PORT}`));
+// ==========================================
+// ☁️ CLOUD RELAY HUB (RENDER)
+// ==========================================
+// ==========================================
+// 🦅 RAPTOR OS CLOUD RELAY (GLOBAL HUB)
+// ==========================================
+
+io.on('connection', (socket) => {
+    console.log('🔌 New Link Established:', socket.id);
+
+    // 1. Identify your local Windows PC when it connects
+    socket.on('registerRaptorNode', () => {
+        console.log('🦅 LOCAL RAPTOR NODE SECURED TO CLOUD!');
+        socket.join('raptor_workers');
+    });
+
+    // 2. Relay the "Scan" command from your Website -> Windows PC
+    socket.on('triggerRaptorScan', (targetFolder) => {
+        console.log(`📡 Relaying Scan Request to Windows Hardware...`);
+        io.to('raptor_workers').emit('executeLocalScan', targetFolder);
+    });
+
+    // 3. Relay Logs and JSON Math from Windows -> Website
+    socket.on('raptorLogUpload', (log) => io.emit('raptorLog', log));
+    socket.on('raptorDataUpload', (data) => io.emit('raptorData', data));
+});
+
+// 🌐 MAIN WEB ROUTING
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// START THE MASTER SERVER
+server.listen(PORT, () => {
+    console.log(`🚀 VANTAGE VISION + RAPTOR ENGINE LIVE ON PORT ${PORT}`);
+});
