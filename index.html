@@ -6349,6 +6349,28 @@
             document.getElementById('nav-coach-os').style.background = 'rgba(6, 182, 212, 0.1)';
             document.getElementById('nav-coach-os').style.color = '#06b6d4';
         }
+        // ==========================================
+        // 🦅 AUTO-HIDE DASHBOARD LOGIC
+        // ==========================================
+        // Listen to all sidebar clicks to prevent UI leaking
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // If the user clicks ANY tab that is NOT the Coach OS tab...
+                if (item.id !== 'nav-coach-os') {
+                    // 1. Hide the Raptor Dashboard
+                    const raptorView = document.getElementById('raptor-dashboard-view');
+                    if (raptorView) raptorView.style.display = 'none';
+
+                    // 2. Restore the main app view (War Room/Library)
+                    const mainAppView = document.getElementById('app-main');
+                    if (mainAppView) mainAppView.style.display = ''; // Empty string restores its default CSS
+
+                    // 3. Remove the highlight from the Coach OS button
+                    document.getElementById('nav-coach-os').style.background = '';
+                    document.getElementById('nav-coach-os').style.color = '#888';
+                }
+            });
+        });
     </script>
 
 </body>
