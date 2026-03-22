@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
     <style>
         /* ==========================================================================
@@ -4483,17 +4484,28 @@
                         pIdx = (pIdx + 1) % phrases.length;
                         const txt = document.getElementById(`${loaderId}_text`);
                         if (txt) txt.innerText = phrases[pIdx];
-                        else clearInterval(window.aiThinkTimer);
-                    }, 3500);
-                } else {
-                    feed.innerHTML += `<div id="${loaderId}" style="margin-bottom:16px; color:#888; font-style:italic;">Coach AI is reviewing the playbook...</div>`;
-                }
+                      else clearInterval(window.aiThinkTimer);
+                }, 3500);
+            } else {
+                feed.innerHTML += `<div id="${loaderId}" style="margin-bottom:16px; color:#888; font-style:italic;">Coach AI is reviewing the playbook...</div>`;
+            }
 
-                feed.scrollTop = feed.scrollHeight;
-                if (fileInput) fileInput.value = '';
+            feed.scrollTop = feed.scrollHeight;
+            if (fileInput) fileInput.value = '';
 
-                try {
-                    const token = await window.Clerk.session.getToken();
+            // ==========================================
+            // 🦅 NEW: TRIGGER RAPTOR ENGINE ON SEND
+            // ==========================================
+            if (window.raptorSocket) {
+                console.log("⚡ Sending Scan Command to Windows Edge Node...");
+                window.raptorSocket.emit("triggerRaptorScan", "C:/COACH_OS/reports");
+            }
+            // ==========================================
+
+            try {
+                const token = await window.Clerk.session.getToken();
+                
+                // --- NEW: Use FormData instead of JSON ---
                     
                     // --- NEW: Use FormData instead of JSON ---
                     const formData = new FormData();
@@ -6236,34 +6248,39 @@
 
     </script>
 
-    <script src="/socket.io/socket.io.js"></script>
+   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        const raptorSocket = io();
+        // Connect directly to your live custom domain
+        window.raptorSocket = io("https://vantage-vision.org");
 
-        raptorSocket.on('connect', () => {
-            console.log("🟢 Raptor Engine Uplink Secured");
+        window.raptorSocket.on('connect', () => {
+            console.log("🟢 UI successfully connected to Cloud Hub!");
         });
 
-        raptorSocket.on('raptorLog', (msg) => {
-            console.log("Raptor Terminal:", msg);
-        });
-
-        // This is where Coach OS data enters your Vantage Vision UI!
-        raptorSocket.on('raptorData', (data) => {
-            console.log("🦅 RAPTOR DATA INTERCEPTED:", data.file);
-            console.log(data.payload);
-            
-            // Example: If it's the formation file, alert the user!
-            if (data.file.includes('formation')) {
-                alert("Coach OS just finished calculating Formation Tendencies!");
+        // Listen for Live Logs from Windows PowerShell and print to Chat Feed
+        window.raptorSocket.on('raptorLog', (log) => {
+            console.log("🖥️ RAPTOR LOG:", log);
+            const feed = document.getElementById('chat-feed');
+            if (feed) {
+                // Creates a cool little "hacker" looking terminal line in the chat
+                feed.innerHTML += `<div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #06b6d4; margin-left: 20px;">> ${log}</div>`;
+                feed.scrollTop = feed.scrollHeight;
             }
         });
 
-        // Attach this to any button in your UI to start the engine
-        window.startRaptorAnalysis = function() {
-            console.log("Commanding server to run Coach OS...");
-            raptorSocket.emit('triggerRaptorScan');
-        };
+        // Listen for the Final AI JSON Data!
+        window.raptorSocket.on('raptorData', (data) => {
+            console.log("🔥 AI DATA ARRIVED FROM WINDOWS:", data.payload);
+            const feed = document.getElementById('chat-feed');
+            if (feed) {
+                feed.innerHTML += `
+                <div style="align-self:flex-start; background:rgba(6, 182, 212, 0.1); border:1px solid #06b6d4; padding:16px; border-radius:8px; margin-bottom:20px; width: 100%;">
+                    <strong style="color:#06b6d4;">🦅 RAPTOR ENGINE ANALYSIS COMPLETE</strong><br>
+                    <span style="color:#ccc; font-size:0.85rem;">File: ${data.file} processed locally.</span>
+                </div>`;
+                feed.scrollTop = feed.scrollHeight;
+            }
+        });
     </script>
 
 </body>
