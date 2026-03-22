@@ -6237,7 +6237,7 @@
                         sessions.unshift(newSession);
                         Store.set('sessions', sessions);
                         await UI.selectSession(newSession.sessionId);
-                    } catch (e) {
+       } catch (e) {
                         console.error(e);
                     }
                 }
@@ -6248,41 +6248,84 @@
 
     </script>
 
+    <div id="raptor-dashboard-view" style="padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000; border-top: 2px solid #06b6d4; margin-top: 40px;">
+        <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 8px;">Coach OS Target Control</h2>
+            <p style="color: #888; font-size: 0.9rem;">Interface directly with your local Windows Edge Node to process high-volume game film.</p>
+        </div>
+        <div style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
+            <div style="flex-grow: 1;">
+                <label style="display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Target PC Folder</label>
+                <input type="text" id="raptor-folder-input" placeholder="C:\COACH_OS\context" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 4px; color: #06b6d4; font-family: 'JetBrains Mono', monospace;">
+            </div>
+            <button id="raptor-scan-btn" style="background: #06b6d4; color: black; font-weight: bold; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; align-self: flex-end; height: 43px;">
+                INITIATE SCAN
+            </button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="background: #000; border: 1px solid #222; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="background: #111; padding: 8px 16px; font-size: 0.75rem; color: #666; font-family: monospace; border-bottom: 1px solid #222;">>_ RAPTOR NODE TERMINAL</div>
+                <div id="raptor-terminal-output" style="padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #06b6d4; height: 400px; overflow-y: auto; line-height: 1.5;">
+                    <span style="color: #666;">Waiting for connection...</span><br>
+                </div>
+            </div>
+            <div style="background: #111; border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden;">
+                 <div style="background: #1a1a1a; padding: 12px 16px; font-size: 0.85rem; color: #aaa; font-weight: bold; border-bottom: 1px solid #333;">LATEST TELEMETRY DATA</div>
+                 <div id="raptor-data-output" style="padding: 16px; height: 400px; overflow-y: auto; color: #eee; font-family: monospace; font-size: 0.85rem; white-space: pre-wrap;">
+                    No data received yet. Run a scan to populate.
+                 </div>
+            </div>
+        </div>
+    </div>
+
    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
-        // Connect directly to your live custom domain
+        // 1. Connect to your Render Cloud
         window.raptorSocket = io("https://vantage-vision.org");
 
+        const terminal = document.getElementById('raptor-terminal-output');
+        const dataBox = document.getElementById('raptor-data-output');
+        const scanBtn = document.getElementById('raptor-scan-btn');
+        const folderInput = document.getElementById('raptor-folder-input');
+
         window.raptorSocket.on('connect', () => {
-            console.log("🟢 UI successfully connected to Cloud Hub!");
+            terminal.innerHTML = `<span style="color: #22c55e;">🟢 Uplink secured to Vantage Vision Cloud. Ready.</span><br>`;
         });
 
-        // Listen for Live Logs from Windows PowerShell and print to Chat Feed
+        // 2. Button Click -> Send Dynamic Target to Windows
+        scanBtn.addEventListener('click', () => {
+            const folder = folderInput.value || "C:\\COACH_OS\\context";
+            terminal.innerHTML += `<br><span style="color: #fff;">> Initiating global scan on target: ${folder}</span><br>`;
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            scanBtn.innerText = "SCANNING...";
+            scanBtn.style.opacity = "0.7";
+            window.raptorSocket.emit("triggerRaptorScan", folder);
+        });
+
+        // 3. Receive Live Logs from Windows PowerShell
         window.raptorSocket.on('raptorLog', (log) => {
-            console.log("🖥️ RAPTOR LOG:", log);
-            const feed = document.getElementById('chat-feed');
-            if (feed) {
-                // Creates a cool little "hacker" looking terminal line in the chat
-                feed.innerHTML += `<div style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #06b6d4; margin-left: 20px;">> ${log}</div>`;
-                feed.scrollTop = feed.scrollHeight;
+            if (log.includes("[ERROR]") || log.includes("FAILED")) {
+                terminal.innerHTML += `<span style="color: #ef4444;">${log}</span><br>`;
+            } else {
+                terminal.innerHTML += `<span style="color: #06b6d4;">${log}</span><br>`;
             }
+            terminal.scrollTop = terminal.scrollHeight; 
         });
 
-        // Listen for the Final AI JSON Data!
+        // 4. Receive Final JSON Data from Windows
         window.raptorSocket.on('raptorData', (data) => {
-            console.log("🔥 AI DATA ARRIVED FROM WINDOWS:", data.payload);
-            const feed = document.getElementById('chat-feed');
-            if (feed) {
-                feed.innerHTML += `
-                <div style="align-self:flex-start; background:rgba(6, 182, 212, 0.1); border:1px solid #06b6d4; padding:16px; border-radius:8px; margin-bottom:20px; width: 100%;">
-                    <strong style="color:#06b6d4;">🦅 RAPTOR ENGINE ANALYSIS COMPLETE</strong><br>
-                    <span style="color:#ccc; font-size:0.85rem;">File: ${data.file} processed locally.</span>
-                </div>`;
-                feed.scrollTop = feed.scrollHeight;
-            }
+            scanBtn.innerText = "INITIATE SCAN";
+            scanBtn.style.opacity = "1";
+
+            dataBox.innerHTML = `
+                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #333;">
+                    <strong style="color: #22c55e;">File Processed:</strong> ${data.file}
+                </div>
+                <div>${JSON.stringify(data.payload, null, 2)}</div>
+            `;
         });
     </script>
 
 </body>
-
 </html>
