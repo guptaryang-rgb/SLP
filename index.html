@@ -6232,8 +6232,38 @@
             }
         };
 
-        window.onload = App.init;
+       window.onload = App.init;
 
+    </script>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const raptorSocket = io();
+
+        raptorSocket.on('connect', () => {
+            console.log("🟢 Raptor Engine Uplink Secured");
+        });
+
+        raptorSocket.on('raptorLog', (msg) => {
+            console.log("Raptor Terminal:", msg);
+        });
+
+        // This is where Coach OS data enters your Vantage Vision UI!
+        raptorSocket.on('raptorData', (data) => {
+            console.log("🦅 RAPTOR DATA INTERCEPTED:", data.file);
+            console.log(data.payload);
+            
+            // Example: If it's the formation file, alert the user!
+            if (data.file.includes('formation')) {
+                alert("Coach OS just finished calculating Formation Tendencies!");
+            }
+        });
+
+        // Attach this to any button in your UI to start the engine
+        window.startRaptorAnalysis = function() {
+            console.log("Commanding server to run Coach OS...");
+            raptorSocket.emit('triggerRaptorScan');
+        };
     </script>
 
 </body>
