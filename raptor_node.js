@@ -4,22 +4,27 @@ const chokidar = require("chokidar");
 const fs = require("fs");
 const path = require("path");
 
+// ⚠️ IMPORTANT: Verify this is your EXACT Render URL. No slash at the end!
 const CLOUD_URL = "https://vantage-vision.onrender.com";
 const REPORTS_FOLDER = 'C:/COACH_OS/reports';
 
 console.log("🦅 Booting Raptor Edge Node...");
 
-// 1. Connect to the Cloud (No server.listen needed here!)
+// 1. Connect to the Cloud (Patient Handshake for Render)
 const socket = io(CLOUD_URL, {
-    transports: ['websocket'],
-    upgrade: false
+    transports: ['polling', 'websocket'], // Start with polling, then upgrade (Render prefers this)
+    reconnection: true,                   // Don't give up if Render is asleep
+    reconnectionAttempts: 20,             // Knock 20 times before quitting
+    reconnectionDelay: 3000               // Wait 3 seconds between knocks
 });
+
 socket.on("connect", () => {
     console.log("🟢 Uplink secured to Vantage Vision Cloud!");
     socket.emit("registerRaptorNode");
 });
+
 socket.on("connect_error", (err) => {
-    console.log("❌ Connection Failed:", err.message);
+    console.log(`⏳ Cloud is waking up or URL is wrong... (Error: ${err.message})`);
 });
 
 // 2. Listen for commands from the Cloud
@@ -41,9 +46,11 @@ chokidar.watch(REPORTS_FOLDER, { persistent: true, usePolling: true, interval: 1
             if (err) return;
             try {
                 const jsonData = JSON.parse(data);
-                console.log(`Uploading ${path.basename(filePath)} to Cloud...`);
+                console.log(`📡 Uploading ${path.basename(filePath)} to Cloud...`);
                 socket.emit("raptorDataUpload", { file: path.basename(filePath), payload: jsonData });
-            } catch (parseErr) {}
+            } catch (parseErr) {
+                console.log(`⚠️ Error parsing JSON for ${path.basename(filePath)}`);
+            }
         });
     }
 });
