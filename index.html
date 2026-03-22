@@ -1784,6 +1784,11 @@
             <div class="nav-tab" data-tab="playbook">Playbook</div>
         </div>
 
+
+        <div id="nav-coach-os" class="nav-item" onclick="openCoachOSTab()" style="padding: 12px 16px; margin: 4px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #888; transition: 0.2s;">
+    <span style="font-size: 1.2rem;">🦅</span>
+    <span style="font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">Coach OS Node</span>
+</div>
         <div style="display:flex; align-items:center; gap:20px;">
             <div class="nav-tab" id="admin-tab" data-tab="admin"
                 style="display:none; color:var(--warning); font-weight:800; border:1px solid rgba(245, 158, 11, 0.4); background:rgba(245, 158, 11, 0.05); border-radius:20px; padding:6px 16px;">
@@ -6248,8 +6253,8 @@
 
     </script>
 
-    <div id="raptor-dashboard-view" style="padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000; border-top: 2px solid #06b6d4; margin-top: 40px;">
-        <div style="margin-bottom: 24px;">
+<div id="raptor-dashboard-view" style="display: none; padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000;">
+            <div style="margin-bottom: 24px;">
             <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 8px;">Coach OS Target Control</h2>
             <p style="color: #888; font-size: 0.9rem;">Interface directly with your local Windows Edge Node to process high-volume game film.</p>
         </div>
@@ -6313,7 +6318,7 @@
             terminal.scrollTop = terminal.scrollHeight; 
         });
 
-        // 4. Receive Final JSON Data from Windows
+       // 4. Receive Final JSON Data from Windows
         window.raptorSocket.on('raptorData', (data) => {
             scanBtn.innerText = "INITIATE SCAN";
             scanBtn.style.opacity = "1";
@@ -6325,6 +6330,25 @@
                 <div>${JSON.stringify(data.payload, null, 2)}</div>
             `;
         });
+
+        // ==========================================
+        // 🦅 TAB NAVIGATION LOGIC
+        // ==========================================
+        function openCoachOSTab() {
+            console.log("Switching to Coach OS Tab...");
+
+            // 1. Hide your main app view (Update 'app-main' if your main chat area has a different ID!)
+            const mainAppView = document.getElementById('app-main'); 
+            if (mainAppView) mainAppView.style.display = 'none';
+
+            // 2. Show the Raptor Dashboard
+            const raptorView = document.getElementById('raptor-dashboard-view');
+            if (raptorView) raptorView.style.display = 'block';
+
+            // 3. Highlight the active tab in the sidebar
+            document.getElementById('nav-coach-os').style.background = 'rgba(6, 182, 212, 0.1)';
+            document.getElementById('nav-coach-os').style.color = '#06b6d4';
+        }
     </script>
 
 </body>
