@@ -10,8 +10,10 @@ const REPORTS_FOLDER = 'C:/COACH_OS/reports';
 console.log("🦅 Booting Raptor Edge Node...");
 
 // 1. Connect to the Cloud (No server.listen needed here!)
-const socket = io(CLOUD_URL);
-
+const socket = io(CLOUD_URL, {
+    transports: ['websocket'],
+    upgrade: false
+});
 socket.on("connect", () => {
     console.log("🟢 Uplink secured to Vantage Vision Cloud!");
     socket.emit("registerRaptorNode");
