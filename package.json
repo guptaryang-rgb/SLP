@@ -1,7 +1,7 @@
 {
   "name": "vantage-vision",
   "version": "1.1.0",
-  "description": "Elite sports video analysis with Gemini 1.5 Pro",
+  "description": "Elite sports video analysis with Gemini",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -15,6 +15,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mongoose": "^9.1.4",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.5"
   }
 }
