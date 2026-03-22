@@ -16,6 +16,9 @@ socket.on("connect", () => {
     console.log("🟢 Uplink secured to Vantage Vision Cloud!");
     socket.emit("registerRaptorNode");
 });
+socket.on("connect_error", (err) => {
+    console.log("❌ Connection Failed:", err.message);
+});
 
 // 2. Listen for commands from the Cloud
 socket.on("executeLocalScan", () => {
