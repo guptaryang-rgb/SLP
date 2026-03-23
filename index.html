@@ -6371,13 +6371,19 @@
             terminal.scrollTop = terminal.scrollHeight; 
         });
 
-       // 4. Receive Final JSON Data from Windows & Build Data Table
+       // 4. Receive Data from Windows (Math OR Playlist)
         window.raptorSocket.on('raptorData', (data) => {
             scanBtn.innerText = "INITIATE SCAN";
             scanBtn.style.opacity = "1";
 
-            // If the data is an array (like our Down & Distance report), build a table!
-            if (Array.isArray(data.payload)) {
+            // TRAFFIC COP 1: Is this the Playlist?
+            if (data.file === 'master.json') {
+                loadPlaylist(data.payload);
+                return; // Stop here, don't put it in the math box!
+            }
+
+            // TRAFFIC COP 2: Is this the Math Report?
+            if (data.file === 'down_distance_report.json' && Array.isArray(data.payload)) {
                 let tableHTML = `
                 <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-family: 'Inter', sans-serif; font-size: 0.9rem;">
                     <tr style="background: #111; color: #06b6d4; text-align: left; border-bottom: 2px solid #333;">
@@ -6404,14 +6410,6 @@
                         <strong style="color: #22c55e;">Report Generated:</strong> ${data.file}
                     </div>
                     ${tableHTML}
-                `;
-            } else {
-                // Fallback for non-array data
-                dataBox.innerHTML = `
-                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #333;">
-                        <strong style="color: #22c55e;">File Processed:</strong> ${data.file}
-                    </div>
-                    <div>${JSON.stringify(data.payload, null, 2)}</div>
                 `;
             }
         });
