@@ -6316,6 +6316,11 @@
                 <div style="background: #1a1a1a; padding: 12px; font-size: 0.8rem; font-weight: bold; color: #06b6d4; border-bottom: 1px solid #333; text-align: center;">
                     📋 PLAYLIST
                 </div>
+              <div style="background: #111; padding: 8px; display: flex; gap: 4px; border-bottom: 1px solid #333;">
+                    <button onclick="filterVCM('all')" style="flex: 1; background: #222; color: #fff; border: 1px solid #444; padding: 4px; font-size: 0.75rem; cursor: pointer;">ALL</button>
+                    <button onclick="filterVCM('pass')" style="flex: 1; background: #222; color: #fff; border: 1px solid #444; padding: 4px; font-size: 0.75rem; cursor: pointer;">PASS</button>
+                    <button onclick="filterVCM('run')" style="flex: 1; background: #222; color: #fff; border: 1px solid #444; padding: 4px; font-size: 0.75rem; cursor: pointer;">RUN</button>
+                </div> 
                 <div id="vcm-playlist-container" style="flex-grow: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px;">
                     <div style="color: #555; text-align: center; font-size: 0.8rem; margin-top: 20px;">Run scan to load plays...</div>
                 </div>
@@ -6413,65 +6418,7 @@
             }
         });
 
-        // ==========================================
-        // 🦅 VCM TELESTRATOR LOGIC
-        // ==========================================
-        const vcmContainer = document.getElementById('vcm-container');
-        const canvas = document.getElementById('vcm-canvas');
-        const ctx = canvas.getContext('2d');
-        const btnDraw = document.getElementById('vcm-btn-draw');
-        const btnClear = document.getElementById('vcm-btn-clear');
-        const btnOffense = document.getElementById('vcm-btn-offense');
-        const btnDefense = document.getElementById('vcm-btn-defense');
-        
-        let isDrawing = false;
-        let drawModeActive = false;
-
-        // 1. Resize Canvas to match video size
-        function resizeCanvas() {
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 1000); // Initial sizing
-
-        // 2. Toggle Draw Mode
-        btnDraw.addEventListener('click', () => {
-            drawModeActive = !drawModeActive;
-            btnDraw.innerText = drawModeActive ? "✏️ Draw Mode: ON" : "✏️ Draw Mode: OFF";
-            btnDraw.style.background = drawModeActive ? "#06b6d4" : "#222";
-            btnDraw.style.color = drawModeActive ? "#000" : "#fff";
-            
-            // Allow pointer events on canvas ONLY when drawing is active
-            canvas.style.pointerEvents = drawModeActive ? "auto" : "none";
-        });
-
-        // 3. Clear Canvas
-        btnClear.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        });
-
-        // 4. Drawing Mechanics
-        canvas.addEventListener('mousedown', (e) => {
-            if (!drawModeActive) return;
-            isDrawing = true;
-            ctx.beginPath();
-            ctx.moveTo(e.offsetX, e.offsetY);
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDrawing || !drawModeActive) return;
-            ctx.strokeStyle = '#eab308'; // Yellow telestrator color
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-        });
-
-        canvas.addEventListener('mouseup', () => isDrawing = false);
-        canvas.addEventListener('mouseout', () => isDrawing = false);
-
-        // 5. UNIFIED TACTICAL DIAGRAM
+       // 5. UNIFIED TACTICAL DIAGRAM (DYNAMIC ALGORITHM)
         const playbookModal = document.getElementById('vcm-playbook-modal');
         const fieldCanvas = document.getElementById('vcm-field-canvas');
         const fieldCtx = fieldCanvas.getContext('2d');
@@ -6494,7 +6441,7 @@
             
             const w = fieldCanvas.width;
             const h = fieldCanvas.height;
-            const los = h * 0.6; // Line of scrimmage is slightly lower so we can see the deep safeties
+            const los = h * 0.6; 
             const center = w / 2;
 
             // --- DRAW FIELD LINES ---
@@ -6529,20 +6476,42 @@
             fieldCtx.fillText("WR", w * 0.15, los + 20);
             fieldCtx.fillText("WR", w * 0.85, los + 20);
 
-            // Offensive Route Outline
-            fieldCtx.beginPath();
-            fieldCtx.strokeStyle = "#eab308"; // Yellow Route
+            // =====================================
+            // 🧠 DYNAMIC PLAYER ACTIONS (OFFENSE)
+            // =====================================
             fieldCtx.lineWidth = 3;
-            fieldCtx.setLineDash([8, 8]);
-            fieldCtx.moveTo(w * 0.15, los);
-            fieldCtx.lineTo(w * 0.15, los - 120);
-            fieldCtx.lineTo(center, los - 150);
-            fieldCtx.stroke();
-            fieldCtx.setLineDash([]); // Reset
+            fieldCtx.setLineDash([8, 8]); // Dashed lines for routes
+            
+            if (play.offense_play && play.offense_play.includes("Four Verticals")) {
+                fieldCtx.strokeStyle = "#eab308"; // Yellow Routes
+                [w * 0.15, w * 0.35, w * 0.65, w * 0.85].forEach(x => {
+                    fieldCtx.beginPath(); fieldCtx.moveTo(x, los - 20); fieldCtx.lineTo(x, los - 180); fieldCtx.stroke();
+                });
+            } 
+            else if (play.offense_play && play.offense_play.includes("Stick")) {
+                fieldCtx.strokeStyle = "#eab308"; 
+                // Flat
+                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.85, los - 20); fieldCtx.lineTo(w * 0.95, los - 60); fieldCtx.stroke();
+                // Stick
+                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.65, los - 20); fieldCtx.lineTo(w * 0.65, los - 80); fieldCtx.lineTo(w * 0.75, los - 80); fieldCtx.stroke();
+                // Vertical
+                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.15, los - 20); fieldCtx.lineTo(w * 0.15, los - 180); fieldCtx.stroke();
+            }
+            else if (play.play_type === "run") {
+                fieldCtx.setLineDash([]); 
+                fieldCtx.strokeStyle = "#22c55e"; // Green for run blocking
+                [center - (lineSpacing * 2), center - lineSpacing, center, center + lineSpacing, center + (lineSpacing * 2)].forEach(x => {
+                    fieldCtx.beginPath(); fieldCtx.moveTo(x, los); fieldCtx.lineTo(x, los - 30); fieldCtx.lineTo(x - 10, los - 30); fieldCtx.stroke();
+                });
+                // RB Path
+                fieldCtx.setLineDash([5, 5]);
+                fieldCtx.strokeStyle = "#eab308";
+                fieldCtx.beginPath(); fieldCtx.moveTo(center - 40, los + 40); fieldCtx.lineTo(center + 20, los - 20); fieldCtx.stroke(); 
+            }
+            fieldCtx.setLineDash([]); // Reset dash
 
             // --- DRAW DEFENSE (Red X's) ---
             fieldCtx.fillStyle = "#ef4444"; 
-            
             fieldCtx.fillText("DE", center - (lineSpacing * 1.5), los - 20);
             fieldCtx.fillText("DT", center - (lineSpacing * 0.5), los - 20);
             fieldCtx.fillText("DT", center + (lineSpacing * 0.5), los - 20);
@@ -6557,76 +6526,42 @@
             fieldCtx.fillText("FS", w * 0.35, los - 180);
             fieldCtx.fillText("SS", w * 0.65, los - 180);
 
-            // Defensive Blitz Arrow
-            fieldCtx.beginPath();
+            // =====================================
+            // 🧠 DYNAMIC PLAYER ACTIONS (DEFENSE)
+            // =====================================
+            fieldCtx.lineWidth = 2;
             fieldCtx.strokeStyle = "#ef4444"; 
-            fieldCtx.lineWidth = 3;
-            fieldCtx.moveTo(center - 80, los - 50);
-            fieldCtx.lineTo(center - 40, los - 10);
-            fieldCtx.stroke();
             
-            // Arrowhead
-            fieldCtx.beginPath();
-            fieldCtx.fillStyle = "#ef4444";
-            fieldCtx.moveTo(center - 40, los - 10);
-            fieldCtx.lineTo(center - 45, los - 20);
-            fieldCtx.lineTo(center - 35, los - 15);
-            fieldCtx.fill();
-        });
-        btnDefense.addEventListener('click', () => {
-            playbookModal.style.display = 'flex';
-            document.getElementById('vcm-modal-title').innerText = "DEFENSIVE SCHEME: " + (document.getElementById('vcm-def').innerText || "Base 4-3");
-            drawFieldBackground();
-
-            const w = fieldCanvas.width;
-            const h = fieldCanvas.height;
-            const los = h * 0.7;
-
-            // Draw Defensive Players
-            fieldCtx.font = "bold 20px 'JetBrains Mono'";
-            fieldCtx.textAlign = "center";
-            fieldCtx.textBaseline = "middle";
-            fieldCtx.fillStyle = "#ef4444"; // Red text for defense
-            
-            // D-Line
-            const lineSpacing = w * 0.06;
-            const center = w / 2;
-            fieldCtx.fillText("DE", center - (lineSpacing * 1.5), los - 20);
-            fieldCtx.fillText("DT", center - (lineSpacing * 0.5), los - 20);
-            fieldCtx.fillText("DT", center + (lineSpacing * 0.5), los - 20);
-            fieldCtx.fillText("DE", center + (lineSpacing * 1.5), los - 20);
-
-            // Linebackers
-            fieldCtx.fillText("WILL", center - 80, los - 80);
-            fieldCtx.fillText("MIKE", center, los - 80);
-            fieldCtx.fillText("SAM", center + 80, los - 80);
-
-            // Secondary
-            fieldCtx.fillText("CB", w * 0.1, los - 30);
-            fieldCtx.fillText("CB", w * 0.9, los - 30);
-            fieldCtx.fillText("FS", w * 0.3, los - 150);
-            fieldCtx.fillText("SS", w * 0.7, los - 150);
-
-            // Example Blitz (WILL Linebacker)
-            fieldCtx.beginPath();
-            fieldCtx.strokeStyle = "#ef4444"; 
-            fieldCtx.lineWidth = 3;
-            fieldCtx.moveTo(center - 80, los - 60);
-            fieldCtx.lineTo(center - 40, los - 10);
-            fieldCtx.stroke();
-            
-            // Arrowhead
-            fieldCtx.beginPath();
-            fieldCtx.fillStyle = "#ef4444";
-            fieldCtx.moveTo(center - 40, los - 10);
-            fieldCtx.lineTo(center - 45, los - 20);
-            fieldCtx.lineTo(center - 35, los - 15);
-            fieldCtx.fill();
+            if (play.defense_coverage && (play.defense_coverage.includes("Blitz") || play.defense_coverage.includes("Man"))) {
+                // Draw Blitzing Linebackers
+                [-80, 0, 80].forEach(offset => {
+                    fieldCtx.beginPath(); fieldCtx.moveTo(center + offset, los - 60); fieldCtx.lineTo(center + (offset * 0.5), los - 25); fieldCtx.stroke();
+                    // Arrowheads
+                    fieldCtx.beginPath(); fieldCtx.fillStyle = "#ef4444"; fieldCtx.arc(center + (offset * 0.5), los - 25, 4, 0, Math.PI * 2); fieldCtx.fill();
+                });
+            } else {
+                // Draw Zone Drop Circles
+                fieldCtx.fillStyle = "rgba(239, 68, 68, 0.2)";
+                fieldCtx.beginPath(); fieldCtx.arc(w * 0.2, los - 150, 40, 0, Math.PI * 2); fieldCtx.fill(); // Deep Third
+                fieldCtx.beginPath(); fieldCtx.arc(w * 0.8, los - 150, 40, 0, Math.PI * 2); fieldCtx.fill(); // Deep Third
+                fieldCtx.beginPath(); fieldCtx.arc(center - 60, los - 60, 30, 0, Math.PI * 2); fieldCtx.fill(); // Underneath
+                fieldCtx.beginPath(); fieldCtx.arc(center + 60, los - 60, 30, 0, Math.PI * 2); fieldCtx.fill(); // Underneath
+            }
         });
 
         // ==========================================
         // 🦅 VCM PLAYLIST LOGIC
         // ==========================================
+      window.masterPlaybook = []; // Stores all plays in memory
+
+        function filterVCM(type) {
+            if (type === 'all') {
+                loadPlaylist(window.masterPlaybook);
+            } else {
+                const filtered = window.masterPlaybook.filter(p => p.play_type.toLowerCase() === type);
+                loadPlaylist(filtered);
+            }
+        }
         function loadPlaylist(playDataArray) {
             // 🚨 THE FIX: Unhide the VCM when the plays load!
             document.getElementById('vcm-container').style.display = 'block';
