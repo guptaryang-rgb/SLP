@@ -6318,17 +6318,49 @@
             terminal.scrollTop = terminal.scrollHeight; 
         });
 
-       // 4. Receive Final JSON Data from Windows
+       // 4. Receive Final JSON Data from Windows & Build Data Table
         window.raptorSocket.on('raptorData', (data) => {
             scanBtn.innerText = "INITIATE SCAN";
             scanBtn.style.opacity = "1";
 
-            dataBox.innerHTML = `
-                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #333;">
-                    <strong style="color: #22c55e;">File Processed:</strong> ${data.file}
-                </div>
-                <div>${JSON.stringify(data.payload, null, 2)}</div>
-            `;
+            // If the data is an array (like our Down & Distance report), build a table!
+            if (Array.isArray(data.payload)) {
+                let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-family: 'Inter', sans-serif; font-size: 0.9rem;">
+                    <tr style="background: #111; color: #06b6d4; text-align: left; border-bottom: 2px solid #333;">
+                        <th style="padding: 12px;">Situation</th>
+                        <th style="padding: 12px;">Plays</th>
+                        <th style="padding: 12px;">Success</th>
+                        <th style="padding: 12px;">Win Rate</th>
+                    </tr>`;
+
+                data.payload.forEach(row => {
+                    tableHTML += `
+                    <tr style="border-bottom: 1px solid #222; transition: background 0.2s;" onmouseover="this.style.background='#1a1a1a'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 12px; font-weight: 600;">${row.situation || '--'}</td>
+                        <td style="padding: 12px; color: #aaa;">${row.plays || 0}</td>
+                        <td style="padding: 12px; color: ${row.success > 0 ? '#22c55e' : '#aaa'};">${row.success !== null ? row.success : 0}</td>
+                        <td style="padding: 12px; font-family: 'JetBrains Mono', monospace; color: #06b6d4;">${row.rate || 0}%</td>
+                    </tr>`;
+                });
+                
+                tableHTML += `</table>`;
+
+                dataBox.innerHTML = `
+                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #333;">
+                        <strong style="color: #22c55e;">Report Generated:</strong> ${data.file}
+                    </div>
+                    ${tableHTML}
+                `;
+            } else {
+                // Fallback for non-array data
+                dataBox.innerHTML = `
+                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #333;">
+                        <strong style="color: #22c55e;">File Processed:</strong> ${data.file}
+                    </div>
+                    <div>${JSON.stringify(data.payload, null, 2)}</div>
+                `;
+            }
         });
 
         // ==========================================
