@@ -6253,8 +6253,7 @@
 
     </script>
 
-<div id="raptor-dashboard-view" style="display: none; padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000;">
-        
+<div id="raptor-dashboard-view" style="display: none; padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000; height: 100vh; overflow-y: auto; padding-bottom: 150px;">        
         <div style="margin-bottom: 24px;">
             <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 8px;">Coach OS Target Control</h2>
             <p style="color: #888; font-size: 0.9rem;">Interface directly with your local Windows Edge Node to process high-volume game film.</p>
@@ -6284,6 +6283,17 @@
                  </div>
             </div>
         </div> 
+        <div id="vcm-playbook-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+            <div style="background: #111; border: 2px solid #06b6d4; border-radius: 8px; width: 90%; max-width: 900px; padding: 20px; box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 id="vcm-modal-title" style="color: #06b6d4; margin: 0; font-size: 1.5rem;">TACTICAL DIAGRAM</h3>
+                    <button onclick="document.getElementById('vcm-playbook-modal').style.display='none'" style="background: transparent; color: #888; border: none; font-size: 2rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">&times;</button>
+                </div>
+                <div style="width: 100%; aspect-ratio: 16/9; background: #166534; border: 2px solid #fff; border-radius: 4px; position: relative;">
+                    <canvas id="vcm-field-canvas" style="width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
         <div id="vcm-container" style="margin-top: 24px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; display: none;">
             
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px;">
@@ -6295,10 +6305,23 @@
                 </div>
             </div>
 
+           <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 16px; align-items: stretch;">
+            
             <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden;">
                 <video id="vcm-video" controls style="width: 100%; height: 100%; object-fit: cover;" src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
                 <canvas id="vcm-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
             </div>
+
+            <div style="background: #0a0a0a; border: 1px solid #222; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden;">
+                <div style="background: #1a1a1a; padding: 12px; font-size: 0.8rem; font-weight: bold; color: #06b6d4; border-bottom: 1px solid #333; text-align: center;">
+                    📋 PLAYLIST
+                </div>
+                <div id="vcm-playlist-container" style="flex-grow: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="color: #555; text-align: center; font-size: 0.8rem; margin-top: 20px;">Run scan to load plays...</div>
+                </div>
+            </div>
+
+        </div>
 
             <div style="margin-top: 16px; display: flex; gap: 12px;">
                 <button id="vcm-btn-draw" style="background: #222; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">✏️ Draw Mode: OFF</button>
@@ -6451,38 +6474,168 @@
         canvas.addEventListener('mouseup', () => isDrawing = false);
         canvas.addEventListener('mouseout', () => isDrawing = false);
 
-        // 5. Simulate AI Scheme Drawing (Phase 3)
-        btnOffense.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "bold 24px 'JetBrains Mono'";
-            ctx.fillStyle = "#22c55e";
-            ctx.fillText("O", canvas.width * 0.4, canvas.height * 0.6);
-            ctx.fillText("O", canvas.width * 0.5, canvas.height * 0.6);
-            ctx.fillText("O", canvas.width * 0.6, canvas.height * 0.6);
+        // 5. Pop-Up Playbook Logic
+        const playbookModal = document.getElementById('vcm-playbook-modal');
+        const fieldCanvas = document.getElementById('vcm-field-canvas');
+        const fieldCtx = fieldCanvas.getContext('2d');
+
+        function drawFieldBackground() {
+            // Fix canvas resolution
+            fieldCanvas.width = fieldCanvas.clientWidth;
+            fieldCanvas.height = fieldCanvas.clientHeight;
             
-            ctx.beginPath();
-            ctx.strokeStyle = "#22c55e";
-            ctx.setLineDash([5, 15]); // Dotted line for routes
-            ctx.moveTo(canvas.width * 0.4, canvas.height * 0.6);
-            ctx.lineTo(canvas.width * 0.4, canvas.height * 0.3);
-            ctx.stroke();
-            ctx.setLineDash([]); // Reset
+            fieldCtx.clearRect(0, 0, fieldCanvas.width, fieldCanvas.height);
+            
+            // Draw Yard Lines
+            fieldCtx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            fieldCtx.lineWidth = 2;
+            fieldCtx.beginPath();
+            // Line of Scrimmage (Blue)
+            fieldCtx.moveTo(0, fieldCanvas.height * 0.7);
+            fieldCtx.lineTo(fieldCanvas.width, fieldCanvas.height * 0.7);
+            fieldCtx.stroke();
+            
+            // First Down Line (Yellow)
+            fieldCtx.strokeStyle = "rgba(234, 179, 8, 0.5)";
+            fieldCtx.beginPath();
+            fieldCtx.moveTo(0, fieldCanvas.height * 0.4);
+            fieldCtx.lineTo(fieldCanvas.width, fieldCanvas.height * 0.4);
+            fieldCtx.stroke();
+        }
+
+        btnOffense.addEventListener('click', () => {
+            playbookModal.style.display = 'flex';
+            document.getElementById('vcm-modal-title').innerText = "OFFENSIVE SCHEME: " + (document.getElementById('vcm-form').innerText || "Spread");
+            drawFieldBackground();
+
+            const w = fieldCanvas.width;
+            const h = fieldCanvas.height;
+            const los = h * 0.7; // Line of scrimmage
+
+            // Draw Offensive Players
+            fieldCtx.font = "bold 20px 'JetBrains Mono'";
+            fieldCtx.textAlign = "center";
+            fieldCtx.textBaseline = "middle";
+            fieldCtx.fillStyle = "#fff"; // White text for offense
+            
+            // O-Line
+            const lineSpacing = w * 0.05;
+            const center = w / 2;
+            fieldCtx.fillText("LT", center - (lineSpacing * 2), los + 15);
+            fieldCtx.fillText("LG", center - lineSpacing, los + 15);
+            fieldCtx.fillText("C", center, los + 15);
+            fieldCtx.fillText("RG", center + lineSpacing, los + 15);
+            fieldCtx.fillText("RT", center + (lineSpacing * 2), los + 15);
+
+            // Backfield
+            fieldCtx.fillText("QB", center, los + 50);
+            fieldCtx.fillText("RB", center - 40, los + 50);
+
+            // Receivers
+            fieldCtx.fillText("WR", w * 0.1, los + 15);
+            fieldCtx.fillText("SLOT", w * 0.25, los + 30);
+            fieldCtx.fillText("WR", w * 0.9, los + 15);
+
+            // Example Route (WR Fade)
+            fieldCtx.beginPath();
+            fieldCtx.strokeStyle = "#eab308"; // Yellow Route
+            fieldCtx.lineWidth = 3;
+            fieldCtx.setLineDash([8, 8]);
+            fieldCtx.moveTo(w * 0.1, los);
+            fieldCtx.lineTo(w * 0.1, los - 100);
+            fieldCtx.lineTo(w * 0.15, los - 150);
+            fieldCtx.stroke();
+            fieldCtx.setLineDash([]); // Reset
         });
 
         btnDefense.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "bold 24px 'JetBrains Mono'";
-            ctx.fillStyle = "#ef4444";
-            ctx.fillText("X", canvas.width * 0.4, canvas.height * 0.4);
-            ctx.fillText("X", canvas.width * 0.5, canvas.height * 0.4);
-            ctx.fillText("X", canvas.width * 0.6, canvas.height * 0.4);
+            playbookModal.style.display = 'flex';
+            document.getElementById('vcm-modal-title').innerText = "DEFENSIVE SCHEME: " + (document.getElementById('vcm-def').innerText || "Base 4-3");
+            drawFieldBackground();
+
+            const w = fieldCanvas.width;
+            const h = fieldCanvas.height;
+            const los = h * 0.7;
+
+            // Draw Defensive Players
+            fieldCtx.font = "bold 20px 'JetBrains Mono'";
+            fieldCtx.textAlign = "center";
+            fieldCtx.textBaseline = "middle";
+            fieldCtx.fillStyle = "#ef4444"; // Red text for defense
             
-            ctx.fillStyle = "rgba(239, 68, 68, 0.2)"; // Show a visual "zone"
-            ctx.beginPath();
-            ctx.ellipse(canvas.width * 0.5, canvas.height * 0.2, 150, 50, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // D-Line
+            const lineSpacing = w * 0.06;
+            const center = w / 2;
+            fieldCtx.fillText("DE", center - (lineSpacing * 1.5), los - 20);
+            fieldCtx.fillText("DT", center - (lineSpacing * 0.5), los - 20);
+            fieldCtx.fillText("DT", center + (lineSpacing * 0.5), los - 20);
+            fieldCtx.fillText("DE", center + (lineSpacing * 1.5), los - 20);
+
+            // Linebackers
+            fieldCtx.fillText("WILL", center - 80, los - 80);
+            fieldCtx.fillText("MIKE", center, los - 80);
+            fieldCtx.fillText("SAM", center + 80, los - 80);
+
+            // Secondary
+            fieldCtx.fillText("CB", w * 0.1, los - 30);
+            fieldCtx.fillText("CB", w * 0.9, los - 30);
+            fieldCtx.fillText("FS", w * 0.3, los - 150);
+            fieldCtx.fillText("SS", w * 0.7, los - 150);
+
+            // Example Blitz (WILL Linebacker)
+            fieldCtx.beginPath();
+            fieldCtx.strokeStyle = "#ef4444"; 
+            fieldCtx.lineWidth = 3;
+            fieldCtx.moveTo(center - 80, los - 60);
+            fieldCtx.lineTo(center - 40, los - 10);
+            fieldCtx.stroke();
+            
+            // Arrowhead
+            fieldCtx.beginPath();
+            fieldCtx.fillStyle = "#ef4444";
+            fieldCtx.moveTo(center - 40, los - 10);
+            fieldCtx.lineTo(center - 45, los - 20);
+            fieldCtx.lineTo(center - 35, los - 15);
+            fieldCtx.fill();
         });
 
+        // ==========================================
+        // 🦅 VCM PLAYLIST LOGIC
+        // ==========================================
+        function loadPlaylist(playDataArray) {
+            const playlistBox = document.getElementById('vcm-playlist-container');
+            playlistBox.innerHTML = ''; // Clear default text
+
+            playDataArray.forEach((play, index) => {
+                // Create a clickable button for each play
+                const playBtn = document.createElement('div');
+                playBtn.style.cssText = "background: #111; border: 1px solid #333; padding: 12px; border-radius: 4px; cursor: pointer; transition: 0.2s;";
+                playBtn.onmouseover = () => playBtn.style.background = '#222';
+                playBtn.onmouseout = () => playBtn.style.background = '#111';
+                
+                // Add the play details inside the button
+                playBtn.innerHTML = `
+                    <div style="color: #fff; font-weight: bold; font-size: 0.9rem; margin-bottom: 4px;">Play ${index + 1}: ${play.offense_play || 'Unknown'}</div>
+                    <div style="color: #aaa; font-size: 0.75rem;">${play.down} & ${play.distance} | ${play.formation || '--'}</div>
+                    <div style="color: #ef4444; font-size: 0.75rem; margin-top: 4px;">vs ${play.defense_coverage || '--'}</div>
+                `;
+
+                // When clicked, load this specific play's intel into the VCM!
+                playBtn.onclick = () => {
+                    document.getElementById('vcm-form').innerText = play.formation || "Unknown";
+                    document.getElementById('vcm-def').innerText = play.defense_coverage || "Unknown";
+                    
+                    // Highlight the active button
+                    Array.from(playlistBox.children).forEach(child => child.style.borderColor = '#333');
+                    playBtn.style.borderColor = '#06b6d4';
+                };
+
+                playlistBox.appendChild(playBtn);
+            });
+        }
+        
+        
+        
         // 6. DEV HACK: Force show VCM for testing right now
         vcmContainer.style.display = 'block';
         // ==========================================
