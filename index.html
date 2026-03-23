@@ -6254,19 +6254,22 @@
     </script>
 
 <div id="raptor-dashboard-view" style="display: none; padding: 24px; max-width: 1200px; margin: 0 auto; color: white; background: #000;">
-            <div style="margin-bottom: 24px;">
+        
+        <div style="margin-bottom: 24px;">
             <h2 style="font-size: 1.5rem; font-weight: 800; color: #06b6d4; margin-bottom: 8px;">Coach OS Target Control</h2>
             <p style="color: #888; font-size: 0.9rem;">Interface directly with your local Windows Edge Node to process high-volume game film.</p>
         </div>
+
         <div style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center;">
             <div style="flex-grow: 1;">
                 <label style="display: block; font-size: 0.8rem; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Target PC Folder</label>
-                <input type="text" id="raptor-folder-input" placeholder="C:\COACH_OS\context" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 4px; color: #06b6d4; font-family: 'JetBrains Mono', monospace;">
+                <input type="text" id="raptor-folder-input" placeholder="C:\COACH_OS\clips" style="width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 4px; color: #06b6d4; font-family: 'JetBrains Mono', monospace;">
             </div>
             <button id="raptor-scan-btn" style="background: #06b6d4; color: black; font-weight: bold; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; align-self: flex-end; height: 43px;">
                 INITIATE SCAN
             </button>
         </div>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
             <div style="background: #000; border: 1px solid #222; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
                 <div style="background: #111; padding: 8px 16px; font-size: 0.75rem; color: #666; font-family: monospace; border-bottom: 1px solid #222;">>_ RAPTOR NODE TERMINAL</div>
@@ -6280,8 +6283,35 @@
                     No data received yet. Run a scan to populate.
                  </div>
             </div>
+        </div> 
+        <div id="vcm-container" style="margin-top: 24px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; display: none;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="color: #06b6d4; font-size: 1.2rem; margin: 0;">VCM | Tactical Viewer</h3>
+                
+                <div id="vcm-intel-readout" style="display: flex; gap: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #aaa;">
+                    <span>Formation: <strong id="vcm-form" style="color:#fff;">--</strong></span>
+                    <span>Defense: <strong id="vcm-def" style="color:#fff;">--</strong></span>
+                </div>
+            </div>
+
+            <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden;">
+                <video id="vcm-video" controls style="width: 100%; height: 100%; object-fit: cover;" src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+                <canvas id="vcm-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
+                <button id="vcm-btn-draw" style="background: #222; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">✏️ Draw Mode: OFF</button>
+                <button id="vcm-btn-clear" style="background: #222; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🗑️ Clear Canvas</button>
+                <div style="flex-grow: 1;"></div>
+                <button id="vcm-btn-offense" style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid #22c55e; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🟢 Show Offense</button>
+                <button id="vcm-btn-defense" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🔴 Show Defense</button>
+            </div>
         </div>
-    </div>
+
+</div> ```
+
+
 
    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script>
@@ -6363,6 +6393,98 @@
             }
         });
 
+        // ==========================================
+        // 🦅 VCM TELESTRATOR LOGIC
+        // ==========================================
+        const vcmContainer = document.getElementById('vcm-container');
+        const canvas = document.getElementById('vcm-canvas');
+        const ctx = canvas.getContext('2d');
+        const btnDraw = document.getElementById('vcm-btn-draw');
+        const btnClear = document.getElementById('vcm-btn-clear');
+        const btnOffense = document.getElementById('vcm-btn-offense');
+        const btnDefense = document.getElementById('vcm-btn-defense');
+        
+        let isDrawing = false;
+        let drawModeActive = false;
+
+        // 1. Resize Canvas to match video size
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 1000); // Initial sizing
+
+        // 2. Toggle Draw Mode
+        btnDraw.addEventListener('click', () => {
+            drawModeActive = !drawModeActive;
+            btnDraw.innerText = drawModeActive ? "✏️ Draw Mode: ON" : "✏️ Draw Mode: OFF";
+            btnDraw.style.background = drawModeActive ? "#06b6d4" : "#222";
+            btnDraw.style.color = drawModeActive ? "#000" : "#fff";
+            
+            // Allow pointer events on canvas ONLY when drawing is active
+            canvas.style.pointerEvents = drawModeActive ? "auto" : "none";
+        });
+
+        // 3. Clear Canvas
+        btnClear.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // 4. Drawing Mechanics
+        canvas.addEventListener('mousedown', (e) => {
+            if (!drawModeActive) return;
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing || !drawModeActive) return;
+            ctx.strokeStyle = '#eab308'; // Yellow telestrator color
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+
+        // 5. Simulate AI Scheme Drawing (Phase 3)
+        btnOffense.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "bold 24px 'JetBrains Mono'";
+            ctx.fillStyle = "#22c55e";
+            ctx.fillText("O", canvas.width * 0.4, canvas.height * 0.6);
+            ctx.fillText("O", canvas.width * 0.5, canvas.height * 0.6);
+            ctx.fillText("O", canvas.width * 0.6, canvas.height * 0.6);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = "#22c55e";
+            ctx.setLineDash([5, 15]); // Dotted line for routes
+            ctx.moveTo(canvas.width * 0.4, canvas.height * 0.6);
+            ctx.lineTo(canvas.width * 0.4, canvas.height * 0.3);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset
+        });
+
+        btnDefense.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "bold 24px 'JetBrains Mono'";
+            ctx.fillStyle = "#ef4444";
+            ctx.fillText("X", canvas.width * 0.4, canvas.height * 0.4);
+            ctx.fillText("X", canvas.width * 0.5, canvas.height * 0.4);
+            ctx.fillText("X", canvas.width * 0.6, canvas.height * 0.4);
+            
+            ctx.fillStyle = "rgba(239, 68, 68, 0.2)"; // Show a visual "zone"
+            ctx.beginPath();
+            ctx.ellipse(canvas.width * 0.5, canvas.height * 0.2, 150, 50, 0, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 6. DEV HACK: Force show VCM for testing right now
+        vcmContainer.style.display = 'block';
         // ==========================================
         // 🦅 TAB NAVIGATION LOGIC
         // ==========================================
