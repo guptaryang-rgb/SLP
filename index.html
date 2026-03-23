@@ -6628,9 +6628,13 @@
         // 🦅 VCM PLAYLIST LOGIC
         // ==========================================
         function loadPlaylist(playDataArray) {
+            // 🚨 THE FIX: Unhide the VCM when the plays load!
+            document.getElementById('vcm-container').style.display = 'block';
+
             const playlistBox = document.getElementById('vcm-playlist-container');
             playlistBox.innerHTML = ''; // Clear default text
-
+            
+            // ... (keep the rest of your code exactly the same)
             playDataArray.forEach((play, index) => {
                 // Create a clickable button for each play
                 const playBtn = document.createElement('div');
