@@ -6657,7 +6657,7 @@
                     
                     // 2. 📺 SYNC THE VIDEO! Ask the local streaming server for the file
                     const videoPlayer = document.getElementById('vcm-video');
-                    videoPlayer.src = `http://localhost:3333/stream/${play.clip}`;
+                    videoPlayer.src = `http://127.0.0.1:3333/stream/${play.clip}`;
                     videoPlayer.play();
 
                     // 3. Save this play's data to memory so the Diagram button can use it
