@@ -6327,8 +6327,7 @@
                 <button id="vcm-btn-draw" style="background: #222; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">✏️ Draw Mode: OFF</button>
                 <button id="vcm-btn-clear" style="background: #222; color: white; border: 1px solid #444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🗑️ Clear Canvas</button>
                 <div style="flex-grow: 1;"></div>
-                <button id="vcm-btn-offense" style="background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid #22c55e; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🟢 Show Offense</button>
-                <button id="vcm-btn-defense" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🔴 Show Defense</button>
+                <button id="vcm-btn-diagram" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4; border: 1px solid #06b6d4; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">🎯 SHOW TACTICAL DIAGRAM</button>
             </div>
         </div>
 
@@ -6472,80 +6471,108 @@
         canvas.addEventListener('mouseup', () => isDrawing = false);
         canvas.addEventListener('mouseout', () => isDrawing = false);
 
-        // 5. Pop-Up Playbook Logic
+        // 5. UNIFIED TACTICAL DIAGRAM
         const playbookModal = document.getElementById('vcm-playbook-modal');
         const fieldCanvas = document.getElementById('vcm-field-canvas');
         const fieldCtx = fieldCanvas.getContext('2d');
+        const btnDiagram = document.getElementById('vcm-btn-diagram');
 
-        function drawFieldBackground() {
+        btnDiagram.addEventListener('click', () => {
+            const play = window.currentTacticalPlay;
+            if (!play) {
+                alert("Please select a play from the playlist first!");
+                return;
+            }
+
+            playbookModal.style.display = 'flex';
+            document.getElementById('vcm-modal-title').innerText = `${play.formation || "Offense"} vs ${play.defense_coverage || "Defense"}`;
+            
             // Fix canvas resolution
             fieldCanvas.width = fieldCanvas.clientWidth;
             fieldCanvas.height = fieldCanvas.clientHeight;
-            
             fieldCtx.clearRect(0, 0, fieldCanvas.width, fieldCanvas.height);
             
-            // Draw Yard Lines
+            const w = fieldCanvas.width;
+            const h = fieldCanvas.height;
+            const los = h * 0.6; // Line of scrimmage is slightly lower so we can see the deep safeties
+            const center = w / 2;
+
+            // --- DRAW FIELD LINES ---
             fieldCtx.strokeStyle = "rgba(255, 255, 255, 0.3)";
             fieldCtx.lineWidth = 2;
             fieldCtx.beginPath();
-            // Line of Scrimmage (Blue)
-            fieldCtx.moveTo(0, fieldCanvas.height * 0.7);
-            fieldCtx.lineTo(fieldCanvas.width, fieldCanvas.height * 0.7);
+            fieldCtx.moveTo(0, los);
+            fieldCtx.lineTo(w, los);
             fieldCtx.stroke();
             
-            // First Down Line (Yellow)
+            // First Down Line
             fieldCtx.strokeStyle = "rgba(234, 179, 8, 0.5)";
             fieldCtx.beginPath();
-            fieldCtx.moveTo(0, fieldCanvas.height * 0.4);
-            fieldCtx.lineTo(fieldCanvas.width, fieldCanvas.height * 0.4);
+            fieldCtx.moveTo(0, los - (h * 0.15));
+            fieldCtx.lineTo(w, los - (h * 0.15));
             fieldCtx.stroke();
-        }
 
-        btnOffense.addEventListener('click', () => {
-            playbookModal.style.display = 'flex';
-            document.getElementById('vcm-modal-title').innerText = "OFFENSIVE SCHEME: " + (document.getElementById('vcm-form').innerText || "Spread");
-            drawFieldBackground();
-
-            const w = fieldCanvas.width;
-            const h = fieldCanvas.height;
-            const los = h * 0.7; // Line of scrimmage
-
-            // Draw Offensive Players
-            fieldCtx.font = "bold 20px 'JetBrains Mono'";
+            // --- DRAW OFFENSE (White O's) ---
+            fieldCtx.font = "bold 18px 'JetBrains Mono'";
             fieldCtx.textAlign = "center";
             fieldCtx.textBaseline = "middle";
-            fieldCtx.fillStyle = "#fff"; // White text for offense
+            fieldCtx.fillStyle = "#fff"; 
             
-            // O-Line
             const lineSpacing = w * 0.05;
-            const center = w / 2;
-            fieldCtx.fillText("LT", center - (lineSpacing * 2), los + 15);
-            fieldCtx.fillText("LG", center - lineSpacing, los + 15);
-            fieldCtx.fillText("C", center, los + 15);
-            fieldCtx.fillText("RG", center + lineSpacing, los + 15);
-            fieldCtx.fillText("RT", center + (lineSpacing * 2), los + 15);
-
-            // Backfield
+            fieldCtx.fillText("LT", center - (lineSpacing * 2), los + 20);
+            fieldCtx.fillText("LG", center - lineSpacing, los + 20);
+            fieldCtx.fillText("C", center, los + 20);
+            fieldCtx.fillText("RG", center + lineSpacing, los + 20);
+            fieldCtx.fillText("RT", center + (lineSpacing * 2), los + 20);
             fieldCtx.fillText("QB", center, los + 50);
             fieldCtx.fillText("RB", center - 40, los + 50);
+            fieldCtx.fillText("WR", w * 0.15, los + 20);
+            fieldCtx.fillText("WR", w * 0.85, los + 20);
 
-            // Receivers
-            fieldCtx.fillText("WR", w * 0.1, los + 15);
-            fieldCtx.fillText("SLOT", w * 0.25, los + 30);
-            fieldCtx.fillText("WR", w * 0.9, los + 15);
-
-            // Example Route (WR Fade)
+            // Offensive Route Outline
             fieldCtx.beginPath();
             fieldCtx.strokeStyle = "#eab308"; // Yellow Route
             fieldCtx.lineWidth = 3;
             fieldCtx.setLineDash([8, 8]);
-            fieldCtx.moveTo(w * 0.1, los);
-            fieldCtx.lineTo(w * 0.1, los - 100);
-            fieldCtx.lineTo(w * 0.15, los - 150);
+            fieldCtx.moveTo(w * 0.15, los);
+            fieldCtx.lineTo(w * 0.15, los - 120);
+            fieldCtx.lineTo(center, los - 150);
             fieldCtx.stroke();
             fieldCtx.setLineDash([]); // Reset
-        });
 
+            // --- DRAW DEFENSE (Red X's) ---
+            fieldCtx.fillStyle = "#ef4444"; 
+            
+            fieldCtx.fillText("DE", center - (lineSpacing * 1.5), los - 20);
+            fieldCtx.fillText("DT", center - (lineSpacing * 0.5), los - 20);
+            fieldCtx.fillText("DT", center + (lineSpacing * 0.5), los - 20);
+            fieldCtx.fillText("DE", center + (lineSpacing * 1.5), los - 20);
+
+            fieldCtx.fillText("WLB", center - 80, los - 70);
+            fieldCtx.fillText("MLB", center, los - 70);
+            fieldCtx.fillText("SLB", center + 80, los - 70);
+
+            fieldCtx.fillText("CB", w * 0.15, los - 40);
+            fieldCtx.fillText("CB", w * 0.85, los - 40);
+            fieldCtx.fillText("FS", w * 0.35, los - 180);
+            fieldCtx.fillText("SS", w * 0.65, los - 180);
+
+            // Defensive Blitz Arrow
+            fieldCtx.beginPath();
+            fieldCtx.strokeStyle = "#ef4444"; 
+            fieldCtx.lineWidth = 3;
+            fieldCtx.moveTo(center - 80, los - 50);
+            fieldCtx.lineTo(center - 40, los - 10);
+            fieldCtx.stroke();
+            
+            // Arrowhead
+            fieldCtx.beginPath();
+            fieldCtx.fillStyle = "#ef4444";
+            fieldCtx.moveTo(center - 40, los - 10);
+            fieldCtx.lineTo(center - 45, los - 20);
+            fieldCtx.lineTo(center - 35, los - 15);
+            fieldCtx.fill();
+        });
         btnDefense.addEventListener('click', () => {
             playbookModal.style.display = 'flex';
             document.getElementById('vcm-modal-title').innerText = "DEFENSIVE SCHEME: " + (document.getElementById('vcm-def').innerText || "Base 4-3");
@@ -6618,11 +6645,20 @@
                     <div style="color: #ef4444; font-size: 0.75rem; margin-top: 4px;">vs ${play.defense_coverage || '--'}</div>
                 `;
 
-                // When clicked, load this specific play's intel into the VCM!
+                // When clicked, load this specific play!
                 playBtn.onclick = () => {
+                    // 1. Update Intel Text
                     document.getElementById('vcm-form').innerText = play.formation || "Unknown";
                     document.getElementById('vcm-def').innerText = play.defense_coverage || "Unknown";
                     
+                    // 2. 📺 SYNC THE VIDEO! Ask the local streaming server for the file
+                    const videoPlayer = document.getElementById('vcm-video');
+                    videoPlayer.src = `http://localhost:3333/stream/${play.clip}`;
+                    videoPlayer.play();
+
+                    // 3. Save this play's data to memory so the Diagram button can use it
+                    window.currentTacticalPlay = play;
+
                     // Highlight the active button
                     Array.from(playlistBox.children).forEach(child => child.style.borderColor = '#333');
                     playBtn.style.borderColor = '#06b6d4';
