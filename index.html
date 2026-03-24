@@ -6467,7 +6467,7 @@
             if (!play) return;
 
             cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight;
-            const w = cvs.width, h = cvs.height, los = h * 0.6, center = w / 2, ls = w * 0.05;
+            const w = cvs.width, h = cvs.height, los = h * 0.6;
 
             drawFieldBackground(w, h, los);
 
@@ -6476,78 +6476,31 @@
             if (playTime > 100) playTime = 100; 
 
             const progress = playTime / 100; 
-
             ctx.font = "bold 16px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
+            // 🧠 THE INFINITE PROJECTOR
+            // It blindly draws whatever X/Y vectors Raptor injected into the JSON!
+            
+            // --- Draw Offense ---
             ctx.fillStyle = "#fff";
-            ctx.fillText("LT", center-(ls*2), los+20); ctx.fillText("LG", center-ls, los+20); 
-            ctx.fillText("C", center, los+20);
-            ctx.fillText("RG", center+ls, los+20); ctx.fillText("RT", center+(ls*2), los+20);
-            ctx.fillText("QB", center, los+50 + (progress * 15)); 
-
-            if (play.offense_play && play.offense_play.includes("Four Verticals")) {
-                const routeDepth = 160 * progress;
-                ctx.fillText("WR", w*0.15, los+20 - routeDepth); 
-                ctx.fillText("WR", w*0.85, los+20 - routeDepth);
-                ctx.fillText("TE", center+ls*3, los+20 - routeDepth);
-                ctx.fillText("RB", center-40, los+50 - (100 * progress)); 
-            } 
-            else if (play.offense_play && play.offense_play.includes("Stick")) {
-                ctx.fillText("WR", w*0.15, los+20 - (160 * progress)); 
-                ctx.fillText("TE", center+ls*3, los+20 - (60 * progress)); 
-                ctx.fillText("RB", center-40 + (60 * progress), los+50 - (40 * progress)); 
-            } 
-            else if (play.offense_play && play.offense_play.includes("Mesh")) {
-                ctx.fillText("WR", w*0.15 + (w*0.5 * progress), los+10 - (20 * progress)); 
-                ctx.fillText("WR", w*0.85 - (w*0.5 * progress), los+30 - (20 * progress)); 
-                ctx.fillText("TE", center+ls*3, los+20 - (100 * progress)); 
-                ctx.fillText("RB", center-40 + (80 * progress), los+50 - (20 * progress)); 
-            }
-            else if (play.offense_play && play.offense_play.includes("Smash")) {
-                ctx.fillText("WR", w*0.15, los+20 - (40 * Math.min(progress*2, 1))); 
-                ctx.fillText("WR", w*0.85, los+20 - (40 * Math.min(progress*2, 1))); 
-                ctx.fillText("TE", center+ls*3 + (50 * progress), los+20 - (120 * progress)); 
-                ctx.fillText("RB", center-40, los+50 - (20 * progress)); 
-            }
-            else if (play.play_type === "run") {
-                ctx.fillText("WR", w*0.15, los+20 - (50 * progress)); 
-                ctx.fillText("WR", w*0.85, los+20 - (50 * progress)); 
-                ctx.fillText("RB", center-40 + (60 * progress), los+50 - (80 * progress)); 
+            if (play.off_vectors && play.off_vectors.length > 0) {
+                play.off_vectors.forEach(v => {
+                    let currentX = (w * v.startX) + (((w * v.endX) - (w * v.startX)) * progress);
+                    let currentY = (los + v.startY) + ((v.endY - v.startY) * progress);
+                    ctx.fillText(v.label, currentX, currentY);
+                });
             } else {
-                ctx.fillText("WR", w*0.15, los+20); ctx.fillText("WR", w*0.85, los+20); ctx.fillText("RB", center-40, los+50);
+                ctx.fillText("Awaiting Geometry Node...", w/2, los + 50);
             }
 
+            // --- Draw Defense ---
             ctx.fillStyle = "#ef4444";
-            const rushDepth = 20 * progress;
-            ctx.fillText("DE", center-(ls*1.5), los-20 + rushDepth); ctx.fillText("DT", center-(ls*0.5), los-20 + rushDepth); 
-            ctx.fillText("DT", center+(ls*0.5), los-20 + rushDepth); ctx.fillText("DE", center+(ls*1.5), los-20 + rushDepth);
-
-            if (play.defense_coverage && play.defense_coverage.includes("Cover 3")) {
-                const dropDepth = 60 * progress;
-                ctx.fillText("CB", w*0.15, los-40 - dropDepth); ctx.fillText("CB", w*0.85, los-40 - dropDepth); 
-                ctx.fillText("FS", w*0.35, los-180 - (20 * progress)); ctx.fillText("SS", w*0.65, los-180 + (80 * progress)); 
-                ctx.fillText("W", center-80, los-70 - (30 * progress)); ctx.fillText("M", center, los-70 - (30 * progress)); ctx.fillText("S", center+80, los-70 - (30 * progress));
-            } 
-            else if (play.defense_coverage && play.defense_coverage.includes("Cover 2")) {
-                const safetyDrop = 70 * progress;
-                ctx.fillText("CB", w*0.15, los-40 - (10 * progress)); 
-                ctx.fillText("CB", w*0.85, los-40 - (10 * progress)); 
-                ctx.fillText("FS", w*0.35 - (40 * progress), los-180 - safetyDrop); 
-                ctx.fillText("SS", w*0.65 + (40 * progress), los-180 - safetyDrop); 
-                ctx.fillText("W", center-80, los-70 - (40 * progress)); ctx.fillText("M", center, los-70 - (50 * progress)); ctx.fillText("S", center+80, los-70 - (40 * progress));
-            }
-            else if (play.defense_coverage && play.defense_coverage.includes("Man")) {
-                ctx.fillText("CB", w*0.15, los-40 + (10 * progress)); 
-                ctx.fillText("CB", w*0.85, los-40 + (10 * progress));
-                ctx.fillText("FS", w*0.35, los-180); 
-                ctx.fillText("SS", w*0.65, los-180 + (50 * progress)); 
-                ctx.fillText("W", center-80, los-70); ctx.fillText("M", center, los-70 + (20 * progress)); ctx.fillText("S", center+80, los-70);
-            }
-            else { 
-                const blitzDepth = 40 * progress;
-                ctx.fillText("CB", w*0.15, los-40 - (20 * progress)); ctx.fillText("CB", w*0.85, los-40 - (20 * progress));
-                ctx.fillText("W", center-80, los-70 + blitzDepth); ctx.fillText("M", center, los-70 + (blitzDepth * 0.5)); ctx.fillText("S", center+80, los-70 + blitzDepth);
-                ctx.fillText("FS", w*0.35, los-180); ctx.fillText("SS", w*0.65, los-180);
+            if (play.def_vectors && play.def_vectors.length > 0) {
+                play.def_vectors.forEach(v => {
+                    let currentX = (w * v.startX) + (((w * v.endX) - (w * v.startX)) * progress);
+                    let currentY = (los + v.startY) + ((v.endY - v.startY) * progress);
+                    ctx.fillText(v.label, currentX, currentY);
+                });
             }
 
             if (isAnimating && playTime < 100) {
