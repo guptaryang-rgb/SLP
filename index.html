@@ -6471,33 +6471,81 @@
 
             drawFieldBackground(w, h, los);
 
-            const speed = 1.0; // Adjust animation speed here
+            const speed = 0.5; // Slower speed so you can watch the routes draw
             if (isAnimating) playTime += speed;
             if (playTime > 100) playTime = 100; 
 
             const progress = playTime / 100; 
-            ctx.font = "bold 16px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            
+            // ----------------------------------------------------
+            // 🧠 DRAW ACTUAL ROUTES (TRAILS)
+            // ----------------------------------------------------
+            if (play.vision_paths && play.vision_paths.length > 0) {
+                play.vision_paths.forEach(player => {
+                    
+                    // 1. Calculate how much of the route to draw based on time
+                    const totalWaypoints = player.path.length;
+                    const currentPointIndex = Math.min(
+                        Math.floor(progress * totalWaypoints), 
+                        totalWaypoints - 1
+                    );
 
-            // 🧠 DRAW OFFENSIVE COORDINATES
-            ctx.fillStyle = "#fff";
-            if (play.off_vectors && play.off_vectors.length > 0) {
-                play.off_vectors.forEach(v => {
-                    let currentX = (w * v.startX) + (((w * v.endX) - (w * v.startX)) * progress);
-                    let currentY = (los + v.startY) + ((v.endY - v.startY) * progress);
-                    ctx.fillText(v.label, currentX, currentY);
+                    // 2. Draw the Route Line (The Trail)
+                    ctx.beginPath();
+                    ctx.strokeStyle = player.team === "offense" ? "rgba(255, 255, 255, 0.6)" : "rgba(239, 68, 68, 0.6)";
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([5, 5]); // Dashed lines for routes
+                    
+                    for (let i = 0; i <= currentPointIndex; i++) {
+                        let ptX = w * player.path[i].x;
+                        let ptY = los + player.path[i].y;
+                        if (i === 0) ctx.moveTo(ptX, ptY);
+                        else ctx.lineTo(ptX, ptY);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Reset dash
+
+                    // 3. Draw the Player Icon at the current tip of the line
+                    ctx.font = "bold 14px 'JetBrains Mono'"; 
+                    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    ctx.fillStyle = player.team === "offense" ? "#fff" : "#ef4444";
+                    
+                    let currentX = w * player.path[currentPointIndex].x;
+                    let currentY = los + player.path[currentPointIndex].y;
+                    
+                    // Draw a background circle for the player so it pops
+                    ctx.beginPath();
+                    ctx.arc(currentX, currentY, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = player.team === "offense" ? "#000" : "#450a0a";
+                    ctx.fill();
+                    ctx.strokeStyle = player.team === "offense" ? "#fff" : "#ef4444";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Draw player label (e.g., WR, CB)
+                    ctx.fillStyle = player.team === "offense" ? "#fff" : "#ef4444";
+                    ctx.fillText(player.label, currentX, currentY);
                 });
-            } else {
-                ctx.fillText("No Geometry Data", w/2, los + 20);
             }
 
-            // 🧠 DRAW DEFENSIVE COORDINATES
-            ctx.fillStyle = "#ef4444";
-            if (play.def_vectors && play.def_vectors.length > 0) {
-                play.def_vectors.forEach(v => {
-                    let currentX = (w * v.startX) + (((w * v.endX) - (w * v.startX)) * progress);
-                    let currentY = (los + v.startY) + ((v.endY - v.startY) * progress);
-                    ctx.fillText(v.label, currentX, currentY);
-                });
+            // ----------------------------------------------------
+            // 🛡️ DRAW DEFENSIVE SHELL (ZONES)
+            // ----------------------------------------------------
+            if (play.defense_shell && play.defense_shell !== "Man") {
+                ctx.fillStyle = "rgba(6, 182, 212, 0.15)"; // Light blue zone overlay
+                ctx.strokeStyle = "rgba(6, 182, 212, 0.5)";
+                ctx.lineWidth = 2;
+                
+                if (play.defense_shell === "Cover 3") {
+                    // Draw Deep 3rd Zones
+                    ctx.fillRect(0, los - 250, w/3, 100); ctx.strokeRect(0, los - 250, w/3, 100);
+                    ctx.fillRect(w/3, los - 250, w/3, 100); ctx.strokeRect(w/3, los - 250, w/3, 100);
+                    ctx.fillRect((w/3)*2, los - 250, w/3, 100); ctx.strokeRect((w/3)*2, los - 250, w/3, 100);
+                } else if (play.defense_shell === "Cover 2") {
+                    // Draw Deep Half Zones
+                    ctx.fillRect(0, los - 250, w/2, 100); ctx.strokeRect(0, los - 250, w/2, 100);
+                    ctx.fillRect(w/2, los - 250, w/2, 100); ctx.strokeRect(w/2, los - 250, w/2, 100);
+                }
             }
 
             if (isAnimating && playTime < 100) {
