@@ -6627,7 +6627,9 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
                 const filtered = window.masterPlaybook.filter(p => p.play_type.toLowerCase() === type);
                 loadPlaylist(filtered);
             }
+            
         }
+        document.getElementById('vcm-container').style.display = 'flex';
         function loadPlaylist(playDataArray) {
             // 🚨 THE FIX: Unhide the VCM when the plays load!
             document.getElementById('vcm-container').style.display = 'block';
