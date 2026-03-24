@@ -6618,26 +6618,29 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
         // ==========================================
         // 🦅 VCM PLAYLIST LOGIC
         // ==========================================
-      window.masterPlaybook = []; // Stores all plays in memory
+        window.masterPlaybook = []; // Stores all plays in memory
 
         function filterVCM(type) {
             if (type === 'all') {
                 loadPlaylist(window.masterPlaybook);
             } else {
-                const filtered = window.masterPlaybook.filter(p => p.play_type.toLowerCase() === type);
+                const filtered = window.masterPlaybook.filter(p => p.play_type && p.play_type.toLowerCase() === type);
                 loadPlaylist(filtered);
             }
-            
         }
-        document.getElementById('vcm-container').style.display = 'flex';
+        
         function loadPlaylist(playDataArray) {
-            // 🚨 THE FIX: Unhide the VCM when the plays load!
-            document.getElementById('vcm-container').style.display = 'block';
+            // 🚨 THE FIX: Unhide the VCM safely inside the function!
+            const vcmContainer = document.getElementById('vcm-container');
+            if (vcmContainer) {
+                vcmContainer.style.display = 'flex'; 
+            }
 
             const playlistBox = document.getElementById('vcm-playlist-container');
+            if (!playlistBox) return; // Safety check
+            
             playlistBox.innerHTML = ''; // Clear default text
             
-            // ... (keep the rest of your code exactly the same)
             playDataArray.forEach((play, index) => {
                 // Create a clickable button for each play
                 const playBtn = document.createElement('div');
@@ -6654,14 +6657,18 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
 
                 // When clicked, load this specific play!
                 playBtn.onclick = () => {
-                    // 1. Update Intel Text
-                    document.getElementById('vcm-form').innerText = play.formation || "Unknown";
-                    document.getElementById('vcm-def').innerText = play.defense_coverage || "Unknown";
+                    // 1. Update Intel Text (if these IDs exist in your HTML)
+                    const formText = document.getElementById('vcm-form');
+                    const defText = document.getElementById('vcm-def');
+                    if (formText) formText.innerText = play.formation || "Unknown";
+                    if (defText) defText.innerText = play.defense_coverage || "Unknown";
                     
                     // 2. 📺 SYNC THE VIDEO! Ask the local streaming server for the file
                     const videoPlayer = document.getElementById('vcm-video');
-                    videoPlayer.src = `http://127.0.0.1:3333/stream/${play.clip}`;
-                    videoPlayer.play();
+                    if (videoPlayer) {
+                        videoPlayer.src = `http://127.0.0.1:3333/stream/${play.clip}`;
+                        videoPlayer.play();
+                    }
 
                     // 3. Save this play's data to memory so the Diagram button can use it
                     window.currentTacticalPlay = play;
