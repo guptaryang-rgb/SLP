@@ -6307,8 +6307,16 @@
                     <button onclick="document.getElementById('vcm-playbook-modal').style.display='none'" style="background: transparent; color: #888; border: none; font-size: 2rem; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">&times;</button>
                 </div>
                 <div style="width: 100%; aspect-ratio: 16/9; background: #166534; border: 2px solid #fff; border-radius: 4px; position: relative;">
-                    <canvas id="vcm-field-canvas" style="width: 100%; height: 100%;"></canvas>
-                </div>
+                    <div id="tactical-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(19, 20, 28, 0.95); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+    <span class="close-modal" onclick="document.getElementById('tactical-modal').style.display='none'" style="position: absolute; top: 30px; right: 40px; font-size: 2rem; color: #fff; cursor: pointer;">&times;</span>
+    
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+        <div id="tactical-title" style="color: #fff; font-size: 1.5rem; font-weight: bold; font-family: 'JetBrains Mono';">TACTICAL DIAGRAM</div>
+        <button id="btn-animate-play" style="background: var(--accent-yellow); color: #000; border: none; padding: 6px 16px; border-radius: 4px; font-weight: bold; cursor: pointer;">▶ PLAY MOTION</button>
+    </div>
+    
+    <canvas id="vcm-field-canvas" style="background: #064e3b; border: 2px solid #fff; border-radius: 8px; width: 800px; height: 450px;"></canvas>
+</div>
             </div>
         </div>
         <div id="vcm-container" style="margin-top: 24px; background: #111; border: 1px solid #333; border-radius: 8px; padding: 20px; display: none;">
@@ -6459,137 +6467,155 @@
             }
         });
 
-       // 5. UNIFIED TACTICAL DIAGRAM (DYNAMIC ALGORITHM)
-        const playbookModal = document.getElementById('vcm-playbook-modal');
-        const fieldCanvas = document.getElementById('vcm-field-canvas');
-        const fieldCtx = fieldCanvas.getContext('2d');
-        const btnDiagram = document.getElementById('vcm-btn-diagram');
+      // ==========================================
+        // 5. ANIMATED TACTICAL DIAGRAM ENGINE
+        // ==========================================
+        let animationFrameId;
+        let isAnimating = false;
+        let playTime = 0; // Tracks the progress of the play
+        
+        const playbookModal = document.getElementById('tactical-modal');
+        const cvs = document.getElementById('vcm-field-canvas');
+        const ctx = cvs.getContext('2d');
 
-        btnDiagram.addEventListener('click', () => {
+        // Draw the static field lines
+        function drawFieldBackground(w, h, los) {
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, los); ctx.lineTo(w, los); ctx.stroke();
+            ctx.strokeStyle = "rgba(234, 179, 8, 0.5)"; 
+            ctx.beginPath(); ctx.moveTo(0, los - (h*0.15)); ctx.lineTo(w, los - (h*0.15)); ctx.stroke();
+        }
+
+       // Main render function for animation frames
+        function renderPlayFrame() {
             const play = window.currentTacticalPlay;
-            if (!play) {
-                alert("Please select a play from the playlist first!");
-                return;
-            }
+            if (!play) return;
 
-            playbookModal.style.display = 'flex';
-            document.getElementById('vcm-modal-title').innerText = `${play.formation || "Offense"} vs ${play.defense_coverage || "Defense"}`;
-            
-            // Fix canvas resolution
-            fieldCanvas.width = fieldCanvas.clientWidth;
-            fieldCanvas.height = fieldCanvas.clientHeight;
-            fieldCtx.clearRect(0, 0, fieldCanvas.width, fieldCanvas.height);
-            
-            const w = fieldCanvas.width;
-            const h = fieldCanvas.height;
-            const los = h * 0.6; 
-            const center = w / 2;
+            cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight;
+            const w = cvs.width, h = cvs.height, los = h * 0.6, center = w / 2, ls = w * 0.05;
 
-            // --- DRAW FIELD LINES ---
-            fieldCtx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-            fieldCtx.lineWidth = 2;
-            fieldCtx.beginPath();
-            fieldCtx.moveTo(0, los);
-            fieldCtx.lineTo(w, los);
-            fieldCtx.stroke();
-            
-            // First Down Line
-            fieldCtx.strokeStyle = "rgba(234, 179, 8, 0.5)";
-            fieldCtx.beginPath();
-            fieldCtx.moveTo(0, los - (h * 0.15));
-            fieldCtx.lineTo(w, los - (h * 0.15));
-            fieldCtx.stroke();
+            drawFieldBackground(w, h, los);
 
-            // --- DRAW OFFENSE (White O's) ---
-            fieldCtx.font = "bold 18px 'JetBrains Mono'";
-            fieldCtx.textAlign = "center";
-            fieldCtx.textBaseline = "middle";
-            fieldCtx.fillStyle = "#fff"; 
-            
-            const lineSpacing = w * 0.05;
-            fieldCtx.fillText("LT", center - (lineSpacing * 2), los + 20);
-            fieldCtx.fillText("LG", center - lineSpacing, los + 20);
-            fieldCtx.fillText("C", center, los + 20);
-            fieldCtx.fillText("RG", center + lineSpacing, los + 20);
-            fieldCtx.fillText("RT", center + (lineSpacing * 2), los + 20);
-            fieldCtx.fillText("QB", center, los + 50);
-            fieldCtx.fillText("RB", center - 40, los + 50);
-            fieldCtx.fillText("WR", w * 0.15, los + 20);
-            fieldCtx.fillText("WR", w * 0.85, los + 20);
+            // --- ANIMATION TIMING LOGIC ---
+            const speed = 1.5; 
+            if (isAnimating) playTime += speed;
+            if (playTime > 100) playTime = 100; // Cap at 100% completion
 
-            // =====================================
-            // 🧠 DYNAMIC PLAYER ACTIONS (OFFENSE)
-            // =====================================
-            fieldCtx.lineWidth = 3;
-            fieldCtx.setLineDash([8, 8]); // Dashed lines for routes
-            
+            const progress = playTime / 100; // 0.0 to 1.0
+
+            ctx.font = "bold 16px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+
+            // --- OFFENSE (White O's) ---
+            ctx.fillStyle = "#fff";
+            ctx.fillText("LT", center-(ls*2), los+20); ctx.fillText("LG", center-ls, los+20); 
+            ctx.fillText("C", center, los+20);
+            ctx.fillText("RG", center+ls, los+20); ctx.fillText("RT", center+(ls*2), los+20);
+            ctx.fillText("QB", center, los+50 + (progress * 15)); // QB drops back
+
+            // 🧠 DYNAMIC OFFENSIVE PLAYBOOK
             if (play.offense_play && play.offense_play.includes("Four Verticals")) {
-                fieldCtx.strokeStyle = "#eab308"; // Yellow Routes
-                [w * 0.15, w * 0.35, w * 0.65, w * 0.85].forEach(x => {
-                    fieldCtx.beginPath(); fieldCtx.moveTo(x, los - 20); fieldCtx.lineTo(x, los - 180); fieldCtx.stroke();
-                });
+                const routeDepth = 160 * progress;
+                ctx.fillText("WR", w*0.15, los+20 - routeDepth); 
+                ctx.fillText("WR", w*0.85, los+20 - routeDepth);
+                ctx.fillText("TE", center+ls*3, los+20 - routeDepth);
+                ctx.fillText("RB", center-40, los+50 - (100 * progress)); 
             } 
             else if (play.offense_play && play.offense_play.includes("Stick")) {
-                fieldCtx.strokeStyle = "#eab308"; 
-                // Flat
-                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.85, los - 20); fieldCtx.lineTo(w * 0.95, los - 60); fieldCtx.stroke();
-                // Stick
-                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.65, los - 20); fieldCtx.lineTo(w * 0.65, los - 80); fieldCtx.lineTo(w * 0.75, los - 80); fieldCtx.stroke();
-                // Vertical
-                fieldCtx.beginPath(); fieldCtx.moveTo(w * 0.15, los - 20); fieldCtx.lineTo(w * 0.15, los - 180); fieldCtx.stroke();
+                ctx.fillText("WR", w*0.15, los+20 - (160 * progress)); // Vertical
+                ctx.fillText("TE", center+ls*3, los+20 - (60 * progress)); // Stick
+                ctx.fillText("RB", center-40 + (60 * progress), los+50 - (40 * progress)); // Flat
+            } 
+            else if (play.offense_play && play.offense_play.includes("Mesh")) {
+                // Crossing routes over the middle
+                ctx.fillText("WR", w*0.15 + (w*0.5 * progress), los+10 - (20 * progress)); // Left WR crosses right
+                ctx.fillText("WR", w*0.85 - (w*0.5 * progress), los+30 - (20 * progress)); // Right WR crosses left
+                ctx.fillText("TE", center+ls*3, los+20 - (100 * progress)); // TE clears out
+                ctx.fillText("RB", center-40 + (80 * progress), los+50 - (20 * progress)); // RB flare
+            }
+            else if (play.offense_play && play.offense_play.includes("Smash")) {
+                // Hitch on outside, Corner route inside
+                ctx.fillText("WR", w*0.15, los+20 - (40 * Math.min(progress*2, 1))); // Stop at 40 depth
+                ctx.fillText("WR", w*0.85, los+20 - (40 * Math.min(progress*2, 1))); 
+                ctx.fillText("TE", center+ls*3 + (50 * progress), los+20 - (120 * progress)); // Angles to corner
+                ctx.fillText("RB", center-40, los+50 - (20 * progress)); // Check release
             }
             else if (play.play_type === "run") {
-                fieldCtx.setLineDash([]); 
-                fieldCtx.strokeStyle = "#22c55e"; // Green for run blocking
-                [center - (lineSpacing * 2), center - lineSpacing, center, center + lineSpacing, center + (lineSpacing * 2)].forEach(x => {
-                    fieldCtx.beginPath(); fieldCtx.moveTo(x, los); fieldCtx.lineTo(x, los - 30); fieldCtx.lineTo(x - 10, los - 30); fieldCtx.stroke();
-                });
-                // RB Path
-                fieldCtx.setLineDash([5, 5]);
-                fieldCtx.strokeStyle = "#eab308";
-                fieldCtx.beginPath(); fieldCtx.moveTo(center - 40, los + 40); fieldCtx.lineTo(center + 20, los - 20); fieldCtx.stroke(); 
-            }
-            fieldCtx.setLineDash([]); // Reset dash
-
-            // --- DRAW DEFENSE (Red X's) ---
-            fieldCtx.fillStyle = "#ef4444"; 
-            fieldCtx.fillText("DE", center - (lineSpacing * 1.5), los - 20);
-            fieldCtx.fillText("DT", center - (lineSpacing * 0.5), los - 20);
-            fieldCtx.fillText("DT", center + (lineSpacing * 0.5), los - 20);
-            fieldCtx.fillText("DE", center + (lineSpacing * 1.5), los - 20);
-
-            fieldCtx.fillText("WLB", center - 80, los - 70);
-            fieldCtx.fillText("MLB", center, los - 70);
-            fieldCtx.fillText("SLB", center + 80, los - 70);
-
-            fieldCtx.fillText("CB", w * 0.15, los - 40);
-            fieldCtx.fillText("CB", w * 0.85, los - 40);
-            fieldCtx.fillText("FS", w * 0.35, los - 180);
-            fieldCtx.fillText("SS", w * 0.65, los - 180);
-
-            // =====================================
-            // 🧠 DYNAMIC PLAYER ACTIONS (DEFENSE)
-            // =====================================
-            fieldCtx.lineWidth = 2;
-            fieldCtx.strokeStyle = "#ef4444"; 
-            
-            if (play.defense_coverage && (play.defense_coverage.includes("Blitz") || play.defense_coverage.includes("Man"))) {
-                // Draw Blitzing Linebackers
-                [-80, 0, 80].forEach(offset => {
-                    fieldCtx.beginPath(); fieldCtx.moveTo(center + offset, los - 60); fieldCtx.lineTo(center + (offset * 0.5), los - 25); fieldCtx.stroke();
-                    // Arrowheads
-                    fieldCtx.beginPath(); fieldCtx.fillStyle = "#ef4444"; fieldCtx.arc(center + (offset * 0.5), los - 25, 4, 0, Math.PI * 2); fieldCtx.fill();
-                });
+                ctx.fillText("WR", w*0.15, los+20 - (50 * progress)); 
+                ctx.fillText("WR", w*0.85, los+20 - (50 * progress)); 
+                ctx.fillText("RB", center-40 + (60 * progress), los+50 - (80 * progress)); // Hits hole
             } else {
-                // Draw Zone Drop Circles
-                fieldCtx.fillStyle = "rgba(239, 68, 68, 0.2)";
-                fieldCtx.beginPath(); fieldCtx.arc(w * 0.2, los - 150, 40, 0, Math.PI * 2); fieldCtx.fill(); // Deep Third
-                fieldCtx.beginPath(); fieldCtx.arc(w * 0.8, los - 150, 40, 0, Math.PI * 2); fieldCtx.fill(); // Deep Third
-                fieldCtx.beginPath(); fieldCtx.arc(center - 60, los - 60, 30, 0, Math.PI * 2); fieldCtx.fill(); // Underneath
-                fieldCtx.beginPath(); fieldCtx.arc(center + 60, los - 60, 30, 0, Math.PI * 2); fieldCtx.fill(); // Underneath
+                ctx.fillText("WR", w*0.15, los+20); ctx.fillText("WR", w*0.85, los+20); ctx.fillText("RB", center-40, los+50);
             }
+
+            // --- DEFENSE (Red X's) ---
+            ctx.fillStyle = "#ef4444";
+            const rushDepth = 20 * progress;
+            ctx.fillText("DE", center-(ls*1.5), los-20 + rushDepth); ctx.fillText("DT", center-(ls*0.5), los-20 + rushDepth); 
+            ctx.fillText("DT", center+(ls*0.5), los-20 + rushDepth); ctx.fillText("DE", center+(ls*1.5), los-20 + rushDepth);
+
+            // 🧠 DYNAMIC DEFENSIVE PLAYBOOK
+            if (play.defense_coverage && play.defense_coverage.includes("Cover 3")) {
+                const dropDepth = 60 * progress;
+                ctx.fillText("CB", w*0.15, los-40 - dropDepth); ctx.fillText("CB", w*0.85, los-40 - dropDepth); 
+                ctx.fillText("FS", w*0.35, los-180 - (20 * progress)); ctx.fillText("SS", w*0.65, los-180 + (80 * progress)); 
+                ctx.fillText("W", center-80, los-70 - (30 * progress)); ctx.fillText("M", center, los-70 - (30 * progress)); ctx.fillText("S", center+80, los-70 - (30 * progress));
+            } 
+            else if (play.defense_coverage && play.defense_coverage.includes("Cover 2")) {
+                // Safeties split deep halves, corners squat in the flats
+                const safetyDrop = 70 * progress;
+                ctx.fillText("CB", w*0.15, los-40 - (10 * progress)); 
+                ctx.fillText("CB", w*0.85, los-40 - (10 * progress)); 
+                ctx.fillText("FS", w*0.35 - (40 * progress), los-180 - safetyDrop); // Drifts left
+                ctx.fillText("SS", w*0.65 + (40 * progress), los-180 - safetyDrop); // Drifts right
+                ctx.fillText("W", center-80, los-70 - (40 * progress)); ctx.fillText("M", center, los-70 - (50 * progress)); ctx.fillText("S", center+80, los-70 - (40 * progress));
+            }
+            else if (play.defense_coverage && play.defense_coverage.includes("Man")) {
+                // Defenders mirror receivers
+                ctx.fillText("CB", w*0.15, los-40 + (10 * progress)); // Press
+                ctx.fillText("CB", w*0.85, los-40 + (10 * progress));
+                ctx.fillText("FS", w*0.35, los-180); // Single high middle
+                ctx.fillText("SS", w*0.65, los-180 + (50 * progress)); // Drops to cover TE
+                ctx.fillText("W", center-80, los-70); ctx.fillText("M", center, los-70 + (20 * progress)); ctx.fillText("S", center+80, los-70);
+            }
+            else { // Blitz
+                const blitzDepth = 40 * progress;
+                ctx.fillText("CB", w*0.15, los-40 - (20 * progress)); ctx.fillText("CB", w*0.85, los-40 - (20 * progress));
+                ctx.fillText("W", center-80, los-70 + blitzDepth); ctx.fillText("M", center, los-70 + (blitzDepth * 0.5)); ctx.fillText("S", center+80, los-70 + blitzDepth);
+                ctx.fillText("FS", w*0.35, los-180); ctx.fillText("SS", w*0.65, los-180);
+            }
+
+            // Keep animating until play ends
+            if (isAnimating && playTime < 100) {
+                animationFrameId = requestAnimationFrame(renderPlayFrame);
+            } else {
+                isAnimating = false; 
+            }
+        }
+
+        // 1. Open Modal & Draw Starting Frame
+        document.getElementById('btn-diagram').addEventListener('click', () => {
+            const play = window.currentTacticalPlay;
+            if (!play) return alert("Select a play from the film room playlist first.");
+
+            playbookModal.style.display = 'flex';
+            document.getElementById('tactical-title').innerText = `${play.formation || "Offense"} vs ${play.defense_coverage || "Defense"}`;
+            
+            // Reset state
+            isAnimating = false;
+            playTime = 0;
+            cancelAnimationFrame(animationFrameId);
+            
+            renderPlayFrame();
         });
 
+        // 2. Trigger Play Animation
+        document.getElementById('btn-animate-play').addEventListener('click', () => {
+            if (isAnimating) return; 
+            playTime = 0; 
+            isAnimating = true;
+            renderPlayFrame();
+        });
         // ==========================================
         // 🦅 VCM PLAYLIST LOGIC
         // ==========================================
