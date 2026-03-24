@@ -6471,17 +6471,14 @@
 
             drawFieldBackground(w, h, los);
 
-            const speed = 1.5; 
+            const speed = 1.0; // Adjust animation speed here
             if (isAnimating) playTime += speed;
             if (playTime > 100) playTime = 100; 
 
             const progress = playTime / 100; 
             ctx.font = "bold 16px 'JetBrains Mono'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
 
-            // 🧠 THE INFINITE PROJECTOR
-            // It blindly draws whatever X/Y vectors Raptor injected into the JSON!
-            
-            // --- Draw Offense ---
+            // 🧠 DRAW OFFENSIVE COORDINATES
             ctx.fillStyle = "#fff";
             if (play.off_vectors && play.off_vectors.length > 0) {
                 play.off_vectors.forEach(v => {
@@ -6490,10 +6487,10 @@
                     ctx.fillText(v.label, currentX, currentY);
                 });
             } else {
-                ctx.fillText("Awaiting Geometry Node...", w/2, los + 50);
+                ctx.fillText("No Geometry Data", w/2, los + 20);
             }
 
-            // --- Draw Defense ---
+            // 🧠 DRAW DEFENSIVE COORDINATES
             ctx.fillStyle = "#ef4444";
             if (play.def_vectors && play.def_vectors.length > 0) {
                 play.def_vectors.forEach(v => {
@@ -6509,7 +6506,6 @@
                 isAnimating = false; 
             }
         }
-
         document.getElementById('vcm-btn-diagram').addEventListener('click', () => {            
             const play = window.currentTacticalPlay;
             if (!play) return alert("Select a play from the film room playlist first.");
