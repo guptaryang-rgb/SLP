@@ -6618,6 +6618,9 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
         // ==========================================
         // 🦅 VCM PLAYLIST LOGIC
         // ==========================================
+        // ==========================================
+        // 🦅 VCM PLAYLIST LOGIC
+        // ==========================================
         window.masterPlaybook = []; // Stores all plays in memory
 
         function filterVCM(type) {
@@ -6630,13 +6633,14 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
         }
         
         function loadPlaylist(playDataArray) {
-            // THE BULLETPROOF UNHIDE COMMAND
+            // 🚨 BULLETPROOF UNHIDE COMMAND - NO VARIABLES 🚨
             document.getElementById('vcm-container').style.display = 'flex';
 
             const playlistBox = document.getElementById('vcm-playlist-container');
             if (!playlistBox) return; // Safety check
             
-            playlistBox.innerHTML = ''; // Clear default text    
+            playlistBox.innerHTML = ''; // Clear default text
+            
             playDataArray.forEach((play, index) => {
                 // Create a clickable button for each play
                 const playBtn = document.createElement('div');
@@ -6653,13 +6657,13 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
 
                 // When clicked, load this specific play!
                 playBtn.onclick = () => {
-                    // 1. Update Intel Text (if these IDs exist in your HTML)
+                    // 1. Update Intel Text
                     const formText = document.getElementById('vcm-form');
                     const defText = document.getElementById('vcm-def');
                     if (formText) formText.innerText = play.formation || "Unknown";
                     if (defText) defText.innerText = play.defense_coverage || "Unknown";
                     
-                    // 2. 📺 SYNC THE VIDEO! Ask the local streaming server for the file
+                    // 2. 📺 SYNC THE VIDEO!
                     const videoPlayer = document.getElementById('vcm-video');
                     if (videoPlayer) {
                         videoPlayer.src = `http://127.0.0.1:3333/stream/${play.clip}`;
