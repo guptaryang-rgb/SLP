@@ -6630,17 +6630,13 @@ document.getElementById('vcm-btn-diagram').addEventListener('click', () => {    
         }
         
         function loadPlaylist(playDataArray) {
-            // 🚨 THE FIX: Unhide the VCM safely inside the function!
-            const vcmContainer = document.getElementById('vcm-container');
-            if (vcmContainer) {
-                vcmContainer.style.display = 'flex'; 
-            }
+            // THE BULLETPROOF UNHIDE COMMAND
+            document.getElementById('vcm-container').style.display = 'flex';
 
             const playlistBox = document.getElementById('vcm-playlist-container');
             if (!playlistBox) return; // Safety check
             
-            playlistBox.innerHTML = ''; // Clear default text
-            
+            playlistBox.innerHTML = ''; // Clear default text    
             playDataArray.forEach((play, index) => {
                 // Create a clickable button for each play
                 const playBtn = document.createElement('div');
