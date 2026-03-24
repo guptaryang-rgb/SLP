@@ -6573,10 +6573,20 @@
                     
                     const videoPlayer = document.getElementById('vcm-video');
                     if (videoPlayer) {
-                        videoPlayer.src = `http://127.0.0.1:3333/stream/${play.clip}`;
-                        videoPlayer.play();
+                        // FIX: Check for null, and use 'localhost' instead of 127.0.0.1 to bypass Chrome security
+                        if (play.clip && play.clip !== "null" && play.clip !== "Missing_Video.mp4") {
+                            videoPlayer.src = `http://localhost:3333/stream/${play.clip}`;
+                            videoPlayer.play().catch(e => console.log("Video waiting for user interaction..."));
+                        } else {
+                            console.log("No video available for this play.");
+                        }
                     }
 
+                    window.currentTacticalPlay = play;
+
+                    Array.from(playlistBox.children).forEach(child => child.style.borderColor = '#333');
+                    playBtn.style.borderColor = '#06b6d4';
+                };
                     window.currentTacticalPlay = play;
 
                     Array.from(playlistBox.children).forEach(child => child.style.borderColor = '#333');
