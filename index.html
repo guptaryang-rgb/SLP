@@ -2799,6 +2799,23 @@
                     </div>
                 </div>
             </div>
+            <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-family: 'Inter', sans-serif;">
+            
+            <div style="background: #0a0a0a; border: 1px solid #333; border-radius: 4px; padding: 16px;">
+                <div style="color: #06b6d4; font-weight: bold; font-size: 0.9rem; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px;">
+                    🎯 DOWN & DISTANCE EFFICIENCY
+                </div>
+                <div id="data-box" style="font-size: 0.8rem; color: #aaa;">Waiting for Down & Distance engine...</div>
+            </div>
+
+            <div style="background: #0a0a0a; border: 1px solid #333; border-radius: 4px; padding: 16px;">
+                <div style="color: #eab308; font-weight: bold; font-size: 0.9rem; margin-bottom: 12px; border-bottom: 1px solid #222; padding-bottom: 8px;">
+                    📈 RUN vs PASS TENDENCIES
+                </div>
+                <div id="tendency-content" style="font-size: 0.8rem; color: #aaa;">Waiting for Tendency engine...</div>
+            </div>
+
+        </div>
         </div>
     </div>
 
@@ -6415,6 +6432,30 @@
                     </div>
                     ${tableHTML}
                 `;
+            }
+            // TRAFFIC COP 3: Is this the Tendency Report?
+            if (data.file === 'tendency_report.json') {
+                const tendBox = document.getElementById('tendency-content');
+                let html = `<table style="width: 100%; border-collapse: collapse;">`;
+                
+                // Assuming the engine outputs an array of data
+                if (Array.isArray(data.payload)) {
+                    data.payload.forEach(row => {
+                        html += `
+                        <tr style="border-bottom: 1px solid #222;">
+                            <td style="padding: 6px; color: #fff;">${row.situation || row.formation || 'Overall'}</td>
+                            <td style="padding: 6px; color: #22c55e;">RUN: ${row.run_percent || 0}%</td>
+                            <td style="padding: 6px; color: #06b6d4;">PASS: ${row.pass_percent || 0}%</td>
+                        </tr>`;
+                    });
+                } else {
+                    // Fallback just in case the data is structured differently
+                    html += `<tr><td style="color: #aaa;">Data received. Formatting required.</td></tr>`;
+                    console.log("Raw Tendency Data:", data.payload);
+                }
+                
+                html += `</table>`;
+                tendBox.innerHTML = html;
             }
         });
 
